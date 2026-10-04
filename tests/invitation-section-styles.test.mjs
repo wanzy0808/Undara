@@ -154,12 +154,12 @@ test("section toolbar visibility shares one state with the Isi panel", () => {
   assert.match(editor, /function toggleSectionInstance\(id: string\)[\s\S]*?setSection\(instance\.key, design\.sections\[instance\.key\] === false\)/);
   assert.match(editor, /function setSection\(section: InvitationSectionKey, enabled: boolean\)[\s\S]*?sectionLayout: next/);
   assert.match(editor, /!hasSameSection \? \{ sections: \{ \.\.\.design\.sections, \[source\.key\]: false \} \} : \{\}/);
-  assert.match(universal, /const hidden = sections\[keyName\] === false;[\s\S]*?if \(hidden && \(!preview \|\| key === "blank-canvas"\)\) return null/);
-  assert.match(romantic, /const hidden = sections\[key\] === false;[\s\S]*?if \(hidden && !preview\) return null/);
-  assert.match(universal, /data-studio-preview-root=\{preview \? "true" : undefined\}/);
-  assert.match(universal, /\$\{preview \? "overflow-visible" : "overflow-hidden"\}/);
-  assert.match(romantic, /data-studio-preview-root=\{preview \? "true" : undefined\}/);
-  assert.match(romantic, /\$\{preview \? "overflow-visible" : "overflow-hidden"\}/);
+  assert.match(universal, /const hidden = sections\[keyName\] === false;[\s\S]*?if \(hidden && \(!editorPreview \|\| key === "blank-canvas"\)\) return null/);
+  assert.match(romantic, /const hidden = sections\[key\] === false;[\s\S]*?if \(hidden && !editorPreview\) return null/);
+  assert.match(universal, /data-studio-preview-root=\{editorPreview \? "true" : undefined\}/);
+  assert.match(universal, /\$\{editorPreview \? "overflow-visible" : "overflow-hidden"\}/);
+  assert.match(romantic, /data-studio-preview-root=\{editorPreview \? "true" : undefined\}/);
+  assert.match(romantic, /\$\{editorPreview \? "overflow-visible" : "overflow-hidden"\}/);
 });
 
 test("section inspector stays visual-only without duplicating function lists", () => {

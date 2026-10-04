@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -10,12 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { InvitationPreview } from "@/components/InvitationStudio/InvitationPreview";
+import StudioPreviewViewport from "@/components/InvitationStudio/StudioPreviewViewport";
+import { studioPreviewDimension, studioPreviewViewports, type StudioPreviewSize } from "./studio-preview-viewport";
 import type {
   InvitationDesignerInvitation,
   InvitationDesignState,
 } from "@/components/InvitationStudio/designer-types";
-import { invitationFonts, invitationPalettes } from "@/lib/templates/design";
 import type { InvitationLanguage } from "@/lib/invitations/language";
 
 export default function StudioFinalPreviewDialog({
@@ -42,7 +43,20 @@ export default function StudioFinalPreviewDialog({
   invitationLanguage: InvitationLanguage;
 }) {
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
+  const [viewport, setViewport] = useState<StudioPreviewSize>(studioPreviewViewports.mobile);
+  const [fit, setFit] = useState(true);
   const en = locale === "en";
+  const snapshot = useMemo(() => ({
+    invitation,
+    design: { template: design.template, palette: design.palette, font: design.font, decor: design.decor, sections: design.sections, photos: design.photos },
+    designKey, musicUrl, eventTag, dressCode, invitationLanguage,
+  }), [invitation, design, designKey, musicUrl, eventTag, dressCode, invitationLanguage]);
+  const closePreview = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  function selectDevice(next: "mobile" | "desktop") {
+    setDevice(next);
+    setViewport(studioPreviewViewports[next]);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,7 +76,7 @@ export default function StudioFinalPreviewDialog({
                 type="button"
                 size="sm"
                 variant={device === "mobile" ? "default" : "outline"}
-                onClick={() => setDevice("mobile")}
+                onClick={() => selectDevice("mobile")}
                 aria-pressed={device === "mobile"}
               >
                 <Smartphone className="h-4 w-4" />
@@ -72,7 +86,7 @@ export default function StudioFinalPreviewDialog({
                 type="button"
                 size="sm"
                 variant={device === "desktop" ? "default" : "outline"}
-                onClick={() => setDevice("desktop")}
+                onClick={() => selectDevice("desktop")}
                 aria-pressed={device === "desktop"}
               >
                 <Monitor className="h-4 w-4" />
@@ -80,31 +94,50 @@ export default function StudioFinalPreviewDialog({
               </Button>
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-2 pt-2 text-sm">
+            <Input
+              key={`width:${viewport.width}`}
+              type="number"
+              inputMode="numeric"
+              aria-label={en ? "Preview width in pixels" : "Lebar preview dalam pixel"}
+              min={240}
+              max={3840}
+              defaultValue={viewport.width}
+              className="h-10 w-20 tabular-nums"
+              onBlur={(event) => {
+                const width = studioPreviewDimension(event.currentTarget.value, viewport.width);
+                event.currentTarget.value = String(width);
+                setViewport((size) => ({ ...size, width }));
+              }}
+              onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
+            />
+            <span aria-hidden="true">×</span>
+            <Input
+              key={`height:${viewport.height}`}
+              type="number"
+              inputMode="numeric"
+              aria-label={en ? "Preview height in pixels" : "Tinggi preview dalam pixel"}
+              min={240}
+              max={3840}
+              defaultValue={viewport.height}
+              className="h-10 w-20 tabular-nums"
+              onBlur={(event) => {
+                const height = studioPreviewDimension(event.currentTarget.value, viewport.height);
+                event.currentTarget.value = String(height);
+                setViewport((size) => ({ ...size, height }));
+              }}
+              onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
+            />
+            <span className="text-muted-foreground">px</span>
+            <div className="ml-auto flex gap-2" role="group" aria-label={en ? "Preview zoom" : "Zoom preview"}>
+              <Button type="button" size="sm" variant={fit ? "default" : "outline"} onClick={() => setFit(true)} aria-pressed={fit}>Fit</Button>
+              <Button type="button" size="sm" variant={fit ? "outline" : "default"} onClick={() => setFit(false)} aria-pressed={!fit}>100%</Button>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-auto overscroll-contain rounded-[var(--undara-control-menu-radius)] border border-primary/25 bg-muted/25 p-3 sm:p-5">
-          <div
-            className={device === "mobile" ? "mx-auto w-[390px] max-w-full" : "mx-auto w-[760px] max-w-full"}
-            data-studio-final-preview-device={device}
-          >
-            <InvitationPreview
-              allowEnvelopeOpen
-              invitationLanguage={invitationLanguage}
-              previewRecipientLine={invitationLanguage === "EN" ? "Dear : Mr [Name] and Mrs [Name]" : "Kepada Yth : Bapak [Nama] dan Ibu [Nama]"}
-              key={`${device}:${designKey}`}
-              invitation={invitation}
-              templateKey={design.template}
-              palette={invitationPalettes[design.palette]}
-              fontPair={invitationFonts[design.font]}
-              decorUrl={design.decor}
-              sections={design.sections}
-              photoAssignments={design.photos}
-              designKey={designKey}
-              musicUrl={musicUrl}
-              eventTag={eventTag}
-              dressCode={dressCode}
-            />
-          </div>
+        <div className="min-h-0 rounded-[var(--undara-control-menu-radius)] border border-primary/25 bg-muted/25 p-3 sm:p-5" data-studio-final-preview-device={device}>
+          {open && <StudioPreviewViewport snapshot={snapshot} viewport={viewport} fit={fit} locale={locale} onClose={closePreview} />}
         </div>
       </DialogContent>
     </Dialog>

@@ -195,6 +195,7 @@ function eventCountdown(value: Date | string, now: number | null) {
 export default function UniversalInvitationTemplate({
   invitation,
   preview = false,
+  editorPreview = preview,
   allowEnvelopeOpen = false,
   sections: sectionOverride,
   photoAssignments,
@@ -224,6 +225,7 @@ export default function UniversalInvitationTemplate({
   invitation: InvitationData;
   personalGuest?: PersonalRsvpGuest;
   preview?: boolean;
+  editorPreview?: boolean;
   allowEnvelopeOpen?: boolean;
   previewRecipientLine?: string;
   sections?: InvitationSections;
@@ -283,7 +285,7 @@ export default function UniversalInvitationTemplate({
   const rsvpConfig = parseInvitationRsvpConfig(activeDesignKey);
   const sectionElementStyles = parseSectionElementStyles(activeDesignKey);
   const sectionLayout = parseInvitationSectionLayout(activeDesignKey);
-  const sectionEditorActions: SectionInstanceEditorActions | undefined = preview ? {
+  const sectionEditorActions: SectionInstanceEditorActions | undefined = editorPreview ? {
     selectedId: selectedSectionInstanceId,
     onSelect: onSelectSectionInstance,
     onMove: onMoveSectionInstance,
@@ -400,14 +402,14 @@ export default function UniversalInvitationTemplate({
 
   const renderSectionInstances = (keyName: InvitationSectionKey, render: (instanceId: string) => ReactNode) => {
     const hidden = sections[keyName] === false;
-    if (hidden && (!preview || key === "blank-canvas")) return null;
+    if (hidden && (!editorPreview || key === "blank-canvas")) return null;
     return instancesForSection(sectionLayout, keyName).map((instance) => (
       <EditableSectionInstance
         key={instance.id}
         instance={instance}
         order={instance.order}
         total={sectionLayout.length}
-        preview={preview}
+        preview={editorPreview}
         hidden={hidden}
         actions={sectionEditorActions}
       >
@@ -606,8 +608,8 @@ export default function UniversalInvitationTemplate({
   return (
     <main
       ref={rootRef}
-      data-studio-preview-root={preview ? "true" : undefined}
-      className={`relative isolate ${nativeVisualScopeClass(activeDesignKey)} mx-auto min-h-[760px] w-full max-w-2xl ${preview ? "overflow-visible" : "overflow-hidden"} border border-[var(--inv-soft)] text-[var(--inv-ink)] ${panel} ${key === "confetti-club" ? "confetti-club-invitation" : key === "zen-atelier" ? "zen-invitation" : key === "pencil-reverie" ? "pr-invitation" : key === "serein" ? "serein-invitation" : key === "botanical-ivory" ? "botanical-invitation" : key === "eternal-blossom" ? "eternal-invitation" : key === "modern-maroon" ? "modern-maroon-invitation" : key === "garden-light" ? "garden-light-invitation" : key === "midnight-romance" ? "midnight-romance-invitation" : key === "classic-pearl" ? "classic-pearl-invitation" : key === "golden-art-deco" ? "golden-art-deco-invitation" : key === "celestial-ink" ? "celestial-ink-invitation" : key === "velvet-horizon" ? "velvet-horizon-invitation" : key === "paper-cut-botanical" ? "paper-cut-botanical-invitation" : ""}`}
+      data-studio-preview-root={editorPreview ? "true" : undefined}
+      className={`relative isolate ${nativeVisualScopeClass(activeDesignKey)} mx-auto min-h-[760px] w-full max-w-2xl ${editorPreview ? "overflow-visible" : "overflow-hidden"} border border-[var(--inv-soft)] text-[var(--inv-ink)] ${panel} ${key === "confetti-club" ? "confetti-club-invitation" : key === "zen-atelier" ? "zen-invitation" : key === "pencil-reverie" ? "pr-invitation" : key === "serein" ? "serein-invitation" : key === "botanical-ivory" ? "botanical-invitation" : key === "eternal-blossom" ? "eternal-invitation" : key === "modern-maroon" ? "modern-maroon-invitation" : key === "garden-light" ? "garden-light-invitation" : key === "midnight-romance" ? "midnight-romance-invitation" : key === "classic-pearl" ? "classic-pearl-invitation" : key === "golden-art-deco" ? "golden-art-deco-invitation" : key === "celestial-ink" ? "celestial-ink-invitation" : key === "velvet-horizon" ? "velvet-horizon-invitation" : key === "paper-cut-botanical" ? "paper-cut-botanical-invitation" : ""}`}
       style={css}
     >
       <style>{nativeVisualStyleSheet(activeDesignKey)}</style>

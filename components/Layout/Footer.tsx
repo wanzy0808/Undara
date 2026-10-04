@@ -9,6 +9,7 @@ import { useLanguage } from "@/components/I18n/LanguageProvider";
 import BrandWordmark from "@/components/Brand/BrandWordmark";
 import { isFramedMarketingPath } from "@/lib/marketing-paths";
 import UndaraSocialIcons from "@/components/Layout/UndaraSocialIcons";
+import { STUDIO_PREVIEW_PATH } from "@/components/InvitationStudio/studio-preview-viewport";
 
 export default function Footer({ embedded = false }: { embedded?: boolean }) {
   const { isDarkMode } = useTheme();
@@ -17,7 +18,7 @@ export default function Footer({ embedded = false }: { embedded?: boolean }) {
   const { messages } = useLanguage();
   const { footer } = messages;
 
-  if ((!embedded && isFramedMarketingPath(pathname)) || pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/owner" || pathname.startsWith("/owner/") || pathname === "/partner" || pathname.startsWith("/partner/")) {
+  if (pathname === STUDIO_PREVIEW_PATH || (!embedded && isFramedMarketingPath(pathname)) || pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/owner" || pathname.startsWith("/owner/") || pathname === "/partner" || pathname.startsWith("/partner/")) {
     return null;
   }
 

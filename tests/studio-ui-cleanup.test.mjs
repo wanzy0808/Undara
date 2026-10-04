@@ -69,9 +69,9 @@ test("Studio keeps the live edit canvas and adds a separate final preview from t
   assert.match(designer, /designKey=\{designKey\}/);
   assert.match(finalPreviewDialog, /Menggunakan draft saat ini, termasuk yang belum disimpan/);
   assert.match(finalPreviewDialog, /device === "mobile"/);
-  assert.match(finalPreviewDialog, /w-\[390px\]/);
-  assert.match(finalPreviewDialog, /w-\[760px\]/);
-  assert.match(finalPreviewDialog, /<InvitationPreview/);
+  assert.match(finalPreviewDialog, /studioPreviewViewports/);
+  assert.match(finalPreviewDialog, /<StudioPreviewViewport/);
+  assert.match(read("components/InvitationStudio/StudioPreviewFrame.tsx"), /<InvitationPreview/);
   assert.doesNotMatch(finalPreviewDialog, /onUpdateAssetLayer|onSelectSectionInstance|onEditPhoto/);
   assert.match(designer, /<LanguageToggle|useLanguage\(\)/);
   assert.ok(designer.includes('key={`${design.template}-${design.sections.envelope !== false}-${previewVersion}`}'));

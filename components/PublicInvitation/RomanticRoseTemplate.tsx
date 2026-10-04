@@ -144,6 +144,7 @@ export default function RomanticRoseTemplate({
   invitation,
   designKey,
   preview = false,
+  editorPreview = preview,
   allowEnvelopeOpen = false,
   sections: sectionOverride,
   coverUrl,
@@ -173,6 +174,7 @@ export default function RomanticRoseTemplate({
   designKey?: string;
   personalGuest?: PersonalRsvpGuest;
   preview?: boolean;
+  editorPreview?: boolean;
   allowEnvelopeOpen?: boolean;
   previewRecipientLine?: string;
   sections?: InvitationSections;
@@ -211,7 +213,7 @@ export default function RomanticRoseTemplate({
   const rsvpConfig = parseInvitationRsvpConfig(activeDesignKey);
   const sectionElementStyles = parseSectionElementStyles(activeDesignKey);
   const sectionLayout = parseInvitationSectionLayout(activeDesignKey);
-  const sectionEditorActions: SectionInstanceEditorActions | undefined = preview ? {
+  const sectionEditorActions: SectionInstanceEditorActions | undefined = editorPreview ? {
     selectedId: selectedSectionInstanceId,
     onSelect: onSelectSectionInstance,
     onMove: onMoveSectionInstance,
@@ -277,14 +279,14 @@ export default function RomanticRoseTemplate({
 
   const renderSectionInstances = (key: InvitationSectionKey, render: (instanceId: string) => React.ReactNode) => {
     const hidden = sections[key] === false;
-    if (hidden && !preview) return null;
+    if (hidden && !editorPreview) return null;
     return instancesForSection(sectionLayout, key).map((instance) => (
       <EditableSectionInstance
         key={instance.id}
         instance={instance}
         order={instance.order}
         total={sectionLayout.length}
-        preview={preview}
+        preview={editorPreview}
         hidden={hidden}
         actions={sectionEditorActions}
       >
@@ -294,7 +296,7 @@ export default function RomanticRoseTemplate({
   };
 
   return (
-    <main ref={rootRef} data-studio-preview-root={preview ? "true" : undefined} className={`romantic-rose relative isolate ${nativeVisualScopeClass(activeDesignKey)} min-h-[760px] ${preview ? "overflow-visible" : "overflow-hidden"} bg-[#f7efe9] text-[#4b2d35] [font-family:var(--rr-body)]`}>
+    <main ref={rootRef} data-studio-preview-root={editorPreview ? "true" : undefined} className={`romantic-rose relative isolate ${nativeVisualScopeClass(activeDesignKey)} min-h-[760px] ${editorPreview ? "overflow-visible" : "overflow-hidden"} bg-[#f7efe9] text-[#4b2d35] [font-family:var(--rr-body)]`}>
       <style>{nativeVisualStyleSheet(activeDesignKey)}</style>
       <style>{`
         .romantic-rose {

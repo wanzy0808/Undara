@@ -54,7 +54,8 @@ test("Studio wiring saves gallery order, behavior and entrance motion in design 
   assert.match(designer, /onReorderGallery=\{reorderGalleryPhoto\}/);
   assert.match(designer, /onGallerySettings=\{updateGallerySettings\}/);
   assert.match(designer, /onUpdatePhotoMotion=\{updatePhotoMotion\}/);
-  assert.match(finalPreview, /photoAssignments=\{design\.photos\}/);
+  assert.match(finalPreview, /photos: design\.photos/);
+  assert.match(read("components/InvitationStudio/StudioPreviewFrame.tsx"), /photoAssignments=\{design\.photos\}/);
 });
 
 test("configurable public gallery supports carousel stack filmstrip masonry autoplay and accessible pause", () => {

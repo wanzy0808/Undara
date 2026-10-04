@@ -12,6 +12,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BrandWordmark from "@/components/Brand/BrandWordmark";
 import { isFramedMarketingPath } from "@/lib/marketing-paths";
+import { STUDIO_PREVIEW_PATH } from "@/components/InvitationStudio/studio-preview-viewport";
 
 export default function Navbar({ embedded = false }: { embedded?: boolean }) {
   const pathname = usePathname();
@@ -20,7 +21,7 @@ export default function Navbar({ embedded = false }: { embedded?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const reducedMotion = useReducedMotion();
   const isLanding = embedded && isFramedMarketingPath(pathname);
-  if ((!embedded && isFramedMarketingPath(pathname)) || pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/owner" || pathname.startsWith("/owner/") || pathname === "/partner" || pathname.startsWith("/partner/")) return null;
+  if (pathname === STUDIO_PREVIEW_PATH || (!embedded && isFramedMarketingPath(pathname)) || pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/owner" || pathname.startsWith("/owner/") || pathname === "/partner" || pathname.startsWith("/partner/")) return null;
 
   return (
     <header className={`undara-navbar relative z-50 w-full text-foreground transition-colors duration-500 ${
