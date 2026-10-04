@@ -482,9 +482,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       setCopiedAssetLayers([]);
     setHistory([]);
     setFuture([]);
-    setNotice(requestedTheme && requestedTheme !== loadedDesign.template && requestedPreset
-      ? "Template dipilih. Klik Simpan untuk menerapkan."
-      : "");
+    setNotice("");
   }
 
   useEffect(() => {
@@ -505,7 +503,6 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     if (!available) return;
     requestedCatalogApplied.current = true;
     selectTemplate(requested);
-    setNotice("Template dipilih. Preview dulu bila perlu, lalu klik Simpan untuk menerapkan.");
   }, [catalog, invitation, templateMode]);
 
 
@@ -632,9 +629,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     setCanvasStage("cover");
     setPanel("assets");
     setInspectorOpen(true);
-    setNotice(locale === "en"
-      ? "Blank canvas ready. Add text, assets, shapes, or enable content sections."
-      : "Canvas kosong siap. Tambahkan teks, aset, bentuk, atau aktifkan section Isi.");
+    setNotice("");
   }
 
   function selectTemplate(templateKey: string) {
@@ -643,6 +638,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       setNotice("Template ini masih menunggu integrasi renderer.");
       return;
     }
+
+    setNotice("");
 
     if (catalogTemplate.designKey) {
       const imported = invitationDesignStateFromKey(catalogTemplate.designKey, invitationDecorOptions[0]);
@@ -726,7 +723,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     setCanvasStage("envelope");
     setPreviewVersion((value) => value + 1);
     requestAnimationFrame(() => canvasScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
-    setNotice("Desain kembali ke kondisi awal template. Aset yang dipasang di canvas, posisi/ukuran/rotasi, teks dekoratif, foto slot, pilihan musik, isi template, warna, font, dan toggle bagian sudah direset. File upload tetap tersimpan di koleksi media. Klik Simpan untuk menerapkan.");
+    setNotice("");
   }
 
   async function deleteMusic(id: string) {

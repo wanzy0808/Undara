@@ -27,7 +27,8 @@
 .undara-studio-page-header .undara-language-toggle button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--primary) 12%, transparent) !important;
 }
-.undara-invitation-studio-shell { display: flex; flex: 1; min-height: 0; flex-direction: column; background: var(--background); }
+/* Keep editor z-indices local so body-portaled dialogs cover every Studio control. */
+.undara-invitation-studio-shell { isolation: isolate; display: flex; flex: 1; min-height: 0; flex-direction: column; background: var(--background); }
 .undara-studio-document-title { width: 100%; text-align: center; }
 .undara-studio-workspace { display: grid; grid-template-columns: 96px minmax(320px, 360px) minmax(0, 1fr); flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
 .undara-studio-rail { position: relative; z-index: 130; min-width: 0; padding: 14px 8px; overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); background: var(--background); }

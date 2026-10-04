@@ -240,7 +240,7 @@ test("Studio keeps Template Restart Undo Redo Preview Save in one canvas toolbar
   assert.match(reset, /setPreviewVersion/);
   assert.match(reset, /clearCanvasSelection\(\)/);
   assert.match(reset, /setCopiedAssetLayer\(null\)/);
-  assert.match(reset, /File upload tetap tersimpan di koleksi media/);
+  assert.doesNotMatch(designer, /Template dipilih|Klik Simpan untuk menerapkan|Preview dulu bila perlu|Canvas kosong siap|Blank canvas ready/);
   assert.doesNotMatch(designer, /Smartphone|copy\.phone|phone: "Ponsel"|phone: "Mobile"/);
   const canvas = designer.split('className="undara-studio-preview-workspace">')[1] || "";
   assert.ok(canvas.indexOf("<StudioStageControls") >= 0 && canvas.indexOf("<StudioStageControls") < canvas.indexOf('className="undara-studio-preview-surface"'));

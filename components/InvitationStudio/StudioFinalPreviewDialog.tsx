@@ -46,15 +46,15 @@ export default function StudioFinalPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[94vh] w-[96vw] max-w-[1100px] grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden p-4 sm:max-w-[1100px] sm:p-5">
+      <DialogContent className="h-[94dvh] w-[96vw] max-w-[1100px] grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden p-4 sm:max-w-[1100px] sm:p-5">
         <DialogHeader className="pr-12">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <DialogTitle>{en ? "Final invitation preview" : "Preview hasil undangan"}</DialogTitle>
               <DialogDescription className="mt-1">
                 {en
-                  ? "This uses the current unsaved draft. Mobile is the primary target; desktop is only a safety check."
-                  : "Menggunakan draft saat ini, termasuk yang belum disimpan. HP adalah target utama; Desktop hanya untuk cek agar tidak berantakan."}
+                  ? "This uses the current draft, including unsaved changes."
+                  : "Menggunakan draft saat ini, termasuk yang belum disimpan."}
               </DialogDescription>
             </div>
             <div className="flex items-center gap-2" role="group" aria-label={en ? "Preview viewport" : "Ukuran preview"}>
@@ -82,12 +82,13 @@ export default function StudioFinalPreviewDialog({
           </div>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-auto rounded-[var(--undara-control-menu-radius)] border border-primary/25 bg-muted/25 p-3 sm:p-5">
+        <div className="min-h-0 overflow-auto overscroll-contain rounded-[var(--undara-control-menu-radius)] border border-primary/25 bg-muted/25 p-3 sm:p-5">
           <div
             className={device === "mobile" ? "mx-auto w-[390px] max-w-full" : "mx-auto w-[760px] max-w-full"}
             data-studio-final-preview-device={device}
           >
             <InvitationPreview
+              allowEnvelopeOpen
               invitationLanguage={invitationLanguage}
               previewRecipientLine={invitationLanguage === "EN" ? "Dear : Mr [Name] and Mrs [Name]" : "Kepada Yth : Bapak [Nama] dan Ibu [Nama]"}
               key={`${device}:${designKey}`}

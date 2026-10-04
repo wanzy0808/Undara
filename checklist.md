@@ -670,6 +670,9 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 ### P1 — Standard canvas editing before advanced animation
 
 - [x] Select/deselect design objects from the canvas.
+- [x] Popup Preview berada di atas seluruh kontrol Studio dengan backdrop merata; Amplop dapat dibuka di Preview, tinggi mengikuti viewport dinamis dan scroll terpisah. (4 Oktober 2026)
+- [x] Hapus pesan helper kiri bawah untuk pemilihan template, Canvas Kosong dan Kembalikan ke Default, termasuk jalur katalog Designer dan pembersihan notice lama. (4 Oktober 2026)
+- [ ] QA browser popup Preview: Light/Dark, HP/Desktop, seleksi aktif sebelum dibuka, `Buka Undangan`, scroll, Escape/tutup dan kembali mengedit.
 - [x] Move objects by drag.
 - [x] Resize from edge and corner handles.
 - [x] Rotate from a dedicated handle below the object.

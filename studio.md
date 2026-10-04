@@ -95,6 +95,10 @@ Naik/Turun mengubah urutan instance section pada undangan user. Duplicate membua
 
 Canvas edit tetap menjadi workspace utama, tetapi Studio juga menyediakan **Preview hasil undangan** terpisah yang memakai **state draft saat ini termasuk perubahan yang belum disimpan**. Preview ini memakai renderer undangan yang sama tanpa selection box, rail section, guide, inspector atau kontrol transform. Default viewport Preview adalah HP karena undangan terutama dikonsumsi lewat ponsel; opsi Desktop hanya untuk memastikan layout tetap layak dan tidak berantakan, bukan membuat desain desktop kedua. Preview tidak menyimpan apa pun dan tidak menjadi renderer alternatif.
 
+**Lapisan popup Preview (4 Oktober 2026):** seluruh Studio di belakang popup digelapkan merata oleh backdrop shared Dialog. Rail, toolbar, inspector, panel layer dan handle editor tidak boleh menimpa popup; z-index editor hanya berlaku di stacking context shell Studio. `Buka Undangan` pada Preview boleh membuka Amplop dan isi dengan renderer yang sama, sementara form tetap non-submitting. Ukuran popup mengikuti tinggi viewport dinamis dan isi memiliki scroll sendiri.
+
+**Tanpa petunjuk di footer kiri bawah (4 Oktober 2026):** memilih template, Canvas Kosong atau Kembalikan ke Default tidak memunculkan pesan tutorial/konfirmasi pemilihan. Hapus semua variasi “Template dipilih”, “Klik Simpan untuk menerapkan” dan uraian reset; aksi tersebut membersihkan notice sebelumnya. Loading/progress, error dan status kerja yang diperlukan tetap melalui feedback existing.
+
 ### Mode Studio berdasarkan role
 
 Studio memakai **satu editor yang sama**, tetapi semantics Save wajib dibedakan berdasarkan role:
