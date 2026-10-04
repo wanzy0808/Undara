@@ -11,13 +11,13 @@ import {
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("Wishes input and button geometry is persisted and scoped without allowing deletion", () => {
+test("Wishes presentation can be removed while geometry remains scoped and persisted", () => {
   const transforms = {};
   for (const kind of ["input", "button"]) {
     const key = `element:wishes:${kind}:wishes_copy2`;
     transforms[key] = { ...defaultNativeVisualTransform, x: 14, y: -6, scaleX: 1.3, rotation: 8 };
     assert.equal(nativeVisualSelector(key), `[data-section-instance-id="wishes_copy2"] [data-studio-section-element="wishes:${kind}"]`);
-    assert.equal(nativeVisualCanHide(key), false);
+    assert.equal(nativeVisualCanHide(key), true);
   }
   assert.deepEqual(parseNativeVisualTransforms(withNativeVisualTransforms("serein", transforms)), transforms);
 });
@@ -259,7 +259,7 @@ test("Classic Pearl keeps heirloom artwork granular while protected event conten
   assert.equal(nativeVisualCanHide("object:cover:tiara-art"), true);
   assert.equal(nativeVisualCanHide("object:cover:pearl-trail"), true);
   assert.equal(nativeVisualUsesSystemContent("object:cover:date"), true);
-  assert.equal(nativeVisualCanHide("object:cover:date"), false);
+  assert.equal(nativeVisualCanHide("object:cover:date"), true);
 });
 
 test("Golden Art Deco poster artwork stays granular while protected event content remains protected", () => {
@@ -288,7 +288,7 @@ test("Golden Art Deco poster artwork stays granular while protected event conten
   assert.equal(nativeVisualCanHide("object:cover:arch-art"), true);
   assert.equal(nativeVisualCanHide("object:cover:champagne-art"), true);
   assert.equal(nativeVisualUsesSystemContent("object:cover:date"), true);
-  assert.equal(nativeVisualCanHide("object:cover:date"), false);
+  assert.equal(nativeVisualCanHide("object:cover:date"), true);
 });
 
 test("Paper Cut Botanical card composition is movable without swallowing its cutout layers", () => {
@@ -304,7 +304,7 @@ test("Paper Cut Botanical card composition is movable without swallowing its cut
   assert.doesNotMatch(paper, /object:cover:art-group/);
   assert.equal(nativeVisualCanHide("object:cover:paper-left"), true);
   assert.equal(nativeVisualCanHide("object:cover:leaf-right"), true);
-  assert.equal(nativeVisualCanHide("object:cover:content-group"), false);
+  assert.equal(nativeVisualCanHide("object:cover:content-group"), true);
   assert.equal(nativeVisualUsesSystemContent("object:cover:date"), true);
 });
 
@@ -438,19 +438,19 @@ test("protected RSVP and Wishes forms expose whole-block visual targets while in
   assert.equal(nativeVisualCapabilities("object:wishes:form-group").typography, false);
 });
 
-test("decorative native objects can be removed per invitation without hiding protected content", () => {
+test("native artwork and data presentation can be removed per invitation", () => {
   assert.equal(nativeVisualCanHide("object:cover:flower-left"), true);
   assert.equal(nativeVisualCanHide("object:envelope:seal"), true);
-  assert.equal(nativeVisualCanHide("object:event:venue"), false);
-  assert.equal(nativeVisualCanHide("heading:cover"), false);
-  assert.equal(nativeVisualCanHide("element:gift:button"), false);
+  assert.equal(nativeVisualCanHide("object:event:venue"), true);
+  assert.equal(nativeVisualCanHide("heading:cover"), true);
+  assert.equal(nativeVisualCanHide("element:gift:button"), true);
 
   const values = sanitizeNativeVisualTransforms({
     "object:cover:flower-left": { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, hidden: true },
     "object:event:venue": { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, hidden: true },
   });
   assert.equal(values["object:cover:flower-left"]?.hidden, true);
-  assert.equal(values["object:event:venue"], undefined);
+  assert.equal(values["object:event:venue"]?.hidden, true);
   const css = nativeVisualStyleSheet(withNativeVisualTransforms("botanical-ivory", values));
   assert.match(css, /display:none/);
 });
@@ -661,7 +661,7 @@ test("Modern Maroon decorative blocks and monogram can be hidden without unlocki
   assert.equal(nativeVisualCanHide("object:cover:block-left"), true);
   assert.equal(nativeVisualCanHide("object:cover:block-right"), true);
   assert.equal(nativeVisualCanHide("object:cover:monogram"), true);
-  assert.equal(nativeVisualCanHide("object:cover:date"), false);
+  assert.equal(nativeVisualCanHide("object:cover:date"), true);
 });
 
 test("Garden Light keeps its illuminated props granular while photo content stays protected", () => {
@@ -679,7 +679,7 @@ test("Garden Light keeps its illuminated props granular while photo content stay
   assert.equal(nativeVisualCanHide("object:cover:arch-art"), true);
   assert.equal(nativeVisualCanHide("object:cover:garland-art"), true);
   assert.equal(nativeVisualCanHide("object:cover:lantern-art"), true);
-  assert.equal(nativeVisualCanHide("object:cover:date"), false);
+  assert.equal(nativeVisualCanHide("object:cover:date"), true);
 });
 
 test("Midnight Romance keeps night-salon artwork granular while photo content stays protected", () => {
@@ -697,7 +697,7 @@ test("Midnight Romance keeps night-salon artwork granular while photo content st
   assert.equal(nativeVisualCanHide("object:cover:arch-art"), true);
   assert.equal(nativeVisualCanHide("object:cover:chandelier-art"), true);
   assert.equal(nativeVisualCanHide("object:cover:garland-art"), true);
-  assert.equal(nativeVisualCanHide("object:cover:date"), false);
+  assert.equal(nativeVisualCanHide("object:cover:date"), true);
 });
 
 test("Pencil Reverie keeps protected recipient data and authored cover groups editable", () => {

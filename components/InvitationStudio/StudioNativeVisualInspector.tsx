@@ -1,12 +1,14 @@
 "use client";
 
-import { AlignCenter, AlignLeft, AlignRight, Lock, Play, RotateCcw, X } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, Lock, Play, RotateCcw, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import InvitationFonts from "@/components/PublicInvitation/InvitationFonts";
 import { invitationFontOptions } from "@/components/InvitationStudio/designer-config";
 import { invitationFontFamily } from "@/lib/templates/presentation";
 import {
   defaultNativeVisualTransform,
   nativeVisualCapabilities,
+  nativeVisualCanHide,
   nativeVisualSelector,
   nativeVisualSupportsAnimation,
   nativeVisualUsesSystemContent,
@@ -26,13 +28,15 @@ const nativeFontFamilies = [...new Set(
 )].sort((a, b) => a.localeCompare(b));
 
 export default function StudioNativeVisualInspector({
-  locale, targetKey, value, onChange, onClose,
+  locale, targetKey, value, onChange, onClose, onDelete, disabled = false,
 }: {
   locale: string;
   targetKey: string;
   value?: NativeVisualTransform;
   onChange: (value: NativeVisualTransform) => void;
   onClose: () => void;
+  onDelete?: () => void;
+  disabled?: boolean;
 }) {
   const en = locale === "en";
   const current: NativeVisualTransform = { ...defaultNativeVisualTransform, ...value };
@@ -290,6 +294,11 @@ export default function StudioNativeVisualInspector({
         className="undara-studio-layer-reset mt-4">
         <RotateCcw size={14} />Reset
       </button>
+      {onDelete && nativeVisualCanHide(targetKey) && (
+        <Button type="button" size="sm" className="mt-2 w-full" disabled={disabled} onClick={onDelete}>
+          <Trash2 size={14} aria-hidden="true" />{en ? "Delete" : "Hapus"}
+        </Button>
+      )}
     </aside>
   );
 }

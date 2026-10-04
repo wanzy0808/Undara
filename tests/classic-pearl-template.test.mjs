@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { nativeVisualCanHide, nativeVisualUsesSystemContent } from "../lib/templates/native-visual-transforms.ts";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const universal = read("components/PublicInvitation/UniversalInvitationTemplate.tsx");
@@ -12,7 +13,6 @@ const css = read("components/PublicInvitation/classic-pearl.css");
 const motion = read("lib/templates/template-motion.ts");
 const catalog = read("lib/templates/catalog.ts");
 const design = read("lib/templates/design.ts");
-const nativeVisuals = read("lib/templates/native-visual-transforms.ts");
 
 test("Classic Pearl uses dedicated photo-free scenes and heirloom sections", () => {
   assert.match(scenes, /ClassicPearlScene/);
@@ -137,8 +137,10 @@ test("Classic Pearl keepsake Gallery stays photo-free and avoids repeated card a
   assert.match(universal, /classic && keyName === "gallery" \? "Galeri Kenangan"/);
 });
 
-test("Classic Pearl pearl flourishes are removable Studio decoration while real date remains protected", () => {
-  assert.match(nativeVisuals, /illustration\|pearl/);
+test("Classic Pearl flourishes and date presentation can be removed while the date stays data-bound", () => {
+  assert.equal(nativeVisualCanHide("object:cover:pearl-trail"), true);
+  assert.equal(nativeVisualCanHide("object:cover:date"), true);
+  assert.equal(nativeVisualUsesSystemContent("object:cover:date"), true);
   assert.match(scene, /object:cover:pearl-trail/);
   assert.doesNotMatch(scene, /object:cover:pearl-rule/);
 });

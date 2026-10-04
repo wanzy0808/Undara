@@ -714,16 +714,11 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} },
       sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })),
       sectionElementStyles: {},
-    nativeVisuals: {},
+      nativeVisuals: {},
     });
     setMusicUrl("");
     setActivePhotoSlot("cover");
-    setSelectedLayerId(null);
-    setSelectedSectionKey(null);
-    setSelectedSectionInstanceId(null);
-    setSelectedRsvpElementKey(null);
-    setSelectedCopyField(null);
-    setSelectedSectionElement(null);
+    clearCanvasSelection();
     setCopiedAssetLayer(null);
       setCopiedAssetLayers([]);
     draggedAssetSrc.current = null;
@@ -1626,10 +1621,11 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   }
 
   function hideSelectedNativeVisual(key: string) {
-    if (!nativeVisualCanHide(key)) return false;
+    if (!invitation || saving || audioBusy || !nativeVisualCanHide(key)) return false;
     const current = { ...defaultNativeVisualTransform, ...nativeVisualTransformForKey(design.nativeVisuals, key), hidden: true };
     commitNativeVisual(key, current);
-    setSelectedNativeKey(null);
+    clearCanvasSelection();
+    activateCanvasEditing();
     return true;
   }
 
@@ -1674,11 +1670,19 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       if (!modifier && !event.altKey && activeNativeKey && !selectedAssetLayer
         && (event.key === "Delete" || event.key === "Backspace")) {
         event.preventDefault();
-        if (!hideSelectedNativeVisual(activeNativeKey)) {
-          setNotice(locale === "en"
-            ? "This system element is protected. Its visual styling can still be edited."
-            : "Elemen sistem ini dilindungi. Styling visualnya tetap bisa diedit.");
+        hideSelectedNativeVisual(activeNativeKey);
+        return;
+      }
+      if (!modifier && !event.altKey && selectedSectionKey && !selectedAssetLayer
+        && (event.key === "Delete" || event.key === "Backspace")) {
+        event.preventDefault();
+        if (selectedSectionKey === "envelope") {
+          change({ sections: { ...design.sections, envelope: false } });
+          setCanvasStage("cover");
+        } else if (selectedSectionInstanceId) {
+          deleteSectionInstance(selectedSectionInstanceId);
         }
+        clearCanvasSelection();
         return;
       }
       if (!modifier && !event.altKey && event.key === "Escape" && activeNativeKey && !selectedAssetLayer) {
@@ -1744,7 +1748,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     }
     window.addEventListener("keydown", handleLayerShortcut);
     return () => window.removeEventListener("keydown", handleLayerShortcut);
-  }, [invitation, saving, audioBusy, canvasStage, selectedPhotoSlot, selectedAssetLayer, selectedAssetLayers, selectedLayerIds, copiedAssetLayer, copiedAssetLayers, design.layers, design.nativeVisuals, activeNativeKey, locale]);
+  }, [invitation, saving, audioBusy, canvasStage, selectedPhotoSlot, selectedAssetLayer, selectedAssetLayers, selectedLayerIds, copiedAssetLayer, copiedAssetLayers, design.layers, design.nativeVisuals, design.sections, design.sectionLayout, selectedSectionKey, selectedSectionInstanceId, activeNativeKey, locale]);
 
   function undo() {
     const key = history.at(-1);
@@ -2206,6 +2210,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
               selectedSectionKey={selectedSectionKey}
               selectedNativeKey={activeNativeKey}
               onUpdateNative={commitNativeVisual}
+              onDeleteNative={hideSelectedNativeVisual}
+              nativeEditingDisabled={!invitation || saving || audioBusy}
               onCloseNative={clearCanvasSelection}
               onCloseAsset={() => { setSelectedLayerIds([]); setSelectedLayerId(null); }}
               onUpdateAsset={updateAssetLayer}

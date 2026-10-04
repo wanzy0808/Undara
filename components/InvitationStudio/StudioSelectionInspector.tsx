@@ -43,6 +43,8 @@ export default function StudioSelectionInspector({
   selectedSectionKey,
   selectedNativeKey,
   onUpdateNative,
+  onDeleteNative,
+  nativeEditingDisabled = false,
   onCloseNative,
   onCloseAsset,
   onUpdateAsset,
@@ -81,6 +83,8 @@ export default function StudioSelectionInspector({
   selectedSectionKey: InvitationSectionKey | null;
   selectedNativeKey: string | null;
   onUpdateNative: (key: string, value: NativeVisualTransform) => void;
+  onDeleteNative?: (key: string) => void;
+  nativeEditingDisabled?: boolean;
   onCloseNative: () => void;
   onCloseAsset: () => void;
   onUpdateAsset: (id: string, patch: Partial<InvitationAssetLayer>) => void;
@@ -111,6 +115,8 @@ export default function StudioSelectionInspector({
     <StudioNativeVisualInspector locale={locale} targetKey={selectedNativeKey}
       value={{ ...defaultNativeVisualTransform, ...templateNativeMotionForKey(design.template, selectedNativeKey, design.sectionStyles), ...nativeVisualTransformForKey(design.nativeVisuals, selectedNativeKey) }}
       onChange={(value) => onUpdateNative(selectedNativeKey, value)}
+      onDelete={onDeleteNative ? () => onDeleteNative(selectedNativeKey) : undefined}
+      disabled={nativeEditingDisabled}
       onClose={onCloseNative} />
   ) : null;
 

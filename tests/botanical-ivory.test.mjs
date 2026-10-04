@@ -39,7 +39,7 @@ test("botanical motion uses real Studio targets and respects section OFF, author
     assert.ok((motion.animationDuration ?? .7) <= .9);
   }
   const key = "object:gallery:specimenTwo-group:gallery-copy";
-  assert.equal(nativeVisualCanHide("object:gallery:specimenTwo-group"), false, "The scroll page is structural");
+  assert.equal(nativeVisualCanHide("object:gallery:specimenTwo-group"), true, "The group can be removed visually without deleting its source photos");
   assert.equal(nativeVisualCanHide("object:gallery:specimen-fern-art"), true, "Its illustration remains independently removable");
   assert.equal(templateNativeMotionForKey("botanical-ivory", key).animation, "tilt-in");
   for (const authored of [{ animation: "none" }, { animation: "fade" }, { timeline: "keepsake-sequence" }]) {

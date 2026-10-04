@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { nativeVisualCanHide, nativeVisualUsesSystemContent } from "../lib/templates/native-visual-transforms.ts";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const universal = read("components/PublicInvitation/UniversalInvitationTemplate.tsx");
@@ -12,7 +13,6 @@ const css = read("components/PublicInvitation/golden-art-deco.css");
 const motion = read("lib/templates/template-motion.ts");
 const catalog = read("lib/templates/catalog.ts");
 const design = read("lib/templates/design.ts");
-const nativeVisuals = read("lib/templates/native-visual-transforms.ts");
 
 test("Golden Art Deco uses dedicated photo-free scenes and section artwork", () => {
   assert.match(scenes, /GoldenArtDecoScene/);
@@ -140,8 +140,11 @@ test("Golden Art Deco uses noir palette and Poiret poster typography", () => {
   assert.match(universal, /golden \? \(sectionStyles\[keyName\]\?\.background \? readableInk\(sectionStyles\[keyName\]\.background, palette\.ink\) : palette\.ink\)/);
 });
 
-test("Golden Art Deco rails and steps are removable decoration while real date is protected", () => {
-  assert.match(nativeVisuals, /mizuhiki\|rail\|steps/);
+test("Golden Art Deco rails, steps and date presentation can be removed while data stays protected", () => {
+  assert.equal(nativeVisualCanHide("object:cover:rail"), true);
+  assert.equal(nativeVisualCanHide("object:cover:steps"), true);
+  assert.equal(nativeVisualCanHide("object:cover:date"), true);
+  assert.equal(nativeVisualUsesSystemContent("object:cover:date"), true);
   assert.match(scene, /object:cover:rail/);
   assert.match(scene, /object:cover:steps/);
   assert.match(scene, /object:envelope:ticket-ornament/);

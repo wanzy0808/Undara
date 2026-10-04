@@ -238,7 +238,7 @@ test("Studio keeps Template Restart Undo Redo Preview Save in one canvas toolbar
   assert.match(reset, /setMusicUrl\(""\)/);
   assert.match(reset, /setCanvasStage\("envelope"\)/);
   assert.match(reset, /setPreviewVersion/);
-  assert.match(reset, /setSelectedLayerId\(null\)/);
+  assert.match(reset, /clearCanvasSelection\(\)/);
   assert.match(reset, /setCopiedAssetLayer\(null\)/);
   assert.match(reset, /File upload tetap tersimpan di koleksi media/);
   assert.doesNotMatch(designer, /Smartphone|copy\.phone|phone: "Ponsel"|phone: "Mobile"/);
@@ -568,7 +568,8 @@ test("Stage 4 gives Amplop and Isi native objects one selection, transform and k
   assert.match(designer, /hideSelectedNativeVisual\(activeNativeKey\)/);
   assert.match(designer, /current\.x \+ \(event\.key === "ArrowLeft"/);
   assert.match(designer, /current\.y \+ \(event\.key === "ArrowUp"/);
-  assert.match(designer, /Elemen sistem ini dilindungi/);
+  assert.doesNotMatch(designer, /Elemen sistem ini dilindungi/);
+  assert.match(designer, /onDeleteNative=\{hideSelectedNativeVisual\}/);
 
   const handles = read("components/InvitationStudio/StudioNativeTransformHandles.tsx");
   for (const handle of ["top-left", "top", "top-right", "right", "bottom-right", "bottom", "bottom-left", "left"]) {

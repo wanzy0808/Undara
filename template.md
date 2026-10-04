@@ -23,7 +23,7 @@ Setiap elemen visual yang terlihat pada master template harus memiliki ownership
 - **protected functional element** untuk RSVP, Wishes, Gift, Maps, Music dan CTA sistem: fungsi/validasi/API tetap dikunci, tetapi presentation yang di-whitelist boleh diedit;
 - **section surface** untuk background/padding/layout section.
 
-Targetnya adalah **semua elemen visual penting dapat dipilih atau diatur melalui Studio tanpa mengubah business data atau merusak semantic web behavior**. Parent group boleh menjadi selectable target tambahan untuk memindahkan komposisi sekaligus, tetapi child target tetap dipertahankan untuk edit granular.
+Targetnya adalah **semua elemen visual penting dapat dipilih atau diatur melalui Studio tanpa mengubah business data atau merusak semantic web behavior**. Parent group boleh menjadi selectable target tambahan untuk memindahkan komposisi sekaligus, tetapi child target tetap dipertahankan untuk edit granular. Semua target visual terdaftar dapat dihapus secara reversible, termasuk presentasi foto/data/komponen; flag hidden mengikuti instance dan dipulihkan melalui Default. Record, file dan engine tidak dihapus.
 
 Setiap template harus punya identitas visual yang berbeda: pilihan komposisi, ritme ruang kosong, karakter tipografi, gaya foto/ilustrasi, ornamen, amplop, susunan galeri, dan motion. Jangan membuat semua tema sebagai satu kerangka identik yang hanya berbeda warna/font. Contoh Zen Atelier adalah referensi **hanya untuk Zen Atelier**; tema baru memakai brief dan moodboard yang disetujui untuk tema itu.
 

@@ -31,7 +31,7 @@ export type NativeVisualTransform = {
   animation?: InvitationSectionAnimation;
   animationDuration?: number;
   animationDelay?: number;
-  /** Instance-local removal for decorative template artwork. Protected/system content cannot set this. */
+  /** Reversible presentation removal. Source data and component behavior stay intact. */
   hidden?: boolean;
 };
 export type NativeVisualTransforms = Record<string, NativeVisualTransform>;
@@ -135,15 +135,9 @@ export function nativeVisualTransformForKey(transforms: NativeVisualTransforms, 
   return { ...defaultNativeVisualTransform, ...transforms[baseKey], ...transforms[key] };
 }
 
-const removableNativeDecorationId = /(?:^|[-_])(?:art|artwork|atmosphere|block|blossom|border|branch|deco|diamond|divider|flourish|flower|fold|firefly|fireflies|gem|glow|heart|illustration|pearl|leaf|line|lines|mizuhiki|rail|steps|monogram|moon|mountain|mountains|orbit|ornament|paper|ring|seal|shoji|sparkle|sprig|star|starfield|sun|symbol|theme-art)(?:$|[-_])/i;
-
-/** Delete/Backspace may hide decorative artwork, never business data or functional controls. */
+/** Every registered visual target can be removed without deleting its source record. */
 export function nativeVisualCanHide(key: string) {
-  if (!isNativeVisualKey(key) || nativeVisualUsesSystemContent(key)) return false;
-  const parts = key.split(":");
-  if (parts[0] !== "object") return false;
-  const objectId = parts[2] ?? "";
-  return removableNativeDecorationId.test(objectId);
+  return isNativeVisualKey(key);
 }
 
 const clamp = (value: unknown, min: number, max: number, fallback: number) =>
@@ -162,7 +156,8 @@ const optionalFontFamily = (value: unknown) =>
 export function sanitizeNativeVisualTransforms(value: unknown): NativeVisualTransforms {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const result: NativeVisualTransforms = {};
-  for (const [key, raw] of Object.entries(value).slice(0, 96)) {
+  // Full templates and duplicated sections need more than 96 editable targets.
+  for (const [key, raw] of Object.entries(value).slice(0, 512)) {
     if (!isNativeVisualKey(key) || !raw || typeof raw !== "object" || Array.isArray(raw)) continue;
     const source = raw as Record<string, unknown>;
     const capabilities = nativeVisualCapabilities(key);
@@ -209,7 +204,7 @@ export function sanitizeNativeVisualTransforms(value: unknown): NativeVisualTran
 
 export function parseNativeVisualTransforms(designKey: string): NativeVisualTransforms {
   const token = designKey.split("::").find((part) => part.startsWith("nativeVisuals="));
-  if (!token || token.length > 24000) return {};
+  if (!token || token.length > 256000) return {};
   try {
     return sanitizeNativeVisualTransforms(JSON.parse(decodeURIComponent(token.slice(14))));
   } catch {
@@ -316,7 +311,7 @@ export function nativeVisualStyleSheet(designKey: string) {
           ? invitationFontFamily(transform.fontFamily)
           : JSON.stringify(invitationFontFamily(transform.fontFamily))}`
         : "",
-      transform.hidden ? "display:none" : "",
+      transform.hidden ? "display:none!important" : "",
     ].filter(Boolean).join(";");
     return `.${scope} ${selector}{${declarations};}`;
   }).join("\n");

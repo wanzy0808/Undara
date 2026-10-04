@@ -53,7 +53,7 @@ test("headings, copy, decorative objects and protected display data resolve to t
     assert.deepEqual(resolve(new Node("span", {}, new Node(tag, attributes, root))), expected);
   }
   assert.equal(nativeVisualCanHide("object:greeting:divider:greeting_copy2"), true);
-  assert.equal(nativeVisualCanHide("object:greeting:names:greeting_copy2"), false);
+  assert.equal(nativeVisualCanHide("object:greeting:names:greeting_copy2"), true);
 });
 
 test("RSVP inputs, custom fields and button use their component inspector before parent native groups", () => {
@@ -95,7 +95,7 @@ test("protected envelope actions retain a selectable visual target even on the i
   const { root, resolve } = sectionFixture("envelope", "envelope");
   const button = new Node("button", { "data-studio-native-object": "object:envelope:open-button", "data-studio-system-action": "open-invitation" }, root);
   assert.deepEqual(resolve(new Node("svg", {}, button)), { kind: "native", key: "object:envelope:open-button:envelope" });
-  assert.equal(nativeVisualCanHide("object:envelope:open-button:envelope"), false);
+  assert.equal(nativeVisualCanHide("object:envelope:open-button:envelope"), true);
 });
 
 test("all section backgrounds select their section; editor controls and empty canvas keep their semantics", () => {
