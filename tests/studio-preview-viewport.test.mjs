@@ -6,7 +6,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   isStudioPreviewMessage, postStudioPreviewDraft, readStudioPreviewSnapshot,
-  studioPreviewDimension, studioPreviewScale, studioPreviewViewports,
+  studioPreviewDeviceBounds, studioPreviewScale, studioPreviewViewports,
   STUDIO_PREVIEW_CLOSE, STUDIO_PREVIEW_DRAFT, STUDIO_PREVIEW_PATH, STUDIO_PREVIEW_READY,
 } from "../components/InvitationStudio/studio-preview-viewport.ts";
 import { templateDemoInvitation } from "../data/templates/preview-invitation.ts";
@@ -32,10 +32,12 @@ const snapshot = () => ({
   eventTag: "#DraftSaatIni", dressCode: "Krem", invitationLanguage: "ID",
 });
 
-test("device presets have actual phone and desktop viewport dimensions", () => {
+test("device presets have distinct phone, tablet and desktop viewport dimensions", () => {
   assert.deepEqual(studioPreviewViewports.mobile, { width: 390, height: 844 });
+  assert.deepEqual(studioPreviewViewports.tablet, { width: 768, height: 1024 });
   assert.deepEqual(studioPreviewViewports.desktop, { width: 1440, height: 900 });
   assert.ok(studioPreviewViewports.mobile.width < 640);
+  assert.ok(studioPreviewViewports.tablet.width >= 768 && studioPreviewViewports.tablet.width < 1024);
   assert.ok(studioPreviewViewports.desktop.width > 1280);
 });
 
@@ -46,15 +48,26 @@ test("fit scales the display to either bound without changing the logical viewpo
   assert.equal(studioPreviewScale(desktop, { width: 1600, height: 1000 }), 1);
   assert.deepEqual(desktop, { width: 1440, height: 900 });
   assert.equal(studioPreviewScale(desktop, { width: 0, height: 0 }), 0);
-  assert.equal(studioPreviewScale(desktop, { width: 200, height: 300 }, false), 1);
 });
 
-test("viewport editing keeps the previous dimension for invalid text and bounds numeric input", () => {
-  for (const value of ["", " ", "bad", "Infinity", "NaN"]) assert.equal(studioPreviewDimension(value, 390), 390);
-  assert.equal(studioPreviewDimension("375.6", 390), 376);
-  assert.equal(studioPreviewDimension("-100", 390), 240);
-  assert.equal(studioPreviewDimension("9000", 390), 3840);
-  assert.equal(studioPreviewDimension("1024", 390), 1024);
+test("auto-fit includes each device bezel and laptop base without shrinking the iframe viewport", () => {
+  for (const device of ["mobile", "tablet", "desktop"]) {
+    const viewport = { ...studioPreviewViewports[device] };
+    const bounds = studioPreviewDeviceBounds(device);
+    assert.ok(bounds.screenLeft > 0 && bounds.screenTop > 0);
+    assert.ok(bounds.screenLeft + viewport.width < bounds.bodyWidth);
+    assert.ok(bounds.screenTop + viewport.height < bounds.bodyHeight);
+    assert.ok(bounds.bodyLeft + bounds.bodyWidth <= bounds.width);
+    assert.equal(bounds.bodyHeight + bounds.baseHeight, bounds.height);
+    assert.equal(bounds.baseHeight > 0, device === "desktop");
+    for (const available of [{ width: 1040, height: 560 }, { width: 260, height: 300 }, { width: 300, height: 180 }]) {
+      const scale = studioPreviewScale(bounds, available);
+      assert.ok(scale > 0 && scale <= 1);
+      assert.ok(bounds.width * scale <= available.width + 1e-9);
+      assert.ok(bounds.height * scale <= available.height + 1e-9);
+    }
+    assert.deepEqual(studioPreviewViewports[device], viewport);
+  }
 });
 
 test("preview handshake ignores other frames, origins and malformed message types", () => {

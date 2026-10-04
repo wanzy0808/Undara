@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  isStudioPreviewMessage, postStudioPreviewDraft, studioPreviewScale,
+  isStudioPreviewMessage, postStudioPreviewDraft, studioPreviewDeviceBounds,
+  studioPreviewScale, studioPreviewViewports,
   STUDIO_PREVIEW_CLOSE, STUDIO_PREVIEW_PATH, STUDIO_PREVIEW_READY,
-  type StudioPreviewSize, type StudioPreviewSnapshot,
+  type StudioPreviewDevice, type StudioPreviewSize, type StudioPreviewSnapshot,
 } from "./studio-preview-viewport";
+import styles from "./studio-preview-device.module.css";
 
-export default function StudioPreviewViewport({ snapshot, viewport, fit, locale, onClose }: {
+export default function StudioPreviewViewport({ snapshot, device, locale, onClose }: {
   snapshot: StudioPreviewSnapshot;
-  viewport: StudioPreviewSize;
-  fit: boolean;
+  device: StudioPreviewDevice;
   locale: string;
   onClose: () => void;
 }) {
@@ -20,7 +21,12 @@ export default function StudioPreviewViewport({ snapshot, viewport, fit, locale,
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const en = locale === "en";
-  const scale = studioPreviewScale(viewport, available, fit);
+  const viewport = studioPreviewViewports[device];
+  const bounds = studioPreviewDeviceBounds(device);
+  const scale = studioPreviewScale(bounds, {
+    width: Math.min(available.width, 1040),
+    height: Math.min(available.height, 560),
+  });
 
   useEffect(() => {
     const node = host.current;
@@ -47,31 +53,38 @@ export default function StudioPreviewViewport({ snapshot, viewport, fit, locale,
   }, [snapshot, onClose]);
 
   return (
-    <div ref={host} className="relative h-full w-full overflow-auto overscroll-contain">
-      {(!ready || failed) && (
-        <div className="absolute inset-0 z-10 grid place-items-center bg-background/90 p-4 text-center text-sm text-muted-foreground" role={failed ? "alert" : "status"}>
-          {failed ? (en ? "Preview could not load. Refresh Studio and try again." : "Preview belum bisa dimuat. Refresh Studio lalu coba lagi.") : (en ? "Loading preview…" : "Memuat preview…")}
+    <div ref={host} className={styles.viewport}>
+      <div className={styles.display} style={{ width: bounds.width * scale, height: bounds.height * scale }}>
+        <div className={styles.device} data-device={device} style={{ width: bounds.width, height: bounds.height, transform: `scale(${scale})` }}>
+          <div className={styles.body} style={{ left: bounds.bodyLeft, width: bounds.bodyWidth, height: bounds.bodyHeight }}>
+            <div className={styles.screen} style={{ left: bounds.screenLeft, top: bounds.screenTop, width: viewport.width, height: viewport.height }}>
+              {(!ready || failed) && (
+                <div className={styles.status} role={failed ? "alert" : "status"}>
+                  {failed ? (en ? "Preview could not load. Refresh Studio and try again." : "Preview belum bisa dimuat. Refresh Studio lalu coba lagi.") : (en ? "Loading preview…" : "Memuat preview…")}
+                </div>
+              )}
+              <iframe
+                ref={frame}
+                src={STUDIO_PREVIEW_PATH}
+                title={en ? "Responsive invitation preview" : "Preview undangan responsif"}
+                className={styles.iframe}
+                width={viewport.width}
+                height={viewport.height}
+                style={{ width: viewport.width, height: viewport.height }}
+                onLoad={() => {
+                  const target = frame.current?.contentWindow;
+                  try {
+                    setFailed(target?.location.pathname !== STUDIO_PREVIEW_PATH);
+                    postStudioPreviewDraft(target ?? null, snapshot, window.location.origin);
+                  } catch {
+                    setFailed(true);
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <div className={styles.base} aria-hidden="true" style={{ top: bounds.bodyHeight - 2, height: bounds.baseHeight }} />
         </div>
-      )}
-      <div className="relative mx-auto overflow-hidden rounded-sm bg-background shadow-sm" style={{ width: viewport.width * scale, height: viewport.height * scale }}>
-        <iframe
-          ref={frame}
-          src={STUDIO_PREVIEW_PATH}
-          title={en ? "Responsive invitation preview" : "Preview undangan responsif"}
-          className="absolute left-0 top-0 block border-0"
-          width={viewport.width}
-          height={viewport.height}
-          style={{ width: viewport.width, height: viewport.height, transform: `scale(${scale})`, transformOrigin: "top left" }}
-          onLoad={() => {
-            const target = frame.current?.contentWindow;
-            try {
-              setFailed(target?.location.pathname !== STUDIO_PREVIEW_PATH);
-              postStudioPreviewDraft(target ?? null, snapshot, window.location.origin);
-            } catch {
-              setFailed(true);
-            }
-          }}
-        />
       </div>
     </div>
   );

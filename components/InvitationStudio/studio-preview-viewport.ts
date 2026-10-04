@@ -8,9 +8,11 @@ export const STUDIO_PREVIEW_CLOSE = "undara:studio-preview:close";
 
 export const studioPreviewViewports = {
   mobile: { width: 390, height: 844 },
+  tablet: { width: 768, height: 1024 },
   desktop: { width: 1440, height: 900 },
 } as const;
 
+export type StudioPreviewDevice = keyof typeof studioPreviewViewports;
 export type StudioPreviewSize = { width: number; height: number };
 export type StudioPreviewSnapshot = {
   invitation: InvitationDesignerInvitation | null;
@@ -22,16 +24,32 @@ export type StudioPreviewSnapshot = {
   invitationLanguage: InvitationLanguage;
 };
 
-export function studioPreviewDimension(value: string, previous: number) {
-  const number = Number(value);
-  return value.trim() && Number.isFinite(number)
-    ? Math.max(240, Math.min(3840, Math.round(number)))
-    : previous;
+const deviceInsets = {
+  mobile: { side: 14, top: 26, bottom: 22, overhang: 0, base: 0 },
+  tablet: { side: 22, top: 26, bottom: 26, overhang: 0, base: 0 },
+  desktop: { side: 24, top: 32, bottom: 36, overhang: 96, base: 28 },
+} as const;
+
+/** Fit the entire device, including the laptop base, around the real viewport. */
+export function studioPreviewDeviceBounds(device: StudioPreviewDevice) {
+  const viewport = studioPreviewViewports[device];
+  const inset = deviceInsets[device];
+  const bodyWidth = viewport.width + inset.side * 2;
+  const bodyHeight = viewport.height + inset.top + inset.bottom;
+  return {
+    width: bodyWidth + inset.overhang * 2,
+    height: bodyHeight + inset.base,
+    bodyWidth,
+    bodyHeight,
+    bodyLeft: inset.overhang,
+    screenLeft: inset.side,
+    screenTop: inset.top,
+    baseHeight: inset.base,
+  };
 }
 
 /** Scale the display only: the iframe keeps the requested CSS viewport. */
-export function studioPreviewScale(viewport: StudioPreviewSize, available: StudioPreviewSize, fit = true) {
-  if (!fit) return 1;
+export function studioPreviewScale(viewport: StudioPreviewSize, available: StudioPreviewSize) {
   if (available.width <= 0 || available.height <= 0) return 0;
   return Math.min(1, available.width / viewport.width, available.height / viewport.height);
 }

@@ -671,9 +671,9 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 
 - [x] Select/deselect design objects from the canvas.
 - [x] Popup Preview berada di atas seluruh kontrol Studio dengan backdrop merata; Amplop dapat dibuka di Preview, tinggi mengikuti viewport dinamis dan scroll terpisah. (4 Oktober 2026)
-- [x] Preview memakai viewport iframe HP 390 × 844 / Desktop 1440 × 900, input dimensi, Fit/100%, scroll internal dan snapshot draft same-origin authenticated; section OFF memakai tampilan tamu tanpa placeholder editor. 522 regresi, TypeScript dan production build lulus. (4 Oktober 2026)
+- [x] Preview menyediakan tiga bingkai perangkat Desktop/Tablet/HP di atas Studio gelap, tanpa judul terlihat/caption/input pixel/Fit/100%. Iframe memakai viewport internal 1440 × 900 / 768 × 1024 / 390 × 844, otomatis muat beserta bezel/base, scroll internal dan snapshot draft same-origin authenticated; section OFF memakai tampilan tamu tanpa placeholder editor. Validasi perubahan tiga perangkat dicatat pada Appendix A. (4 Oktober 2026)
 - [x] Hapus pesan helper kiri bawah untuk pemilihan template, Canvas Kosong dan Kembalikan ke Default, termasuk jalur katalog Designer dan pembersihan notice lama. (4 Oktober 2026)
-- [ ] QA browser popup Preview: Light/Dark, HP/Desktop dan dimensi kustom, media query/viewport units, Fit/100%, seleksi aktif sebelum dibuka, `Buka Undangan`, pergantian viewport tanpa replay, scroll internal, section OFF, Escape/tutup dan kembali mengedit. Browser lokal terblokir `ERR_BLOCKED_BY_CLIENT` pada 4 Oktober 2026; belum ada sign-off visual.
+- [ ] QA browser Preview: Light/Dark, tiga pilihan Desktop/Tablet/HP, bingkai terpusat tanpa judul/caption/pixel/zoom, auto-fit di layar sempit/pendek, media query/viewport units, seleksi aktif sebelum dibuka, `Buka Undangan`, pergantian perangkat tanpa replay, scroll internal, section OFF, Escape/tutup dan kembali mengedit. Browser lokal terblokir `ERR_BLOCKED_BY_CLIENT` pada 4 Oktober 2026; belum ada sign-off visual.
 - [x] Move objects by drag.
 - [x] Resize from edge and corner handles.
 - [x] Rotate from a dedicated handle below the object.

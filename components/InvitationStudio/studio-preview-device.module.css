@@ -1,0 +1,131 @@
+.viewport {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.display {
+  position: relative;
+  pointer-events: auto;
+}
+
+.device {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+
+.body {
+  position: absolute;
+  top: 0;
+  border-radius: 54px;
+  background: #111113;
+  box-shadow: inset 0 0 0 3px #b9b9bd, inset 0 0 0 7px #353538, 0 18px 42px rgb(0 0 0 / 24%);
+}
+
+.body::before {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 58px;
+  height: 6px;
+  border-radius: 6px;
+  background: #303034;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.body::after {
+  position: absolute;
+  top: 22%;
+  right: -3px;
+  width: 4px;
+  height: 65px;
+  border-radius: 2px;
+  background: #9b9ba0;
+  content: "";
+}
+
+.screen {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 38px;
+  background: var(--background);
+}
+
+.iframe {
+  display: block;
+  border: 0;
+}
+
+.status {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  inset: 0;
+  place-items: center;
+  padding: 24px;
+  background: var(--background);
+  color: var(--muted-foreground);
+  font-size: 16px;
+  text-align: center;
+}
+
+.base {
+  position: absolute;
+  left: 0;
+  display: none;
+  width: 100%;
+  border-radius: 2px 2px 48% 48% / 2px 2px 80% 80%;
+  background: linear-gradient(#dadadc, #aaaab0 55%, #74747a);
+  box-shadow: 0 16px 26px rgb(0 0 0 / 20%);
+}
+
+.base::before {
+  position: absolute;
+  top: 0;
+  left: 40%;
+  width: 20%;
+  height: 9px;
+  border-radius: 0 0 14px 14px;
+  background: #909096;
+  content: "";
+}
+
+.device[data-device="tablet"] .body {
+  border-radius: 36px;
+}
+
+.device[data-device="tablet"] .body::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.device[data-device="tablet"] .screen {
+  border-radius: 12px;
+}
+
+.device[data-device="desktop"] .body {
+  border-radius: 34px 34px 12px 12px;
+}
+
+.device[data-device="desktop"] .body::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.device[data-device="desktop"] .body::after {
+  display: none;
+}
+
+.device[data-device="desktop"] .screen {
+  border-radius: 4px;
+}
+
+.device[data-device="desktop"] .base {
+  display: block;
+}
