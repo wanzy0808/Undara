@@ -37,6 +37,7 @@ export type DesignerTemplateMinAggregateOutputType = {
   musicUrl: string | null
   status: $Enums.TemplateStatus | null
   designerId: string | null
+  customInvitationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -54,6 +55,7 @@ export type DesignerTemplateMaxAggregateOutputType = {
   musicUrl: string | null
   status: $Enums.TemplateStatus | null
   designerId: string | null
+  customInvitationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -72,6 +74,7 @@ export type DesignerTemplateCountAggregateOutputType = {
   musicUrl: number
   status: number
   designerId: number
+  customInvitationId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -91,6 +94,7 @@ export type DesignerTemplateMinAggregateInputType = {
   musicUrl?: true
   status?: true
   designerId?: true
+  customInvitationId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -108,6 +112,7 @@ export type DesignerTemplateMaxAggregateInputType = {
   musicUrl?: true
   status?: true
   designerId?: true
+  customInvitationId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -126,6 +131,7 @@ export type DesignerTemplateCountAggregateInputType = {
   musicUrl?: true
   status?: true
   designerId?: true
+  customInvitationId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -217,6 +223,7 @@ export type DesignerTemplateGroupByOutputType = {
   musicUrl: string | null
   status: $Enums.TemplateStatus
   designerId: string
+  customInvitationId: string | null
   createdAt: Date
   updatedAt: Date
   _count: DesignerTemplateCountAggregateOutputType | null
@@ -256,9 +263,11 @@ export type DesignerTemplateWhereInput = {
   musicUrl?: Prisma.StringNullableFilter<"DesignerTemplate"> | string | null
   status?: Prisma.EnumTemplateStatusFilter<"DesignerTemplate"> | $Enums.TemplateStatus
   designerId?: Prisma.StringFilter<"DesignerTemplate"> | string
+  customInvitationId?: Prisma.StringNullableFilter<"DesignerTemplate"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DesignerTemplate"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DesignerTemplate"> | Date | string
   designer?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  customInvitation?: Prisma.XOR<Prisma.InvitationNullableScalarRelationFilter, Prisma.InvitationWhereInput> | null
 }
 
 export type DesignerTemplateOrderByWithRelationInput = {
@@ -275,9 +284,11 @@ export type DesignerTemplateOrderByWithRelationInput = {
   musicUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   designerId?: Prisma.SortOrder
+  customInvitationId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   designer?: Prisma.UserOrderByWithRelationInput
+  customInvitation?: Prisma.InvitationOrderByWithRelationInput
 }
 
 export type DesignerTemplateWhereUniqueInput = Prisma.AtLeast<{
@@ -297,9 +308,11 @@ export type DesignerTemplateWhereUniqueInput = Prisma.AtLeast<{
   musicUrl?: Prisma.StringNullableFilter<"DesignerTemplate"> | string | null
   status?: Prisma.EnumTemplateStatusFilter<"DesignerTemplate"> | $Enums.TemplateStatus
   designerId?: Prisma.StringFilter<"DesignerTemplate"> | string
+  customInvitationId?: Prisma.StringNullableFilter<"DesignerTemplate"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DesignerTemplate"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DesignerTemplate"> | Date | string
   designer?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  customInvitation?: Prisma.XOR<Prisma.InvitationNullableScalarRelationFilter, Prisma.InvitationWhereInput> | null
 }, "id" | "templateNo">
 
 export type DesignerTemplateOrderByWithAggregationInput = {
@@ -316,6 +329,7 @@ export type DesignerTemplateOrderByWithAggregationInput = {
   musicUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   designerId?: Prisma.SortOrder
+  customInvitationId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DesignerTemplateCountOrderByAggregateInput
@@ -340,6 +354,7 @@ export type DesignerTemplateScalarWhereWithAggregatesInput = {
   musicUrl?: Prisma.StringNullableWithAggregatesFilter<"DesignerTemplate"> | string | null
   status?: Prisma.EnumTemplateStatusWithAggregatesFilter<"DesignerTemplate"> | $Enums.TemplateStatus
   designerId?: Prisma.StringWithAggregatesFilter<"DesignerTemplate"> | string
+  customInvitationId?: Prisma.StringNullableWithAggregatesFilter<"DesignerTemplate"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"DesignerTemplate"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"DesignerTemplate"> | Date | string
 }
@@ -360,6 +375,7 @@ export type DesignerTemplateCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   designer: Prisma.UserCreateNestedOneWithoutDesignerTemplatesInput
+  customInvitation?: Prisma.InvitationCreateNestedOneWithoutCustomDesignerTemplatesInput
 }
 
 export type DesignerTemplateUncheckedCreateInput = {
@@ -376,6 +392,7 @@ export type DesignerTemplateUncheckedCreateInput = {
   musicUrl?: string | null
   status?: $Enums.TemplateStatus
   designerId: string
+  customInvitationId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -396,6 +413,7 @@ export type DesignerTemplateUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   designer?: Prisma.UserUpdateOneRequiredWithoutDesignerTemplatesNestedInput
+  customInvitation?: Prisma.InvitationUpdateOneWithoutCustomDesignerTemplatesNestedInput
 }
 
 export type DesignerTemplateUncheckedUpdateInput = {
@@ -412,6 +430,7 @@ export type DesignerTemplateUncheckedUpdateInput = {
   musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
   designerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customInvitationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -430,6 +449,7 @@ export type DesignerTemplateCreateManyInput = {
   musicUrl?: string | null
   status?: $Enums.TemplateStatus
   designerId: string
+  customInvitationId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -465,6 +485,7 @@ export type DesignerTemplateUncheckedUpdateManyInput = {
   musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
   designerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customInvitationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -501,6 +522,7 @@ export type DesignerTemplateCountOrderByAggregateInput = {
   musicUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
   designerId?: Prisma.SortOrder
+  customInvitationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -518,6 +540,7 @@ export type DesignerTemplateMaxOrderByAggregateInput = {
   musicUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
   designerId?: Prisma.SortOrder
+  customInvitationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -535,6 +558,7 @@ export type DesignerTemplateMinOrderByAggregateInput = {
   musicUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
   designerId?: Prisma.SortOrder
+  customInvitationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -581,6 +605,48 @@ export type DesignerTemplateUncheckedUpdateManyWithoutDesignerNestedInput = {
   deleteMany?: Prisma.DesignerTemplateScalarWhereInput | Prisma.DesignerTemplateScalarWhereInput[]
 }
 
+export type DesignerTemplateCreateNestedManyWithoutCustomInvitationInput = {
+  create?: Prisma.XOR<Prisma.DesignerTemplateCreateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput> | Prisma.DesignerTemplateCreateWithoutCustomInvitationInput[] | Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput[]
+  connectOrCreate?: Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput | Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput[]
+  createMany?: Prisma.DesignerTemplateCreateManyCustomInvitationInputEnvelope
+  connect?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+}
+
+export type DesignerTemplateUncheckedCreateNestedManyWithoutCustomInvitationInput = {
+  create?: Prisma.XOR<Prisma.DesignerTemplateCreateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput> | Prisma.DesignerTemplateCreateWithoutCustomInvitationInput[] | Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput[]
+  connectOrCreate?: Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput | Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput[]
+  createMany?: Prisma.DesignerTemplateCreateManyCustomInvitationInputEnvelope
+  connect?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+}
+
+export type DesignerTemplateUpdateManyWithoutCustomInvitationNestedInput = {
+  create?: Prisma.XOR<Prisma.DesignerTemplateCreateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput> | Prisma.DesignerTemplateCreateWithoutCustomInvitationInput[] | Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput[]
+  connectOrCreate?: Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput | Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput[]
+  upsert?: Prisma.DesignerTemplateUpsertWithWhereUniqueWithoutCustomInvitationInput | Prisma.DesignerTemplateUpsertWithWhereUniqueWithoutCustomInvitationInput[]
+  createMany?: Prisma.DesignerTemplateCreateManyCustomInvitationInputEnvelope
+  set?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  disconnect?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  delete?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  connect?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  update?: Prisma.DesignerTemplateUpdateWithWhereUniqueWithoutCustomInvitationInput | Prisma.DesignerTemplateUpdateWithWhereUniqueWithoutCustomInvitationInput[]
+  updateMany?: Prisma.DesignerTemplateUpdateManyWithWhereWithoutCustomInvitationInput | Prisma.DesignerTemplateUpdateManyWithWhereWithoutCustomInvitationInput[]
+  deleteMany?: Prisma.DesignerTemplateScalarWhereInput | Prisma.DesignerTemplateScalarWhereInput[]
+}
+
+export type DesignerTemplateUncheckedUpdateManyWithoutCustomInvitationNestedInput = {
+  create?: Prisma.XOR<Prisma.DesignerTemplateCreateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput> | Prisma.DesignerTemplateCreateWithoutCustomInvitationInput[] | Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput[]
+  connectOrCreate?: Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput | Prisma.DesignerTemplateCreateOrConnectWithoutCustomInvitationInput[]
+  upsert?: Prisma.DesignerTemplateUpsertWithWhereUniqueWithoutCustomInvitationInput | Prisma.DesignerTemplateUpsertWithWhereUniqueWithoutCustomInvitationInput[]
+  createMany?: Prisma.DesignerTemplateCreateManyCustomInvitationInputEnvelope
+  set?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  disconnect?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  delete?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  connect?: Prisma.DesignerTemplateWhereUniqueInput | Prisma.DesignerTemplateWhereUniqueInput[]
+  update?: Prisma.DesignerTemplateUpdateWithWhereUniqueWithoutCustomInvitationInput | Prisma.DesignerTemplateUpdateWithWhereUniqueWithoutCustomInvitationInput[]
+  updateMany?: Prisma.DesignerTemplateUpdateManyWithWhereWithoutCustomInvitationInput | Prisma.DesignerTemplateUpdateManyWithWhereWithoutCustomInvitationInput[]
+  deleteMany?: Prisma.DesignerTemplateScalarWhereInput | Prisma.DesignerTemplateScalarWhereInput[]
+}
+
 export type DesignerTemplateCreatetagsInput = {
   set: string[]
 }
@@ -609,6 +675,7 @@ export type DesignerTemplateCreateWithoutDesignerInput = {
   status?: $Enums.TemplateStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  customInvitation?: Prisma.InvitationCreateNestedOneWithoutCustomDesignerTemplatesInput
 }
 
 export type DesignerTemplateUncheckedCreateWithoutDesignerInput = {
@@ -624,6 +691,7 @@ export type DesignerTemplateUncheckedCreateWithoutDesignerInput = {
   usesPhotos?: boolean
   musicUrl?: string | null
   status?: $Enums.TemplateStatus
+  customInvitationId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -671,8 +739,71 @@ export type DesignerTemplateScalarWhereInput = {
   musicUrl?: Prisma.StringNullableFilter<"DesignerTemplate"> | string | null
   status?: Prisma.EnumTemplateStatusFilter<"DesignerTemplate"> | $Enums.TemplateStatus
   designerId?: Prisma.StringFilter<"DesignerTemplate"> | string
+  customInvitationId?: Prisma.StringNullableFilter<"DesignerTemplate"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DesignerTemplate"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DesignerTemplate"> | Date | string
+}
+
+export type DesignerTemplateCreateWithoutCustomInvitationInput = {
+  id?: string
+  templateNo: string
+  name: string
+  tags?: Prisma.DesignerTemplateCreatetagsInput | string[]
+  previewUrl: string
+  templateFile?: string | null
+  designKey?: string | null
+  category?: string
+  description?: string
+  usesPhotos?: boolean
+  musicUrl?: string | null
+  status?: $Enums.TemplateStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  designer: Prisma.UserCreateNestedOneWithoutDesignerTemplatesInput
+}
+
+export type DesignerTemplateUncheckedCreateWithoutCustomInvitationInput = {
+  id?: string
+  templateNo: string
+  name: string
+  tags?: Prisma.DesignerTemplateCreatetagsInput | string[]
+  previewUrl: string
+  templateFile?: string | null
+  designKey?: string | null
+  category?: string
+  description?: string
+  usesPhotos?: boolean
+  musicUrl?: string | null
+  status?: $Enums.TemplateStatus
+  designerId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type DesignerTemplateCreateOrConnectWithoutCustomInvitationInput = {
+  where: Prisma.DesignerTemplateWhereUniqueInput
+  create: Prisma.XOR<Prisma.DesignerTemplateCreateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput>
+}
+
+export type DesignerTemplateCreateManyCustomInvitationInputEnvelope = {
+  data: Prisma.DesignerTemplateCreateManyCustomInvitationInput | Prisma.DesignerTemplateCreateManyCustomInvitationInput[]
+  skipDuplicates?: boolean
+}
+
+export type DesignerTemplateUpsertWithWhereUniqueWithoutCustomInvitationInput = {
+  where: Prisma.DesignerTemplateWhereUniqueInput
+  update: Prisma.XOR<Prisma.DesignerTemplateUpdateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedUpdateWithoutCustomInvitationInput>
+  create: Prisma.XOR<Prisma.DesignerTemplateCreateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedCreateWithoutCustomInvitationInput>
+}
+
+export type DesignerTemplateUpdateWithWhereUniqueWithoutCustomInvitationInput = {
+  where: Prisma.DesignerTemplateWhereUniqueInput
+  data: Prisma.XOR<Prisma.DesignerTemplateUpdateWithoutCustomInvitationInput, Prisma.DesignerTemplateUncheckedUpdateWithoutCustomInvitationInput>
+}
+
+export type DesignerTemplateUpdateManyWithWhereWithoutCustomInvitationInput = {
+  where: Prisma.DesignerTemplateScalarWhereInput
+  data: Prisma.XOR<Prisma.DesignerTemplateUpdateManyMutationInput, Prisma.DesignerTemplateUncheckedUpdateManyWithoutCustomInvitationInput>
 }
 
 export type DesignerTemplateCreateManyDesignerInput = {
@@ -688,6 +819,7 @@ export type DesignerTemplateCreateManyDesignerInput = {
   usesPhotos?: boolean
   musicUrl?: string | null
   status?: $Enums.TemplateStatus
+  customInvitationId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -707,6 +839,7 @@ export type DesignerTemplateUpdateWithoutDesignerInput = {
   status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customInvitation?: Prisma.InvitationUpdateOneWithoutCustomDesignerTemplatesNestedInput
 }
 
 export type DesignerTemplateUncheckedUpdateWithoutDesignerInput = {
@@ -722,6 +855,7 @@ export type DesignerTemplateUncheckedUpdateWithoutDesignerInput = {
   usesPhotos?: Prisma.BoolFieldUpdateOperationsInput | boolean
   musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
+  customInvitationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -739,6 +873,79 @@ export type DesignerTemplateUncheckedUpdateManyWithoutDesignerInput = {
   usesPhotos?: Prisma.BoolFieldUpdateOperationsInput | boolean
   musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
+  customInvitationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type DesignerTemplateCreateManyCustomInvitationInput = {
+  id?: string
+  templateNo: string
+  name: string
+  tags?: Prisma.DesignerTemplateCreatetagsInput | string[]
+  previewUrl: string
+  templateFile?: string | null
+  designKey?: string | null
+  category?: string
+  description?: string
+  usesPhotos?: boolean
+  musicUrl?: string | null
+  status?: $Enums.TemplateStatus
+  designerId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type DesignerTemplateUpdateWithoutCustomInvitationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  templateNo?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.DesignerTemplateUpdatetagsInput | string[]
+  previewUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  templateFile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  designKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  usesPhotos?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  designer?: Prisma.UserUpdateOneRequiredWithoutDesignerTemplatesNestedInput
+}
+
+export type DesignerTemplateUncheckedUpdateWithoutCustomInvitationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  templateNo?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.DesignerTemplateUpdatetagsInput | string[]
+  previewUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  templateFile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  designKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  usesPhotos?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
+  designerId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type DesignerTemplateUncheckedUpdateManyWithoutCustomInvitationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  templateNo?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.DesignerTemplateUpdatetagsInput | string[]
+  previewUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  templateFile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  designKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  usesPhotos?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTemplateStatusFieldUpdateOperationsInput | $Enums.TemplateStatus
+  designerId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -759,9 +966,11 @@ export type DesignerTemplateSelect<ExtArgs extends runtime.Types.Extensions.Inte
   musicUrl?: boolean
   status?: boolean
   designerId?: boolean
+  customInvitationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   designer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  customInvitation?: boolean | Prisma.DesignerTemplate$customInvitationArgs<ExtArgs>
 }, ExtArgs["result"]["designerTemplate"]>
 
 export type DesignerTemplateSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -778,9 +987,11 @@ export type DesignerTemplateSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   musicUrl?: boolean
   status?: boolean
   designerId?: boolean
+  customInvitationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   designer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  customInvitation?: boolean | Prisma.DesignerTemplate$customInvitationArgs<ExtArgs>
 }, ExtArgs["result"]["designerTemplate"]>
 
 export type DesignerTemplateSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -797,9 +1008,11 @@ export type DesignerTemplateSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   musicUrl?: boolean
   status?: boolean
   designerId?: boolean
+  customInvitationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   designer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  customInvitation?: boolean | Prisma.DesignerTemplate$customInvitationArgs<ExtArgs>
 }, ExtArgs["result"]["designerTemplate"]>
 
 export type DesignerTemplateSelectScalar = {
@@ -816,25 +1029,30 @@ export type DesignerTemplateSelectScalar = {
   musicUrl?: boolean
   status?: boolean
   designerId?: boolean
+  customInvitationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DesignerTemplateOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "templateNo" | "name" | "tags" | "previewUrl" | "templateFile" | "designKey" | "category" | "description" | "usesPhotos" | "musicUrl" | "status" | "designerId" | "createdAt" | "updatedAt", ExtArgs["result"]["designerTemplate"]>
+export type DesignerTemplateOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "templateNo" | "name" | "tags" | "previewUrl" | "templateFile" | "designKey" | "category" | "description" | "usesPhotos" | "musicUrl" | "status" | "designerId" | "customInvitationId" | "createdAt" | "updatedAt", ExtArgs["result"]["designerTemplate"]>
 export type DesignerTemplateInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   designer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  customInvitation?: boolean | Prisma.DesignerTemplate$customInvitationArgs<ExtArgs>
 }
 export type DesignerTemplateIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   designer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  customInvitation?: boolean | Prisma.DesignerTemplate$customInvitationArgs<ExtArgs>
 }
 export type DesignerTemplateIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   designer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  customInvitation?: boolean | Prisma.DesignerTemplate$customInvitationArgs<ExtArgs>
 }
 
 export type $DesignerTemplatePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "DesignerTemplate"
   objects: {
     designer: Prisma.$UserPayload<ExtArgs>
+    customInvitation: Prisma.$InvitationPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -850,6 +1068,7 @@ export type $DesignerTemplatePayload<ExtArgs extends runtime.Types.Extensions.In
     musicUrl: string | null
     status: $Enums.TemplateStatus
     designerId: string
+    customInvitationId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["designerTemplate"]>
@@ -1247,6 +1466,7 @@ readonly fields: DesignerTemplateFieldRefs;
 export interface Prisma__DesignerTemplateClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   designer<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  customInvitation<T extends Prisma.DesignerTemplate$customInvitationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DesignerTemplate$customInvitationArgs<ExtArgs>>): Prisma.Prisma__InvitationClient<runtime.Types.Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1289,6 +1509,7 @@ export interface DesignerTemplateFieldRefs {
   readonly musicUrl: Prisma.FieldRef<"DesignerTemplate", 'String'>
   readonly status: Prisma.FieldRef<"DesignerTemplate", 'TemplateStatus'>
   readonly designerId: Prisma.FieldRef<"DesignerTemplate", 'String'>
+  readonly customInvitationId: Prisma.FieldRef<"DesignerTemplate", 'String'>
   readonly createdAt: Prisma.FieldRef<"DesignerTemplate", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"DesignerTemplate", 'DateTime'>
 }
@@ -1689,6 +1910,25 @@ export type DesignerTemplateDeleteManyArgs<ExtArgs extends runtime.Types.Extensi
    * Limit how many DesignerTemplates to delete.
    */
   limit?: number
+}
+
+/**
+ * DesignerTemplate.customInvitation
+ */
+export type DesignerTemplate$customInvitationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Invitation
+   */
+  select?: Prisma.InvitationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Invitation
+   */
+  omit?: Prisma.InvitationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InvitationInclude<ExtArgs> | null
+  where?: Prisma.InvitationWhereInput
 }
 
 /**

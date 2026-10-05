@@ -263,6 +263,7 @@ export const DesignerTemplateScalarFieldEnum = {
   musicUrl: 'musicUrl',
   status: 'status',
   designerId: 'designerId',
+  customInvitationId: 'customInvitationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
