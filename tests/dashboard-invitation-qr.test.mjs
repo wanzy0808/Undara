@@ -6,10 +6,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { LanguageProvider } from "../components/I18n/LanguageProvider.tsx";
 import MenuModule from "../components/Dashboard/InvitationQrMenu.tsx";
 import PreviewModule from "../components/Dashboard/InvitationQrPreview.tsx";
-import { invitationQrImageUrl, accessibleInvitationQrOptions } from "../components/Dashboard/invitation-qr.ts";
+import { invitationQrImageUrl, accessibleInvitationQrOptions, invitationQrGuestOptions } from "../components/Dashboard/invitation-qr.ts";
 
 const InvitationQrMenu = MenuModule.default ?? MenuModule;
 const InvitationQrPreview = PreviewModule.default ?? PreviewModule;
+const InvitationQrGuestCard = PreviewModule.InvitationQrGuestCard;
 const render = (element, locale = "id") => renderToStaticMarkup(createElement(LanguageProvider, { initialLocale: locale }, element));
 
 test("QR choices follow server access, including paid drafts and manual Owner grants", () => {
@@ -32,17 +33,17 @@ test("QR choices follow server access, including paid drafts and manual Owner gr
 
 test("preview and download stay on the app and identify the same selected invitation", () => {
   for (const id of ["invitation-a", "invitation-b", "id&download=1?x=2"]) {
-    const preview = new URL(invitationQrImageUrl(id), "https://undara.example.test");
-    const download = new URL(invitationQrImageUrl(id, true), preview.origin);
+    const preview = new URL(invitationQrImageUrl(id, "guest-a"), "https://undara.example.test");
+    const download = new URL(invitationQrImageUrl(id, "guest-a", true), preview.origin);
     assert.equal(preview.origin, "https://undara.example.test");
     assert.equal(preview.pathname, "/api/invitations/qr");
     assert.equal(preview.searchParams.get("invitationId"), id);
     assert.equal(preview.searchParams.has("download"), false);
     assert.equal(download.searchParams.get("invitationId"), id);
     assert.equal(download.searchParams.get("download"), "1");
-    assert.equal(download.searchParams.size, 2);
+    assert.equal(download.searchParams.size, 3);
   }
-  assert.notEqual(invitationQrImageUrl("invitation-a"), invitationQrImageUrl("invitation-b"));
+  assert.notEqual(invitationQrImageUrl("invitation-a", "guest-a"), invitationQrImageUrl("invitation-b", "guest-a"));
 });
 
 test("Beranda QR menu renders a localized dialog trigger without loading an invitation automatically", () => {
@@ -57,29 +58,29 @@ test("Beranda QR menu renders a localized dialog trigger without loading an invi
 
 test("card preview and download use the same dashboard locale without allowing ID query injection", () => {
   const id = "invitation-a&locale=en";
-  const english = new URL(invitationQrImageUrl(id, true, "en"), "https://undara.example.test");
+  const english = new URL(invitationQrImageUrl(id, "guest-a&token=unsigned", true, "en"), "https://undara.example.test");
   assert.equal(english.searchParams.get("invitationId"), id);
   assert.equal(english.searchParams.get("download"), "1");
   assert.equal(english.searchParams.get("locale"), "en");
-  assert.equal(english.searchParams.size, 3);
-  const indonesian = new URL(invitationQrImageUrl(id, true, "id"), english.origin);
+  assert.equal(english.searchParams.size, 4);
+  const indonesian = new URL(invitationQrImageUrl(id, "guest-a&token=unsigned", true, "id"), english.origin);
   assert.equal(indonesian.searchParams.has("locale"), false);
-  const preview = new URL(invitationQrImageUrl(id, false, "en"), english.origin);
+  const preview = new URL(invitationQrImageUrl(id, "guest-a&token=unsigned", false, "en"), english.origin);
   assert.equal(preview.searchParams.get("invitationId"), id);
   assert.equal(preview.searchParams.get("locale"), "en");
   assert.equal(preview.searchParams.has("download"), false);
-  assert.equal(preview.searchParams.size, 2);
+  assert.equal(preview.searchParams.size, 3);
   english.searchParams.delete("download");
   assert.equal(preview.href, english.href);
   const source = readFileSync(new URL("../components/Dashboard/InvitationQrPreview.tsx", import.meta.url), "utf8");
-  assert.match(source, /invitationQrImageUrl\(invitationId, false, locale\)/);
-  assert.match(source, /invitationQrImageUrl\(invitationId, true, locale\)/);
+  assert.match(source, /invitationQrImageUrl\(invitationId, guestId, false, locale\)/);
+  assert.match(source, /invitationQrImageUrl\(invitationId, guestId, true, locale\)/);
 });
 
 test("QR preview loads the selected invitation and disables download until the image is ready", () => {
-  const html = render(createElement(InvitationQrPreview, { invitationId: "paid-draft", title: "Acara Keluarga" }));
-  assert.match(html, /src="\/api\/invitations\/qr\?invitationId=paid-draft"/);
-  assert.match(html, /alt="QR Undangan · Acara Keluarga"/);
+  const html = render(createElement(InvitationQrGuestCard, { invitationId: "paid-draft", guestId: "guest-a", guestName: "Naya", title: "Acara Keluarga" }));
+  assert.match(html, /src="\/api\/invitations\/qr\?invitationId=paid-draft&amp;guestId=guest-a"/);
+  assert.match(html, /alt="QR tiket masuk · Naya · Acara Keluarga"/);
   assert.match(html, /<img[^>]*width="900"[^>]*height="1320"/);
   assert.ok(html.indexOf("<img") < html.indexOf("<button"));
   assert.match(html, /role="status"/);
@@ -88,10 +89,24 @@ test("QR preview loads the selected invitation and disables download until the i
 });
 
 test("QR preview uses English feedback and escapes the invitation title", () => {
-  const html = render(createElement(InvitationQrPreview, { invitationId: "paid-public", title: '<script>alert("x")</script>' }), "en");
+  const html = render(createElement(InvitationQrGuestCard, { invitationId: "paid-public", guestId: "guest-a", guestName: "Naya", title: '<script>alert("x")</script>' }), "en");
   assert.ok(html.includes("Loading QR..."));
-  assert.ok(html.includes("Invitation QR"));
-  assert.match(html, /src="\/api\/invitations\/qr\?invitationId=paid-public&amp;locale=en"/);
+  assert.ok(html.includes("Admission QR"));
+  assert.match(html, /src="\/api\/invitations\/qr\?invitationId=paid-public&amp;guestId=guest-a&amp;locale=en"/);
   assert.doesNotMatch(html, /<script>/);
   assert.match(html, /&lt;script&gt;/);
+});
+
+test("guest selection excludes another event and the preview waits for an explicitly chosen guest", () => {
+  const guests = [
+    { id: "guest-a", invitationId: "event-a", name: "Naya" },
+    { id: "guest-b", invitationId: "event-b", name: "Naya" },
+  ];
+  assert.deepEqual(invitationQrGuestOptions(guests, "event-a").map(({ id }) => id), ["guest-a"]);
+  const html = render(createElement(InvitationQrPreview, { invitationId: "event-a", title: "Event" }));
+  assert.ok(html.includes("Memuat tamu..."));
+  assert.doesNotMatch(html, /<img|Download QR PNG/);
+  const url = new URL(invitationQrImageUrl("event-a", "guest-a&download=1"), "https://undara.example.test");
+  assert.equal(url.searchParams.get("guestId"), "guest-a&download=1");
+  assert.equal(url.searchParams.has("download"), false);
 });

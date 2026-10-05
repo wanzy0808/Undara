@@ -2,18 +2,19 @@ import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { invitationQrFilename, invitationQrTarget } from "@/lib/invitations/qr";
+import { invitationQrFilename } from "@/lib/invitations/qr";
 import { invitationQrDownloadCard } from "@/lib/invitations/qr-card";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
+import { createGuestQrToken } from "@/lib/usher/qr";
 
-const PRIVATE_HEADERS = { "Cache-Control": "private, no-store" };
+const PRIVATE_HEADERS = { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer", "X-Content-Type-Options": "nosniff" };
 
 export const runtime = "nodejs";
 
 /**
- * Generate/download one QR per owned invitation with active Digital access.
- * It encodes an app-hosted permanent invitation ID redirect, NOT a guest's
- * signed QR ticket. The PNG is generated in memory on this application server.
+ * Render a named admission ticket for an existing guest of the owned event.
+ * Use the same signed payload as Usher issuance so the scanner records that
+ * canonical Guest's check-in. Rendering never creates guests or checks them in.
  */
 export async function GET(request: Request) {
   const user = await getCurrentUser();
@@ -25,6 +26,10 @@ export async function GET(request: Request) {
   const invitationId = url.searchParams.get("invitationId")?.trim() ?? "";
   if (!/^[a-zA-Z0-9_-]{1,128}$/.test(invitationId)) {
     return NextResponse.json({ error: "Undangan belum dipilih." }, { status: 400, headers: PRIVATE_HEADERS });
+  }
+  const guestId = url.searchParams.get("guestId")?.trim() ?? "";
+  if (!/^[a-zA-Z0-9_-]{1,128}$/.test(guestId)) {
+    return NextResponse.json({ error: "Tamu belum dipilih." }, { status: 400, headers: PRIVATE_HEADERS });
   }
 
   try {
@@ -42,11 +47,14 @@ export async function GET(request: Request) {
       );
     }
 
-    // APP_URL is the canonical, publicly reachable application origin in
-    // production. During local development fall back to the current request.
-    const appOrigin = process.env.APP_URL?.trim() || url.origin;
-    const qrTarget = invitationQrTarget(appOrigin, invitation.id);
-    const qrBytes = await QRCode.toBuffer(qrTarget, {
+    const guest = await prisma.guest.findFirst({
+      where: { id: guestId, invitationId: invitation.id },
+      select: { id: true, name: true },
+    });
+    if (!guest) {
+      return NextResponse.json({ error: "Tamu tidak ditemukan pada acara ini." }, { status: 404, headers: PRIVATE_HEADERS });
+    }
+    const qrBytes = await QRCode.toBuffer(createGuestQrToken(guest.id), {
       type: "png",
       width: 640,
       margin: 4,
@@ -54,13 +62,13 @@ export async function GET(request: Request) {
     });
     const download = url.searchParams.get("download") === "1";
     const locale = url.searchParams.get("locale") === "en" ? "en" : "id";
-    const bytes = await invitationQrDownloadCard(qrBytes, invitation.title, locale);
+    const bytes = await invitationQrDownloadCard(qrBytes, invitation.title, guest.name, locale);
     return new Response(new Uint8Array(bytes), {
       status: 200,
       headers: {
         ...PRIVATE_HEADERS,
         "Content-Type": "image/png",
-        "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${invitationQrFilename(invitation.title)}"`,
+        "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${invitationQrFilename(invitation.title, guest.name)}"`,
         "Content-Length": String(bytes.byteLength),
         "X-Content-Type-Options": "nosniff",
       },

@@ -1,10 +1,9 @@
 import { slugifyEvent } from "@/lib/invitations/slug";
 
 /**
- * Invitation-share QR: one stable destination per accessible Invitation.id.
- * This is NOT the HMAC-signed QR token used for per-guest Usher check-in.
- * The redirect route resolves the current slug, so editing the draft does not
- * invalidate a QR downloaded earlier.
+ * Legacy invitation-sharing destination. Previously downloaded /q links keep
+ * resolving the current published slug; the admission-ticket menu uses the
+ * signed Guest payload from lib/usher/qr instead.
  */
 export function invitationQrTarget(appOrigin: string, invitationId: string): string {
   const base = new URL(appOrigin);
@@ -15,7 +14,8 @@ export function invitationQrTarget(appOrigin: string, invitationId: string): str
   return new URL(`/q/${encodeURIComponent(id)}`, base.origin).toString();
 }
 
-export function invitationQrFilename(title?: string | null): string {
+export function invitationQrFilename(title: string | null | undefined, guestName: string): string {
   const eventName = slugifyEvent(title?.trim() || "acara").slice(0, 80).replace(/-+$/, "");
-  return `undara-undangan-${eventName}-qr.png`;
+  const guest = slugifyEvent(guestName.trim() || "tamu").slice(0, 50).replace(/-+$/, "");
+  return `undara-tiket-masuk-${eventName}-${guest}.png`;
 }

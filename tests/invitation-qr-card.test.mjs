@@ -3,9 +3,9 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import QRCode from "qrcode";
 import sharp from "sharp";
-import { invitationQrCardGeometry, invitationQrCardTitle, invitationQrDownloadCard } from "../lib/invitations/qr-card.ts";
+import { invitationQrCardGeometry, invitationQrCardTitle, invitationQrCardGuestName, invitationQrDownloadCard } from "../lib/invitations/qr-card.ts";
 
-const target = "https://undara.example.test/q/invitation-a";
+const target = "DCQR1.test-guest.test-only-signature";
 const qrPng = await QRCode.toBuffer(target, { type: "png", width: 640, margin: 4, errorCorrectionLevel: "M" });
 const pixels = (input) => sharp(input).ensureAlpha().raw().toBuffer();
 
@@ -14,7 +14,7 @@ test("ID/EN thank-you cards preserve every QR pixel and its full white quiet zon
   const expected = await pixels(qrPng);
   const cards = [];
   for (const locale of ["id", "en"]) {
-    const card = await invitationQrDownloadCard(qrPng, "ulang tahun Naya", locale);
+    const card = await invitationQrDownloadCard(qrPng, "ulang tahun Naya", "Naya", locale);
     cards.push(card);
     const metadata = await sharp(card).metadata();
     assert.equal(metadata.format, "png");
@@ -33,7 +33,7 @@ test("ID/EN thank-you cards preserve every QR pixel and its full white quiet zon
 });
 
 test("footer uses the exact canonical wordmark alpha, tinted with Undara Brown", async () => {
-  const card = await invitationQrDownloadCard(qrPng, "Denny & Christine");
+  const card = await invitationQrDownloadCard(qrPng, "Denny & Christine", "Naya");
   const alpha = await sharp("public/assets/brand/undara/logo.webp").resize(240, 101).ensureAlpha().extractChannel(3).raw().toBuffer();
   const footer = await sharp(card).extract({ left: 330, top: 1152, width: 240, height: 101 }).removeAlpha().raw().toBuffer();
   let visible = 0;
@@ -51,11 +51,11 @@ test("long, blank and markup-like event titles cannot overlap or alter the QR", 
   const original = await pixels(qrPng);
   const { qrLeft: left, qrTop: top } = invitationQrCardGeometry;
   for (const title of ["Perayaan Bersama Sahabat ".repeat(40), "a".repeat(1000), '<span size="999999">Naya & Friends</span>', " 👨‍👩‍👧‍👦 ".repeat(200), null, " "]) {
-    const card = await invitationQrDownloadCard(qrPng, title);
+    const card = await invitationQrDownloadCard(qrPng, title, "Naya");
     const crop = await sharp(card).extract({ left, top, width: 640, height: 640 }).ensureAlpha().raw().toBuffer();
     assert.deepEqual(crop, original);
     // The print frame may occupy the card edges; the title-to-QR reading area stays clear.
-    const gap = await sharp(card).extract({ left, top: 410, width: 640, height: 38 }).removeAlpha().raw().toBuffer();
+    const gap = await sharp(card).extract({ left, top: 434, width: 640, height: 14 }).removeAlpha().raw().toBuffer();
     for (let i = 0; i < gap.length; i += 3) assert.deepEqual([...gap.subarray(i, i + 3)], [237, 227, 216]);
   }
   assert.equal(invitationQrCardTitle("ulang tahun naya\n & sahabat"), "Ulang Tahun Naya & Sahabat");
@@ -68,9 +68,9 @@ test("long, blank and markup-like event titles cannot overlap or alter the QR", 
 test("invalid QR inputs fail closed rather than producing a card with a missing or resized code", async () => {
   const tiny = await QRCode.toBuffer(target, { width: 320 });
   const wrongFormat = await sharp(qrPng).webp().toBuffer();
-  await assert.rejects(invitationQrDownloadCard(tiny, "Naya"), /Invalid invitation QR image/);
-  await assert.rejects(invitationQrDownloadCard(wrongFormat, "Naya"), /Invalid invitation QR image/);
-  await assert.rejects(invitationQrDownloadCard(Buffer.from("not an image"), "Naya"));
+  await assert.rejects(invitationQrDownloadCard(tiny, "Naya", "Guest"), /Invalid invitation QR image/);
+  await assert.rejects(invitationQrDownloadCard(wrongFormat, "Naya", "Guest"), /Invalid invitation QR image/);
+  await assert.rejects(invitationQrDownloadCard(Buffer.from("not an image"), "Naya", "Guest"));
 });
 
 test("deployable route trace includes local brand fonts, licenses, wordmark and greeting-card artwork", () => {
@@ -82,4 +82,19 @@ test("deployable route trace includes local brand fonts, licenses, wordmark and 
   for (const name of ["DMSerifDisplay-OFL.txt", "Roboto-OFL.txt"]) {
     assert.match(readFileSync(new URL(`../assets/brand/fonts/${name}`, import.meta.url), "utf8"), /SIL OPEN FONT LICENSE Version 1\.1/);
   }
+});
+
+test("guest names remain canonical, bounded and outside the QR even with long or markup-like names", async () => {
+  assert.equal(invitationQrCardGuestName("  McDonald & de Vries  "), "McDonald & de Vries");
+  assert.equal(invitationQrCardGuestName("👨‍👩‍👧‍👦".repeat(90)), "👨‍👩‍👧‍👦".repeat(80) + "…");
+  const original = await pixels(qrPng);
+  const { qrLeft: left, qrTop: top } = invitationQrCardGeometry;
+  const cards = [];
+  for (const name of ["Naya", "Ardi", "a".repeat(1000), '<span size="99999">Naya & Friends</span>', "👨‍👩‍👧‍👦".repeat(90)]) {
+    const card = await invitationQrDownloadCard(qrPng, "Perayaan Bersama Sahabat ".repeat(40), name);
+    assert.deepEqual(await sharp(card).extract({ left, top, width: 640, height: 640 }).ensureAlpha().raw().toBuffer(), original);
+    cards.push(card);
+  }
+  const nameArea = { left: 80, top: 392, width: 740, height: 42 };
+  assert.notDeepEqual(await sharp(cards[0]).extract(nameArea).raw().toBuffer(), await sharp(cards[1]).extract(nameArea).raw().toBuffer());
 });

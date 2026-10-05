@@ -18,17 +18,25 @@ function escapeMarkup(text: string) {
   return text.replace(/[&<>"']/g, (character) => entities[character]);
 }
 
-/** Bound the customer's display title without splitting an emoji or changing saved data. */
-export function invitationQrCardTitle(title?: string | null) {
-  const normalized = (title ?? "").normalize("NFC")
+function boundedCardText(value: string | null | undefined, limit: number) {
+  const normalized = (value ?? "").normalize("NFC")
     .replace(/[\p{Cc}\u200e\u200f\u202a-\u202e\u2066-\u2069]/gu, " ").replace(/\s+/gu, " ").trim();
   let bounded = "";
   let count = 0;
   for (const part of new Intl.Segmenter("id", { granularity: "grapheme" }).segment(normalized)) {
-    if (count++ === 120) return displayTitleCase(bounded.trimEnd()) + "…";
+    if (count++ === limit) return bounded.trimEnd() + "…";
     bounded += part.segment;
   }
-  return displayTitleCase(bounded);
+  return bounded;
+}
+
+/** Bound display text without splitting an emoji or changing saved guest data. */
+export function invitationQrCardTitle(title?: string | null) {
+  return displayTitleCase(boundedCardText(title, 120));
+}
+
+export function invitationQrCardGuestName(name: string) {
+  return boundedCardText(name, 80);
 }
 
 async function textImage(text: string, fontfile: string, font: string, width: number, maxHeight: number) {
@@ -74,18 +82,19 @@ function backgroundImage() {
 }
 
 /** Compose the original QR unchanged; copy and branding stay outside its white quiet zone. */
-export async function invitationQrDownloadCard(qrPng: Buffer, title?: string | null, locale: "id" | "en" = "id") {
+export async function invitationQrDownloadCard(qrPng: Buffer, title: string | null | undefined, guestName: string, locale: "id" | "en" = "id") {
   const geometry = invitationQrCardGeometry;
   const qr = await sharp(qrPng).metadata();
   if (qr.format !== "png" || qr.width !== geometry.qrSize || qr.height !== geometry.qrSize) throw new Error("Invalid invitation QR image.");
   const heading = locale === "en" ? "Thank you" : "Terima kasih";
   const message = locale === "en" ? "for being part of\nour special story." : "telah menjadi bagian dari\ncerita istimewa kami.";
   const eventTitle = invitationQrCardTitle(title);
-  const [headingImage, messageImage, titleImage, scanImage, logo, background] = await Promise.all([
+  const [headingImage, messageImage, titleImage, guestImage, scanImage, logo, background] = await Promise.all([
     textImage(heading, fonts.heading, "DM Serif Display 78", 740, 96),
     textImage(message, fonts.body, "Roboto 34", 740, 94),
-    eventTitle ? textImage(eventTitle, fonts.heading, "DM Serif Display 36", 740, 76) : null,
-    textImage(locale === "en" ? "Scan to open your invitation" : "Pindai untuk membuka undangan", fonts.body, "Roboto 24", 620, 34),
+    eventTitle ? textImage(eventTitle, fonts.heading, "DM Serif Display 36", 740, 52) : null,
+    textImage(invitationQrCardGuestName(guestName) || (locale === "en" ? "Guest" : "Tamu"), fonts.body, "Roboto 28", 740, 42),
+    textImage(locale === "en" ? "Present this QR at the entrance" : "Tunjukkan QR ini di pintu masuk", fonts.body, "Roboto 24", 620, 34),
     logoImage(),
     backgroundImage(),
   ]);
@@ -94,6 +103,7 @@ export async function invitationQrDownloadCard(qrPng: Buffer, title?: string | n
     .composite([
       center(headingImage, 96), center(messageImage, 210),
       ...(titleImage ? [center(titleImage, 332)] : []),
+      center(guestImage, 392),
       { input: qrPng, left: geometry.qrLeft, top: geometry.qrTop },
       center(scanImage, 1106),
       { input: logo, left: 330, top: 1152 },
