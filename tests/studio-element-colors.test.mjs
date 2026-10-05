@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { parseAssetLayers, sanitizeAssetLayers, withAssetLayers } from "../lib/templates/asset-layers.ts";
 import {
   defaultNativeVisualTransform, nativeVisualColorFilters, nativeVisualScopeClass, nativeVisualStyleSheet,
+  nativeVisualSupportsFramePaint,
   parseNativeVisualTransforms, sanitizeNativeVisualTransforms, withNativeVisualTransforms,
 } from "../lib/templates/native-visual-transforms.ts";
 import { invitationComponentColorCss } from "../lib/templates/component-colors.ts";
@@ -104,10 +105,11 @@ test("parent paint excludes registered children and photo paint uses detail tint
   const css = nativeVisualStyleSheet(key);
   assert.match(css, /:not\([^}]*data-studio-native-object/);
   assert.match(css, /:not\([^}]*data-invitation-photo-slot/);
-  assert.match(css, /:is\(img,path,rect,circle,ellipse,line,polyline,polygon,use,text\)/);
+  assert.match(css, /:is\(path,rect,circle,ellipse,line,polyline,polygon,use,text\)/);
+  assert.match(css, /:is\(img\)[^}]*filter:url\("#undara-tint-123456"\)!important/);
   assert.match(css, /filter:url\("#undara-solid-123456"\)!important/);
   assert.match(css, /filter:url\("#undara-tint-abcdef"\)!important/);
-  assert.deepEqual(nativeVisualColorFilters(key), [{ color: "#123456", mode: "solid" }, { color: "#abcdef", mode: "tint" }]);
+  assert.deepEqual(nativeVisualColorFilters(key), [{ color: "#123456", mode: "solid" }, { color: "#123456", mode: "tint" }, { color: "#abcdef", mode: "tint" }]);
 });
 
 test("tint preserves alpha and proportional image detail; original images require no filter", () => {
@@ -173,6 +175,16 @@ test("right inspectors expose paint by object type with accessible individual re
   assert.match(photoHtml, />Garis</);
   const buttonHtml = render(NativeInspectorModule, { locale: "id", targetKey: "rsvp:button", onChange: noop, onClose: noop });
   assert.doesNotMatch(buttonHtml, /type="color"/);
+});
+
+test("native frame paint requires a box separate from raster tint or SVG group geometry", () => {
+  const html = "http://www.w3.org/1999/xhtml";
+  const svg = "http://www.w3.org/2000/svg";
+  for (const tagName of ["IMG", "img"]) assert.equal(nativeVisualSupportsFramePaint({ tagName, namespaceURI: html }), false);
+  for (const tagName of ["DIV", "SPAN", "BUTTON", "H1"]) assert.equal(nativeVisualSupportsFramePaint({ tagName, namespaceURI: html }), true);
+  for (const tagName of ["g", "path", "rect", "circle"]) assert.equal(nativeVisualSupportsFramePaint({ tagName, namespaceURI: svg }), false);
+  assert.equal(nativeVisualSupportsFramePaint({ tagName: "svg", namespaceURI: svg }), true);
+  assert.equal(nativeVisualSupportsFramePaint(null), false);
 });
 
 test("RSVP paints labels and real fields, retaining a separately colored submit button", () => {

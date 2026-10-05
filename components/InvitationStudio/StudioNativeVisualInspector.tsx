@@ -13,6 +13,7 @@ import {
   nativeVisualCanHide,
   nativeVisualSelector,
   nativeVisualPaintKind,
+  nativeVisualSupportsFramePaint,
   nativeVisualSupportsAnimation,
   nativeVisualUsesSystemContent,
   type NativeVisualTextAlign,
@@ -48,7 +49,7 @@ export default function StudioNativeVisualInspector({
   const animationCapable = nativeVisualSupportsAnimation(targetKey);
   const systemContent = nativeVisualUsesSystemContent(targetKey);
   const photo = targetKey.startsWith("photo:");
-  const [paint, setPaint] = useState<{ key: string; kind: ReturnType<typeof nativeVisualPaintKind>; frame: boolean } | null>(null);
+  const [paint, setPaint] = useState<{ key: string; kind: ReturnType<typeof nativeVisualPaintKind>; frame: boolean; image: boolean } | null>(null);
   const paintKind = paint?.key === targetKey ? paint.kind : "none";
   const framePaint = paint?.key === targetKey ? paint.frame : true;
   useEffect(() => {
@@ -58,10 +59,10 @@ export default function StudioNativeVisualInspector({
     const inspect = () => {
       const target = surface.querySelector(selector);
       const kind = nativeVisualPaintKind(target);
-      // SVG groups/paths paint geometry, while an SVG viewport can also paint its frame.
-      const frame = !target || target.namespaceURI !== "http://www.w3.org/2000/svg" || target.tagName.toLowerCase() === "svg";
-      setPaint((previous) => previous?.key === targetKey && previous.kind === kind && previous.frame === frame
-        ? previous : { key: targetKey, kind, frame });
+      const frame = nativeVisualSupportsFramePaint(target);
+      const image = target?.tagName.toLowerCase() === "img";
+      setPaint((previous) => previous?.key === targetKey && previous.kind === kind && previous.frame === frame && previous.image === image
+        ? previous : { key: targetKey, kind, frame, image });
     };
     inspect();
     const observer = new MutationObserver(inspect);
@@ -72,7 +73,7 @@ export default function StudioNativeVisualInspector({
   const title = targetKey.startsWith("heading:")
     ? (en ? `${section} heading` : `Judul ${section}`)
     : targetKey.startsWith("photo:")
-      ? (en ? "Photo frame" : "Bingkai foto")
+      ? (framePaint ? (en ? "Photo frame" : "Bingkai foto") : (en ? "Photo" : "Foto"))
       : (en ? "Visual element" : "Elemen visual");
   const fields = [
     { key: "x", label: "X", unit: "%", min: -2000, max: 2000, factor: 1 },
@@ -82,7 +83,7 @@ export default function StudioNativeVisualInspector({
     { key: "rotation", label: en ? "Rotation" : "Rotasi", unit: "°", min: -180, max: 180, factor: 1 },
   ] as const;
   const colors = [
-    { key: "color", label: photo ? "Tint" : en ? "Color" : "Warna", fallback: "#222222" },
+    { key: "color", label: photo || (paint?.key === targetKey && paint.image) ? "Tint" : en ? "Color" : "Warna", fallback: "#222222" },
     { key: "background", label: en ? "Background" : "Latar", fallback: "#ffffff" },
     { key: "borderColor", label: en ? "Border" : "Garis", fallback: "#c07a84" },
   ] as const;
@@ -159,7 +160,7 @@ export default function StudioNativeVisualInspector({
         </label>
       )}
 
-      {capabilities.colors && (
+      {capabilities.colors && (framePaint || photo || capabilities.typography || paintKind !== "none") && (
         <div className="undara-studio-native-colors mt-4 space-y-3 border-t border-primary/20 pt-4">
           {colors.filter(({ key }) => key === "color" ? photo || capabilities.typography || paintKind !== "none" : framePaint).map(({ key, label, fallback }) => (
             <StudioColorField key={key} locale={locale} label={label} value={current[key]} fallback={fallback}

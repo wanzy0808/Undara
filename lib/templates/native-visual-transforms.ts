@@ -311,9 +311,18 @@ export function nativeVisualPaintKind(target: Element | null): "text" | "artwork
   return text ? "text" : artwork ? "artwork" : "none";
 }
 
+/** Replaced images tint their whole paint. Frames need a separate box; SVG groups have no CSS box. */
+export function nativeVisualSupportsFramePaint(target: Pick<Element, "tagName" | "namespaceURI"> | null) {
+  if (!target) return false;
+  const tag = target.tagName.toLowerCase();
+  if (tag === "img") return false;
+  return target.namespaceURI !== "http://www.w3.org/2000/svg" || tag === "svg";
+}
+
 export function nativeVisualColorFilters(designKey: string): InvitationColorFilter[] {
   return Object.entries(parseNativeVisualTransforms(designKey)).flatMap(([key, value]) =>
-    value.color ? [{ color: value.color, mode: key.startsWith("photo:") ? "tint" as const : "solid" as const }] : []);
+    value.color ? (key.startsWith("photo:") ? [{ color: value.color, mode: "tint" as const }]
+      : [{ color: value.color, mode: "solid" as const }, { color: value.color, mode: "tint" as const }]) : []);
 }
 
 /** The selector registry and bounded numeric values keep injected styles free of user CSS. */
@@ -346,10 +355,12 @@ export function nativeVisualStyleSheet(designKey: string) {
     ].filter(Boolean).join(";");
     const rules = [`.${scope} ${selector}{${declarations};}`];
     if (transform.color) {
-      const filter = invitationColorFilterCss(transform.color, key.startsWith("photo:") ? "tint" : "solid");
-      const paintTags = key.startsWith("photo:") ? "img" : nativeArtworkTags;
-      rules.push(`.${scope} ${selector}:is(${paintTags}),.${scope} ${nativeVisualOwnedDescendants(selector, paintTags)}{filter:${filter}!important;}`);
+      const tint = invitationColorFilterCss(transform.color, "tint");
+      rules.push(`.${scope} ${selector}:is(img),.${scope} ${nativeVisualOwnedDescendants(selector, "img")}{filter:${tint}!important;}`);
       if (!key.startsWith("photo:")) {
+        const filter = invitationColorFilterCss(transform.color, "solid");
+        const paintTags = nativeArtworkTags.slice(4);
+        rules.push(`.${scope} ${selector}:is(${paintTags}),.${scope} ${nativeVisualOwnedDescendants(selector, paintTags)}{filter:${filter}!important;}`);
         rules.push(`.${scope} ${nativeVisualOwnedDescendants(selector, "p,span,h1,h2,h3,h4,h5,h6,a,label,strong,em,small,time")}{color:inherit!important;}`);
       }
     }
