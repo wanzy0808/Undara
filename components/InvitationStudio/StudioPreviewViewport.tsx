@@ -17,21 +17,21 @@ export default function StudioPreviewViewport({ snapshot, device, locale, onClos
 }) {
   const host = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
-  const [available, setAvailable] = useState<StudioPreviewSize>({ width: 0, height: 0 });
+  const [available, setAvailable] = useState<StudioPreviewSize & { screenWidth: number }>({ width: 0, height: 0, screenWidth: 0 });
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const en = locale === "en";
   const viewport = studioPreviewViewports[device];
   const bounds = studioPreviewDeviceBounds(device);
   const scale = studioPreviewScale(bounds, {
-    width: Math.min(available.width, 1040),
-    height: Math.min(available.height, 560),
+    width: device === "desktop" ? Math.min(available.width, available.screenWidth * 0.8) : available.width,
+    height: device === "desktop" ? available.height : Math.min(available.height, 728),
   });
 
   useEffect(() => {
     const node = host.current;
     if (!node) return;
-    const observer = new ResizeObserver(() => setAvailable({ width: node.clientWidth, height: node.clientHeight }));
+    const observer = new ResizeObserver(() => setAvailable({ width: node.clientWidth, height: node.clientHeight, screenWidth: window.innerWidth }));
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
