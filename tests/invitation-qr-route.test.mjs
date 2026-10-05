@@ -4,6 +4,7 @@ import test from "node:test";
 import ts from "typescript";
 import QRCode from "qrcode";
 import { invitationQrFilename, invitationQrTarget } from "../lib/invitations/qr.ts";
+import { invitationQrDownloadCard } from "../lib/invitations/qr-card.ts";
 import { loadPackageAccess } from "./helpers/package-access.mjs";
 
 const source = readFileSync(new URL("../app/api/invitations/qr/route.ts", import.meta.url), "utf8");
@@ -13,11 +14,11 @@ const compiled = ts.transpileModule(source, {
 
 // Exercise the real handler with authentication/database boundaries replaced;
 // the PNG encoder and entitlement/target helpers remain the production code.
-function loadHandler({ user = { id: "owner-a" }, invitation, appUrl = "https://undara.example.test/base", render = QRCode.toBuffer, grants, grantError } = {}) {
+function loadHandler({ user = { id: "owner-a" }, invitation, appUrl = "https://undara.example.test/base", render = QRCode.toBuffer, cardRender = invitationQrDownloadCard, grants, grantError } = {}) {
   const record = invitation === undefined
     ? { id: "invitation-a", ownerId: "owner-a", title: "Acara Keluarga", payment: { packageKey: "INVITATION_BASIC", status: "PAID" } }
     : invitation;
-  const calls = { queries: [], renders: [], fetches: [], errors: [] };
+  const calls = { queries: [], renders: [], cards: [], fetches: [], errors: [] };
   const packageAccess = loadPackageAccess({ grants, grantError });
   calls.grantQueries = packageAccess.queries;
   const modules = {
@@ -29,6 +30,7 @@ function loadHandler({ user = { id: "owner-a" }, invitation, appUrl = "https://u
       return record?.id === query.where.id && record?.ownerId === query.where.ownerId ? record : null;
     } } } },
     "@/lib/invitations/qr": { invitationQrFilename, invitationQrTarget },
+    "@/lib/invitations/qr-card": { invitationQrDownloadCard: (...args) => { calls.cards.push(args); return cardRender(...args); } },
     "@/lib/packages/server-access": packageAccess.access,
   };
   const routeModule = { exports: {} };
@@ -72,7 +74,7 @@ test("invitation QR rejects unauthenticated, malformed, missing, other-owner and
   }
 });
 
-test("paid owner gets a real 640px PNG for the stable app URL without a provider request", async (t) => {
+test("paid owner gets a plain QR preview and a branded card download without a provider request", async (t) => {
   for (const download of [false, true]) {
     await t.test(download ? "download" : "preview", async () => {
       const { GET, calls } = loadHandler();
@@ -84,8 +86,8 @@ test("paid owner gets a real 640px PNG for the stable app URL without a provider
       assert.equal(response.headers.get("content-disposition"), `${download ? "attachment" : "inline"}; filename="undara-undangan-acara-keluarga-qr.png"`);
       const png = Buffer.from(await response.arrayBuffer());
       assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
-      assert.equal(png.readUInt32BE(16), 640);
-      assert.equal(png.readUInt32BE(20), 640);
+      assert.equal(png.readUInt32BE(16), download ? 900 : 640);
+      assert.equal(png.readUInt32BE(20), download ? 1320 : 640);
       assert.equal(Number(response.headers.get("content-length")), png.byteLength);
       assert.deepEqual(calls.queries[0].where, { id: "invitation-a", ownerId: "owner-a" });
       assert.equal(calls.queries[0].select.title, true);
@@ -94,8 +96,46 @@ test("paid owner gets a real 640px PNG for the stable app URL without a provider
       }]]);
       assert.equal(calls.fetches.length, 0);
       assert.equal(calls.errors.length, 0);
+      assert.equal(calls.cards.length, download ? 1 : 0);
+      if (download) assert.deepEqual(calls.cards[0].slice(1), ["Acara Keluarga", "id"]);
     });
   }
+});
+
+test("download locale selects only ID or EN and cannot replace the saved event title or QR target", async () => {
+  for (const [locale, expected] of [["en", "en"], ["id", "id"], ["../../fonts", "id"]]) {
+    const { GET, calls } = loadHandler();
+    const response = await GET(new Request(`https://undara.example.test/api/invitations/qr?invitationId=invitation-a&download=1&locale=${encodeURIComponent(locale)}&title=Another%20Event`));
+    assert.equal(response.status, 200);
+    assert.deepEqual(calls.cards[0].slice(1), ["Acara Keluarga", expected]);
+    assert.equal(calls.renders[0][0], "https://undara.example.test/q/invitation-a");
+    assert.equal(calls.fetches.length, 0);
+  }
+});
+
+test("card downloads retain authentication, invitation ownership and payment guards before composition", async () => {
+  for (const [options, status] of [[{ user: null }, 401], [{ user: { id: "owner-b" }, grants: { "owner-b": { digital: true } } }, 404], [{ invitation: { id: "invitation-a", ownerId: "owner-a", payment: null } }, 402]]) {
+    const { GET, calls } = loadHandler(options);
+    const response = await GET(new Request("https://undara.example.test/api/invitations/qr?invitationId=invitation-a&download=1&locale=en"));
+    assert.equal(response.status, status);
+    assert.equal(response.headers.get("cache-control"), "private, no-store");
+    assert.equal(calls.renders.length, 0);
+    assert.equal(calls.cards.length, 0);
+  }
+});
+
+test("card composition failures return a private retry error and leave the plain QR preview available", async () => {
+  const { GET, calls } = loadHandler({ cardRender: async () => { throw new Error("private font/image detail"); } });
+  const failed = await GET(new Request("https://undara.example.test/api/invitations/qr?invitationId=invitation-a&download=1"));
+  assert.equal(failed.status, 503);
+  assert.equal(failed.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(await failed.json(), { error: "QR belum dapat dibuat. Coba lagi." });
+  assert.equal(calls.errors.length, 1);
+  assert.equal(calls.cards.length, 1);
+  const preview = await GET(new Request("https://undara.example.test/api/invitations/qr?invitationId=invitation-a"));
+  assert.equal(preview.status, 200);
+  assert.equal(calls.cards.length, 1);
+  assert.equal(calls.fetches.length, 0);
 });
 
 test("QR download follows the saved event title while keeping unsafe characters out of response headers", async () => {

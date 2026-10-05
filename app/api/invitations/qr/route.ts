@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { invitationQrFilename, invitationQrTarget } from "@/lib/invitations/qr";
+import { invitationQrDownloadCard } from "@/lib/invitations/qr-card";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 
 const PRIVATE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -45,13 +46,15 @@ export async function GET(request: Request) {
     // production. During local development fall back to the current request.
     const appOrigin = process.env.APP_URL?.trim() || url.origin;
     const qrTarget = invitationQrTarget(appOrigin, invitation.id);
-    const bytes = await QRCode.toBuffer(qrTarget, {
+    const qrBytes = await QRCode.toBuffer(qrTarget, {
       type: "png",
       width: 640,
       margin: 4,
       errorCorrectionLevel: "M",
     });
     const download = url.searchParams.get("download") === "1";
+    const locale = url.searchParams.get("locale") === "en" ? "en" : "id";
+    const bytes = download ? await invitationQrDownloadCard(qrBytes, invitation.title, locale) : qrBytes;
     return new Response(new Uint8Array(bytes), {
       status: 200,
       headers: {

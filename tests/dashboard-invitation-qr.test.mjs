@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -52,6 +53,20 @@ test("Beranda QR menu renders a localized dialog trigger without loading an invi
     assert.match(html, /data-slot="dialog-trigger"/);
     assert.doesNotMatch(html, /<img|invitationId=/);
   }
+});
+
+test("English card downloads follow the dashboard locale without changing the plain QR preview", () => {
+  const id = "invitation-a&locale=en";
+  const english = new URL(invitationQrImageUrl(id, true, "en"), "https://undara.example.test");
+  assert.equal(english.searchParams.get("invitationId"), id);
+  assert.equal(english.searchParams.get("download"), "1");
+  assert.equal(english.searchParams.get("locale"), "en");
+  assert.equal(english.searchParams.size, 3);
+  const indonesian = new URL(invitationQrImageUrl(id, true, "id"), english.origin);
+  assert.equal(indonesian.searchParams.has("locale"), false);
+  assert.equal(invitationQrImageUrl(id, false, "en"), invitationQrImageUrl(id));
+  const source = readFileSync(new URL("../components/Dashboard/InvitationQrPreview.tsx", import.meta.url), "utf8");
+  assert.match(source, /invitationQrImageUrl\(invitationId, true, locale\)/);
 });
 
 test("QR preview loads the selected invitation and disables download until the image is ready", () => {

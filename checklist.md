@@ -73,9 +73,10 @@ Implementasi storage/custom/auth yang sudah ada tidak diulang. Fitur ekspansi me
 - [x] Nama unduhan QR mengikuti judul acara tersimpan, dengan normalisasi aman/fallback dan panjang dibatasi; tombol mengikuti filename server. Tujuan QR tetap memakai ID undangan yang sama. Validasi dicatat pada Appendix A batch filename.
 - [x] Popup QR: hapus subtitle “Satu QR untuk setiap undangan” dan terjemahan penjelasan lama yang tidak terpakai. Judul/label/aksi singkat serta status yang diperlukan tetap ada. Lokal 499/499 tes, lint dua file UI, TypeScript dan build 72/72 lulus.
 - [x] Pratinjau QR Beranda/Undangan: hapus “Tautan terbuka setelah Publish” beserta terjemahannya dan prop preview yang hanya dipakai untuk penjelasan itu. Lokal 499/499 tes, TypeScript/build 72/72 lulus; lint empat file bersih dan temuan panel Undangan identik baseline.
+- [x] Kartu download QR Undara (5 Oktober 2026): PNG 900 × 1320/300 dpi, ucapan terima kasih ID/EN, judul acara aman/terbatas dan logo gambar kanonik; semua pixel QR 640px/quiet zone tetap utuh. Lokal 565/565 tes, lint, TypeScript dan build webpack 72/72 lulus. PNG ID/EN/judul panjang diperiksa, tiga varian berhasil dibaca decoder independen; font, lisensi dan logo terverifikasi dalam trace deployment.
 - [ ] QA customer hak manual: panel Owner → Beranda QR → preview/download → scan undangan terbit beserta foto/password, lalu revoke grant. Verifikasi record user yang dilaporkan pada database/deployment aktual; tes fixture tidak menggantikan sesi customer.
 - [ ] QR Beranda: QA browser sesi customer desktop/mobile Light/Dark/ID/EN, pilih A → B saat gambar memuat, tutup/Escape/fokus kembali, empty/error/retry dan download PNG aktual. SSR/helper tests tidak menggantikan native browser behavior.
-- [ ] QR: QA scanner perangkat nyata serta sesi owner → pratinjau/unduh → scan pada domain produksi publik; tes handler tidak menggantikan PostgreSQL/E2E.
+- [ ] QR: QA scanner perangkat nyata serta sesi owner → pratinjau/unduh kartu ID/EN → cetak/scan pada domain produksi publik; uji decoder fixture/handler tidak menggantikan kamera, hasil printer atau PostgreSQL/E2E.
 
 ## Rebrand Undara — migrasi bertahap (28 September 2026)
 

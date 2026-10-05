@@ -13,7 +13,7 @@ export default function InvitationQrPreview({
   invitationId: string;
   title: string;
 }) {
-  const { d } = useDashboardI18n();
+  const { d, locale } = useDashboardI18n();
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [attempt, setAttempt] = useState(0);
   const downloadLabel = <><Download className="size-4" aria-hidden="true" />{d("Download QR PNG")}</>;
@@ -48,7 +48,7 @@ export default function InvitationQrPreview({
           <>
             {status === "ready" ? (
               <Button asChild>
-                <a href={invitationQrImageUrl(invitationId, true)} download>
+                <a href={invitationQrImageUrl(invitationId, true, locale)} download>
                   {downloadLabel}
                 </a>
               </Button>
