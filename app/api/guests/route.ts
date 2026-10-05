@@ -29,6 +29,8 @@ const guestSelect = {
   source: true,
   rsvpStatus: true,
   plusOnes: true,
+  rsvpEvents: true,
+  rsvpAnswers: true,
   checkedIn: true,
   checkedInAt: true,
   checkedInById: true,

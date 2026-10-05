@@ -4,6 +4,9 @@ import { useCallback } from "react";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 
 const english: Record<string, string> = {
+  "Acara yang dihadiri": "Events attending",
+  "Upacara Nikah": "Wedding Ceremony",
+  "Resepsi": "Reception",
   "Tutup QR": "Close QR",
   "QR Undangan": "Invitation QR",
   "Pilih undangan": "Choose an invitation",

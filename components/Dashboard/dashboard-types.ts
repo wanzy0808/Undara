@@ -40,6 +40,7 @@ export type DashboardContext = {
 export type DashboardEvent = EventScopeOption & {
   type: "WEDDING" | "ADAT_AKAD";
   slug: string;
+  templateKey?: string;
   eventConfigured: boolean;
   accessPaid: boolean;
   createdAt: string;
@@ -67,6 +68,8 @@ export type DashboardGuest = {
   source?: "RSVP" | "MANUAL";
   rsvpStatus: string;
   plusOnes: number;
+  rsvpEvents?: string[];
+  rsvpAnswers?: Record<string, string> | null;
   checkedIn?: boolean;
   table?: { id: string; name: string; shape: string; capacity: number } | null;
   tableId?: string | null;

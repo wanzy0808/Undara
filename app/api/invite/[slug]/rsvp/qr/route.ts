@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { verifyGuestQrToken } from "@/lib/usher/qr";
-import { hasPaidDigitalInvitation } from "@/lib/packages/access";
+import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { checkPublicRateLimit, getClientIp } from "@/lib/security/public-rate-limit";
 
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       include: { invitation: { include: { payment: true } } },
     });
     if (!guest || !guest.invitation.isPublished || !guest.invitation.eventConfigured
-      || !hasPaidDigitalInvitation(guest.invitation.payment)) {
+      || !(await hasAccountDigitalInvitation(guest.invitation.ownerId, guest.invitation.payment))) {
       return NextResponse.json({ error: "QR tidak tersedia." }, { status: 404, headers });
     }
     const png = await QRCode.toBuffer(token, { type: "png", width: 840, margin: 4, errorCorrectionLevel: "M" });

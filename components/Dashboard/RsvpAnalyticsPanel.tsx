@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { usherQrImageUrl } from "@/components/Usher/utils";
+import { confirmedRsvpPax, rsvpCsvCell } from "@/lib/guests/rsvp";
+import { defaultInvitationRsvpConfig, type InvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 import {
   DashboardMetricCard,
   DashboardMetricGrid,
@@ -33,6 +35,8 @@ export type RsvpGuest = {
   personalSharedAt?: string | null;
   rsvpStatus: string;
   plusOnes: number;
+  rsvpEvents?: string[];
+  rsvpAnswers?: Record<string, string> | null;
   checkedIn?: boolean;
   table?: { id: string; name: string; shape: string; capacity: number } | null;
   tableId?: string | null;
@@ -44,6 +48,7 @@ type Props = {
   accent: string;
   embedded?: boolean;
   onRefresh?: () => Promise<void> | void;
+  rsvpConfig?: InvitationRsvpConfig;
 };
 type SortKey = "name" | "status" | "pax" | "checkedIn";
 
@@ -65,6 +70,7 @@ export default function RsvpAnalyticsPanel({
   slug,
   embedded = false,
   onRefresh,
+  rsvpConfig = defaultInvitationRsvpConfig,
 }: Props) {
   const { d, locale } = useDashboardI18n();
   const [query, setQuery] = useState("");
@@ -73,12 +79,16 @@ export default function RsvpAnalyticsPanel({
   const [qr, setQr] = useState<{ name: string; token: string } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const eventNames = (guest: RsvpGuest) => (guest.rsvpEvents ?? []).flatMap((event) =>
+    event === "ceremony" ? [d("Upacara Nikah")] : event === "reception" ? [d("Resepsi")] : [],
+  ).join(", ");
+  const answer = (guest: RsvpGuest, id: string) => typeof guest.rsvpAnswers?.[id] === "string" ? guest.rsvpAnswers[id] : "";
 
   const stats = useMemo(
     () => ({
       total: guests.length,
       attending: guests.filter((guest) => guest.rsvpStatus === "ATTENDING").length,
-      pax: guests.filter((guest) => guest.rsvpStatus === "ATTENDING").reduce((sum, guest) => sum + guest.plusOnes + 1, 0),
+      pax: guests.reduce((sum, guest) => sum + confirmedRsvpPax(guest), 0),
       checkedIn: guests.filter((guest) => guest.checkedIn).length,
     }),
     [guests],
@@ -100,7 +110,7 @@ export default function RsvpAnalyticsPanel({
           : sortKey === "status"
             ? (statusLabel[a.rsvpStatus] ?? a.rsvpStatus)
             : sortKey === "pax"
-              ? a.plusOnes + 1
+              ? confirmedRsvpPax(a)
               : a.checkedIn
                 ? 1
                 : 0;
@@ -110,7 +120,7 @@ export default function RsvpAnalyticsPanel({
           : sortKey === "status"
             ? (statusLabel[b.rsvpStatus] ?? b.rsvpStatus)
             : sortKey === "pax"
-              ? b.plusOnes + 1
+              ? confirmedRsvpPax(b)
               : b.checkedIn
                 ? 1
                 : 0;
@@ -124,23 +134,26 @@ export default function RsvpAnalyticsPanel({
   function exportCsv() {
     const header =
       locale === "en"
-        ? ["Guest Name", "Phone", "RSVP Status", "Pax", "Check In", "Table"]
-        : ["Nama Tamu", "Telepon", "Status RSVP", "Pax", "Check In", "Meja"];
+        ? ["Guest Name", "Phone", "RSVP Status", "Pax", "Check In", "Table", "Events attending"]
+        : ["Nama Tamu", "Telepon", "Status RSVP", "Pax", "Check In", "Meja", "Acara yang dihadiri"];
+    header.push(...rsvpConfig.customFields.map((field) => field.label));
     const lines = [
       header,
       ...filtered.map((guest) => [
         guest.name,
         guest.phone || "",
         d(statusLabel[guest.rsvpStatus] ?? guest.rsvpStatus),
-        guest.plusOnes + 1,
+        confirmedRsvpPax(guest),
         guest.checkedIn ? d("Checked In") : d("Belum Check In"),
         guest.table?.name || d("Belum ditempatkan"),
+        eventNames(guest),
+        ...rsvpConfig.customFields.map((field) => answer(guest, field.id)),
       ]),
     ];
     const csv = lines
       .map((row) =>
         row
-          .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+          .map(rsvpCsvCell)
           .join(","),
       )
       .join("\n");
@@ -296,7 +309,7 @@ export default function RsvpAnalyticsPanel({
                 <dl className="mt-4 grid grid-cols-3 gap-3 border-y border-primary/15 py-3 text-sm">
                   <div className="min-w-0">
                     <dt className="text-muted-foreground">{d("Pax")}</dt>
-                    <dd className="mt-1 font-semibold tabular-nums text-foreground">{guest.plusOnes + 1}</dd>
+                    <dd className="mt-1 font-semibold tabular-nums text-foreground">{confirmedRsvpPax(guest)}</dd>
                   </div>
                   <div className="min-w-0">
                     <dt className="text-muted-foreground">{d("Check-in")}</dt>
@@ -307,6 +320,14 @@ export default function RsvpAnalyticsPanel({
                     <dd className="mt-1 break-words font-semibold text-foreground">{guest.table?.name || "—"}</dd>
                   </div>
                 </dl>
+                {(eventNames(guest) || rsvpConfig.customFields.some((field) => answer(guest, field.id))) && (
+                  <dl className="mt-3 space-y-2 text-sm">
+                    {eventNames(guest) && <div><dt className="text-muted-foreground">{d("Acara yang dihadiri")}</dt><dd className="mt-1 text-foreground">{eventNames(guest)}</dd></div>}
+                    {rsvpConfig.customFields.filter((field) => answer(guest, field.id)).map((field) => (
+                      <div key={field.id}><dt className="break-words text-muted-foreground">{field.label}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-foreground">{answer(guest, field.id)}</dd></div>
+                    ))}
+                  </dl>
+                )}
                 <div className="mt-4 flex flex-wrap justify-end gap-2">
                   <Button
                     type="button"

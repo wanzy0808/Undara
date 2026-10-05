@@ -465,6 +465,9 @@ Create Customer A and Customer B with separate events.
 
 # 12. P1 — RSVP, Wishes & anti-abuse
 
+- [x] Audit RSVP 6 Oktober 2026: total hadir numeric termasuk penerima pada link umum/personal, batas server/kuota, summary saved count, pax non-hadir 0 di Dashboard/CSV, event/custom answers terlihat, dan QR publik mengikuti entitlement owner manual/payment. Validasi aktual dicatat pada Appendix A batch RSVP.
+- [ ] QA sesi customer: publish → bagikan link umum/personal → isi di HP (status, total orang, wedding events/kolom wajib) → submit → konfirmasi/unduh QR → Dashboard/CSV event yang tepat; uji kuota, duplicate contact, non-hadir, hak manual/revoke dan scan Usher pada database deployment. Handler/SSR fixture bukan E2E tersebut.
+
 - [x] RSVP public endpoint has basic IP+slug rate limiting.
 - [x] RSVP validates attendance status.
 - [x] RSVP constrains existing guest updates to the current invitation.

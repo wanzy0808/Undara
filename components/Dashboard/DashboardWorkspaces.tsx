@@ -37,6 +37,7 @@ import type {
 } from "@/components/Dashboard/dashboard-types";
 import ReferralCodePanel from "@/components/Dashboard/ReferralCodePanel";
 import InvitationQrMenu from "@/components/Dashboard/InvitationQrMenu";
+import { parseInvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 
 function formatEventDate(value: string, locale: "id" | "en" = "id") {
   const date = new Date(value);
@@ -270,6 +271,7 @@ export function RsvpWorkspace({
               key={selectedEvent.id}
               guests={guests}
               slug={selectedEvent.slug}
+              rsvpConfig={parseInvitationRsvpConfig(selectedEvent.templateKey ?? "")}
               accent={accent}
               embedded
               onRefresh={onRefresh}

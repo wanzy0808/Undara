@@ -17,6 +17,7 @@ import type {
 } from "@/components/InvitationStudio/rsvp-types";
 import { rsvpElementStyleCss, type InvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 import { invitationFieldColors } from "@/lib/templates/visual-colors";
+import { confirmedRsvpPax } from "@/lib/guests/rsvp";
 
 export function RsvpSuccessPanel({ ticketGuest, ticketUrl, calendarUrl }: {
   ticketGuest: RsvpTicketGuest;
@@ -39,6 +40,7 @@ export function RsvpSuccessPanel({ ticketGuest, ticketUrl, calendarUrl }: {
             ? "Konfirmasi Anda telah tersimpan. Terima kasih telah memberi kabar bahwa Anda belum dapat hadir."
             : "Konfirmasi Anda telah tersimpan dengan status masih tentatif.")}
       </p>
+      {attending && <p className="mt-3 text-sm font-medium">{tr("Jumlah yang hadir")}: {confirmedRsvpPax(ticketGuest)} {tr("orang")}</p>}
       {attending && ticketUrl && <>
         <div className="mx-auto mt-6 w-fit rounded-2xl bg-white p-3">
           <img src={ticketUrl} alt={tr("QR check-in tamu")} width={280} height={280} className="h-auto max-w-full" />
@@ -125,6 +127,8 @@ export function RsvpInputPanel({
               }
               className="mt-1.5" style={inputFieldStyle}
               placeholder={tr("Nama lengkap")}
+              autoComplete="name"
+              maxLength={120}
               required
             />
           </label>
@@ -132,12 +136,15 @@ export function RsvpInputPanel({
           <label className="text-xs font-medium" style={inputTextStyle}>
             {tr("No. WhatsApp")}
             <Input
+              type="tel"
+              autoComplete="tel"
               value={form.phone}
               onChange={(event) =>
                 setForm({ ...form, phone: event.target.value })
               }
               className="mt-1.5" style={inputFieldStyle}
               placeholder="08xxxxxxxxxx"
+              maxLength={32}
               required
             />
           </label>
@@ -183,53 +190,23 @@ export function RsvpInputPanel({
         <option value="TENTATIVE">{tr("Saya Masih Tentatif")}</option>
       </select>)}
 
-      {form.status === "ATTENDING" && (invitedPax === undefined || invitedPax > 1) && (
+      {form.status === "ATTENDING" && (
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium" style={inputTextStyle}>{tr("Jumlah pendamping")}</legend>
-        {invitedPax !== undefined && invitedPax > 2 ? (
+        <legend className="text-sm font-medium" style={inputTextStyle}>{tr("Jumlah yang hadir")}</legend>
           <Input
             type="number"
-            min={0}
-            max={invitedPax - 1}
+            min={1}
+            max={invitedPax ?? 11}
             step={1}
-            value={form.plusOnes}
-            onChange={(event) => setForm({ ...form, plusOnes: event.target.value })}
+            value={form.plusOnes === "" ? "" : Number(form.plusOnes) + 1}
+            onChange={(event) => setForm({ ...form, plusOnes: event.target.value === "" ? "" : String(Number(event.target.value) - 1) })}
             className="max-w-28"
             style={inputFieldStyle}
-            aria-label={tr("Jumlah pendamping")}
+            aria-label={tr("Jumlah yang hadir")}
+            required
+            readOnly={invitedPax === 1}
           />
-        ) : (
-        <>
-        <div className="flex gap-5 text-sm" style={inputTextStyle}>
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="plusOnes"
-              style={{ accentColor: inputColor }}
-              value="1"
-              checked={form.plusOnes === "1"}
-              onChange={(event) =>
-                setForm({ ...form, plusOnes: event.target.value })
-              }
-            />
-            {tr("Ya")}
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="plusOnes"
-              style={{ accentColor: inputColor }}
-              value="0"
-              checked={form.plusOnes === "0"}
-              onChange={(event) =>
-                setForm({ ...form, plusOnes: event.target.value })
-              }
-            />
-            {tr("Tidak")}
-          </label>
-        </div>
-        </>
-        )}
+        <p className="text-xs opacity-70" style={inputTextStyle}>{tr("Termasuk Anda.")}</p>
       </fieldset>
       )}
 
