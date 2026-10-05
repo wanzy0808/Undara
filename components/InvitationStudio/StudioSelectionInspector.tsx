@@ -21,6 +21,8 @@ import type { CroppablePhotoSlot, GallerySettings, InvitationPhotoAsset, PhotoCr
 import type { InvitationSectionKey } from "@/lib/templates/sections";
 import { invitationSectionInstanceStyle, type InvitationSectionStyle } from "@/lib/templates/section-styles";
 import type { StudioSectionElementKind } from "@/lib/templates/section-element-styles";
+import { nativeVisualIsLocked } from "@/lib/templates/native-visual-locks";
+import type { NativeVisualLayerPosition } from "@/lib/templates/native-visual-order";
 
 type SelectedSectionElement = {
   section: InvitationSectionKey;
@@ -45,6 +47,8 @@ export default function StudioSelectionInspector({
   selectedNativeKey,
   onUpdateNative,
   onDeleteNative,
+  onToggleNativeLock,
+  onPositionNative,
   nativeEditingDisabled = false,
   onCloseNative,
   onCloseAsset,
@@ -86,6 +90,8 @@ export default function StudioSelectionInspector({
   selectedNativeKey: string | null;
   onUpdateNative: (key: string, value: NativeVisualTransform) => void;
   onDeleteNative?: (key: string) => void;
+  onToggleNativeLock?: (key: string) => void;
+  onPositionNative?: (key: string, position: NativeVisualLayerPosition) => void;
   nativeEditingDisabled?: boolean;
   onCloseNative: () => void;
   onCloseAsset: () => void;
@@ -113,12 +119,16 @@ export default function StudioSelectionInspector({
   const scopedLayerPosition = selectedAssetLayer
     ? assetLayerScopePosition(design.layers, selectedAssetLayer.id)
     : { index: selectedAssetIndex, count: design.layers.length };
+  const nativeLocked = selectedNativeKey ? nativeVisualIsLocked(design.nativeLocks, selectedNativeKey) : false;
   const nativeControls = selectedNativeKey && isNativeVisualKey(selectedNativeKey) ? (
     <StudioNativeVisualInspector locale={locale} targetKey={selectedNativeKey}
       value={{ ...defaultNativeVisualTransform, ...templateNativeMotionForKey(design.template, selectedNativeKey, design.sectionStyles), ...nativeVisualTransformForKey(design.nativeVisuals, selectedNativeKey) }}
       ownValue={design.nativeVisuals[selectedNativeKey] ?? null}
       onChange={(value) => onUpdateNative(selectedNativeKey, value)}
       onDelete={onDeleteNative ? () => onDeleteNative(selectedNativeKey) : undefined}
+      onToggleLock={onToggleNativeLock ? () => onToggleNativeLock(selectedNativeKey) : undefined}
+      onPosition={onPositionNative ? (position) => onPositionNative(selectedNativeKey, position) : undefined}
+      locked={nativeLocked}
       disabled={nativeEditingDisabled}
       onClose={onCloseNative} />
   ) : null;
@@ -166,7 +176,7 @@ export default function StudioSelectionInspector({
         motion={templatePhotoMotion(design.template, design.photos.motion, design.sectionStyles)[selectedPhotoSlot]}
         assignments={design.photos}
         assets={photoAssets}
-        disabled={photoEditingDisabled}
+        disabled={photoEditingDisabled || nativeLocked}
         onSetFocus={onSetPhotoFocus}
         onSetCrop={onSetPhotoCrop}
         onResetCrop={onResetPhotoCrop}
@@ -184,6 +194,7 @@ export default function StudioSelectionInspector({
   if (selectedRsvpElementKey) {
     return (
       <div className="undara-studio-selection-stack">
+      <fieldset disabled={nativeEditingDisabled || nativeLocked} className="contents">
       <RsvpElementInspector
         locale={locale}
         elementKey={selectedRsvpElementKey}
@@ -191,6 +202,7 @@ export default function StudioSelectionInspector({
         onConfig={onUpdateRsvpConfig}
         onClose={onCloseRsvp}
       />
+      </fieldset>
       {nativeControls}
       </div>
     );
@@ -199,6 +211,7 @@ export default function StudioSelectionInspector({
   if (selectedSectionElement) {
     return (
       <div className="undara-studio-selection-stack">
+      <fieldset disabled={nativeEditingDisabled || nativeLocked} className="contents">
       <SectionElementInspector
         locale={locale}
         section={selectedSectionElement.section}
@@ -207,6 +220,7 @@ export default function StudioSelectionInspector({
         onChange={onUpdateSectionElementStyles}
         onClose={onCloseSectionElement}
       />
+      </fieldset>
       {nativeControls}
       </div>
     );
@@ -215,6 +229,7 @@ export default function StudioSelectionInspector({
   if (selectedCopyField) {
     return (
       <div className="undara-studio-selection-stack">
+      <fieldset disabled={nativeEditingDisabled || nativeLocked} className="contents">
       <CopyTextInspector
         locale={locale}
         field={selectedCopyField}
@@ -223,6 +238,7 @@ export default function StudioSelectionInspector({
         onReset={() => onResetCopyMotion(selectedCopyField)}
         onClose={onCloseCopy}
       />
+      </fieldset>
       {nativeControls}
       </div>
     );

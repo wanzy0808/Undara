@@ -15,7 +15,7 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 const round = (value: number) => Math.round(value * 100) / 100;
 
 export default function StudioNativeTransformHandles({
-  canvasRef, targetKey, transform, zoom, revision, onCommit,
+  canvasRef, targetKey, transform, zoom, revision, onCommit, locked = false, disabled = false,
 }: {
   canvasRef: RefObject<HTMLDivElement | null>;
   targetKey: string | null;
@@ -23,6 +23,8 @@ export default function StudioNativeTransformHandles({
   zoom: number;
   revision: string;
   onCommit: (key: string, value: NativeVisualTransform) => void;
+  locked?: boolean;
+  disabled?: boolean;
 }) {
   const [box, setBox] = useState<Box | null>(null);
   const gesture = useRef<{
@@ -95,7 +97,7 @@ export default function StudioNativeTransformHandles({
   }
 
   function begin(event: PointerEvent<HTMLButtonElement>, handle: Handle) {
-    if (!targetKey || event.button !== 0 || gesture.current) return;
+    if (!targetKey || locked || disabled || event.button !== 0 || gesture.current) return;
     if (canvasRef.current?.dataset.spacePan === "true") return;
     const node = target();
     if (!node) return;
@@ -116,6 +118,7 @@ export default function StudioNativeTransformHandles({
   }
 
   function move(event: PointerEvent<HTMLButtonElement>) {
+    if (locked || disabled) { end(event, true); return; }
     const drag = gesture.current;
     if (!drag || drag.pointer !== event.pointerId) return;
     if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 2) drag.moved = true;
@@ -138,7 +141,7 @@ export default function StudioNativeTransformHandles({
     if (!drag || drag.pointer !== event.pointerId) return;
     const next = calculate(event);
     gesture.current = null;
-    if (!cancelled && drag.moved && next && targetKey) onCommit(targetKey, next);
+    if (!cancelled && !locked && !disabled && drag.moved && next && targetKey) onCommit(targetKey, next);
     requestAnimationFrame(() => { clear(drag.node); measure(); });
   }
 
@@ -147,29 +150,31 @@ export default function StudioNativeTransformHandles({
   return (
     <div className="undara-studio-native-transform" style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
       aria-label="Transformasi elemen bawaan">
-      {nativeVisualUsesSystemContent(targetKey) && (
-        <span className="undara-studio-native-content-lock" title="Isi dari data acara terkunci; styling tetap editable" aria-label="Isi data acara terkunci">
+      {(locked || nativeVisualUsesSystemContent(targetKey)) && (
+        <span className="undara-studio-native-content-lock" title={locked ? "Elemen dikunci" : "Isi dari data acara terkunci; styling tetap editable"} aria-label={locked ? "Elemen dikunci" : "Isi data acara terkunci"}>
           <Lock size={12} />
         </span>
       )}
-      <button type="button" className="undara-studio-native-move" aria-label="Geser elemen" title="Tarik untuk menggeser"
+      {!locked && <>
+      <button type="button" disabled={disabled} className="undara-studio-native-move" aria-label="Geser elemen" title="Tarik untuk menggeser"
         onPointerDown={(event) => begin(event, "move")} onPointerMove={move} onPointerUp={end}
-        onPointerCancel={(event) => end(event, true)} />
+        onPointerCancel={(event) => end(event, true)} onLostPointerCapture={(event) => end(event, true)} />
       {handles.map((handle) => (
-        <button key={handle} type="button" className={`undara-studio-native-handle undara-studio-native-handle--${handle}`}
+        <button key={handle} type="button" disabled={disabled} className={`undara-studio-native-handle undara-studio-native-handle--${handle}`}
           aria-label={`Ubah ukuran dari ${handle}`} title={`Tarik untuk mengubah ukuran dari ${handle}`}
           onPointerDown={(event) => begin(event, handle)} onPointerMove={move} onPointerUp={end}
-          onPointerCancel={(event) => end(event, true)} />
+          onPointerCancel={(event) => end(event, true)} onLostPointerCapture={(event) => end(event, true)} />
       ))}
-      {transform && <button type="button" className="undara-studio-native-reset" aria-label="Reset posisi ukuran dan rotasi elemen"
+      {transform && <button type="button" disabled={disabled} className="undara-studio-native-reset" aria-label="Reset posisi ukuran dan rotasi elemen"
         title="Reset transformasi" onClick={(event) => { event.stopPropagation(); onCommit(targetKey, { ...transform, ...defaultNativeVisualTransform }); canvasRef.current?.focus({ preventScroll: true }); }}>
         <RotateCcw size={14} />
       </button>}
-      <button type="button" className="undara-studio-native-rotate" aria-label="Putar elemen"
+      <button type="button" disabled={disabled} className="undara-studio-native-rotate" aria-label="Putar elemen"
         title="Tarik untuk memutar" onPointerDown={(event) => begin(event, "rotate")}
-        onPointerMove={move} onPointerUp={end} onPointerCancel={(event) => end(event, true)}>
+        onPointerMove={move} onPointerUp={end} onPointerCancel={(event) => end(event, true)} onLostPointerCapture={(event) => end(event, true)}>
         <RotateCw size={15} />
       </button>
+      </>}
     </div>
   );
 }

@@ -21,7 +21,7 @@ type AssetLayerInspectorProps = {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-function LayerStackIcon({ action }: { action: "front" | "forward" | "backward" | "back" }) {
+export function LayerStackIcon({ action }: { action: "front" | "forward" | "backward" | "back" }) {
   const up = action === "front" || action === "forward";
   const edge = action === "front" || action === "back";
   return (

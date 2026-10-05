@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlignCenter, AlignLeft, AlignRight, Lock, Play, RotateCcw, Trash2, X } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, Lock, Unlock, Play, RotateCcw, Trash2, X } from "lucide-react";
+import { LayerStackIcon } from "@/components/InvitationStudio/AssetLayerInspector";
+import { studioNativeLayerPeers } from "@/components/InvitationStudio/studio-native-layer-order";
+import type { NativeVisualLayerPosition } from "@/lib/templates/native-visual-order";
 import StudioColorField from "@/components/InvitationStudio/StudioColorField";
 import { Button } from "@/components/ui/button";
 import InvitationFonts from "@/components/PublicInvitation/InvitationFonts";
@@ -32,7 +35,7 @@ const nativeFontFamilies = [...new Set(
 )].sort((a, b) => a.localeCompare(b));
 
 export default function StudioNativeVisualInspector({
-  locale, targetKey, value, ownValue, onChange, onClose, onDelete, disabled = false,
+  locale, targetKey, value, ownValue, onChange, onClose, onDelete, onToggleLock, onPosition, locked = false, disabled = false,
 }: {
   locale: string;
   targetKey: string;
@@ -41,6 +44,9 @@ export default function StudioNativeVisualInspector({
   onChange: (value: NativeVisualTransform) => void;
   onClose: () => void;
   onDelete?: () => void;
+  onToggleLock?: () => void;
+  onPosition?: (position: NativeVisualLayerPosition) => void;
+  locked?: boolean;
   disabled?: boolean;
 }) {
   const en = locale === "en";
@@ -49,7 +55,7 @@ export default function StudioNativeVisualInspector({
   const animationCapable = nativeVisualSupportsAnimation(targetKey);
   const systemContent = nativeVisualUsesSystemContent(targetKey);
   const photo = targetKey.startsWith("photo:");
-  const [paint, setPaint] = useState<{ key: string; kind: ReturnType<typeof nativeVisualPaintKind>; frame: boolean; image: boolean } | null>(null);
+  const [paint, setPaint] = useState<{ key: string; kind: ReturnType<typeof nativeVisualPaintKind>; frame: boolean; image: boolean; layerIndex: number; layerCount: number } | null>(null);
   const paintKind = paint?.key === targetKey ? paint.kind : "none";
   const framePaint = paint?.key === targetKey ? paint.frame : true;
   useEffect(() => {
@@ -61,14 +67,17 @@ export default function StudioNativeVisualInspector({
       const kind = nativeVisualPaintKind(target);
       const frame = nativeVisualSupportsFramePaint(target);
       const image = target?.tagName.toLowerCase() === "img";
+      const layers = studioNativeLayerPeers(target, surface as HTMLElement);
+      const layerIndex = layers.indexOf(targetKey), layerCount = layers.length;
       setPaint((previous) => previous?.key === targetKey && previous.kind === kind && previous.frame === frame && previous.image === image
-        ? previous : { key: targetKey, kind, frame, image });
+        && previous.layerIndex === layerIndex && previous.layerCount === layerCount
+        ? previous : { key: targetKey, kind, frame, image, layerIndex, layerCount });
     };
     inspect();
     const observer = new MutationObserver(inspect);
     observer.observe(surface, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, [targetKey]);
+  }, [targetKey, value?.layerOrder]);
   const section = targetKey.split(":")[1] ?? "";
   const title = targetKey.startsWith("heading:")
     ? (en ? `${section} heading` : `Judul ${section}`)
@@ -116,15 +125,41 @@ export default function StudioNativeVisualInspector({
       <InvitationFonts families={current.fontFamily ? [current.fontFamily] : []} />
       <div className="flex items-center justify-between gap-2">
         <h3 className="truncate text-sm font-semibold capitalize text-primary">{title}</h3>
+        {onToggleLock && <Button type="button" size="icon" variant={locked ? "default" : "outline"}
+          aria-pressed={locked} aria-label={locked ? (en ? "Unlock element" : "Buka kunci elemen") : (en ? "Lock element" : "Kunci elemen")}
+          title={locked ? (en ? "Unlock element" : "Buka kunci elemen") : (en ? "Lock element" : "Kunci elemen")}
+          disabled={disabled} onClick={onToggleLock}>
+          {locked ? <Lock size={15} /> : <Unlock size={15} />}
+        </Button>}
         <button type="button" onClick={onClose} aria-label={en ? "Close properties" : "Tutup properti"}
           className="grid h-8 w-8 place-items-center rounded-lg hover:bg-primary/10"><X size={16} /></button>
       </div>
-      <fieldset disabled={disabled} className="contents">
+      <fieldset disabled={disabled || locked} className="contents">
       {systemContent && (
         <p className="mt-3 flex items-center gap-2 text-xs leading-5 text-muted-foreground">
           <Lock size={13} className="mt-0.5 shrink-0 text-primary" />
           <span>{en ? "Content from event data" : "Isi dari data acara"}</span>
         </p>
+      )}
+
+      {onPosition && paint?.key === targetKey && paint.layerCount > 1 && paint.layerIndex >= 0 && (
+        <div className="mt-4 text-xs text-foreground">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span>{en ? "Layer order" : "Urutan layer"}</span>
+            <output>{paint.layerIndex + 1}/{paint.layerCount}</output>
+          </div>
+          <div className="undara-studio-layer-order" role="group" aria-label={en ? "Layer order" : "Urutan layer"}>
+            {(["front", "forward", "backward", "back"] as const).map((action) => {
+              const label = action === "front" ? (en ? "Bring to front" : "Paling depan")
+                : action === "forward" ? (en ? "Bring forward one layer" : "Naik 1 layer")
+                : action === "backward" ? (en ? "Send backward one layer" : "Turun 1 layer")
+                : (en ? "Send to back" : "Paling belakang");
+              const atEdge = action === "front" || action === "forward" ? paint.layerIndex === paint.layerCount - 1 : paint.layerIndex === 0;
+              return <button key={action} type="button" onClick={() => onPosition(action)}
+                aria-label={label} title={label} disabled={atEdge}><LayerStackIcon action={action} /></button>;
+            })}
+          </div>
+        </div>
       )}
 
       <div className="mt-4 grid grid-cols-2 gap-3">

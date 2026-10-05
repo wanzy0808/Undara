@@ -29,6 +29,7 @@ import InvitationColorFilters from "@/components/PublicInvitation/InvitationColo
 import { invitationComponentColorCss } from "@/lib/templates/component-colors";
 import { instancesForSection, parseInvitationSectionLayout } from "@/lib/templates/section-layout";
 import EditableSectionInstance, { type SectionInstanceEditorActions } from "@/components/PublicInvitation/EditableSectionInstance";
+import { useInvitationNativeLayerOrder } from "@/components/PublicInvitation/use-native-layer-order";
 import { useInvitationSectionAnimations } from "@/components/PublicInvitation/use-section-animations";
 import { usePremiumSectionTimelines } from "@/components/PublicInvitation/use-premium-section-timelines";
 import { useInvitationPhotoAnimations } from "@/components/PublicInvitation/use-photo-animations";
@@ -215,6 +216,7 @@ export default function RomanticRoseTemplate({
   const rsvpConfig = parseInvitationRsvpConfig(activeDesignKey);
   const sectionElementStyles = parseSectionElementStyles(activeDesignKey);
   const sectionLayout = parseInvitationSectionLayout(activeDesignKey);
+  useInvitationNativeLayerOrder(rootRef, activeDesignKey);
   const sectionEditorActions: SectionInstanceEditorActions | undefined = editorPreview ? {
     selectedId: selectedSectionInstanceId,
     onSelect: onSelectSectionInstance,

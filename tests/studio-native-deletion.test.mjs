@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import StudioSelectionInspectorModule from "../components/InvitationStudio/StudioSelectionInspector.tsx";
 import { invitationTemplatePresets } from "../components/InvitationStudio/designer-config.ts";
 import { invitationDesignStateFromKey, makeInvitationDesignStateKey } from "../components/InvitationStudio/designer-state.ts";
+import { nativeVisualIsLocked } from "../lib/templates/native-visual-locks.ts";
 import * as native from "../lib/templates/native-visual-transforms.ts";
 import { defaultInvitationSections } from "../lib/templates/sections.ts";
 import { defaultPhotoAssignments } from "../lib/templates/photo-slots.ts";
@@ -15,7 +16,7 @@ import { defaultInvitationSectionLayout } from "../lib/templates/section-layout.
 
 const source = readFileSync(new URL("../components/InvitationStudio/InvitationDesigner.tsx", import.meta.url), "utf8");
 const parsed = ts.createSourceFile("InvitationDesigner.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-const names = ["clearCanvasSelection", "commitNativeVisual", "hideSelectedNativeVisual", "deleteSectionInstance", "restoreDefaults"];
+const names = ["clearCanvasSelection", "commitNativeVisual", "hideSelectedNativeVisual", "deleteSectionInstance", "restoreDefaults", "toggleNativeLock", "duplicateSectionInstance"];
 const functions = new Map();
 function visit(node) {
   if (ts.isFunctionDeclaration(node) && names.includes(node.name?.text)) functions.set(node.name.text, node.getText(parsed));
@@ -35,6 +36,7 @@ function editorHarness(initial = invitationDesignStateFromKey("garden-light", ""
   const ui = { setSelectedPhotoSlot: "personOne", setSelectedNativeKey: "photo:personOne", setCropModeSlot: "personOne" };
   let focusCount = 0;
   const context = {
+    nativeVisualIsLocked,
     defaultNativeVisualTransform: native.defaultNativeVisualTransform,
     isNativeVisualKey: native.isNativeVisualKey,
     nativeVisualCanHide: native.nativeVisualCanHide,
@@ -44,6 +46,7 @@ function editorHarness(initial = invitationDesignStateFromKey("garden-light", ""
     defaultInvitationSections, defaultPhotoAssignments,
     defaultInvitationRsvpConfig, defaultInvitationSectionLayout, invitationTemplatePresets,
     design, invitation: event, saving: false, audioBusy: false, audioMutation: { current: false },
+    assetLayerUsage: 0, maxAssetLayers: 12, locale: "id", crypto,
     blankCanvasSections: {}, selectedSectionInstanceId: "cover", selectedAssetLayer: null,
     draggedAssetSrc: { current: null }, canvasScrollRef: { current: { scrollTo() {} } },
     requestAnimationFrame: (callback) => callback(),
@@ -149,6 +152,57 @@ test("unregistered selectors and busy editor states cannot remove visuals", () =
     assert.deepEqual(native.sanitizeNativeVisualTransforms({ [key]: { ...native.defaultNativeVisualTransform, hidden: true } }), {});
   }
   assert.deepEqual(editor.design.nativeVisuals, {});
+});
+
+test("native lock blocks direct styling, geometry and deletion until explicitly unlocked, with Undo", () => {
+  const editor = editorHarness();
+  const key = "photo:personOne:identity";
+  editor.toggleNativeLock(key);
+  assert.equal(editor.reload().nativeLocks[key], true);
+  const count = editor.history.length;
+  editor.commitNativeVisual(key, { ...native.defaultNativeVisualTransform, x: 18, color: "#123456" });
+  assert.equal(editor.hideSelectedNativeVisual(key), false);
+  assert.equal(editor.history.length, count);
+  assert.equal(editor.design.nativeVisuals[key], undefined);
+  editor.toggleNativeLock(key);
+  assert.equal(nativeVisualIsLocked(editor.reload().nativeLocks, key), false);
+  editor.undo();
+  assert.equal(nativeVisualIsLocked(editor.reload().nativeLocks, key), true);
+  editor.toggleNativeLock(key);
+  editor.commitNativeVisual(key, { ...native.defaultNativeVisualTransform, x: 18 });
+  assert.equal(editor.reload().nativeVisuals[key].x, 18);
+  assert.equal(editor.event.assets[0].id, "photo-a");
+});
+
+test("unlocking one inherited native lock leaves its sibling locked and preserves an explicit false override", () => {
+  const editor = editorHarness();
+  editor.design.nativeLocks["photo:personOne"] = true;
+  editor.toggleNativeLock("photo:personOne:identity_copy2");
+  const reloaded = editor.reload();
+  assert.equal(reloaded.nativeLocks["photo:personOne:identity_copy2"], false);
+  assert.equal(nativeVisualIsLocked(reloaded.nativeLocks, "photo:personOne:identity_copy2"), false);
+  assert.equal(nativeVisualIsLocked(reloaded.nativeLocks, "photo:personOne:identity"), true);
+});
+
+test("section Duplicate/Delete and Default carry or clear native locks and layer order with their own instance", () => {
+  const editor = editorHarness();
+  const key = "object:cover:content-group:cover";
+  editor.design.nativeLocks[key] = true;
+  editor.design.nativeVisuals[key] = { ...native.defaultNativeVisualTransform, x: 12, layerOrder: 3 };
+  editor.duplicateSectionInstance("cover");
+  const duplicate = editor.design.sectionLayout.find((item) => item.key === "cover" && item.id !== "cover");
+  const cloneKey = `object:cover:content-group:${duplicate.id}`;
+  assert.equal(editor.reload().nativeLocks[cloneKey], true);
+  assert.equal(editor.reload().nativeVisuals[cloneKey].layerOrder, 3);
+  editor.deleteSectionInstance(duplicate.id);
+  assert.equal(editor.reload().nativeLocks[cloneKey], undefined);
+  assert.equal(editor.reload().nativeLocks[key], true);
+  editor.restoreDefaults();
+  assert.deepEqual(editor.reload().nativeLocks, {});
+  assert.deepEqual(editor.reload().nativeVisuals, {});
+  editor.undo();
+  assert.equal(editor.reload().nativeLocks[key], true);
+  assert.equal(editor.reload().nativeVisuals[key].layerOrder, 3);
 });
 
 test("right inspector binds Delete to the selected instance, exposes short ID/EN labels and obeys busy state", () => {

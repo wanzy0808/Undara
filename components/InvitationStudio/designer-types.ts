@@ -10,6 +10,7 @@ import type { InvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 import type { InvitationSectionInstance } from "@/lib/templates/section-layout";
 import type { StudioSectionElementStyles } from "@/lib/templates/section-element-styles";
 import type { NativeVisualTransforms } from "@/lib/templates/native-visual-transforms";
+import type { NativeVisualLocks } from "@/lib/templates/native-visual-locks";
 
 export type InvitationDesignerInvitation = {
   id: string;
@@ -80,6 +81,7 @@ export type InvitationDesignState = {
   sectionLayout: InvitationSectionInstance[];
   sectionElementStyles: StudioSectionElementStyles;
   nativeVisuals: NativeVisualTransforms;
+  nativeLocks: NativeVisualLocks;
 };
 
 export type InvitationTemplateLayout =

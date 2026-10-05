@@ -18,6 +18,8 @@ export type NativeVisualTransform = {
   scaleX: number;
   scaleY: number;
   rotation: number;
+  /** Paint order within a native DOM sibling group; never global page order. */
+  layerOrder?: number;
   /** Optional visual overrides share the same persisted nativeVisuals token. */
   opacity?: number;
   color?: string;
@@ -167,6 +169,8 @@ export function sanitizeNativeVisualTransforms(value: unknown): NativeVisualTran
       scaleY: clamp(source.scaleY, 0.25, 3, 1),
       rotation: clamp(source.rotation, -180, 180, 0),
     };
+    const layerOrder = optionalNumber(source.layerOrder, 0, 511);
+    if (layerOrder !== undefined) transform.layerOrder = Math.round(layerOrder);
     if (capabilities.opacity) transform.opacity = optionalNumber(source.opacity, 0.2, 1);
     if (capabilities.colors) {
       transform.color = safeVisualColor(source.color);
@@ -337,6 +341,7 @@ export function nativeVisualStyleSheet(designKey: string) {
       `rotate:${transform.rotation}deg`,
       `scale:${transform.scaleX} ${transform.scaleY}`,
       "transform-origin:center",
+      transform.layerOrder !== undefined ? `z-index:${transform.layerOrder}!important` : "",
       transform.opacity !== undefined ? `opacity:${transform.opacity}` : "",
       transform.color && !key.startsWith("photo:") ? `color:${transform.color}!important` : "",
       transform.background ? `background:${transform.background}!important` : "",
@@ -354,6 +359,9 @@ export function nativeVisualStyleSheet(designKey: string) {
       transform.hidden ? "display:none!important" : "",
     ].filter(Boolean).join(";");
     const rules = [`.${scope} ${selector}{${declarations};}`];
+    if (transform.layerOrder !== undefined) {
+      rules.push(`.${scope} ${selector}[data-invitation-native-layer-static="true"]{position:relative!important;}`);
+    }
     if (transform.color) {
       const tint = invitationColorFilterCss(transform.color, "tint");
       rules.push(`.${scope} ${selector}:is(img),.${scope} ${nativeVisualOwnedDescendants(selector, "img")}{filter:${tint}!important;}`);

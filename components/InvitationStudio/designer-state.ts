@@ -1,3 +1,4 @@
+import { parseNativeVisualLocks, withNativeVisualLocks } from "@/lib/templates/native-visual-locks";
 import {
   getEventCategory,
   normalizeEventCategory,
@@ -83,7 +84,7 @@ export function formatInvitationEventDate(
 }
 
 export function makeInvitationDesignStateKey(state: InvitationDesignState) {
-  return withNativeVisualTransforms(withSectionElementStyles(withInvitationSectionLayout(withInvitationRsvpConfig(withInvitationSectionStyles(withAssetLayers(withEditableCopyMotions(withEnglishEditableCopy(withEditableCopy(
+  const key = withNativeVisualTransforms(withSectionElementStyles(withInvitationSectionLayout(withInvitationRsvpConfig(withInvitationSectionStyles(withAssetLayers(withEditableCopyMotions(withEnglishEditableCopy(withEditableCopy(
     withPhotoAssignments(
       withInvitationSections(
         makeDesignKey(state.template, state.palette, state.font, state.decor),
@@ -93,6 +94,7 @@ export function makeInvitationDesignStateKey(state: InvitationDesignState) {
     ),
     state.copy,
   ), state.copyEn), state.copyMotion), state.layers), state.sectionStyles), state.rsvpConfig), state.sectionLayout), state.sectionElementStyles), state.nativeVisuals);
+  return withNativeVisualLocks(key, state.nativeLocks);
 }
 
 export function invitationDesignStateFromKey(
@@ -120,5 +122,6 @@ export function invitationDesignStateFromKey(
     sectionLayout: parseInvitationSectionLayout(key),
     sectionElementStyles: parseSectionElementStyles(key),
     nativeVisuals: parseNativeVisualTransforms(key),
+    nativeLocks: parseNativeVisualLocks(key),
   };
 }

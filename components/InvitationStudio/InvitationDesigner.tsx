@@ -29,10 +29,14 @@ import StudioFinalPreviewDialog from "@/components/InvitationStudio/StudioFinalP
 import StudioStageControls from "@/components/InvitationStudio/StudioStageControls";
 import StudioCanvasFooter, { type CanvasNavigationItem } from "@/components/InvitationStudio/StudioCanvasFooter";
 import StudioNativeTransformHandles from "@/components/InvitationStudio/StudioNativeTransformHandles";
+import { studioNativeLayerPeers } from "@/components/InvitationStudio/studio-native-layer-order";
+import { nativeVisualIsLocked } from "@/lib/templates/native-visual-locks";
+import { positionNativeVisuals, type NativeVisualLayerPosition } from "@/lib/templates/native-visual-order";
 import {
   defaultNativeVisualTransform,
   isNativeVisualKey,
   nativeVisualCanHide,
+  nativeVisualSelector,
   nativePhotoVisualKey,
   nativeVisualInstanceId,
   nativeVisualTransformForKey,
@@ -324,7 +328,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} },
     sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })),
     sectionElementStyles: {},
-    nativeVisuals: {},
+    nativeVisuals: {}, nativeLocks: {},
   });
   const assetLayerUsage = templateMode
     ? design.layers.length
@@ -447,7 +451,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     const requestedTheme = params.get("template") || (params.get("from") === "template" ? readTemplateSelection() : null);
     const requestedPreset = requestedTheme ? invitationTemplatePresets[requestedTheme] : undefined;
     const stagedDesign: InvitationDesignState = requestedTheme && requestedTheme !== loadedDesign.template && requestedPreset
-      ? { ...loadedDesign, template: requestedTheme, palette: requestedPreset.palette, font: requestedPreset.font, copy: {}, copyEn: {}, copyMotion: {}, layers: [], sectionStyles: {}, rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} }, sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })), sectionElementStyles: {}, nativeVisuals: {} }
+      ? { ...loadedDesign, template: requestedTheme, palette: requestedPreset.palette, font: requestedPreset.font, copy: {}, copyEn: {}, copyMotion: {}, layers: [], sectionStyles: {}, rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} }, sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })), sectionElementStyles: {}, nativeVisuals: {}, nativeLocks: {} }
       : loadedDesign;
     // Use actual persisted fields for cache identity; fallback photo URLs can change after an upload.
     const serverBaseline = makeStudioServerRevision(next);
@@ -604,7 +608,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} },
       sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })),
       sectionElementStyles: {},
-    nativeVisuals: {},
+    nativeVisuals: {}, nativeLocks: {},
     });
     setMusicUrl("");
     setSelectedCatalogKey("blank-canvas");
@@ -672,6 +676,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
         sectionLayout: templateKey === design.template ? design.sectionLayout : defaultInvitationSectionLayout.map((item) => ({ ...item })),
         sectionElementStyles: templateKey === design.template ? design.sectionElementStyles : {},
         nativeVisuals: templateKey === design.template ? design.nativeVisuals : {},
+        nativeLocks: templateKey === design.template ? design.nativeLocks : {},
       });
       setMusicUrl(getInvitationDefaultMusic(templateKey).url);
     }
@@ -710,7 +715,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} },
       sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })),
       sectionElementStyles: {},
-      nativeVisuals: {},
+      nativeVisuals: {}, nativeLocks: {},
     });
     setMusicUrl("");
     setActivePhotoSlot("cover");
@@ -1460,12 +1465,16 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     });
 
     const nativeVisuals = { ...design.nativeVisuals };
+    const nativeLocks = { ...design.nativeLocks };
     for (const [key, value] of Object.entries(design.nativeVisuals)) {
       if (nativeVisualInstanceId(key) !== source.id) continue;
       nativeVisuals[`${key.slice(0, -source.id.length)}${copyId}`] = { ...value };
     }
+    for (const [key, locked] of Object.entries(design.nativeLocks)) {
+      if (nativeVisualInstanceId(key) === source.id) nativeLocks[`${key.slice(0, -source.id.length)}${copyId}`] = locked;
+    }
 
-    change({ sectionLayout: next, layers: [...design.layers, ...clonedLayers], nativeVisuals });
+    change({ sectionLayout: next, layers: [...design.layers, ...clonedLayers], nativeVisuals, nativeLocks });
     setSelectedSectionKey(source.key);
     setSelectedSectionInstanceId(copyId);
   }
@@ -1481,10 +1490,13 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     const nativeVisuals = Object.fromEntries(
       Object.entries(design.nativeVisuals).filter(([key]) => nativeVisualInstanceId(key) !== id),
     );
+    const nativeLocks = Object.fromEntries(Object.entries(design.nativeLocks)
+      .filter(([key]) => nativeVisualInstanceId(key) !== id));
     change({
       sectionLayout: next,
       layers,
       nativeVisuals,
+      nativeLocks,
       ...(!hasSameSection ? { sections: { ...design.sections, [source.key]: false } } : {}),
     });
     if (selectedSectionInstanceId === id) {
@@ -1635,7 +1647,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   const activeNativeTransform = activeNativeKey ? nativeVisualTransformForKey(design.nativeVisuals, activeNativeKey) : undefined;
 
   function commitNativeVisual(key: string, value: NativeVisualTransform) {
-    if (!isNativeVisualKey(key)) return;
+    if (!invitation || saving || audioBusy || !isNativeVisualKey(key) || nativeVisualIsLocked(design.nativeLocks, key)) return;
     const next = { ...design.nativeVisuals };
     const normalized = sanitizeNativeVisualTransforms({ [key]: value })[key];
     if (normalized) next[key] = normalized;
@@ -1643,8 +1655,28 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     change({ nativeVisuals: next });
   }
 
+  function toggleNativeLock(key: string) {
+    if (!invitation || saving || audioBusy || !isNativeVisualKey(key)) return;
+    const nativeLocks = { ...design.nativeLocks };
+    const baseKey = nativeVisualInstanceId(key) ? key.slice(0, key.lastIndexOf(":")) : key;
+    if (!nativeVisualIsLocked(nativeLocks, key)) nativeLocks[key] = true;
+    else if (baseKey !== key && nativeLocks[baseKey] === true) nativeLocks[key] = false;
+    else delete nativeLocks[key];
+    change({ nativeLocks });
+  }
+
+  function positionNativeVisual(key: string, position: NativeVisualLayerPosition) {
+    if (!invitation || saving || audioBusy || nativeVisualIsLocked(design.nativeLocks, key)) return;
+    const surface = canvasScrollRef.current?.querySelector<HTMLElement>(".undara-studio-preview-surface");
+    const selector = nativeVisualSelector(key);
+    if (!surface || !selector) return;
+    const peers = studioNativeLayerPeers(surface.querySelector(selector), surface);
+    const next = positionNativeVisuals(design.nativeVisuals, peers, key, position, design.nativeLocks);
+    if (next !== design.nativeVisuals) change({ nativeVisuals: next });
+  }
+
   function hideSelectedNativeVisual(key: string) {
-    if (!invitation || saving || audioBusy || !nativeVisualCanHide(key)) return false;
+    if (!invitation || saving || audioBusy || !nativeVisualCanHide(key) || nativeVisualIsLocked(design.nativeLocks, key)) return false;
     const current = { ...defaultNativeVisualTransform, ...nativeVisualTransformForKey(design.nativeVisuals, key), hidden: true };
     commitNativeVisual(key, current);
     clearCanvasSelection();
@@ -1678,7 +1710,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       const modifier = event.ctrlKey || event.metaKey;
       const shortcutKey = event.key.toLowerCase();
 
-      if (!modifier && !event.altKey && activeNativeKey && !selectedAssetLayer
+      if (!modifier && !event.altKey && activeNativeKey && !selectedAssetLayer && !nativeVisualIsLocked(design.nativeLocks, activeNativeKey)
         && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
         event.preventDefault();
         const step = event.shiftKey ? 5 : 1;
@@ -1690,7 +1722,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
         });
         return;
       }
-      if (!modifier && !event.altKey && activeNativeKey && !selectedAssetLayer
+      if (!modifier && !event.altKey && activeNativeKey && !selectedAssetLayer && !nativeVisualIsLocked(design.nativeLocks, activeNativeKey)
         && (event.key === "Delete" || event.key === "Backspace")) {
         event.preventDefault();
         hideSelectedNativeVisual(activeNativeKey);
@@ -1771,7 +1803,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     }
     window.addEventListener("keydown", handleLayerShortcut);
     return () => window.removeEventListener("keydown", handleLayerShortcut);
-  }, [invitation, saving, audioBusy, canvasStage, selectedPhotoSlot, selectedAssetLayer, selectedAssetLayers, selectedLayerIds, copiedAssetLayer, copiedAssetLayers, design.layers, design.nativeVisuals, design.sections, design.sectionLayout, selectedSectionKey, selectedSectionInstanceId, activeNativeKey, locale]);
+  }, [invitation, saving, audioBusy, canvasStage, selectedPhotoSlot, selectedAssetLayer, selectedAssetLayers, selectedLayerIds, copiedAssetLayer, copiedAssetLayers, design.layers, design.nativeVisuals, design.nativeLocks, design.sections, design.sectionLayout, selectedSectionKey, selectedSectionInstanceId, activeNativeKey, locale]);
 
   function undo() {
     const key = history.at(-1);
@@ -2232,6 +2264,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
               selectedNativeKey={activeNativeKey}
               onUpdateNative={commitNativeVisual}
               onDeleteNative={hideSelectedNativeVisual}
+              onToggleNativeLock={toggleNativeLock}
+              onPositionNative={positionNativeVisual}
               nativeEditingDisabled={!invitation || saving || audioBusy}
               onCloseNative={clearCanvasSelection}
               onCloseAsset={() => { setSelectedLayerIds([]); setSelectedLayerId(null); }}
@@ -2261,6 +2295,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
             canvasRef={canvasScrollRef}
             targetKey={activeNativeKey}
             transform={activeNativeTransform}
+            locked={activeNativeKey ? nativeVisualIsLocked(design.nativeLocks, activeNativeKey) : false}
+            disabled={!invitation || saving || audioBusy}
             zoom={canvasZoom}
             revision={`${designKey}|${canvasStage}|${previewVersion}`}
             onCommit={commitNativeVisual}
