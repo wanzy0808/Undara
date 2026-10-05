@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     });
     const download = url.searchParams.get("download") === "1";
     const locale = url.searchParams.get("locale") === "en" ? "en" : "id";
-    const bytes = download ? await invitationQrDownloadCard(qrBytes, invitation.title, locale) : qrBytes;
+    const bytes = await invitationQrDownloadCard(qrBytes, invitation.title, locale);
     return new Response(new Uint8Array(bytes), {
       status: 200,
       headers: {

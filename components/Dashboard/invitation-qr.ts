@@ -10,5 +10,5 @@ export function accessibleInvitationQrOptions(invitations: InvitationQrOption[])
 }
 
 export function invitationQrImageUrl(invitationId: string, download = false, locale: "id" | "en" = "id") {
-  return `/api/invitations/qr?invitationId=${encodeURIComponent(invitationId)}${download ? `&download=1${locale === "en" ? "&locale=en" : ""}` : ""}`;
+  return `/api/invitations/qr?invitationId=${encodeURIComponent(invitationId)}${download ? "&download=1" : ""}${locale === "en" ? "&locale=en" : ""}`;
 }

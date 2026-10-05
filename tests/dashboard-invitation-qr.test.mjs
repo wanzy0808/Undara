@@ -55,7 +55,7 @@ test("Beranda QR menu renders a localized dialog trigger without loading an invi
   }
 });
 
-test("English card downloads follow the dashboard locale without changing the plain QR preview", () => {
+test("card preview and download use the same dashboard locale without allowing ID query injection", () => {
   const id = "invitation-a&locale=en";
   const english = new URL(invitationQrImageUrl(id, true, "en"), "https://undara.example.test");
   assert.equal(english.searchParams.get("invitationId"), id);
@@ -64,8 +64,15 @@ test("English card downloads follow the dashboard locale without changing the pl
   assert.equal(english.searchParams.size, 3);
   const indonesian = new URL(invitationQrImageUrl(id, true, "id"), english.origin);
   assert.equal(indonesian.searchParams.has("locale"), false);
-  assert.equal(invitationQrImageUrl(id, false, "en"), invitationQrImageUrl(id));
+  const preview = new URL(invitationQrImageUrl(id, false, "en"), english.origin);
+  assert.equal(preview.searchParams.get("invitationId"), id);
+  assert.equal(preview.searchParams.get("locale"), "en");
+  assert.equal(preview.searchParams.has("download"), false);
+  assert.equal(preview.searchParams.size, 2);
+  english.searchParams.delete("download");
+  assert.equal(preview.href, english.href);
   const source = readFileSync(new URL("../components/Dashboard/InvitationQrPreview.tsx", import.meta.url), "utf8");
+  assert.match(source, /invitationQrImageUrl\(invitationId, false, locale\)/);
   assert.match(source, /invitationQrImageUrl\(invitationId, true, locale\)/);
 });
 
@@ -73,6 +80,8 @@ test("QR preview loads the selected invitation and disables download until the i
   const html = render(createElement(InvitationQrPreview, { invitationId: "paid-draft", title: "Acara Keluarga" }));
   assert.match(html, /src="\/api\/invitations\/qr\?invitationId=paid-draft"/);
   assert.match(html, /alt="QR Undangan · Acara Keluarga"/);
+  assert.match(html, /<img[^>]*width="900"[^>]*height="1320"/);
+  assert.ok(html.indexOf("<img") < html.indexOf("<button"));
   assert.match(html, /role="status"/);
   assert.match(html, /<button[^>]*disabled/);
   assert.doesNotMatch(html, /<a[^>]*download/);
@@ -82,6 +91,7 @@ test("QR preview uses English feedback and escapes the invitation title", () => 
   const html = render(createElement(InvitationQrPreview, { invitationId: "paid-public", title: '<script>alert("x")</script>' }), "en");
   assert.ok(html.includes("Loading QR..."));
   assert.ok(html.includes("Invitation QR"));
+  assert.match(html, /src="\/api\/invitations\/qr\?invitationId=paid-public&amp;locale=en"/);
   assert.doesNotMatch(html, /<script>/);
   assert.match(html, /&lt;script&gt;/);
 });
