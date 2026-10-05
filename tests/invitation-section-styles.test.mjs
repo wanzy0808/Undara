@@ -62,7 +62,7 @@ test("Envelope and Cover backgrounds reach their nested scene root without recol
   const universal = read("components/PublicInvitation/UniversalInvitationTemplate.tsx");
   assert.match(universal, /<style>\{invitationSectionBackgroundRule\}<\/style>/);
   assert.match(universal, /data-invitation-background-override=\{sectionStyles\.envelope\?\.background/);
-  assert.match(universal, /data-invitation-background-override=\{sectionStyles\.cover\?\.background/);
+  assert.match(universal, /data-invitation-background-override=\{sectionStyle\?\.background/);
 });
 
 test("Studio section selection opens a right-side inspector and renderers consume saved styles", () => {
@@ -90,7 +90,7 @@ test("Studio section selection opens a right-side inspector and renderers consum
   assert.match(inspector, /Perataan/);
   assert.match(inspector, /Ruang vertikal/);
   assert.match(inspector, /Opasitas/);
-  assert.match(inspector, /Warna latar section/);
+  assert.match(inspector, /<StudioColorField[\s\S]*?label=\{en \? "Background" : "Latar"\}/);
   assert.doesNotMatch(inspector, />\s*Default\s*</);
   assert.match(inspector, /undara-studio-section-reset/);
   assert.doesNotMatch(inspector, /functionalNotes|>Komponen<|>Components</);

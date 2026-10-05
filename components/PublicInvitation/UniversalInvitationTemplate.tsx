@@ -40,7 +40,7 @@ import { parseEditableCopyMotions } from "@/lib/templates/editable-copy-motion";
 import { getInvitationTemplate } from "@/lib/templates/catalog";
 import { photoCropStyle, resolveGallerySettings, resolveInvitationPhotos, resolvePhotoCrop, type CroppablePhotoSlot, type PhotoAssignments, type PhotoCrop, type PhotoSlot } from "@/lib/templates/photo-slots";
 import { parseInvitationSections, type InvitationSectionKey, type InvitationSections } from "@/lib/templates/sections";
-import { invitationSectionBackgroundRule, invitationSectionStyleCss, parseInvitationSectionStyles } from "@/lib/templates/section-styles";
+import { invitationSectionBackgroundRule, invitationSectionInstanceStyle, invitationSectionStyleCss, parseInvitationSectionStyles, type InvitationSectionStyle } from "@/lib/templates/section-styles";
 import { parseInvitationRsvpConfig, rsvpElementStyleCss } from "@/lib/templates/rsvp-config";
 import { parseSectionElementStyles, sectionElementStyleCss } from "@/lib/templates/section-element-styles";
 import { nativeVisualColorFilters, nativeVisualFontFamilies, nativeVisualScopeClass, nativeVisualStyleSheet } from "@/lib/templates/native-visual-transforms";
@@ -402,7 +402,7 @@ export default function UniversalInvitationTemplate({
     editable={preview && Boolean(onUpdateAssetLayer)} editorMode={editorMode} selectedId={selectedAssetLayerId} selectedIds={selectedAssetLayerIds} onSelect={onSelectAssetLayer}
     onUpdate={onUpdateAssetLayer} />;
 
-  const renderSectionInstances = (keyName: InvitationSectionKey, render: (instanceId: string) => ReactNode) => {
+  const renderSectionInstances = (keyName: InvitationSectionKey, render: (instanceId: string, style: InvitationSectionStyle | undefined) => ReactNode) => {
     const hidden = sections[keyName] === false;
     if (hidden && (!editorPreview || key === "blank-canvas")) return null;
     return instancesForSection(sectionLayout, keyName).map((instance) => (
@@ -415,7 +415,7 @@ export default function UniversalInvitationTemplate({
         hidden={hidden}
         actions={sectionEditorActions}
       >
-        {render(instance.id)}
+        {render(instance.id, invitationSectionInstanceStyle(sectionStyles[keyName], instance))}
       </EditableSectionInstance>
     ));
   };
@@ -546,21 +546,22 @@ export default function UniversalInvitationTemplate({
       closing: "var(--inv-bg)",
     };
     const backdrop = modern ? (modernBackdrop[keyName] ?? "var(--inv-bg)") : garden ? (gardenBackdrop[keyName] ?? "var(--inv-bg)") : midnight ? (midnightBackdrop[keyName] ?? "var(--inv-bg)") : classic ? (classicBackdrop[keyName] ?? "var(--inv-bg)") : golden ? (goldenBackdrop[keyName] ?? "var(--inv-bg)") : celestial ? (celestialBackdrop[keyName] ?? "var(--inv-bg)") : velvet ? (velvetBackdrop[keyName] ?? "var(--inv-bg)") : paper ? (paperBackdrop[keyName] ?? "var(--inv-bg)") : botanical || blossom ? keyName === "countdown" ? "var(--inv-accent)" : ["greeting", "wishes", "gallery"].includes(keyName) ? "var(--inv-surface)" : "var(--inv-bg)" : contrast ? (key === "golden-art-deco" ? "#191b17" : "#080d20") : index % 2 ? "var(--inv-surface)" : "var(--inv-bg)";
+    return renderSectionInstances(keyName, (instanceId, sectionStyle) => {
     const color = modern
       ? readableInk(modernDarkSection ? palette.bg : modernSoftSection ? palette.surface : palette.surface, palette.ink)
-      : confetti ? readableInk(sectionStyles[keyName]?.background || (index % 2 ? palette.surface : palette.bg), palette.ink)
-      : garden ? (sectionStyles[keyName]?.background ? readableInk(sectionStyles[keyName].background, palette.ink) : palette.ink)
-      : midnight ? (sectionStyles[keyName]?.background ? readableInk(sectionStyles[keyName].background, palette.ink) : palette.ink)
-      : classic ? (sectionStyles[keyName]?.background ? readableInk(sectionStyles[keyName].background, palette.ink) : palette.ink)
-      : golden ? (sectionStyles[keyName]?.background ? readableInk(sectionStyles[keyName].background, palette.ink) : palette.ink)
-      : celestial ? (sectionStyles[keyName]?.background ? readableInk(sectionStyles[keyName].background, palette.ink) : palette.ink)
-      : velvet ? (sectionStyles[keyName]?.background ? readableInk(sectionStyles[keyName].background, palette.ink) : palette.ink)
-      : paper ? (sectionStyles[keyName]?.background ? readableInk(sectionStyles[keyName].background, palette.ink) : palette.ink)
-      : botanical || blossom ? readableInk(sectionStyles[keyName]?.background || (keyName === "countdown" ? palette.accent : ["greeting", "wishes", "gallery"].includes(keyName) ? palette.surface : palette.bg), palette.ink) : customPalette ? readableInk(index % 2 ? palette.surface : palette.bg, palette.ink) : contrast ? (key === "celestial-ink" ? "#c9e2f0" : "#e7cfa4") : "var(--inv-ink)";
-    return renderSectionInstances(keyName, (instanceId) => (
+      : confetti ? readableInk(sectionStyle?.background || (index % 2 ? palette.surface : palette.bg), palette.ink)
+      : garden ? (sectionStyle?.background ? readableInk(sectionStyle.background, palette.ink) : palette.ink)
+      : midnight ? (sectionStyle?.background ? readableInk(sectionStyle.background, palette.ink) : palette.ink)
+      : classic ? (sectionStyle?.background ? readableInk(sectionStyle.background, palette.ink) : palette.ink)
+      : golden ? (sectionStyle?.background ? readableInk(sectionStyle.background, palette.ink) : palette.ink)
+      : celestial ? (sectionStyle?.background ? readableInk(sectionStyle.background, palette.ink) : palette.ink)
+      : velvet ? (sectionStyle?.background ? readableInk(sectionStyle.background, palette.ink) : palette.ink)
+      : paper ? (sectionStyle?.background ? readableInk(sectionStyle.background, palette.ink) : palette.ink)
+      : botanical || blossom ? readableInk(sectionStyle?.background || (keyName === "countdown" ? palette.accent : ["greeting", "wishes", "gallery"].includes(keyName) ? palette.surface : palette.bg), palette.ink) : customPalette ? readableInk(index % 2 ? palette.surface : palette.bg, palette.ink) : contrast ? (key === "celestial-ink" ? "#c9e2f0" : "#e7cfa4") : "var(--inv-ink)";
+    return (
       <>
       <section data-invitation-section={keyName} data-premium-timeline={sectionHasPremiumTimeline ? "true" : undefined} className={`relative overflow-hidden px-6 sm:px-9 ${confetti ? "cc-section" : zen ? "zen-section" : pencil ? "pr-section" : serein ? "serein-section" : botanical ? "bi-section" : blossom ? "eb-section" : garden ? "gl-section" : midnight ? "mr-section" : classic ? "cp-section" : golden ? "gd-section" : celestial ? "ci-section" : velvet ? "vh-section" : paper ? "pcb-section" : modern ? `mm-section mm-${keyName}` : "py-16"} ${confetti || left || pencil || serein || botanical || blossom || garden || midnight || classic || golden || paper || modern ? "text-left" : "text-center"}`}
-        style={{ ...(confetti ? { "--cc-section-heading": readableInk(sectionStyles[keyName]?.background || (index % 2 ? palette.surface : palette.bg), palette.accent) } as CSSProperties : {}), backgroundColor: backdrop, color, backgroundImage: zen ? "radial-gradient(circle at 10% 40%,rgba(112,100,81,.055),transparent 42%)" : undefined, ...invitationSectionStyleCss(sectionStyles[keyName]) }}
+        style={{ ...(confetti ? { "--cc-section-heading": readableInk(sectionStyle?.background || (index % 2 ? palette.surface : palette.bg), palette.accent) } as CSSProperties : {}), backgroundColor: backdrop, color, backgroundImage: zen ? "radial-gradient(circle at 10% 40%,rgba(112,100,81,.055),transparent 42%)" : undefined, ...invitationSectionStyleCss(sectionStyle) }}
       >
         {confetti && <ConfettiClubSectionArt section={keyName} />}
         {botanical && <BotanicalSectionArt section={keyName} />}
@@ -604,7 +605,8 @@ export default function UniversalInvitationTemplate({
       </section>
       {after?.(instanceId)}
       </>
-    ));
+    );
+    });
   };
 
   return (
@@ -646,8 +648,8 @@ export default function UniversalInvitationTemplate({
         />{objectOverlay("envelope")}</div>
       ) : (
         <div className={`${key === "zen-atelier" ? "zen-content " : ""}flex flex-col`}>
-          {renderSectionInstances("cover", (instanceId) => (
-            <div className="relative" data-studio-cover-stage data-invitation-section="cover" data-invitation-background-override={sectionStyles.cover?.background ? "true" : undefined} style={invitationSectionStyleCss(sectionStyles.cover)}><InvitationThemeScenes
+          {renderSectionInstances("cover", (instanceId, sectionStyle) => (
+            <div className="relative" data-studio-cover-stage data-invitation-section="cover" data-invitation-background-override={sectionStyle?.background ? "true" : undefined} style={invitationSectionStyleCss(sectionStyle)}><InvitationThemeScenes
               theme={key}
               isWedding={normalizeEventCategory(invitation.eventCategory) === "WEDDING"}
               couple={couple}
@@ -666,7 +668,7 @@ export default function UniversalInvitationTemplate({
               stage="cover"
               onOpen={handleOpen}
               onEditPhoto={usesPhotos && preview && onEditPhoto ? () => onEditPhoto("cover") : undefined}
-              motionEnabled={sectionStyles.cover?.animation !== "none" && !sectionStyles.cover?.timeline}
+              motionEnabled={sectionStyle?.animation !== "none" && !sectionStyle?.timeline}
             />{objectOverlay("cover", instanceId)}</div>
           ))}
 
@@ -962,8 +964,8 @@ export default function UniversalInvitationTemplate({
             </div>
           ), 11)}
 
-          {renderSectionInstances("footer", (instanceId) => (
-            <footer data-invitation-section="footer" style={invitationSectionStyleCss(sectionStyles.footer)} className={key === "golden-art-deco" ? "gd-footer" : key === "celestial-ink" ? "ci-footer" : key === "velvet-horizon" ? "vh-footer" : key === "paper-cut-botanical" ? "pcb-footer" : key === "pencil-reverie" ? "pr-footer" : key === "classic-pearl" ? "cp-footer" : key === "midnight-romance" ? "mr-footer" : key === "garden-light" ? "gl-footer" : key === "botanical-ivory" ? "relative bi-footer" : key === "eternal-blossom" ? "relative eb-footer" : key === "modern-maroon" ? "relative mm-footer flex items-center" : "relative flex items-center justify-center border-t border-[var(--inv-soft)] bg-[var(--inv-surface)] px-6 py-5"}>
+          {renderSectionInstances("footer", (instanceId, sectionStyle) => (
+            <footer data-invitation-section="footer" style={invitationSectionStyleCss(sectionStyle)} className={key === "golden-art-deco" ? "gd-footer" : key === "celestial-ink" ? "ci-footer" : key === "velvet-horizon" ? "vh-footer" : key === "paper-cut-botanical" ? "pcb-footer" : key === "pencil-reverie" ? "pr-footer" : key === "classic-pearl" ? "cp-footer" : key === "midnight-romance" ? "mr-footer" : key === "garden-light" ? "gl-footer" : key === "botanical-ivory" ? "relative bi-footer" : key === "eternal-blossom" ? "relative eb-footer" : key === "modern-maroon" ? "relative mm-footer flex items-center" : "relative flex items-center justify-center border-t border-[var(--inv-soft)] bg-[var(--inv-surface)] px-6 py-5"}>
               {key === "golden-art-deco" ? <><span aria-hidden="true" data-studio-native-object="object:footer:diamond" className="gd-footer-mark" /><span data-studio-native-object="object:footer:signature" className="gd-footer-signature">Undara</span></> : key === "celestial-ink" ? <><span aria-hidden="true" data-studio-native-object="object:footer:moon" className="ci-footer-mark">☾</span><span data-studio-native-object="object:footer:signature" className="ci-footer-signature">Undara</span></> : key === "velvet-horizon" ? <span data-studio-native-object="object:footer:signature" className="vh-footer-signature">Undara</span> : key === "paper-cut-botanical" ? <><span aria-hidden="true" data-studio-native-object="object:footer:paper-mark" className="pcb-footer-mark" /><span data-studio-native-object="object:footer:signature" className="pcb-footer-signature">Undara</span></> : key === "pencil-reverie" ? <><span aria-hidden="true" data-studio-native-object="object:footer:pencil-mark" className="pr-footer-mark" /><span data-studio-native-object="object:footer:signature" className="pr-footer-signature">Undara</span></> : key === "classic-pearl" ? <><span aria-hidden="true" data-studio-native-object="object:footer:pearl" className="cp-footer-mark" /><span data-studio-native-object="object:footer:signature" className="cp-footer-signature">Undara</span></> : key === "midnight-romance" ? <><span aria-hidden="true" data-studio-native-object="object:footer:star" className="mr-footer-mark">✦</span><span data-studio-native-object="object:footer:signature" className="mr-footer-signature">Undara</span></> : key === "garden-light" ? <><span aria-hidden="true" data-studio-native-object="object:footer:star" className="gl-footer-mark">✦</span><span data-studio-native-object="object:footer:signature" className="gl-footer-signature">Undara</span></> : key === "botanical-ivory" ? <><span aria-hidden="true" data-studio-native-object="object:footer:monogram" className="bi-footer-mark">&amp;</span><span data-studio-native-object="object:footer:signature" className="bi-footer-signature">Undara</span></> : key === "eternal-blossom" ? <span data-studio-native-object="object:footer:flower-art" aria-hidden="true"><BlossomSymbol /></span> : <span aria-hidden="true" data-studio-native-object="object:footer:rule" className="h-px w-10 bg-[var(--inv-accent)] opacity-50" />}
               {objectOverlay("footer", instanceId)}
             </footer>

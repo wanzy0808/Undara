@@ -1,6 +1,7 @@
 "use client";
 
 import { AlignCenter, AlignLeft, AlignRight, RotateCcw } from "lucide-react";
+import StudioColorField from "@/components/InvitationStudio/StudioColorField";
 import { invitationSectionItems, type InvitationSectionKey } from "@/lib/templates/sections";
 import type { InvitationSectionAlign, InvitationSectionStyle } from "@/lib/templates/section-styles";
 import {
@@ -19,6 +20,8 @@ export default function SectionInspector({
   locale,
   sectionKey,
   style,
+  backgroundResetDisabled,
+  disabled = false,
   onUpdate,
   onReset,
   onClose,
@@ -26,6 +29,8 @@ export default function SectionInspector({
   locale: string;
   sectionKey: InvitationSectionKey;
   style: InvitationSectionStyle | undefined;
+  backgroundResetDisabled?: boolean;
+  disabled?: boolean;
   onUpdate: (patch: Partial<InvitationSectionStyle>) => void;
   onReset: () => void;
   onClose: () => void;
@@ -81,19 +86,11 @@ export default function SectionInspector({
         <button type="button" onClick={onClose} aria-label={en ? "Close section properties" : "Tutup properti section"} title={en ? "Close" : "Tutup"}>×</button>
       </div>
 
-      <div className="undara-studio-section-field">
-        <span>{en ? "Background" : "Latar"}</span>
-        <div className="undara-studio-section-color">
-          <input
-            type="color"
-            value={style?.background ?? "#ffffff"}
-            aria-label={en ? "Section background color" : "Warna latar section"}
-            title={en ? "Choose section background" : "Pilih warna latar section"}
-            onChange={(event) => onUpdate({ background: event.target.value })}
-          />
-          <output>{style?.background?.toUpperCase() ?? (en ? "Theme" : "Tema")}</output>
-        </div>
-      </div>
+      <fieldset disabled={disabled} className="contents">
+      <StudioColorField locale={locale} label={en ? "Background" : "Latar"}
+        value={style?.background} defaultLabel={en ? "Theme" : "Tema"}
+        resetDisabled={backgroundResetDisabled}
+        onChange={(background) => onUpdate({ background })} />
 
 
       <div className="undara-studio-section-field">
@@ -231,6 +228,7 @@ export default function SectionInspector({
         <RotateCcw size={14} />
         Reset
       </button>
+      </fieldset>
     </aside>
   );
 }

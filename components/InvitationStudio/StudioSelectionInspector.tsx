@@ -19,7 +19,7 @@ import type { EditableCopyMotion } from "@/lib/templates/editable-copy-motion";
 import type { InvitationAssetLayer } from "@/lib/templates/asset-layers";
 import type { CroppablePhotoSlot, GallerySettings, InvitationPhotoAsset, PhotoCrop, PhotoFocus, PhotoMotion, PhotoSlot } from "@/lib/templates/photo-slots";
 import type { InvitationSectionKey } from "@/lib/templates/sections";
-import type { InvitationSectionStyle } from "@/lib/templates/section-styles";
+import { invitationSectionInstanceStyle, type InvitationSectionStyle } from "@/lib/templates/section-styles";
 import type { StudioSectionElementKind } from "@/lib/templates/section-element-styles";
 
 type SelectedSectionElement = {
@@ -41,6 +41,7 @@ export default function StudioSelectionInspector({
   selectedSectionElement,
   selectedCopyField,
   selectedSectionKey,
+  selectedSectionInstanceId,
   selectedNativeKey,
   onUpdateNative,
   onDeleteNative,
@@ -81,6 +82,7 @@ export default function StudioSelectionInspector({
   selectedSectionElement: SelectedSectionElement;
   selectedCopyField: EditableInvitationCopyField | null;
   selectedSectionKey: InvitationSectionKey | null;
+  selectedSectionInstanceId?: string | null;
   selectedNativeKey: string | null;
   onUpdateNative: (key: string, value: NativeVisualTransform) => void;
   onDeleteNative?: (key: string) => void;
@@ -104,8 +106,8 @@ export default function StudioSelectionInspector({
   onUpdateCopyMotion: (field: EditableInvitationCopyField, patch: Partial<EditableCopyMotion>) => void;
   onResetCopyMotion: (field: EditableInvitationCopyField) => void;
   onCloseCopy: () => void;
-  onUpdateSectionStyle: (key: InvitationSectionKey, patch: Partial<InvitationSectionStyle>) => void;
-  onResetSectionStyle: (key: InvitationSectionKey) => void;
+  onUpdateSectionStyle: (key: InvitationSectionKey, patch: Partial<InvitationSectionStyle>, instanceId?: string | null) => void;
+  onResetSectionStyle: (key: InvitationSectionKey, instanceId?: string | null) => void;
   onCloseSection: () => void;
 }) {
   const scopedLayerPosition = selectedAssetLayer
@@ -227,13 +229,16 @@ export default function StudioSelectionInspector({
   }
 
   if (selectedSectionKey) {
+    const instance = design.sectionLayout.find((item) => item.key === selectedSectionKey && (!selectedSectionInstanceId || item.id === selectedSectionInstanceId));
     return (
       <SectionInspector
         locale={locale}
         sectionKey={selectedSectionKey}
-        style={design.sectionStyles[selectedSectionKey]}
-        onUpdate={(patch) => onUpdateSectionStyle(selectedSectionKey, patch)}
-        onReset={() => onResetSectionStyle(selectedSectionKey)}
+        style={invitationSectionInstanceStyle(design.sectionStyles[selectedSectionKey], instance)}
+        backgroundResetDisabled={instance ? !instance.background : undefined}
+        disabled={nativeEditingDisabled}
+        onUpdate={(patch) => onUpdateSectionStyle(selectedSectionKey, patch, instance?.id ?? selectedSectionInstanceId)}
+        onReset={() => onResetSectionStyle(selectedSectionKey, instance?.id ?? selectedSectionInstanceId)}
         onClose={onCloseSection}
       />
     );

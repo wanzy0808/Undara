@@ -137,7 +137,7 @@ test("Golden Art Deco uses noir palette and Poiret poster typography", () => {
   assert.match(catalog, /key: "golden-art-deco"[\s\S]*preset: \{ layout: "classic", palette: "decoNoir", font: "poiretMontserrat" \}/);
   assert.match(design, /decoNoir: \{ name: "Golden Art Deco"/);
   assert.match(catalog, /1920s soirée poster/);
-  assert.match(universal, /golden \? \(sectionStyles\[keyName\]\?\.background \? readableInk\(sectionStyles\[keyName\]\.background, palette\.ink\) : palette\.ink\)/);
+  assert.match(universal, /golden \? \(sectionStyle\?\.background \? readableInk\(sectionStyle\.background, palette\.ink\) : palette\.ink\)/);
 });
 
 test("Golden Art Deco rails, steps and date presentation can be removed while data stays protected", () => {

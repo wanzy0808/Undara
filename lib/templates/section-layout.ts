@@ -1,9 +1,12 @@
 import { invitationSectionItems, type InvitationSectionKey } from "@/lib/templates/sections";
+import { safeVisualColor } from "@/lib/templates/visual-colors";
 
 export type InvitationSectionInstance = {
   id: string;
   key: InvitationSectionKey;
   hidden?: boolean;
+  /** Per-instance surface paint; absent values inherit the legacy section style. */
+  background?: string;
 };
 
 export const invitationContentSectionKeys = invitationSectionItems
@@ -29,7 +32,8 @@ export function sanitizeInvitationSectionLayout(value: unknown): InvitationSecti
     const key = source.key as InvitationSectionKey;
     if (!id || ids.has(id) || !validKeys.has(key)) continue;
     ids.add(id);
-    output.push({ id, key, ...(source.hidden === true ? { hidden: true } : {}) });
+    const background = safeVisualColor(source.background);
+    output.push({ id, key, ...(source.hidden === true ? { hidden: true } : {}), ...(background ? { background } : {}) });
   }
   return output;
 }
@@ -48,7 +52,7 @@ function isDefaultLayout(layout: InvitationSectionInstance[]) {
   if (layout.length !== defaultInvitationSectionLayout.length) return false;
   return layout.every((item, index) => {
     const baseline = defaultInvitationSectionLayout[index];
-    return baseline && item.id === baseline.id && item.key === baseline.key && item.hidden !== true;
+    return baseline && item.id === baseline.id && item.key === baseline.key && item.hidden !== true && !item.background;
   });
 }
 

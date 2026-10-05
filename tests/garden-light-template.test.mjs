@@ -77,6 +77,6 @@ test("Garden Light viewport entrances are one-shot while explicit Studio replay 
 
 
 test("Garden Light section ink stays palette-aware instead of feeding CSS expressions into hex contrast math", () => {
-  assert.match(universal, /garden \? \(sectionStyles\[keyName\]\?\.background \? readableInk\(sectionStyles\[keyName\]\.background, palette\.ink\) : palette\.ink\)/);
-  assert.doesNotMatch(universal, /garden \? readableInk\(sectionStyles\[keyName\]\?\.background \|\| \(gardenBackdrop\[keyName\]/);
+  assert.match(universal, /garden \? \(sectionStyle\?\.background \? readableInk\(sectionStyle\.background, palette\.ink\) : palette\.ink\)/);
+  assert.doesNotMatch(universal, /garden \? readableInk\(sectionStyle\?\.background \|\| \(gardenBackdrop\[keyName\]/);
 });

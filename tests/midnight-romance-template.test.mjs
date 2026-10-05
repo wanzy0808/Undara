@@ -82,6 +82,6 @@ test("Midnight Romance entrances are one-shot and wait for artwork", () => {
 });
 
 test("Midnight Romance section ink stays palette-aware", () => {
-  assert.match(universal, /midnight \? \(sectionStyles\[keyName\]\?\.background \? readableInk\(sectionStyles\[keyName\]\.background, palette\.ink\) : palette\.ink\)/);
-  assert.doesNotMatch(universal, /midnight \? readableInk\(sectionStyles\[keyName\]\?\.background \|\| \(midnightBackdrop\[keyName\]/);
+  assert.match(universal, /midnight \? \(sectionStyle\?\.background \? readableInk\(sectionStyle\.background, palette\.ink\) : palette\.ink\)/);
+  assert.doesNotMatch(universal, /midnight \? readableInk\(sectionStyle\?\.background \|\| \(midnightBackdrop\[keyName\]/);
 });

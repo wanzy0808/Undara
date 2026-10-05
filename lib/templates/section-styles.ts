@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { InvitationSectionKey } from "@/lib/templates/sections";
+import type { InvitationSectionInstance } from "@/lib/templates/section-layout";
 import { isInvitationSectionAnimation, type InvitationSectionAnimation } from "@/lib/templates/section-animations";
 import {
   isInvitationPremiumTimeline,
@@ -28,6 +29,13 @@ export type InvitationSectionStyle = {
 };
 
 export type InvitationSectionStyles = Partial<Record<InvitationSectionKey, InvitationSectionStyle>>;
+
+export function invitationSectionInstanceStyle(
+  style?: InvitationSectionStyle,
+  instance?: Pick<InvitationSectionInstance, "background">,
+): InvitationSectionStyle | undefined {
+  return instance?.background ? { ...style, background: instance.background } : style;
+}
 
 // Envelope/Cover scenes have their own painted root inside the editable section wrapper.
 // The value stays local to that wrapper, so previews with different colors cannot affect each other.

@@ -21,7 +21,7 @@ import { localizedWeddingParentLine } from "@/lib/invitations/language";
 import { formatPersonalEnvelopeAddress } from "@/lib/guests/personal-envelope";
 import { photoCropStyle, resolveGallerySettings, resolveInvitationPhotos, resolvePhotoCrop, type CroppablePhotoSlot, type PhotoAssignments, type PhotoCrop, type PhotoSlot } from "@/lib/templates/photo-slots";
 import { parseInvitationSections, type InvitationSectionKey, type InvitationSections } from "@/lib/templates/sections";
-import { invitationSectionStyleCss, parseInvitationSectionStyles } from "@/lib/templates/section-styles";
+import { invitationSectionInstanceStyle, invitationSectionStyleCss, parseInvitationSectionStyles, type InvitationSectionStyle } from "@/lib/templates/section-styles";
 import { parseInvitationRsvpConfig, rsvpElementStyleCss } from "@/lib/templates/rsvp-config";
 import { parseSectionElementStyles, sectionElementStyleCss } from "@/lib/templates/section-element-styles";
 import { nativeVisualColorFilters, nativeVisualFontFamilies, nativeVisualScopeClass, nativeVisualStyleSheet } from "@/lib/templates/native-visual-transforms";
@@ -279,7 +279,7 @@ export default function RomanticRoseTemplate({
   const objectOverlay = (target: StudioObjectSection, instanceId: string = target) => <InvitationAssetLayers layers={illustrationLayers} section={target} sectionInstanceId={instanceId}
     editable={preview && Boolean(onUpdateAssetLayer)} editorMode={editorMode} selectedId={selectedAssetLayerId} selectedIds={selectedAssetLayerIds} onSelect={onSelectAssetLayer} onUpdate={onUpdateAssetLayer} />;
 
-  const renderSectionInstances = (key: InvitationSectionKey, render: (instanceId: string) => React.ReactNode) => {
+  const renderSectionInstances = (key: InvitationSectionKey, render: (instanceId: string, style: InvitationSectionStyle | undefined) => React.ReactNode) => {
     const hidden = sections[key] === false;
     if (hidden && !editorPreview) return null;
     return instancesForSection(sectionLayout, key).map((instance) => (
@@ -292,7 +292,7 @@ export default function RomanticRoseTemplate({
         hidden={hidden}
         actions={sectionEditorActions}
       >
-        {render(instance.id)}
+        {render(instance.id, invitationSectionInstanceStyle(sectionStyles[key], instance))}
       </EditableSectionInstance>
     ));
   };
@@ -353,8 +353,8 @@ export default function RomanticRoseTemplate({
         </section>
       ) : (
         <div className="mx-auto flex max-w-2xl flex-col">
-          {renderSectionInstances("cover", (instanceId) => (
-            <section data-invitation-section="cover" style={invitationSectionStyleCss(sectionStyles.cover)} className="relative min-h-[720px] overflow-hidden bg-[#4b2632] text-[#fff8f3]">
+          {renderSectionInstances("cover", (instanceId, sectionStyle) => (
+            <section data-invitation-section="cover" style={invitationSectionStyleCss(sectionStyle)} className="relative min-h-[720px] overflow-hidden bg-[#4b2632] text-[#fff8f3]">
                         <div data-studio-native-object="object:cover:background-photo" data-invitation-photo-slot="cover" className="absolute inset-0">
                           <RosePhoto url={cover} alt="Foto sampul pasangan" cropStyle={photoCropStyle(assignment, "cover")} className="h-full w-full object-cover" />
                           {editPhoto("cover", "cover utama")}
@@ -376,8 +376,8 @@ export default function RomanticRoseTemplate({
                       </section>
           ))}
 
-          {renderSectionInstances("greeting", (instanceId) => (
-            <section data-invitation-section="greeting" style={invitationSectionStyleCss(sectionStyles.greeting)} className="relative overflow-hidden bg-[#fffaf6] px-8 py-24 text-left">
+          {renderSectionInstances("greeting", (instanceId, sectionStyle) => (
+            <section data-invitation-section="greeting" style={invitationSectionStyleCss(sectionStyle)} className="relative overflow-hidden bg-[#fffaf6] px-8 py-24 text-left">
                         {objectOverlay("greeting", instanceId)}
                         <RoseHeading section="greeting" eyebrow="A warm invitation" align="left">{tr("Dengan penuh sukacita")}</RoseHeading>
                         <div data-studio-native-object="object:greeting:copy-group" className="ml-auto max-w-[28rem] space-y-5 border-l border-[#c9a98d]/65 pl-6 text-sm leading-8 text-[#6a4a52]">
@@ -387,9 +387,9 @@ export default function RomanticRoseTemplate({
                       </section>
           ))}
 
-          {renderSectionInstances("identity", (instanceId) => (
+          {renderSectionInstances("identity", (instanceId, sectionStyle) => (
             <>
-            <section data-invitation-section="identity" style={invitationSectionStyleCss(sectionStyles.identity)} className="relative overflow-hidden bg-[#ead3d0] px-7 py-24">
+            <section data-invitation-section="identity" style={invitationSectionStyleCss(sectionStyle)} className="relative overflow-hidden bg-[#ead3d0] px-7 py-24">
                         {objectOverlay("identity", instanceId)}
                         <RoseHeading section="identity" eyebrow="The two of us" align="left">{tr("Mempelai")}</RoseHeading>
                         <div data-studio-native-object="object:identity:couple-group" className="grid grid-cols-2 items-start gap-5">
@@ -417,8 +417,8 @@ export default function RomanticRoseTemplate({
             </>
           ))}
 
-          {renderSectionInstances("event", (instanceId) => (
-            <section data-invitation-section="event" style={invitationSectionStyleCss(sectionStyles.event)} className="relative overflow-hidden bg-[#5a2e3a] px-8 py-24 text-left text-[#fff8f3]">
+          {renderSectionInstances("event", (instanceId, sectionStyle) => (
+            <section data-invitation-section="event" style={invitationSectionStyleCss(sectionStyle)} className="relative overflow-hidden bg-[#5a2e3a] px-8 py-24 text-left text-[#fff8f3]">
                         {objectOverlay("event", instanceId)}
                         <RoseHeading section="event" eyebrow="Save the date" align="left" light>{tr("Detail Acara")}</RoseHeading>
                         <div data-studio-native-object="object:event:details-group">
@@ -429,8 +429,8 @@ export default function RomanticRoseTemplate({
                       </section>
           ))}
 
-          {renderSectionInstances("dateTime", (instanceId) => (
-            <section data-invitation-section="dateTime" style={invitationSectionStyleCss(sectionStyles.dateTime)} className="relative bg-[#f7efe9] px-8 py-24 text-left">
+          {renderSectionInstances("dateTime", (instanceId, sectionStyle) => (
+            <section data-invitation-section="dateTime" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#f7efe9] px-8 py-24 text-left">
                         {objectOverlay("dateTime", instanceId)}
                         <RoseHeading section="dateTime" eyebrow="A day to remember" align="left">{tr("Tanggal & Waktu")}</RoseHeading>
                         <div data-studio-native-object="object:dateTime:panel" className="max-w-md border-y border-[#c9a98d]/55 py-9">
@@ -443,8 +443,8 @@ export default function RomanticRoseTemplate({
                       </section>
           ))}
 
-          {renderSectionInstances("gallery", (instanceId) => (
-            <section data-invitation-section="gallery" style={invitationSectionStyleCss(sectionStyles.gallery)} className="relative overflow-hidden bg-[#fffaf6] px-6 py-24">
+          {renderSectionInstances("gallery", (instanceId, sectionStyle) => (
+            <section data-invitation-section="gallery" style={invitationSectionStyleCss(sectionStyle)} className="relative overflow-hidden bg-[#fffaf6] px-6 py-24">
                         {objectOverlay("gallery", instanceId)}
                           <RoseHeading section="gallery" eyebrow="Our memories" align="left">{tr("Galeri Foto")}</RoseHeading>
                           {preview && onEditPhoto && <button type="button" onClick={() => onEditPhoto("gallery")} className="mb-5 w-full rounded-[var(--undara-control-radius)] border border-[#dab0be] py-2 text-xs font-medium text-[#a65e69]">Atur foto galeri</button>}
@@ -465,8 +465,8 @@ export default function RomanticRoseTemplate({
                         </section>
           ))}
 
-          {renderSectionInstances("countdown", (instanceId) => (
-            <section data-invitation-section="countdown" style={invitationSectionStyleCss(sectionStyles.countdown)} className="relative bg-[#ead3d0] px-7 py-24 text-left">
+          {renderSectionInstances("countdown", (instanceId, sectionStyle) => (
+            <section data-invitation-section="countdown" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#ead3d0] px-7 py-24 text-left">
                         {objectOverlay("countdown", instanceId)}
                         <RoseHeading section="countdown" eyebrow="Counting the moments" align="left">{tr("Menuju Hari Bahagia")}</RoseHeading>
                         {now !== null && countdown ? (
@@ -482,8 +482,8 @@ export default function RomanticRoseTemplate({
                       </section>
           ))}
 
-          {renderSectionInstances("location", (instanceId) => (
-            <section data-invitation-section="location" style={invitationSectionStyleCss(sectionStyles.location)} className="relative bg-[#fffaf6] px-8 py-24 text-left">
+          {renderSectionInstances("location", (instanceId, sectionStyle) => (
+            <section data-invitation-section="location" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#fffaf6] px-8 py-24 text-left">
                         {objectOverlay("location", instanceId)}
                         <RoseHeading section="location" eyebrow="Find your way" align="left">{tr("Lokasi")}</RoseHeading>
                         <div data-studio-native-object="object:location:details-group">
@@ -499,8 +499,8 @@ export default function RomanticRoseTemplate({
                       </section>
           ))}
 
-          {renderSectionInstances("rsvp", (instanceId) => (
-            <section data-invitation-section="rsvp" style={invitationSectionStyleCss(sectionStyles.rsvp)} className="relative bg-[#f7efe9] px-5 py-24">
+          {renderSectionInstances("rsvp", (instanceId, sectionStyle) => (
+            <section data-invitation-section="rsvp" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#f7efe9] px-5 py-24">
                         {objectOverlay("rsvp", instanceId)}
                           <RoseHeading section="rsvp" eyebrow="Your presence means so much" studioElement="title" style={rsvpElementStyleCss(rsvpConfig, "title")}>{tr(rsvpConfig.title || "Konfirmasi Kehadiran")}</RoseHeading>
                           <div data-studio-native-object="object:rsvp:form-group">
@@ -509,8 +509,8 @@ export default function RomanticRoseTemplate({
                         </section>
           ))}
 
-          {renderSectionInstances("wishes", (instanceId) => (
-            <section data-invitation-section="wishes" style={invitationSectionStyleCss(sectionStyles.wishes)} className="relative bg-[#fffaf6] px-7 py-24 text-left">
+          {renderSectionInstances("wishes", (instanceId, sectionStyle) => (
+            <section data-invitation-section="wishes" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#fffaf6] px-7 py-24 text-left">
                         {objectOverlay("wishes", instanceId)}
                           <RoseHeading section="wishes" eyebrow="A little note of love">{tr("Ucapan & Doa")}</RoseHeading>
                           <div data-studio-native-object="object:wishes:form-group">
@@ -519,8 +519,8 @@ export default function RomanticRoseTemplate({
                         </section>
           ))}
 
-          {renderSectionInstances("gift", (instanceId) => (
-            <section data-invitation-section="gift" style={invitationSectionStyleCss(sectionStyles.gift)} className="relative bg-[#5a2e3a] px-7 py-24 text-left text-[#fff8f3]">
+          {renderSectionInstances("gift", (instanceId, sectionStyle) => (
+            <section data-invitation-section="gift" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#5a2e3a] px-7 py-24 text-left text-[#fff8f3]">
                         {objectOverlay("gift", instanceId)}
                           <RoseHeading section="gift" eyebrow="With gratitude" align="left" light>{tr("Tanda Kasih")}</RoseHeading>
                           <Gift data-studio-native-object="object:gift:gift-icon" className="h-5 w-5 text-[#d7b598]" />
@@ -533,8 +533,8 @@ export default function RomanticRoseTemplate({
                         </section>
           ))}
 
-          {renderSectionInstances("closing", (instanceId) => (
-            <section data-invitation-section="closing" style={invitationSectionStyleCss(sectionStyles.closing)} className="relative overflow-hidden bg-[#ead3d0] px-8 py-28 text-left">
+          {renderSectionInstances("closing", (instanceId, sectionStyle) => (
+            <section data-invitation-section="closing" style={invitationSectionStyleCss(sectionStyle)} className="relative overflow-hidden bg-[#ead3d0] px-8 py-28 text-left">
                         {objectOverlay("closing", instanceId)}
                         <Heart data-studio-native-object="object:closing:heart" className="mb-8 h-6 w-6 text-[#8c5664]" />
                         <RoseHeading section="closing" eyebrow="Forever begins here" align="left">{tr("Terima Kasih")}</RoseHeading>
@@ -547,8 +547,8 @@ export default function RomanticRoseTemplate({
                       </section>
           ))}
 
-          {renderSectionInstances("footer", (instanceId) => (
-            <footer data-invitation-section="footer" style={invitationSectionStyleCss(sectionStyles.footer)} className="relative flex items-center justify-center bg-[#5a2e3a] px-6 py-7">
+          {renderSectionInstances("footer", (instanceId, sectionStyle) => (
+            <footer data-invitation-section="footer" style={invitationSectionStyleCss(sectionStyle)} className="relative flex items-center justify-center bg-[#5a2e3a] px-6 py-7">
                         {objectOverlay("footer", instanceId)}
                         <span aria-hidden="true" data-studio-native-object="object:footer:rule" className="h-px w-16 bg-[#d7b598] opacity-60" />
                       </footer>

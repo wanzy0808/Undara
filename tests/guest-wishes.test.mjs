@@ -20,7 +20,7 @@ test("Studio shows one legible Ucapan Tamu label without the stale unavailable m
 test("all invitation renderers use one shared live wishes engine and previews cannot submit", () => {
   assert.match(universal, /sections\.wishes && section\("wishes", \(/);
   assert.match(universal, /<GuestWishes slug=\{invitation\.slug\} preview=\{preview\}/);
-  assert.match(rose, /renderSectionInstances\("wishes", \(instanceId\) => \(/);
+  assert.match(rose, /renderSectionInstances\("wishes", \(instanceId, sectionStyle\) => \(/);
   assert.match(rose, /<GuestWishes slug=\{invitation\.slug\} preview=\{preview\}/);
   assert.doesNotMatch(universal, /Kolom ucapan belum aktif|Ucapan belum tersedia/);
   assert.doesNotMatch(rose, /Kolom ucapan belum aktif/);

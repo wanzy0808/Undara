@@ -46,6 +46,7 @@ import {
 } from "@/lib/templates/design";
 import type { InvitationSectionKey } from "@/lib/templates/sections";
 import type { InvitationSectionStyle } from "@/lib/templates/section-styles";
+import { safeVisualColor } from "@/lib/templates/visual-colors";
 import { defaultInvitationRsvpConfig, MAX_RSVP_CUSTOM_FIELDS } from "@/lib/templates/rsvp-config";
 import { defaultInvitationSectionLayout, invitationContentSectionKeys } from "@/lib/templates/section-layout";
 import type { StudioSectionElementKind } from "@/lib/templates/section-element-styles";
@@ -1440,7 +1441,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
 
     const copyId = `${source.key}-copy-${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
     const next = [...design.sectionLayout];
-    next.splice(index + 1, 0, { id: copyId, key: source.key });
+    const background = source.background ?? design.sectionStyles[source.key]?.background;
+    next.splice(index + 1, 0, { id: copyId, key: source.key, ...(background ? { background } : {}) });
 
     const groupIds = new Map<string, string>();
     const clonedLayers = sourceLayers.map((layer) => {
@@ -1495,23 +1497,49 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     }
   }
 
-  function updateSectionStyle(key: InvitationSectionKey, patch: Partial<InvitationSectionStyle>) {
+  function updateSectionStyle(key: InvitationSectionKey, patch: Partial<InvitationSectionStyle>, instanceId = selectedSectionInstanceId) {
+    if (!invitation || saving || audioBusy) return;
+    const instance = design.sectionLayout.find((item) => item.key === key && (!instanceId || item.id === instanceId));
+    if (instanceId && key !== "envelope" && !instance) return;
+    const paintsBackground = Object.hasOwn(patch, "background");
+    const background = safeVisualColor(patch.background);
+    if (paintsBackground && patch.background !== undefined && !background) return;
+    const sharedPatch = { ...patch };
+    if (instance) delete sharedPatch.background;
     const current = design.sectionStyles[key] ?? {};
-    const next = { ...current, ...patch };
+    const next = { ...current, ...sharedPatch };
     for (const [property, value] of Object.entries(next)) {
       if (value === undefined) delete (next as Record<string, unknown>)[property];
     }
     const sectionStyles = { ...design.sectionStyles };
     if (Object.keys(next).length) sectionStyles[key] = next;
     else delete sectionStyles[key];
-    change({ sectionStyles });
+    const sectionLayout = instance && paintsBackground ? design.sectionLayout.map((item) => {
+      if (item.id !== instance.id) return item;
+      const nextInstance = { ...item };
+      if (background) nextInstance.background = background;
+      else delete nextInstance.background;
+      return nextInstance;
+    }) : design.sectionLayout;
+    change({ sectionStyles, sectionLayout });
   }
 
-  function resetSectionStyle(key: InvitationSectionKey) {
-    if (!design.sectionStyles[key]) return;
+  function resetSectionStyle(key: InvitationSectionKey, instanceId = selectedSectionInstanceId) {
+    if (!invitation || saving || audioBusy) return;
+    const instance = design.sectionLayout.find((item) => item.key === key && (!instanceId || item.id === instanceId));
+    if (instanceId && key !== "envelope" && !instance) return;
+    if (!design.sectionStyles[key] && !instance?.background) return;
     const sectionStyles = { ...design.sectionStyles };
-    delete sectionStyles[key];
-    change({ sectionStyles });
+    const legacyBackground = instance && sectionStyles[key]?.background;
+    if (legacyBackground) sectionStyles[key] = { background: legacyBackground };
+    else delete sectionStyles[key];
+    const sectionLayout = instance ? design.sectionLayout.map((item) => {
+      if (item.id !== instance.id) return item;
+      const nextInstance = { ...item };
+      delete nextInstance.background;
+      return nextInstance;
+    }) : design.sectionLayout;
+    change({ sectionStyles, sectionLayout });
   }
 
   function updateAssetLayer(id: string, patch: Partial<InvitationAssetLayer>) {
@@ -2200,6 +2228,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
               selectedSectionElement={selectedSectionElement}
               selectedCopyField={selectedCopyField}
               selectedSectionKey={selectedSectionKey}
+              selectedSectionInstanceId={selectedSectionInstanceId}
               selectedNativeKey={activeNativeKey}
               onUpdateNative={commitNativeVisual}
               onDeleteNative={hideSelectedNativeVisual}
