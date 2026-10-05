@@ -5,14 +5,10 @@ import { useLanguage } from "@/components/I18n/LanguageProvider";
 import { invitationText, type InvitationLanguage } from "@/lib/invitations/language";
 import { RotateCcw } from "lucide-react";
 import { invitationSectionItems } from "@/lib/templates/sections";
-import type { PaletteKey } from "@/lib/templates/design";
 import type {
   InvitationSectionKey,
   InvitationSections,
 } from "@/lib/templates/sections";
-import {
-  invitationPaletteOptions,
-} from "@/components/InvitationStudio/designer-config";
 import { MAX_RSVP_CUSTOM_FIELDS, type InvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 import {
   availableEditableCopyFields,
@@ -46,7 +42,6 @@ export function DesignerTool({
 
 const studioHeadingEnglish: Record<string, string> = {
   "Isi": "Content",
-  "Palet Warna": "Color Palette",
 };
 
 function Heading({ title }: { title: string }) {
@@ -287,44 +282,6 @@ export function ContentPanel({
             </div>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-export function ColorPanel({
-  selected,
-  onSelect,
-}: {
-  selected: PaletteKey;
-  onSelect: (key: PaletteKey) => void;
-}) {
-  return (
-    <div>
-      <Heading title="Palet Warna" />
-      <div className="mt-5 space-y-2">
-        {invitationPaletteOptions.map(([key, item]) => (
-          <button
-            type="button"
-            key={key}
-            onClick={() => onSelect(key)}
-            aria-pressed={selected === key}
-            className={`flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 text-left ${
-              selected === key
-                ? "border-primary ring-2 ring-primary/20"
-                : "border-border"
-            }`}
-          >
-            <span className="flex h-8 w-12 shrink-0 overflow-hidden rounded-lg">
-              <i className="flex-1" style={{ background: item.bg }} />
-              <i className="flex-1" style={{ background: item.accent }} />
-              <i className="flex-1" style={{ background: item.soft }} />
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              {item.name}
-            </span>
-          </button>
-        ))}
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { AlignCenter, AlignLeft, AlignRight, Lock, Play, RotateCcw, Trash2, X } from "lucide-react";
+import StudioColorField from "@/components/InvitationStudio/StudioColorField";
 import { Button } from "@/components/ui/button";
 import InvitationFonts from "@/components/PublicInvitation/InvitationFonts";
 import { invitationFontOptions } from "@/components/InvitationStudio/designer-config";
@@ -10,6 +12,7 @@ import {
   nativeVisualCapabilities,
   nativeVisualCanHide,
   nativeVisualSelector,
+  nativeVisualPaintKind,
   nativeVisualSupportsAnimation,
   nativeVisualUsesSystemContent,
   type NativeVisualTextAlign,
@@ -28,11 +31,12 @@ const nativeFontFamilies = [...new Set(
 )].sort((a, b) => a.localeCompare(b));
 
 export default function StudioNativeVisualInspector({
-  locale, targetKey, value, onChange, onClose, onDelete, disabled = false,
+  locale, targetKey, value, ownValue, onChange, onClose, onDelete, disabled = false,
 }: {
   locale: string;
   targetKey: string;
   value?: NativeVisualTransform;
+  ownValue?: NativeVisualTransform | null;
   onChange: (value: NativeVisualTransform) => void;
   onClose: () => void;
   onDelete?: () => void;
@@ -43,6 +47,27 @@ export default function StudioNativeVisualInspector({
   const capabilities = nativeVisualCapabilities(targetKey);
   const animationCapable = nativeVisualSupportsAnimation(targetKey);
   const systemContent = nativeVisualUsesSystemContent(targetKey);
+  const photo = targetKey.startsWith("photo:");
+  const [paint, setPaint] = useState<{ key: string; kind: ReturnType<typeof nativeVisualPaintKind>; frame: boolean } | null>(null);
+  const paintKind = paint?.key === targetKey ? paint.kind : "none";
+  const framePaint = paint?.key === targetKey ? paint.frame : true;
+  useEffect(() => {
+    const surface = document.querySelector(".undara-studio-preview-surface");
+    const selector = nativeVisualSelector(targetKey);
+    if (!surface || !selector) return;
+    const inspect = () => {
+      const target = surface.querySelector(selector);
+      const kind = nativeVisualPaintKind(target);
+      // SVG groups/paths paint geometry, while an SVG viewport can also paint its frame.
+      const frame = !target || target.namespaceURI !== "http://www.w3.org/2000/svg" || target.tagName.toLowerCase() === "svg";
+      setPaint((previous) => previous?.key === targetKey && previous.kind === kind && previous.frame === frame
+        ? previous : { key: targetKey, kind, frame });
+    };
+    inspect();
+    const observer = new MutationObserver(inspect);
+    observer.observe(surface, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [targetKey]);
   const section = targetKey.split(":")[1] ?? "";
   const title = targetKey.startsWith("heading:")
     ? (en ? `${section} heading` : `Judul ${section}`)
@@ -57,7 +82,7 @@ export default function StudioNativeVisualInspector({
     { key: "rotation", label: en ? "Rotation" : "Rotasi", unit: "°", min: -180, max: 180, factor: 1 },
   ] as const;
   const colors = [
-    { key: "color", label: en ? "Color" : "Warna", fallback: "#222222" },
+    { key: "color", label: photo ? "Tint" : en ? "Color" : "Warna", fallback: "#222222" },
     { key: "background", label: en ? "Background" : "Latar", fallback: "#ffffff" },
     { key: "borderColor", label: en ? "Border" : "Garis", fallback: "#c07a84" },
   ] as const;
@@ -93,6 +118,7 @@ export default function StudioNativeVisualInspector({
         <button type="button" onClick={onClose} aria-label={en ? "Close properties" : "Tutup properti"}
           className="grid h-8 w-8 place-items-center rounded-lg hover:bg-primary/10"><X size={16} /></button>
       </div>
+      <fieldset disabled={disabled} className="contents">
       {systemContent && (
         <p className="mt-3 flex items-center gap-2 text-xs leading-5 text-muted-foreground">
           <Lock size={13} className="mt-0.5 shrink-0 text-primary" />
@@ -134,18 +160,23 @@ export default function StudioNativeVisualInspector({
       )}
 
       {capabilities.colors && (
-        <div className="mt-4 space-y-3 border-t border-primary/20 pt-4">
-          {colors.map(({ key, label, fallback }) => (
-            <div key={key} className="text-xs text-foreground">
-              <span className="mb-1 block">{label}</span>
-              <div className="undara-studio-native-color">
-                <input type="color" value={current[key] ?? fallback} aria-label={label}
-                  onChange={(event) => patch({ [key]: event.currentTarget.value } as Partial<NativeVisualTransform>)}
-                  className="h-9 w-12 rounded-lg border border-primary/30 bg-background p-1" />
-                <output>{current[key]?.toUpperCase() ?? (en ? "Theme" : "Tema")}</output>
-              </div>
-            </div>
+        <div className="undara-studio-native-colors mt-4 space-y-3 border-t border-primary/20 pt-4">
+          {colors.filter(({ key }) => key === "color" ? photo || capabilities.typography || paintKind !== "none" : framePaint).map(({ key, label, fallback }) => (
+            <StudioColorField key={key} locale={locale} label={label} value={current[key]} fallback={fallback}
+              transparent={key === "background"}
+              resetDisabled={ownValue !== undefined ? !ownValue?.[key] : undefined}
+              onChange={(color) => patch({ [key]: color } as Partial<NativeVisualTransform>)} />
           ))}
+          {framePaint && current.borderColor && (
+            <label className="block text-xs text-foreground">
+              <span className="mb-1 block">{en ? "Border width" : "Tebal garis"}</span>
+              <input type="number" min={0} max={12} step={0.5} value={current.borderWidth ?? 2}
+                onChange={(event) => {
+                  const width = event.currentTarget.valueAsNumber;
+                  if (Number.isFinite(width)) patch({ borderWidth: clamp(width, 0, 12) });
+                }} className="h-9 w-full rounded-lg border border-primary/30 bg-transparent px-2" />
+            </label>
+          )}
         </div>
       )}
 
@@ -299,6 +330,7 @@ export default function StudioNativeVisualInspector({
           <Trash2 size={14} aria-hidden="true" />{en ? "Delete" : "Hapus"}
         </Button>
       )}
+      </fieldset>
     </aside>
   );
 }

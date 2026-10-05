@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import { Lock, RotateCw } from "lucide-react";
 import { type InvitationAssetLayer, type StudioObjectSection } from "@/lib/templates/asset-layers";
 import { findSectionAt } from "@/components/InvitationStudio/studio-canvas-dom";
@@ -9,6 +9,8 @@ import { invitationFontFamily } from "@/lib/templates/presentation";
 import { resizeObjectFromHandle, type ObjectResizeHandle } from "@/lib/templates/object-resize";
 import { useInvitationLayerAnimation } from "@/components/PublicInvitation/use-layer-animation";
 import InvitationLayerTextContent from "@/components/PublicInvitation/InvitationLayerTextContent";
+import InvitationColorFilters from "@/components/PublicInvitation/InvitationColorFilters";
+import { invitationColorFilterCss } from "@/lib/templates/visual-colors";
 
 /** Overlay geometry is relative to its owning invitation section, not the Studio viewport. */
 type LayerPatch = Partial<InvitationAssetLayer>;
@@ -252,6 +254,20 @@ function EditableLayer({
     if (next !== (layer.text ?? "")) onUpdate?.(layer.id, { text: next });
   }
 
+  const frameStyle: CSSProperties = {
+    backgroundColor: layer.background,
+    ...(layer.borderColor ? { border: `${layer.borderWidth ?? 2}px solid ${layer.borderColor}`, boxSizing: "border-box" } : {}),
+    borderRadius: layer.radius ? `${layer.radius}px` : undefined,
+  };
+  const imageVisual = !layer.kind ? (
+    <span className={`block w-full ${displayed.height === undefined ? "" : "h-full"}`}
+      style={{ ...frameStyle, overflow: "hidden", filter: shadowFilter }}>
+      <img src={layer.src} alt="" draggable={false}
+        className={`pointer-events-none block w-full select-none ${displayed.height === undefined ? "h-auto" : "h-full object-fill"}`}
+        style={{ transform: `scaleX(${layer.flipX ? -1 : 1}) scaleY(${layer.flipY ? -1 : 1})`, filter: invitationColorFilterCss(layer.color, "tint") }} />
+    </span>
+  ) : null;
+
   const shapeVisual = layer.kind === "shape" ? (
     <span
       aria-hidden="true"
@@ -282,6 +298,7 @@ function EditableLayer({
       zIndex: editable && selected ? 40 : undefined,
       transformOrigin: "center", touchAction: "none",
     }}>
+      {!layer.kind && layer.color && <InvitationColorFilters filters={[{ color: layer.color, mode: "tint" }]} />}
       {editable ? (
         editingText && layer.kind === "text" ? (
           <div
@@ -308,6 +325,7 @@ function EditableLayer({
                   letterSpacing: layer.letterSpacing ?? 0,
                   lineHeight: layer.lineHeight ?? 1.2,
                   color: layer.color ?? "#C07A84",
+                  ...frameStyle,
                   filter: shadowFilter,
                 }}
                 onInput={(event) => {
@@ -356,8 +374,9 @@ function EditableLayer({
                 letterSpacing: layer.letterSpacing ?? 0,
                 lineHeight: layer.lineHeight ?? 1.2,
                 color: layer.color ?? "#C07A84",
+                ...frameStyle,
                 filter: shadowFilter,
-              }}><InvitationLayerTextContent text={layer.text ?? ""} unit={layer.textAnimationUnit} /></span> : layer.kind === "shape" ? shapeVisual : <img src={layer.src} alt="" draggable={false} className={`pointer-events-none block w-full select-none ${displayed.height === undefined ? "h-auto" : "h-full object-fill"}`} style={{ transform: `scaleX(${layer.flipX ? -1 : 1}) scaleY(${layer.flipY ? -1 : 1})`, borderRadius: `${layer.radius ?? 0}px`, filter: shadowFilter }} />}
+              }}><InvitationLayerTextContent text={layer.text ?? ""} unit={layer.textAnimationUnit} /></span> : layer.kind === "shape" ? shapeVisual : imageVisual}
             </span>
           </button>
         )
@@ -373,8 +392,9 @@ function EditableLayer({
             letterSpacing: layer.letterSpacing ?? 0,
             lineHeight: layer.lineHeight ?? 1.2,
             color: layer.color ?? "#C07A84",
+            ...frameStyle,
             filter: shadowFilter,
-          }}><InvitationLayerTextContent text={layer.text ?? ""} unit={layer.textAnimationUnit} /></span> : layer.kind === "shape" ? shapeVisual : <img src={layer.src} alt="" draggable={false} className={`block w-full select-none ${displayed.height === undefined ? "h-auto" : "h-full object-fill"}`} style={{ transform: `scaleX(${layer.flipX ? -1 : 1}) scaleY(${layer.flipY ? -1 : 1})`, borderRadius: `${layer.radius ?? 0}px`, filter: shadowFilter }} />}
+          }}><InvitationLayerTextContent text={layer.text ?? ""} unit={layer.textAnimationUnit} /></span> : layer.kind === "shape" ? shapeVisual : imageVisual}
         </span>
       )}
       {editable && selected && !editingText && <>

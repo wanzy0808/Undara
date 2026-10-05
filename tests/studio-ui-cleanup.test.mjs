@@ -113,14 +113,14 @@ test("Studio uses one left-rail Isi menu for sections and functional components"
   const rail = designer.split('<nav className="undara-studio-rail"')[1]?.split("</nav>")[0] || "";
   assert.match(rail, /label=\{copy\.sections\}/);
   assert.doesNotMatch(rail, /panel === "content"|copy\.content|FilePenLine/);
-  const mergedPanel = designer.split('{panel === "sections" && (')[1]?.split('{panel === "color"')[0] || "";
+  const mergedPanel = designer.split('{panel === "sections" && (')[1]?.split('{panel === "decor"')[0] || "";
   assert.match(mergedPanel, /<ContentPanel/);
   assert.doesNotMatch(mergedPanel, /<SectionsPanel/);
   assert.match(panels, /<Heading title="Isi" \/>/);
   assert.match(panels, /sectionFunctionalElements/);
 });
 
-test("Studio left rail follows Catalog Isi Teks Foto Aset Musik Warna order", () => {
+test("Studio left rail follows Catalog Isi Teks Foto Aset Musik order with individual colors on the right", () => {
   const rail = designer.split('<nav className="undara-studio-rail"')[1]?.split("</nav>")[0] || "";
   const order = [
     'panel === "template"',
@@ -129,7 +129,6 @@ test("Studio left rail follows Catalog Isi Teks Foto Aset Musik Warna order", ()
     'panel === "decor"',
     'panel === "assets"',
     'panel === "music"',
-    'panel === "color"',
   ];
   let previous = -1;
   for (const token of order) {
@@ -139,6 +138,7 @@ test("Studio left rail follows Catalog Isi Teks Foto Aset Musik Warna order", ()
   }
   assert.match(rail, /label=\{locale === "en" \? "Catalog" : "Katalog"\}/);
   assert.doesNotMatch(rail, /undara-studio-rail-divider/);
+  assert.doesNotMatch(designer, /ColorPanel|panel === "color"|copy\.colors/);
 });
 
 test("Studio folds Font into Text with four quick font pairs and See more", () => {
@@ -331,9 +331,11 @@ test("right-side text size styling reaches nested RSVP and wishes fields", () =>
   const rsvpPanels = read("components/InvitationStudio/RsvpPanels.tsx");
   const wishes = read("components/PublicInvitation/GuestWishes.tsx");
   assert.match(rsvpPanels, /const inputFontSize = rsvpConfig\.elementStyles\.inputs\?\.fontSize/);
-  assert.match(rsvpPanels, /const inputTextStyle = inputFontSize !== undefined/);
+  assert.match(rsvpPanels, /inputFontSize !== undefined \? \{ fontSize:/);
+  assert.match(rsvpPanels, /const inputFieldStyle = invitationFieldColors/);
   assert.match(rsvpPanels, /style=\{inputTextStyle\}/);
-  assert.match(wishes, /const inputTextStyle = inputStyle\?\.fontSize !== undefined/);
+  assert.match(wishes, /inputStyle\?\.fontSize !== undefined \? \{ fontSize:/);
+  assert.match(wishes, /const inputFieldStyle = invitationFieldColors/);
   assert.match(wishes, /style=\{inputTextStyle\}/);
 });
 

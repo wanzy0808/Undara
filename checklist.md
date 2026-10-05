@@ -15,6 +15,9 @@ Kerjakan satu batch kecil → verifikasi → commit sebelum membuka batch beriku
 
 **Arahan owner terbaru:** Studio didahulukan. Lanjutkan item Studio di bawah satu per satu sebelum membuka batch storage/auth/custom atau halaman lain. Checkbox implementasi/tes source tidak menggantikan QA browser.
 
+- [x] Warna per elemen di inspector kanan (5 Oktober 2026): latar/garis teks, tint/frame foto dan aset, warna artwork SVG, prioritas native override serta warna field RSVP/Ucapan. Menu Warna kiri dihapus; palet lama tetap kompatibel. Lokal 536/536 tes, TypeScript dan build webpack 72/72 lulus; lint sama dengan baseline tanpa diagnostic baru. Rincian di Appendix A PRD.
+- [ ] QA warna di browser: canvas → Undo/Redo → Preview Desktop/Tablet/HP → Simpan → reload → public, reset warna/transparent, SVG group/ornamen raster, section duplikat dan ID/EN. Runtime browser lokal belum tersedia; parser CSS/SSR tidak menggantikan pemeriksaan pixel atau gesture.
+
 - [x] Cek prioritas canonical pada `prd.md`: brand Undara, general-event, tanpa limit 3 event, publish/entitlement server-authoritative dan event-scoped, serta private `UNDARA_DATA_DIR`. Ini audit prioritas handoff, bukan klaim seluruh Markdown bebas kontradiksi.
 - [x] Music Asset Library Studio: 14 lagu bundled dari registry bersama, cari judul/artis, dengarkan tanpa mengganti pilihan, radio pilihan aktif/default, upload event terpisah, dan event playback bersama. Jalur Save lama tetap dipakai.
 - [x] Batch musik `1d77985`: 366/366 regression tests, TypeScript dan build produksi 72/72 halaman lulus lokal dan pada GitHub Actions [Build Validation](https://github.com/wanzy0808/Undara/actions/runs/37078220318). [Orphan Audit](https://github.com/wanzy0808/Undara/actions/runs/37078220311) juga success. QA browser terautentikasi tetap terbuka.

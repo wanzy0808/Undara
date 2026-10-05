@@ -114,6 +114,7 @@ export default function StudioSelectionInspector({
   const nativeControls = selectedNativeKey && isNativeVisualKey(selectedNativeKey) ? (
     <StudioNativeVisualInspector locale={locale} targetKey={selectedNativeKey}
       value={{ ...defaultNativeVisualTransform, ...templateNativeMotionForKey(design.template, selectedNativeKey, design.sectionStyles), ...nativeVisualTransformForKey(design.nativeVisuals, selectedNativeKey) }}
+      ownValue={design.nativeVisuals[selectedNativeKey] ?? null}
       onChange={(value) => onUpdateNative(selectedNativeKey, value)}
       onDelete={onDeleteNative ? () => onDeleteNative(selectedNativeKey) : undefined}
       disabled={nativeEditingDisabled}

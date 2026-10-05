@@ -24,7 +24,9 @@ import { parseInvitationSections, type InvitationSectionKey, type InvitationSect
 import { invitationSectionStyleCss, parseInvitationSectionStyles } from "@/lib/templates/section-styles";
 import { parseInvitationRsvpConfig, rsvpElementStyleCss } from "@/lib/templates/rsvp-config";
 import { parseSectionElementStyles, sectionElementStyleCss } from "@/lib/templates/section-element-styles";
-import { nativeVisualFontFamilies, nativeVisualScopeClass, nativeVisualStyleSheet } from "@/lib/templates/native-visual-transforms";
+import { nativeVisualColorFilters, nativeVisualFontFamilies, nativeVisualScopeClass, nativeVisualStyleSheet } from "@/lib/templates/native-visual-transforms";
+import InvitationColorFilters from "@/components/PublicInvitation/InvitationColorFilters";
+import { invitationComponentColorCss } from "@/lib/templates/component-colors";
 import { instancesForSection, parseInvitationSectionLayout } from "@/lib/templates/section-layout";
 import EditableSectionInstance, { type SectionInstanceEditorActions } from "@/components/PublicInvitation/EditableSectionInstance";
 import { useInvitationSectionAnimations } from "@/components/PublicInvitation/use-section-animations";
@@ -298,6 +300,8 @@ export default function RomanticRoseTemplate({
   return (
     <main ref={rootRef} data-studio-preview-root={editorPreview ? "true" : undefined} className={`romantic-rose relative isolate ${nativeVisualScopeClass(activeDesignKey)} min-h-[760px] ${editorPreview ? "overflow-visible" : "overflow-hidden"} bg-[#f7efe9] text-[#4b2d35] [font-family:var(--rr-body)]`}>
       <style>{nativeVisualStyleSheet(activeDesignKey)}</style>
+      <style>{invitationComponentColorCss(nativeVisualScopeClass(activeDesignKey), rsvpConfig, sectionElementStyles)}</style>
+      <InvitationColorFilters filters={nativeVisualColorFilters(activeDesignKey)} />
       <style>{`
         .romantic-rose {
           --rr-display: "Cinzel", "Times New Roman", serif;

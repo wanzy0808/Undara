@@ -483,7 +483,7 @@ test("native visual styling stays inside the validated nativeVisuals contract", 
   const css = nativeVisualStyleSheet(withNativeVisualTransforms("botanical-ivory", values));
   assert.match(css, /opacity:1/);
   assert.match(css, /color:#abcdef/);
-  assert.match(css, /border-color:#123456/);
+  assert.match(css, /border:2px solid #123456!important/);
   assert.match(css, /font-size:160px/);
   assert.doesNotMatch(css, /background-color:red|text-align:justify/);
 });
@@ -495,7 +495,7 @@ test("native visual capabilities avoid duplicating protected component styling",
   assert.deepEqual(nativeVisualCapabilities("object:identity:our-story-heading"), { opacity: true, colors: true, typography: true });
   assert.deepEqual(nativeVisualCapabilities("object:envelope:open-button"), { opacity: true, colors: true, typography: true });
   assert.deepEqual(nativeVisualCapabilities("object:cover:flower-left"), { opacity: true, colors: true, typography: false });
-  assert.deepEqual(nativeVisualCapabilities("photo:cover"), { opacity: true, colors: false, typography: false });
+  assert.deepEqual(nativeVisualCapabilities("photo:cover"), { opacity: true, colors: true, typography: false });
   assert.deepEqual(nativeVisualCapabilities("element:gift:button"), { opacity: false, colors: false, typography: false });
   assert.deepEqual(nativeVisualCapabilities("rsvp:button"), { opacity: false, colors: false, typography: false });
 });

@@ -11,6 +11,7 @@ import {
 import { invitationFontFamily } from "@/lib/templates/presentation";
 import InvitationFonts from "@/components/PublicInvitation/InvitationFonts";
 import { invitationFontOptions } from "@/components/InvitationStudio/designer-config";
+import StudioColorField from "@/components/InvitationStudio/StudioColorField";
 
 type Props = {
   locale: string;
@@ -190,13 +191,15 @@ export default function TextLayerInspector({
         </div>
       </div>
 
-      <div className="undara-studio-layer-field">
-        <span>{en ? "Text color" : "Warna teks"}</span>
-        <div className="undara-studio-text-color">
-          <input type="color" value={layer.color ?? "#C07A84"} onChange={(event) => onUpdate(layer.id, { color: event.target.value })} aria-label={en ? "Text color" : "Warna teks"} />
-          <output>{(layer.color ?? "#C07A84").toUpperCase()}</output>
-        </div>
-      </div>
+      <StudioColorField locale={locale} label={en ? "Text color" : "Warna teks"} value={layer.color}
+        fallback="#C07A84" defaultLabel="#C07A84" onChange={(color) => onUpdate(layer.id, { color })} />
+      <StudioColorField locale={locale} label={en ? "Background" : "Latar"} value={layer.background}
+        transparent defaultLabel={en ? "Transparent" : "Transparan"}
+        onChange={(background) => onUpdate(layer.id, { background })} />
+      <StudioColorField locale={locale} label={en ? "Border" : "Garis"} value={layer.borderColor}
+        defaultLabel={en ? "None" : "Tanpa garis"} fallback="#C07A84"
+        onChange={(borderColor) => onUpdate(layer.id, { borderColor })} />
+      {layer.borderColor && numberInput(en ? "Border width" : "Tebal garis", layer.borderWidth ?? 2, 0, 12, 0.5, "px", (borderWidth) => ({ borderWidth }))}
 
       <div className="undara-studio-layer-grid">
         {numberInput(en ? "Letter spacing" : "Jarak huruf", layer.letterSpacing ?? 0, -2, 12, 0.1, "px", (letterSpacing) => ({ letterSpacing }))}
@@ -305,6 +308,9 @@ export default function TextLayerInspector({
           letterSpacing: 0,
           lineHeight: 1.2,
           color: undefined,
+          background: undefined,
+          borderColor: undefined,
+          borderWidth: undefined,
           shadowX: undefined,
           shadowY: undefined,
           shadowBlur: undefined,

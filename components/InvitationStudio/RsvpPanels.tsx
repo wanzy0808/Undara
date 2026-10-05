@@ -16,6 +16,7 @@ import type {
   RsvpTicketGuest,
 } from "@/components/InvitationStudio/rsvp-types";
 import { rsvpElementStyleCss, type InvitationRsvpConfig } from "@/lib/templates/rsvp-config";
+import { invitationFieldColors } from "@/lib/templates/visual-colors";
 
 export function RsvpSuccessPanel({ ticketGuest, ticketUrl, calendarUrl }: {
   ticketGuest: RsvpTicketGuest;
@@ -91,7 +92,9 @@ export function RsvpInputPanel({
   const language = useInvitationLanguage();
   const tr = (text: string) => invitationText(language, text);
   const inputFontSize = rsvpConfig.elementStyles.inputs?.fontSize;
-  const inputTextStyle = inputFontSize !== undefined ? { fontSize: `${inputFontSize}px` } : undefined;
+  const inputColor = rsvpConfig.elementStyles.inputs?.color;
+  const inputTextStyle = { ...(inputFontSize !== undefined ? { fontSize: `${inputFontSize}px` } : {}), ...(inputColor ? { color: inputColor } : {}) };
+  const inputFieldStyle = invitationFieldColors(rsvpElementStyleCss(rsvpConfig, "inputs"));
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 font-[var(--font-fauna)]">
@@ -120,7 +123,7 @@ export function RsvpInputPanel({
               onChange={(event) =>
                 setForm({ ...form, name: event.target.value })
               }
-              className="mt-1.5" style={inputTextStyle}
+              className="mt-1.5" style={inputFieldStyle}
               placeholder={tr("Nama lengkap")}
               required
             />
@@ -133,7 +136,7 @@ export function RsvpInputPanel({
               onChange={(event) =>
                 setForm({ ...form, phone: event.target.value })
               }
-              className="mt-1.5" style={inputTextStyle}
+              className="mt-1.5" style={inputFieldStyle}
               placeholder="08xxxxxxxxxx"
               required
             />
@@ -149,7 +152,7 @@ export function RsvpInputPanel({
             value={form.eventChoice}
             onChange={(event) => setForm({ ...form, eventChoice: event.target.value as RsvpFormState["eventChoice"] })}
             className="mt-1.5 w-full rounded-md border border-black/10 bg-transparent px-3 py-2.5 text-sm dark:border-white/10"
-            style={inputTextStyle}
+            style={inputFieldStyle}
             required
           >
             <option value="">{tr("Pilih acara")}</option>
@@ -162,9 +165,9 @@ export function RsvpInputPanel({
 
       {appearance === "zen" ? <fieldset className="zen-status-options">
         <legend className="sr-only">{tr("Status kehadiran")}</legend>
-        {([["ATTENDING", "Saya Akan Hadir"], ["TENTATIVE", "Saya Mungkin Hadir"], ["NOT_ATTENDING", "Saya Tidak Dapat Hadir"]] as const).map(([value, label]) => <label key={value}>
-          <input type="radio" name="attendance" value={value} checked={form.status === value} onChange={() => setForm({ ...form, status: value })} />
-          <span>{tr(label)}</span>
+        {([["ATTENDING", "Saya Akan Hadir"], ["TENTATIVE", "Saya Mungkin Hadir"], ["NOT_ATTENDING", "Saya Tidak Dapat Hadir"]] as const).map(([value, label]) => <label key={value} style={inputFieldStyle}>
+          <input type="radio" name="attendance" value={value} checked={form.status === value} style={{ accentColor: inputColor }} onChange={() => setForm({ ...form, status: value })} />
+          <span style={inputTextStyle}>{tr(label)}</span>
         </label>)}
       </fieldset> : (<select
         aria-label={tr("Status kehadiran")}
@@ -173,7 +176,7 @@ export function RsvpInputPanel({
           setForm({ ...form, status: event.target.value })
         }
         className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2.5 text-sm dark:border-white/10"
-        style={inputTextStyle}
+        style={inputFieldStyle}
       >
         <option value="ATTENDING">{tr("Saya Akan Hadir")}</option>
         <option value="NOT_ATTENDING">{tr("Saya Tidak Hadir")}</option>
@@ -192,7 +195,7 @@ export function RsvpInputPanel({
             value={form.plusOnes}
             onChange={(event) => setForm({ ...form, plusOnes: event.target.value })}
             className="max-w-28"
-            style={inputTextStyle}
+            style={inputFieldStyle}
             aria-label={tr("Jumlah pendamping")}
           />
         ) : (
@@ -202,6 +205,7 @@ export function RsvpInputPanel({
             <input
               type="radio"
               name="plusOnes"
+              style={{ accentColor: inputColor }}
               value="1"
               checked={form.plusOnes === "1"}
               onChange={(event) =>
@@ -214,6 +218,7 @@ export function RsvpInputPanel({
             <input
               type="radio"
               name="plusOnes"
+              style={{ accentColor: inputColor }}
               value="0"
               checked={form.plusOnes === "0"}
               onChange={(event) =>
@@ -239,7 +244,7 @@ export function RsvpInputPanel({
                   ...form,
                   customAnswers: { ...form.customAnswers, [field.id]: event.target.value },
                 })}
-                className="mt-1.5" style={inputTextStyle}
+                className="mt-1.5" style={inputFieldStyle}
                 maxLength={200}
                 required={field.required && form.status === "ATTENDING"}
               />

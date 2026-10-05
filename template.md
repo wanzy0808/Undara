@@ -14,6 +14,8 @@ Elemen dekoratif dan visual bawaan boleh bebas dikomposisikan serta diberi edge 
 
 ### Kontrak editability elemen bawaan
 
+**Warna individual (5 Oktober 2026):** semua target canvas menyediakan kontrol warna yang benar-benar mengenai paint target: teks/font, latar/transparan, fill/stroke shape, frame dan tint foto/artwork. Warna native harus mengalahkan style inline/gradient bawaan secara scoped tanpa menimpa target anak independen. Raster/SVG dapat diberi warna/tint sebagai satu siluet/objek; bagian di dalam raster memerlukan layer nyata jika ingin dipilih terpisah. Baseline artwork/palet tidak berubah sebelum override dipilih. Menu Warna global kiri dihapus; desain lama tetap kompatibel.
+
 Setiap elemen visual yang terlihat pada master template harus memiliki ownership Studio yang jelas; jangan meninggalkan visual penting sebagai markup hardcoded yang tidak bisa dipilih. Gunakan salah satu kontrak berikut sesuai jenisnya:
 
 - **native object** untuk ornamen, panel, divider, icon, decorative group, visual text, dan elemen presentasi bawaan;

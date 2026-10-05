@@ -81,7 +81,8 @@ test("Zen envelope honors Studio palette and font tokens without locking its pap
   assert.match(scene, /stroke="var\(--jp-accent\)"/);
   assert.match(scene, /stroke="var\(--jp-soft\)"/);
   assert.match(universal, /fontFamily: invitationFontFamily\(font\.body\)/);
-  assert.match(studio, /<ColorPanel selected=\{design\.palette\} onSelect=\{\(value\) => change\(\{ palette: value \}\)\}/);
+  assert.doesNotMatch(studio, /<ColorPanel/);
+  assert.match(studio, /const palette = invitationPalettes\[design\.palette\]/);
   assert.match(studio, /<TextObjectPanel[^>]*selectedFont=\{design\.font\}[\s\S]*onFontSelect=\{\(value\) => change\(\{ font: value \}\)\}/);
 });
 

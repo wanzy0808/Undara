@@ -57,7 +57,6 @@ export type InvitationDesignerInvitation = {
 export type InvitationDesignerPanel =
   | "template"
   | "sections"
-  | "color"
   | "decor"
   | "music"
   | "assets"

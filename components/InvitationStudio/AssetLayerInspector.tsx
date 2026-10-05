@@ -5,6 +5,7 @@ import type { InvitationAssetLayer } from "@/lib/templates/asset-layers";
 import { studioObjectSections, type StudioObjectSection } from "@/lib/templates/asset-layers";
 import { invitationSectionItems, type InvitationSections } from "@/lib/templates/sections";
 import LayerAnimationControls from "@/components/InvitationStudio/LayerAnimationControls";
+import StudioColorField from "@/components/InvitationStudio/StudioColorField";
 
 type AssetLayerInspectorProps = {
   locale: string;
@@ -156,6 +157,20 @@ export default function AssetLayerInspector({
           <button type="button" className="min-h-9 rounded-lg border border-primary/30 px-2 text-xs hover:bg-primary/10" aria-pressed={Boolean(selectedAssetLayer.flipY)} onClick={() => onUpdate(selectedAssetLayer.id, { flipY: selectedAssetLayer.flipY ? undefined : true })}>{en ? "Vertical" : "Vertikal"}</button>
         </div>
       </div>
+
+      {selectedAssetLayer.kind !== "shape" && (
+        <div className="space-y-3 border-t border-border pt-3">
+          <StudioColorField locale={locale} label="Tint" value={selectedAssetLayer.color} fallback="#C07A84"
+            defaultLabel={en ? "Original" : "Asli"} onChange={(color) => onUpdate(selectedAssetLayer.id, { color })} />
+          <StudioColorField locale={locale} label={en ? "Background" : "Latar"} value={selectedAssetLayer.background}
+            transparent defaultLabel={en ? "Transparent" : "Transparan"}
+            onChange={(background) => onUpdate(selectedAssetLayer.id, { background })} />
+          <StudioColorField locale={locale} label={en ? "Border" : "Garis"} value={selectedAssetLayer.borderColor}
+            defaultLabel={en ? "None" : "Tanpa garis"} fallback="#C07A84"
+            onChange={(borderColor) => onUpdate(selectedAssetLayer.id, { borderColor })} />
+          {selectedAssetLayer.borderColor && numberInput(en ? "Border width" : "Tebal garis", selectedAssetLayer.borderWidth ?? 2, 0, 12, 0.5, "px", (borderWidth) => onUpdate(selectedAssetLayer.id, { borderWidth }))}
+        </div>
+      )}
 
       {selectedAssetLayer.kind === "shape" && (
         <div className="space-y-3 border-t border-border pt-3">
@@ -365,6 +380,13 @@ export default function AssetLayerInspector({
           rotation: 0,
           flipX: undefined,
           flipY: undefined,
+          color: undefined,
+          background: undefined,
+          borderColor: undefined,
+          borderWidth: undefined,
+          fill: undefined,
+          stroke: undefined,
+          strokeWidth: undefined,
           shadowX: undefined,
           shadowY: undefined,
           shadowBlur: undefined,

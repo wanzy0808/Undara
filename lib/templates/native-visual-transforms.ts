@@ -8,6 +8,7 @@ import {
 } from "@/lib/templates/section-animations";
 import { invitationContentSectionKeys } from "@/lib/templates/section-layout";
 import type { PhotoSlot } from "@/lib/templates/photo-slots";
+import { invitationColorFilterCss, safeVisualColor, type InvitationColorFilter } from "@/lib/templates/visual-colors";
 
 export type NativeVisualTextAlign = "left" | "center" | "right";
 
@@ -22,6 +23,7 @@ export type NativeVisualTransform = {
   color?: string;
   background?: string;
   borderColor?: string;
+  borderWidth?: number;
   fontSize?: number;
   fontWeight?: number;
   textAlign?: NativeVisualTextAlign;
@@ -43,7 +45,6 @@ export const defaultNativeVisualTransform: NativeVisualTransform = {
 const nativeObjectKey = /^object:(?:envelope|cover|greeting|identity|event|dateTime|gallery|countdown|location|rsvp|wishes|gift|closing|footer):[a-zA-Z0-9_-]{1,64}(?::[a-zA-Z0-9_-]{1,64})?$/;
 const nativeTextObjectId = /(?:^|[-_])(?:kicker|date|name|names|venue|address|title|heading|subtitle|signature|quote|hashtag|copy|greeting|timezone|start|end|bank-name|account-name|account-number|dress-code|side-label|ending|parents|value|label|button)(?:$|[-_])/i;
 const nativeSystemContentObjectId = /^(?:date|event-title|venue|address|dress-code|timezone|start|end|bank-name|account-name|account-number|personOne-name|personTwo-name|personOne-parents|personTwo-parents|event-name|names|hashtag|letter-names|empty-copy)$/i;
-const hexColor = /^#[0-9a-fA-F]{6}$/;
 const nativeFontFamilies: ReadonlySet<string> = new Set<string>(
   Object.values(invitationFonts).flatMap((item) => [item.heading, item.body]),
 );
@@ -61,7 +62,7 @@ const keys = new Set<string>([
 export function nativeVisualCapabilities(key: string) {
   const parts = key.split(":");
   const kind = parts[0];
-  if (kind === "photo") return { opacity: true, colors: false, typography: false };
+  if (kind === "photo") return { opacity: true, colors: true, typography: false };
   if (kind === "element" || kind === "rsvp") return { opacity: false, colors: false, typography: false };
   if (kind === "heading" || kind === "copy") return { opacity: true, colors: true, typography: true };
   if (kind === "object") {
@@ -146,8 +147,6 @@ const clamp = (value: unknown, min: number, max: number, fallback: number) =>
 const optionalNumber = (value: unknown, min: number, max: number) =>
   typeof value === "number" && Number.isFinite(value)
     ? Math.round(Math.min(max, Math.max(min, value)) * 100) / 100 : undefined;
-const optionalColor = (value: unknown) =>
-  typeof value === "string" && hexColor.test(value) ? value.toLowerCase() : undefined;
 const optionalAlign = (value: unknown): NativeVisualTextAlign | undefined =>
   value === "left" || value === "center" || value === "right" ? value : undefined;
 const optionalFontFamily = (value: unknown) =>
@@ -170,9 +169,10 @@ export function sanitizeNativeVisualTransforms(value: unknown): NativeVisualTran
     };
     if (capabilities.opacity) transform.opacity = optionalNumber(source.opacity, 0.2, 1);
     if (capabilities.colors) {
-      transform.color = optionalColor(source.color);
-      transform.background = optionalColor(source.background);
-      transform.borderColor = optionalColor(source.borderColor);
+      transform.color = safeVisualColor(source.color);
+      transform.background = safeVisualColor(source.background, true);
+      transform.borderColor = safeVisualColor(source.borderColor);
+      transform.borderWidth = optionalNumber(source.borderWidth, 0, 12);
     }
     if (capabilities.typography) {
       transform.fontSize = optionalNumber(source.fontSize, 8, 160);
@@ -259,6 +259,7 @@ export function nativeVisualStyle(transform: NativeVisualTransform): CSSProperti
     color: transform.color,
     backgroundColor: transform.background,
     borderColor: transform.borderColor,
+    ...(transform.borderColor ? { borderStyle: "solid", borderWidth: transform.borderWidth ?? 2 } : {}),
     fontSize: transform.fontSize,
     fontWeight: transform.fontWeight,
     textAlign: transform.textAlign,
@@ -285,6 +286,36 @@ export function nativeVisualScopeClass(designKey: string) {
   return `dc-native-${(hash >>> 0).toString(36)}`;
 }
 
+const nativePaintBoundary = ":is([data-studio-native-object],[data-studio-native-heading],[data-studio-copy-field],[data-invitation-photo-slot],[data-studio-rsvp-element],[data-studio-section-element],[data-studio-design-object],[data-studio-system-action])";
+const nativeArtworkTags = "img,path,rect,circle,ellipse,line,polyline,polygon,use,text";
+
+/** Parent paint stops at independently selectable child targets. */
+export function nativeVisualOwnedDescendants(selector: string, tags: string) {
+  return `${selector} :is(${tags}):not(${selector} ${nativePaintBoundary},${selector} ${nativePaintBoundary} *)`;
+}
+
+export function nativeVisualPaintKind(target: Element | null): "text" | "artwork" | "none" {
+  if (!target) return "none";
+  if (target.matches(nativeArtworkTags)) return "artwork";
+  let text = false;
+  let artwork = false;
+  function visit(node: Node) {
+    if (node.nodeType === 3) { text ||= Boolean(node.textContent?.trim()); return; }
+    if (node.nodeType !== 1) return;
+    const element = node as Element;
+    if (element !== target && element.matches(nativePaintBoundary)) return;
+    if (element.matches(nativeArtworkTags)) { artwork = true; return; }
+    element.childNodes.forEach(visit);
+  }
+  visit(target);
+  return text ? "text" : artwork ? "artwork" : "none";
+}
+
+export function nativeVisualColorFilters(designKey: string): InvitationColorFilter[] {
+  return Object.entries(parseNativeVisualTransforms(designKey)).flatMap(([key, value]) =>
+    value.color ? [{ color: value.color, mode: key.startsWith("photo:") ? "tint" as const : "solid" as const }] : []);
+}
+
 /** The selector registry and bounded numeric values keep injected styles free of user CSS. */
 export function nativeVisualStyleSheet(designKey: string) {
   const transforms = parseNativeVisualTransforms(designKey);
@@ -298,9 +329,9 @@ export function nativeVisualStyleSheet(designKey: string) {
       `scale:${transform.scaleX} ${transform.scaleY}`,
       "transform-origin:center",
       transform.opacity !== undefined ? `opacity:${transform.opacity}` : "",
-      transform.color ? `color:${transform.color}` : "",
-      transform.background ? `background-color:${transform.background}` : "",
-      transform.borderColor ? `border-color:${transform.borderColor}` : "",
+      transform.color && !key.startsWith("photo:") ? `color:${transform.color}!important` : "",
+      transform.background ? `background:${transform.background}!important` : "",
+      transform.borderColor ? `border:${transform.borderWidth ?? 2}px solid ${transform.borderColor}!important` : "",
       transform.fontSize !== undefined ? `font-size:${transform.fontSize}px` : "",
       transform.fontWeight !== undefined ? `font-weight:${transform.fontWeight}` : "",
       transform.textAlign ? `text-align:${transform.textAlign}` : "",
@@ -313,6 +344,15 @@ export function nativeVisualStyleSheet(designKey: string) {
         : "",
       transform.hidden ? "display:none!important" : "",
     ].filter(Boolean).join(";");
-    return `.${scope} ${selector}{${declarations};}`;
+    const rules = [`.${scope} ${selector}{${declarations};}`];
+    if (transform.color) {
+      const filter = invitationColorFilterCss(transform.color, key.startsWith("photo:") ? "tint" : "solid");
+      const paintTags = key.startsWith("photo:") ? "img" : nativeArtworkTags;
+      rules.push(`.${scope} ${selector}:is(${paintTags}),.${scope} ${nativeVisualOwnedDescendants(selector, paintTags)}{filter:${filter}!important;}`);
+      if (!key.startsWith("photo:")) {
+        rules.push(`.${scope} ${nativeVisualOwnedDescendants(selector, "p,span,h1,h2,h3,h4,h5,h6,a,label,strong,em,small,time")}{color:inherit!important;}`);
+      }
+    }
+    return rules.join("\n");
   }).join("\n");
 }

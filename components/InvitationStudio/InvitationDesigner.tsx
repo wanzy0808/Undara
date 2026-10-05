@@ -7,7 +7,6 @@ import {
   Type,
   LayoutTemplate,
   Music2,
-  Palette,
   SlidersHorizontal,
 } from "lucide-react";
 import { audioUploadError } from "@/lib/invitations/audio-limits";
@@ -51,7 +50,6 @@ import { defaultInvitationRsvpConfig, MAX_RSVP_CUSTOM_FIELDS } from "@/lib/templ
 import { defaultInvitationSectionLayout, invitationContentSectionKeys } from "@/lib/templates/section-layout";
 import type { StudioSectionElementKind } from "@/lib/templates/section-element-styles";
 import {
-  ColorPanel,
   ContentPanel,
   DesignerTool,
   MusicPanel,
@@ -133,7 +131,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     defaults: "Restore Defaults", defaultsHint: "Return this template to its original design state. Uploaded files stay in your media library.",
     undo: "Undo design", redo: "Redo design", preview: "Preview", saving: "Saving...", save: "Save",
     settings: "Settings", invitation: "Invitation", tools: "Design tools",
-    sections: "Content", colors: "Colors", photos: "Photos", music: "Music", assets: "Assets", text: "Text",
+    sections: "Content", photos: "Photos", music: "Music", assets: "Assets", text: "Text",
     envelope: "Envelope", cover: "Content",
     showPanel: "Show panel", hidePanel: "Hide panel", replay: "Restart from the beginning",
     envelopeHint: "Open the digital envelope in the canvas", coverHint: "Show invitation content without changing the saved envelope setting",
@@ -143,7 +141,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     defaults: "Kembalikan ke Default", defaultsHint: "Kembalikan template ke kondisi desain awal. File upload tetap tersimpan di koleksi media.",
     undo: "Urungkan desain", redo: "Ulangi desain", preview: "Preview", saving: "Menyimpan...", save: "Simpan",
     settings: "Pengaturan", invitation: "Undangan", tools: "Alat desain",
-    sections: "Isi", colors: "Warna", photos: "Foto", music: "Musik", assets: "Aset", text: "Teks",
+    sections: "Isi", photos: "Foto", music: "Musik", assets: "Aset", text: "Teks",
     envelope: "Amplop", cover: "Isi",
     showPanel: "Tampilkan panel", hidePanel: "Sembunyikan panel", replay: "Ulangi dari awal",
     envelopeHint: "Tampilkan dan coba animasi Amplop Digital di canvas", coverHint: "Lihat isi undangan tanpa mengubah pengaturan Amplop",
@@ -1951,7 +1949,6 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
           <DesignerTool active={panel === "decor"} label={copy.photos} icon={<ImagePlus className="h-4 w-4" />} onClick={openPhotoPanel} />
           <DesignerTool active={panel === "assets"} label={copy.assets} icon={<Layers3 className="h-4 w-4" />} onClick={() => { setInspectorOpen(true); setMobileCanvas(false); setPanel("assets"); }} />
           <DesignerTool active={panel === "music"} label={copy.music} icon={<Music2 className="h-4 w-4" />} onClick={() => { setInspectorOpen(true); setMobileCanvas(false); setPanel("music"); }} />
-          <DesignerTool active={panel === "color"} label={copy.colors} icon={<Palette className="h-4 w-4" />} onClick={() => { setInspectorOpen(true); setMobileCanvas(false); setPanel("color"); }} />
         </nav>
 
         <aside className="undara-studio-inspector" aria-label="Pengaturan desain">
@@ -1978,8 +1975,6 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
               onRemoveRsvpField={removeRsvpCustomField}
             />
           )}
-          {panel === "color" && design.template === "romantic-rose" && <p className="text-sm leading-7 text-muted-foreground">Warna Romantic Rose mengikuti desain asli tema.</p>}
-          {panel === "color" && design.template !== "romantic-rose" && <ColorPanel selected={design.palette} onSelect={(value) => change({ palette: value })} />}
           {panel === "decor" && template && !template.usesPhotos ? (
             <div className="space-y-4 rounded-2xl border border-primary/25 bg-primary/5 p-5">
               <h2 className="font-[family-name:var(--font-undara-heading)] text-lg text-foreground">{copy.photoFree}</h2>

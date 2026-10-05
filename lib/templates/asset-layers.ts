@@ -1,4 +1,5 @@
 import { isInvitationSectionAnimation, type InvitationSectionAnimation } from "@/lib/templates/section-animations";
+import { safeVisualColor } from "@/lib/templates/visual-colors";
 
 /** Template-safe, invitation-scoped artwork and optional decorative text. */
 export const studioObjectSections = [
@@ -43,6 +44,10 @@ export type InvitationAssetLayer = {
   letterSpacing?: number;
   lineHeight?: number;
   color?: string;
+  /** Text background / image frame. Absent preserves the existing transparent surface. */
+  background?: string;
+  borderColor?: string;
+  borderWidth?: number;
   /** Locked layers stay visible/selectable in Studio but cannot be transformed. */
   locked?: boolean;
   /** Hidden layers remain in the design/layer list but are omitted from public rendering. */
@@ -123,6 +128,18 @@ export function sanitizeAssetLayers(value: unknown): InvitationAssetLayer[] {
       if (typeof entry.letterSpacing === "number" && Number.isFinite(entry.letterSpacing)) layer.letterSpacing = numberBetween(entry.letterSpacing, -2, 12, 0);
       if (typeof entry.lineHeight === "number" && Number.isFinite(entry.lineHeight)) layer.lineHeight = numberBetween(entry.lineHeight, 0.8, 2.5, 1.2);
       layer.color = typeof entry.color === "string" && /^#[a-fA-F0-9]{6}$/.test(entry.color) ? entry.color : "#C07A84";
+    }
+    if (!shapeObject) {
+      const background = safeVisualColor(entry.background, true);
+      const borderColor = safeVisualColor(entry.borderColor);
+      if (background) layer.background = background;
+      if (borderColor) layer.borderColor = borderColor;
+      if (entry.borderWidth !== undefined) layer.borderWidth = numberBetween(entry.borderWidth, 0, 12, 2);
+      // Images use color as optional tint; existing text-color behavior stays compatible.
+      if (!textObject) {
+        const tint = safeVisualColor(entry.color);
+        if (tint) layer.color = tint;
+      }
     }
     if (entry.height !== undefined) layer.height = numberBetween(entry.height, 3, 200, layer.width);
     if (!shapeObject && entry.radius !== undefined) layer.radius = numberBetween(entry.radius, 0, 100, 0);

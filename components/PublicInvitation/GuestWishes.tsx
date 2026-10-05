@@ -4,6 +4,7 @@ import { useEffect, useId, useState, type CSSProperties, type FormEvent } from "
 import { Button } from "@/components/ui/button";
 import { useInvitationLanguage } from "@/components/PublicInvitation/InvitationLanguage";
 import { invitationText } from "@/lib/invitations/language";
+import { invitationFieldColors } from "@/lib/templates/visual-colors";
 
 type Wish = { id: string; authorName: string; message: string; createdAt: string };
 
@@ -36,7 +37,8 @@ export default function GuestWishes({
   const [reloadKey, setReloadKey] = useState(0);
   const endpoint = `/api/invite/${encodeURIComponent(slug)}/wishes`;
   const rose = appearance === "rose";
-  const inputTextStyle = inputStyle?.fontSize !== undefined ? { fontSize: inputStyle.fontSize } : undefined;
+  const inputTextStyle = { ...(inputStyle?.fontSize !== undefined ? { fontSize: inputStyle.fontSize } : {}), ...(inputStyle?.color ? { color: inputStyle.color } : {}) };
+  const inputFieldStyle = invitationFieldColors(inputStyle);
   const fieldClass = rose
     ? "w-full min-w-0 rounded-[var(--dc-control-radius)] border border-[#d7b5be] bg-white/90 px-4 py-3 text-sm text-[#66394b] outline-none focus-visible:border-[#a65e69] focus-visible:ring-2 focus-visible:ring-[#a65e69]/20 disabled:opacity-65"
     : "w-full min-w-0 rounded-[var(--dc-control-radius)] border border-[var(--inv-soft)] bg-[var(--inv-surface)] px-4 py-3 text-sm text-[var(--inv-scene-surface-ink,var(--inv-ink))] outline-none focus-visible:border-[var(--inv-accent)] focus-visible:ring-2 focus-visible:ring-[var(--inv-accent)]/20 disabled:opacity-65";
@@ -110,7 +112,7 @@ export default function GuestWishes({
               maxLength={80}
               required
               className={fieldClass}
-              style={inputTextStyle}
+              style={inputFieldStyle}
             />
           </div>
           <div>
@@ -125,7 +127,7 @@ export default function GuestWishes({
               maxLength={600}
               required
               className={`${fieldClass} resize-y`}
-              style={inputTextStyle}
+              style={inputFieldStyle}
             />
           </div>
           <Button data-studio-section-element="wishes:button" style={buttonStyle} type="submit" disabled={submitting} aria-disabled={preview || submitting} size="sm" className="min-h-10">

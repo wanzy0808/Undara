@@ -43,7 +43,9 @@ import { parseInvitationSections, type InvitationSectionKey, type InvitationSect
 import { invitationSectionBackgroundRule, invitationSectionStyleCss, parseInvitationSectionStyles } from "@/lib/templates/section-styles";
 import { parseInvitationRsvpConfig, rsvpElementStyleCss } from "@/lib/templates/rsvp-config";
 import { parseSectionElementStyles, sectionElementStyleCss } from "@/lib/templates/section-element-styles";
-import { nativeVisualFontFamilies, nativeVisualScopeClass, nativeVisualStyleSheet } from "@/lib/templates/native-visual-transforms";
+import { nativeVisualColorFilters, nativeVisualFontFamilies, nativeVisualScopeClass, nativeVisualStyleSheet } from "@/lib/templates/native-visual-transforms";
+import InvitationColorFilters from "@/components/PublicInvitation/InvitationColorFilters";
+import { invitationComponentColorCss } from "@/lib/templates/component-colors";
 import { instancesForSection, parseInvitationSectionLayout } from "@/lib/templates/section-layout";
 import EditableSectionInstance, { type SectionInstanceEditorActions } from "@/components/PublicInvitation/EditableSectionInstance";
 import { useInvitationSectionAnimations } from "@/components/PublicInvitation/use-section-animations";
@@ -613,6 +615,8 @@ export default function UniversalInvitationTemplate({
       style={css}
     >
       <style>{nativeVisualStyleSheet(activeDesignKey)}</style>
+      <style>{invitationComponentColorCss(nativeVisualScopeClass(activeDesignKey), rsvpConfig, sectionElementStyles)}</style>
+      <InvitationColorFilters filters={nativeVisualColorFilters(activeDesignKey)} />
       <style>{invitationSectionBackgroundRule}</style>
       <InvitationFonts families={[font.heading, font.body, ...nativeVisualFontFamilies(activeDesignKey)]} />
       {sections.music !== false && <InvitationMusic ref={musicRef} source={music} opened={opened || sections.envelope === false} preview={preview} />}
