@@ -54,7 +54,7 @@ export default function InvitationQrMenu({ onManageInvitations }: { onManageInvi
         <QrCode className="size-4" aria-hidden="true" />{d("QR Undangan")}
       </DialogTrigger>
       <DialogContent showCloseButton={false} overlayClassName="z-[100]" className="z-[101] max-h-[calc(100dvh-2rem)] gap-4 overflow-y-auto sm:max-w-3xl">
-        <DialogHeader className="sticky top-0 z-10 -mx-6 -mt-6 flex-row items-center justify-between gap-4 bg-popover px-6 py-4">
+        <DialogHeader className="sticky top-0 z-10 -mx-6 flex-row items-center justify-between gap-4 bg-popover px-6 py-4">
           <DialogTitle className="font-[family-name:var(--font-undara-heading)] text-xl font-semibold text-primary">{d("QR Undangan")}</DialogTitle>
           <DialogClose render={<Button size="icon-sm" className="shrink-0" aria-label={d("Tutup QR")} />}>
             <X className="size-4" aria-hidden="true" />
@@ -75,7 +75,7 @@ export default function InvitationQrMenu({ onManageInvitations }: { onManageInvi
         ) : (
           <>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-foreground">{d("Undangan")}</span>
+              <span className="sr-only">{d("Undangan")}</span>
               <span className="relative block">
                 <select
                   data-dc-native-chevron="true"
