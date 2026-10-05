@@ -53,13 +53,13 @@ export default function InvitationQrMenu({ onManageInvitations }: { onManageInvi
       <DialogTrigger render={<Button size="lg" className="dc-dashboard-overview-cta" />}>
         <QrCode className="size-4" aria-hidden="true" />{d("QR Undangan")}
       </DialogTrigger>
-      <DialogContent showCloseButton={false} overlayClassName="z-[100]" className="z-[101] max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
-        <DialogHeader className="pr-12">
+      <DialogContent showCloseButton={false} overlayClassName="z-[100]" className="z-[101] max-h-[calc(100dvh-2rem)] gap-4 overflow-y-auto sm:max-w-3xl">
+        <DialogHeader className="sticky top-0 z-10 -mx-6 -mt-6 flex-row items-center justify-between gap-4 bg-popover px-6 py-4">
           <DialogTitle className="font-[family-name:var(--font-undara-heading)] text-xl font-semibold text-primary">{d("QR Undangan")}</DialogTitle>
+          <DialogClose render={<Button size="icon-sm" className="shrink-0" aria-label={d("Tutup QR")} />}>
+            <X className="size-4" aria-hidden="true" />
+          </DialogClose>
         </DialogHeader>
-        <DialogClose render={<Button size="icon-sm" className="absolute right-4 top-4" aria-label={d("Tutup QR")} />}>
-          <X className="size-4" aria-hidden="true" />
-        </DialogClose>
         {loading ? (
           <p role="status" className="text-sm text-muted-foreground">{d("Memuat...")}</p>
         ) : failed ? (

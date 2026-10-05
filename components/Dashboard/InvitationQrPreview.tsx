@@ -26,7 +26,7 @@ function InvitationQrCardPreview({ invitationId, title }: InvitationQrPreviewPro
   return (
     <div className="flex min-w-0 flex-col items-center gap-4">
       {status !== "error" && (
-        <div className="flex w-full max-w-xs justify-center" aria-busy={status === "loading"}>
+        <div className="flex w-full max-w-md justify-center" aria-busy={status === "loading"}>
           {/* The same-origin endpoint returns a private PNG, unsuitable for the image optimizer. */}
           <img
             key={attempt}
@@ -34,7 +34,7 @@ function InvitationQrCardPreview({ invitationId, title }: InvitationQrPreviewPro
             alt={`${d("QR Undangan")} · ${title}`}
             width={900}
             height={1320}
-            className="block h-auto max-h-[55dvh] w-auto max-w-full shadow-sm"
+            className="block h-auto max-h-[70dvh] w-auto max-w-full shadow-sm"
             onLoad={() => setStatus("ready")}
             onError={() => setStatus("error")}
           />

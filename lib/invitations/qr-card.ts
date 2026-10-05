@@ -7,6 +7,7 @@ export const invitationQrCardGeometry = {
 } as const;
 
 const brown = "#703B3B";
+const ivory = "#EDE3D8";
 const fonts = {
   heading: path.join(process.cwd(), "assets/brand/fonts/DMSerifDisplay-Regular.ttf"),
   body: path.join(process.cwd(), "assets/brand/fonts/Roboto.ttf"),
@@ -50,6 +51,28 @@ function logoImage() {
   return brandLogo;
 }
 
+let cardBackground: Promise<Buffer> | undefined;
+function backgroundImage() {
+  cardBackground ??= (async () => {
+    const ornamentRoot = path.join(process.cwd(), "public/assets/landing/ornaments/botanical");
+    const [topCorner, bottomCorner, sprig] = await Promise.all([
+      sharp(path.join(ornamentRoot, "branch-01.webp")).resize(320, 240).png().toBuffer(),
+      sharp(path.join(ornamentRoot, "branch-04.webp")).resize(300, 225).png().toBuffer(),
+      sharp(path.join(ornamentRoot, "branch-05.webp")).trim().resize(176).png().toBuffer(),
+    ]);
+    // The frame is geometry; the leaf engravings reuse the original Undara artwork.
+    const frame = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1320"><rect x="38" y="38" width="824" height="1244" rx="28" fill="none" stroke="#B79778" stroke-width="2"/></svg>`);
+    return sharp({ create: { width: 900, height: 1320, channels: 3, background: ivory } })
+      .composite([
+        { input: frame, left: 0, top: 0 },
+        { input: topCorner, left: 12, top: 12 },
+        { input: bottomCorner, left: 585, top: 1080 },
+        { input: sprig, left: 362, top: 300 },
+      ]).png().toBuffer();
+  })().catch((error) => { cardBackground = undefined; throw error; });
+  return cardBackground;
+}
+
 /** Compose the original QR unchanged; copy and branding stay outside its white quiet zone. */
 export async function invitationQrDownloadCard(qrPng: Buffer, title?: string | null, locale: "id" | "en" = "id") {
   const geometry = invitationQrCardGeometry;
@@ -58,18 +81,21 @@ export async function invitationQrDownloadCard(qrPng: Buffer, title?: string | n
   const heading = locale === "en" ? "Thank you" : "Terima kasih";
   const message = locale === "en" ? "for being part of\nour special story." : "telah menjadi bagian dari\ncerita istimewa kami.";
   const eventTitle = invitationQrCardTitle(title);
-  const [headingImage, messageImage, titleImage, logo] = await Promise.all([
+  const [headingImage, messageImage, titleImage, scanImage, logo, background] = await Promise.all([
     textImage(heading, fonts.heading, "DM Serif Display 78", 740, 96),
     textImage(message, fonts.body, "Roboto 34", 740, 94),
-    eventTitle ? textImage(eventTitle, fonts.body, "Roboto Medium 28", 740, 76) : null,
+    eventTitle ? textImage(eventTitle, fonts.heading, "DM Serif Display 36", 740, 76) : null,
+    textImage(locale === "en" ? "Scan to open your invitation" : "Pindai untuk membuka undangan", fonts.body, "Roboto 24", 620, 34),
     logoImage(),
+    backgroundImage(),
   ]);
   const center = (image: typeof headingImage, top: number) => ({ input: image.data, left: Math.round((geometry.width - image.info.width) / 2), top });
-  return sharp({ create: { width: geometry.width, height: geometry.height, channels: 3, background: "#EDE3D8" } })
+  return sharp(background)
     .composite([
       center(headingImage, 96), center(messageImage, 210),
       ...(titleImage ? [center(titleImage, 332)] : []),
       { input: qrPng, left: geometry.qrLeft, top: geometry.qrTop },
+      center(scanImage, 1106),
       { input: logo, left: 330, top: 1152 },
     ]).withMetadata({ density: 300 }).png().toBuffer();
 }

@@ -54,7 +54,8 @@ test("long, blank and markup-like event titles cannot overlap or alter the QR", 
     const card = await invitationQrDownloadCard(qrPng, title);
     const crop = await sharp(card).extract({ left, top, width: 640, height: 640 }).ensureAlpha().raw().toBuffer();
     assert.deepEqual(crop, original);
-    const gap = await sharp(card).extract({ left: 0, top: 410, width: 900, height: 38 }).removeAlpha().raw().toBuffer();
+    // The print frame may occupy the card edges; the title-to-QR reading area stays clear.
+    const gap = await sharp(card).extract({ left, top: 410, width: 640, height: 38 }).removeAlpha().raw().toBuffer();
     for (let i = 0; i < gap.length; i += 3) assert.deepEqual([...gap.subarray(i, i + 3)], [237, 227, 216]);
   }
   assert.equal(invitationQrCardTitle("ulang tahun naya\n & sahabat"), "Ulang Tahun Naya & Sahabat");
@@ -72,9 +73,12 @@ test("invalid QR inputs fail closed rather than producing a card with a missing 
   await assert.rejects(invitationQrDownloadCard(Buffer.from("not an image"), "Naya"));
 });
 
-test("deployable route trace includes both local brand fonts, their licenses and the canonical logo", () => {
+test("deployable route trace includes local brand fonts, licenses, wordmark and greeting-card artwork", () => {
   const config = readFileSync(new URL("../next.config.ts", import.meta.url), "utf8");
   assert.match(config, /outputFileTracingIncludes[\s\S]*"\/api\/invitations\/qr"[\s\S]*assets\/brand\/fonts\/\*[\s\S]*public\/assets\/brand\/undara\/logo\.webp/);
+  for (const name of ["branch-01.webp", "branch-04.webp", "branch-05.webp"]) {
+    assert.ok(config.includes(`./public/assets/landing/ornaments/botanical/${name}`));
+  }
   for (const name of ["DMSerifDisplay-OFL.txt", "Roboto-OFL.txt"]) {
     assert.match(readFileSync(new URL(`../assets/brand/fonts/${name}`, import.meta.url), "utf8"), /SIL OPEN FONT LICENSE Version 1\.1/);
   }
