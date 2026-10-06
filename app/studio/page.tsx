@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import StudioEntrySection from "@/components/InvitationStudio/StudioEntrySection";
 import { PENDING_TEMPLATE_COOKIE, isSelectableTemplate } from "@/lib/templates/template-intent";
+import { getInvitationTemplate, invitationTemplates, templateSupportsEventCategory } from "@/lib/templates/catalog";
 
 /**
  * Marketing CTA gateway. Studio needs an existing, configured event and its ID;
@@ -25,11 +26,26 @@ export default async function StudioEntryPage({
   if (user.role === "ADMIN" || user.role === "FINANCE") redirect("/admin");
   if (user.role === "DESIGNER" || user.role === "EDITOR") redirect("/designer");
 
-  const events = await prisma.invitation.findMany({
+  let selectedTheme = invitationTemplates.find((item) => item.key === selectedTemplate);
+  if (selectedTemplate?.startsWith("designer:")) {
+    const designer = await prisma.designerTemplate.findUnique({
+      where: { templateNo: selectedTemplate.slice("designer:".length) },
+      select: { status: true, designKey: true },
+    });
+    if (designer?.status === "PUBLISHED" && designer.designKey) {
+      const baseKey = designer.designKey.split("::")[0];
+      const base = getInvitationTemplate(baseKey);
+      if (base.key === baseKey) selectedTheme = base;
+    }
+  }
+  const availableEvents = await prisma.invitation.findMany({
     where: { ownerId: user.id, eventConfigured: true },
-    select: { id: true, title: true, type: true },
+    select: { id: true, title: true, type: true, eventCategory: true },
     orderBy: { updatedAt: "desc" },
   });
+  const events = selectedTemplate
+    ? availableEvents.filter((event) => selectedTheme && templateSupportsEventCategory(selectedTheme, event.eventCategory))
+    : availableEvents;
 
   if (events.length === 1) {
     const event = events[0];

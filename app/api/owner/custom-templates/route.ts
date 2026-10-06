@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getInvitationTemplate } from "@/lib/templates/catalog";
+import { getInvitationTemplate, isInvitationTemplateCompatible } from "@/lib/templates/catalog";
 import { parseDesignKey } from "@/lib/templates/design";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 
@@ -312,7 +312,7 @@ export async function POST(request: Request) {
 
     const invitation = await prisma.invitation.findFirst({
       where: { id: invitationId, ownerId: targetUser.id, isPublished: false },
-      select: { id: true, title: true, templateKey: true, musicUrl: true },
+      select: { id: true, title: true, templateKey: true, musicUrl: true, eventCategory: true },
     });
     if (!invitation) {
       return NextResponse.json(
@@ -321,7 +321,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!isInvitationTemplateCompatible(template.designKey, invitation.eventCategory)) {
+      return NextResponse.json({ error: "Template tidak sesuai dengan kategori acara tujuan." }, { status: 400 });
+    }
+
     const result = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Invitation" WHERE "id" = ${invitation.id} FOR UPDATE`;
+      const current = await tx.invitation.findUniqueOrThrow({ where: { id: invitation.id } });
+      if (current.isPublished || !isInvitationTemplateCompatible(template.designKey!, current.eventCategory)) {
+        throw new Error("Kategori atau status acara berubah. Muat ulang sebelum memberikan template.");
+      }
       const archived = await tx.designerTemplate.updateMany({
         where: { id: template.id, status: template.status },
         data: { status: "ARCHIVED" },
@@ -382,7 +391,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/owner/custom-templates failed", error);
     const message = error instanceof Error ? error.message : "Template custom belum dapat diproses.";
-    const conflict = /sudah punya custom request aktif|sudah diproses/.test(message);
+    const conflict = /sudah punya custom request aktif|sudah diproses|Kategori atau status acara berubah/.test(message);
     return NextResponse.json({ error: message }, { status: conflict ? 409 : 500 });
   }
 }

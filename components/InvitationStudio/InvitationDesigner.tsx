@@ -18,7 +18,7 @@ import { useTemplateCatalog } from "@/lib/templates/use-template-catalog";
 import { defaultGallerySettings, defaultPhotoAssignments, type CroppablePhotoSlot, type GallerySettings, type PhotoCrop, type PhotoFocus, type PhotoMotion, type PhotoSlot } from "@/lib/templates/photo-slots";
 import { getEventCategory } from "@/lib/events/catalog";
 import { templatePhotoMotion } from "@/lib/templates/template-motion";
-import { getInvitationTemplate } from "@/lib/templates/catalog";
+import { canContinueInvitationTemplate, getInvitationTemplate, isInvitationTemplateCompatible, templatesForEvent } from "@/lib/templates/catalog";
 import PhotoPanel from "@/components/InvitationStudio/PhotoPanel";
 import AssetPanel from "@/components/InvitationStudio/AssetPanel";
 import TextObjectPanel from "@/components/InvitationStudio/TextObjectPanel";
@@ -72,6 +72,7 @@ import {
 } from "@/components/InvitationStudio/designer-config";
 import {
   getInvitationEventIdentity,
+  eventInvitationDesignFromKey,
   invitationDesignStateFromKey,
   makeInvitationDesignStateKey,
 } from "@/components/InvitationStudio/designer-state";
@@ -153,7 +154,6 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     photoFree: "Tema tanpa foto", retry: "Coba Lagi",
   };
   const catalog = useTemplateCatalog();
-  const readyTemplates = catalog.filter((item) => item.ready);
   const maxAssetLayers = templateMode ? MAX_TEMPLATE_ASSET_LAYERS : MAX_ASSET_LAYERS;
   const [selectedCatalogKey, setSelectedCatalogKey] = useState("botanical-ivory");
   const [invitation, setInvitation] = useState<InvitationDesignerInvitation | null>(null);
@@ -288,6 +288,9 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   const [templateDraftId, setTemplateDraftId] = useState<string | null>(null);
   const [templateDraftStatus, setTemplateDraftStatus] = useState<string | null>(null);
   const [templateCustomInvitationId, setTemplateCustomInvitationId] = useState<string | null>(null);
+  const eventScoped = !templateMode || Boolean(templateCustomInvitationId);
+  const eventCatalog = eventScoped && !invitation ? [] : templatesForEvent(catalog, eventScoped ? invitation?.eventCategory : undefined);
+  const readyTemplates = eventCatalog.filter((item) => item.ready);
   const audioMutation = useRef(false);
   const requestedCatalogApplied = useRef(false);
   const [audioBusy, setAudioBusy] = useState(false);
@@ -445,17 +448,19 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     setMusicUrl(next.musicUrl || "");
     setEventTag(next.weddingHashtag || "");
     setDressCode(next.dressCode || "");
-    const loadedDesign = invitationDesignStateFromKey(next.templateKey, fallbackDecor);
+    const savedDesign = invitationDesignStateFromKey(next.templateKey, fallbackDecor);
+    const loadedDesign = eventInvitationDesignFromKey(next.templateKey, next.eventCategory, fallbackDecor);
     // A catalog CTA may select a ready theme for THIS event, but never saves that
     // selection without the owner's explicit Save Design action.
     const requestedTheme = params.get("template") || (params.get("from") === "template" ? readTemplateSelection() : null);
-    const requestedPreset = requestedTheme ? invitationTemplatePresets[requestedTheme] : undefined;
+    const requestedPreset = requestedTheme && isInvitationTemplateCompatible(requestedTheme, next.eventCategory)
+      ? invitationTemplatePresets[requestedTheme] : undefined;
     const stagedDesign: InvitationDesignState = requestedTheme && requestedTheme !== loadedDesign.template && requestedPreset
       ? { ...loadedDesign, template: requestedTheme, palette: requestedPreset.palette, font: requestedPreset.font, copy: {}, copyEn: {}, copyMotion: {}, layers: [], sectionStyles: {}, rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} }, sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })), sectionElementStyles: {}, nativeVisuals: {}, nativeLocks: {} }
       : loadedDesign;
     // Use actual persisted fields for cache identity; fallback photo URLs can change after an upload.
     const serverBaseline = makeStudioServerRevision(next);
-    const canonicalSavedState = makeStudioSavedState(makeInvitationDesignStateKey(loadedDesign), next.musicUrl || "", next.weddingHashtag || "", next.dressCode || "");
+    const canonicalSavedState = makeStudioSavedState(makeInvitationDesignStateKey(savedDesign), next.musicUrl || "", next.weddingHashtag || "", next.dressCode || "");
     // Restore only after a true browser refresh of this same invitation and saved revision.
     // A fresh visit, event switch, Back/Forward navigation or logout never reopens this draft.
     const navigationType = (window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type ?? "navigate";
@@ -467,11 +472,12 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     try {
       const raw = window.sessionStorage.getItem(STUDIO_REFRESH_DRAFT_KEY);
       refreshed = recoverStudioRefreshDraft(raw, sameStudioEntry ? navigationType : "navigate", next.id, serverBaseline);
+      if (refreshed && !canContinueInvitationTemplate(refreshed[0], next.templateKey, next.eventCategory)) refreshed = null;
       if (!refreshed) window.sessionStorage.removeItem(STUDIO_REFRESH_DRAFT_KEY);
       if (!sameStudioEntry) window.history.replaceState({ ...historyState, __dcStudioDraftEntry: next.id }, "", window.location.href);
     } catch { /* Session storage may be disabled: ordinary editing still works. */ }
     setDesign(refreshed ? invitationDesignStateFromKey(refreshed[0], fallbackDecor) : stagedDesign);
-    setSelectedCatalogKey(requestedTheme && requestedPreset ? requestedTheme : loadedDesign.template);
+    setSelectedCatalogKey(refreshed ? invitationDesignStateFromKey(refreshed[0], fallbackDecor).template : requestedTheme && requestedPreset ? requestedTheme : loadedDesign.template);
     if (refreshed) {
       setMusicUrl(refreshed[1]);
       setEventTag(refreshed[2]);
@@ -511,7 +517,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
 
   const template =
     readyTemplates.find((item) => item.key === design.template) ||
-    (design.template === "blank-canvas" ? getInvitationTemplate("blank-canvas") : readyTemplates[0]);
+    getInvitationTemplate(design.template);
   const palette = invitationPalettes[design.palette];
   const fontPair = invitationFonts[design.font];
   const designKey = makeInvitationDesignStateKey(design);
@@ -2013,7 +2019,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
 
         <aside className="undara-studio-inspector" aria-label="Pengaturan desain">
           <fieldset disabled={!invitation || saving} className="min-w-0 border-0 p-0 disabled:opacity-50">
-          {panel === "template" && <TemplatePanel selected={selectedCatalogKey} onSelect={selectTemplate} templates={catalog} onBlankCanvas={templateMode && allowBlankCanvas ? startBlankCanvas : undefined} />}
+          {panel === "template" && <TemplatePanel selected={selectedCatalogKey} onSelect={selectTemplate} templates={eventCatalog} onBlankCanvas={templateMode && allowBlankCanvas ? startBlankCanvas : undefined} />}
           {panel === "sections" && (
             <ContentPanel
               invitationLanguage={invitationLanguage}

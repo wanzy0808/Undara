@@ -47,6 +47,7 @@ export async function GET() {
         previewImage: item.previewUrl,
         assetPath: base?.assetPath ?? "",
         category: item.category || item.tags[0] || "Designer",
+        eventCategories: ready ? (base?.eventCategories ?? []) : [],
         previewType: ready ? ("studio" as const) : ("image" as const),
         source: "designer" as const,
         ready,

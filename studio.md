@@ -103,6 +103,8 @@ Canvas edit tetap menjadi workspace utama, tetapi Studio juga menyediakan **Prev
 
 ### Mode Studio berdasarkan role
 
+**Katalog sesuai event (6 October 2026):** Invitation Mode dan Template Mode untuk custom job terikat event hanya menampilkan tema yang mendukung kategori acara melalui registry `eventCategories`. Ulang tahun dan wedding saling terpisah; master authoring tanpa event tetap melihat semuanya. Acara baru memakai default kompatibel tanpa autosave. Tautan/cookie/draft refresh tidak boleh mengganti tema ke kategori yang salah. Server memeriksa pilihan baru, Publish pertama, dan handoff custom; desain tersimpan tetap utuh dan bisa diedit dengan base yang sama.
+
 Studio memakai **satu editor yang sama**, tetapi semantics Save wajib dibedakan berdasarkan role:
 
 - **USER / customer — Invitation Mode:** Studio selalu terikat ke satu `Invitation` milik user. Tombol **Simpan** menyimpan desain ke undangan tersebut melalui `/api/invitations`. Save **bukan publish otomatis**; setelah desain tersimpan, Publish tetap mengikuti flow Undangan Digital dan rule pembayaran/publish yang berlaku.

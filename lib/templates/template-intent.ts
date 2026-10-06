@@ -9,7 +9,7 @@ export const PENDING_TEMPLATE_COOKIE = "dc_pending_invitation_template";
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function isSelectableTemplate(key: string | null | undefined): key is string {
-  return Boolean(key && (invitationTemplates.some((template) => template.key === key) || /^designer:\\d{3,}$/.test(key)));
+  return Boolean(key && (invitationTemplates.some((template) => template.key === key) || /^designer:\d{3,}$/.test(key)));
 }
 
 export function rememberTemplateSelection(key: string) {

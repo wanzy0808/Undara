@@ -15,6 +15,7 @@ import { parsePhotoAssignments, withPhotoAssignments } from "@/lib/templates/pho
 import { parseEditableCopy, parseEnglishEditableCopy, withEditableCopy, withEnglishEditableCopy } from "@/lib/templates/editable-copy";
 import { parseEditableCopyMotions, withEditableCopyMotions } from "@/lib/templates/editable-copy-motion";
 import { invitationTemplatePresets } from "@/components/InvitationStudio/designer-config";
+import { defaultInvitationTemplateForEvent } from "@/lib/templates/catalog";
 import { parseAssetLayers, withAssetLayers } from "@/lib/templates/asset-layers";
 import { parseInvitationSectionStyles, withInvitationSectionStyles } from "@/lib/templates/section-styles";
 import { parseInvitationRsvpConfig, withInvitationRsvpConfig } from "@/lib/templates/rsvp-config";
@@ -95,6 +96,15 @@ export function makeInvitationDesignStateKey(state: InvitationDesignState) {
     state.copy,
   ), state.copyEn), state.copyMotion), state.layers), state.sectionStyles), state.rsvpConfig), state.sectionLayout), state.sectionElementStyles), state.nativeVisuals);
   return withNativeVisualLocks(key, state.nativeLocks);
+}
+
+/** Use a compatible initial theme only when the event has no saved design. */
+export function eventInvitationDesignFromKey(key: string, category: string, fallbackDecor: string) {
+  const template = defaultInvitationTemplateForEvent(category);
+  return invitationDesignStateFromKey(
+    key || makeDesignKey(template.key, template.preset.palette, template.preset.font),
+    fallbackDecor,
+  );
 }
 
 export function invitationDesignStateFromKey(

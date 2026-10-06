@@ -1,6 +1,12 @@
 import type { CroppablePhotoSlot, PhotoSlot } from "@/lib/templates/photo-slots";
 import type { FontKey, PaletteKey } from "@/lib/templates/design";
 import type { InvitationTemplateLayout } from "@/components/InvitationStudio/designer-types";
+import { eventCategoryOptions, normalizeEventCategory, type EventCategory } from "@/lib/events/catalog";
+
+// Preserve the older themes' availability for Baby Shower/Other while separating birthdays.
+const legacyTemplateEventCategories = eventCategoryOptions
+  .map((item) => item.key)
+  .filter((key) => key !== "BIRTHDAY");
 
 export type InvitationTemplate = {
   key: string;
@@ -10,6 +16,8 @@ export type InvitationTemplate = {
   previewImage: string;
   assetPath: string;
   category: string;
+  /** Event compatibility is separate from the visual category (Floral, Modern, etc.). */
+  eventCategories: readonly EventCategory[];
   previewType: "public" | "studio";
   photoSlots: PhotoSlot[];
   /** Slots whose image sizing actually responds to a custom crop aspect ratio. */
@@ -21,6 +29,7 @@ export type InvitationTemplate = {
 export const blankCanvasTemplate: InvitationTemplate = {
   key: "blank-canvas",
   category: "Studio",
+  eventCategories: eventCategoryOptions.map((item) => item.key),
   previewType: "studio",
   usesPhotos: false,
   photoSlots: [],
@@ -36,6 +45,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "romantic-rose",
     category: "Floral",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "personOne", "personTwo", "gallery"],
@@ -50,6 +60,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "botanical-ivory",
     category: "Botanical",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: false,
     photoSlots: [],
@@ -66,6 +77,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "eternal-blossom",
     category: "Floral",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "personOne", "personTwo", "gallery"],
@@ -81,6 +93,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "modern-maroon",
     category: "Modern",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "personOne", "personTwo", "gallery"],
@@ -95,6 +108,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "garden-light",
     category: "Botanical",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "personOne", "personTwo", "gallery"],
@@ -110,6 +124,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "midnight-romance",
     category: "Modern",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "personOne", "personTwo", "gallery"],
@@ -125,6 +140,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "classic-pearl",
     category: "Classic",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: false,
     photoSlots: [],
@@ -139,6 +155,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "golden-art-deco",
     category: "Art Deco",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: false,
     photoSlots: [],
@@ -152,6 +169,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "paper-cut-botanical",
     category: "Illustration",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: false,
     photoSlots: [],
@@ -165,6 +183,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "pencil-reverie",
     category: "Illustration",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: false,
     photoSlots: [],
@@ -178,6 +197,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "zen-atelier",
     category: "Zen",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "gallery"],
@@ -191,6 +211,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "velvet-horizon",
     category: "Romantic",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "personOne", "personTwo", "gallery"],
@@ -205,6 +226,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "celestial-ink",
     category: "Celestial",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: false,
     photoSlots: [],
@@ -218,6 +240,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "serein",
     category: "Editorial",
+    eventCategories: legacyTemplateEventCategories,
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "personOne", "personTwo", "gallery"],
@@ -231,6 +254,7 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     key: "confetti-club",
     category: "Birthday",
+    eventCategories: ["BIRTHDAY"],
     previewType: "public",
     usesPhotos: true,
     photoSlots: ["cover", "gallery"],
@@ -242,6 +266,40 @@ export const invitationTemplates: InvitationTemplate[] = [
     assetPath: "/templates/confetti-club",
   },
 ];
+
+export function templateSupportsEventCategory(
+  template: { eventCategories?: readonly EventCategory[] },
+  category: unknown,
+) {
+  return template.eventCategories?.includes(normalizeEventCategory(category)) ?? false;
+}
+
+export function templatesForEvent<T extends { eventCategories?: readonly EventCategory[] }>(
+  templates: T[],
+  category?: string,
+): T[] {
+  return category === undefined ? templates : templates.filter((item) => templateSupportsEventCategory(item, category));
+}
+
+export function isInvitationTemplateCompatible(designKey: string, category: unknown) {
+  const baseKey = designKey.split("::")[0];
+  const template = baseKey === blankCanvasTemplate.key
+    ? blankCanvasTemplate
+    : invitationTemplates.find((item) => item.key === baseKey);
+  return Boolean(template && templateSupportsEventCategory(template, category));
+}
+
+export function defaultInvitationTemplateForEvent(category: unknown) {
+  return invitationTemplates.find((item) => item.key === "botanical-ivory" && templateSupportsEventCategory(item, category))
+    ?? invitationTemplates.find((item) => templateSupportsEventCategory(item, category))
+    ?? blankCanvasTemplate;
+}
+
+/** Older assigned designs can still be edited; this never permits a new incompatible theme. */
+export function canContinueInvitationTemplate(designKey: string, savedKey: string, category: unknown) {
+  return isInvitationTemplateCompatible(designKey, category)
+    || Boolean(savedKey && designKey.split("::")[0] === savedKey.split("::")[0]);
+}
 
 export function supportsPhotoCropAspect(key: string, slot: PhotoSlot) {
   if (slot === "gallery") return false;

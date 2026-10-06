@@ -7,6 +7,7 @@ import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 import { hasPaidDigitalInvitation } from "@/lib/packages/access";
 import { getOwnerPackageGrant } from "@/lib/packages/owner-grants";
 import { assertInvitationMusicAsset, MissingMusicAssetError } from "@/lib/invitations/music-selection";
+import { canContinueInvitationTemplate, isInvitationTemplateCompatible } from "@/lib/templates/catalog";
 import {
   buildEventTitle,
   getEventCategory,
@@ -37,6 +38,25 @@ function sanitizeInvitation<T extends object>(invitation: T) {
     passwordHash?: string | null;
   };
   return safeInvitation;
+}
+
+class IncompatibleTemplateError extends Error {
+  constructor() {
+    super("Template tidak sesuai dengan kategori acara. Pilih template yang sesuai di Studio.");
+  }
+}
+
+function assertTemplateCategory(
+  templateKey: string,
+  eventCategory: string,
+  current: { templateKey: string; isPublished: boolean },
+  wantsPublish: boolean,
+) {
+  if (!templateKey || isInvitationTemplateCompatible(templateKey, eventCategory)) return;
+  // Keep assigned designs editable, including after a draft event changes category.
+  if (canContinueInvitationTemplate(templateKey, current.templateKey, eventCategory)
+    && (!wantsPublish || current.isPublished)) return;
+  throw new IncompatibleTemplateError();
 }
 
 function databaseFailure(error: unknown, fallback: string) {
@@ -378,6 +398,7 @@ export async function PUT(request: Request) {
     const wantsPublish = body.isPublished === undefined ? invitation.isPublished : Boolean(body.isPublished);
     const canPublish = ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment);
     const eventConfigured = body.eventConfigured === true ? Boolean(title) : invitation.eventConfigured;
+    assertTemplateCategory(templateKey, eventCategory, invitation, wantsPublish);
 
     if (body.eventConfigured === true) {
       if (!title) {
@@ -451,6 +472,8 @@ export async function PUT(request: Request) {
       // Share the upload/delete lock so an old editor cannot restore a removed file.
       await tx.$queryRaw`SELECT "id" FROM "Invitation" WHERE "id" = ${invitation.id} FOR UPDATE`;
       const current = await tx.invitation.findUniqueOrThrow({ where: { id: invitation.id } });
+      const latestEventCategory = body.eventCategory === undefined ? normalizeEventCategory(current.eventCategory) : eventCategory;
+      assertTemplateCategory(templateKey, latestEventCategory, current, wantsPublish);
       const musicUrl = String(body.musicUrl ?? current.musicUrl ?? "").trim() || null;
       await assertInvitationMusicAsset(musicUrl, invitation.id, user.id, (where) =>
         tx.invitationAsset.findFirst({ where }),
@@ -459,7 +482,7 @@ export async function PUT(request: Request) {
         where: { id: invitation.id },
         data: {
           slug,
-          eventCategory,
+          eventCategory: latestEventCategory,
           groomName,
           brideName,
           groomFatherName,
@@ -503,6 +526,7 @@ export async function PUT(request: Request) {
       accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(updated.payment),
     });
   } catch (error) {
+    if (error instanceof IncompatibleTemplateError) return NextResponse.json({ error: error.message }, { status: 400 });
     if (error instanceof MissingMusicAssetError) return NextResponse.json({ error: error.message }, { status: 409 });
     console.error("PUT /api/invitations failed", error);
     return databaseFailure(error, "Undangan belum dapat disimpan.");
