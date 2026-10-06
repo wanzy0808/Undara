@@ -72,7 +72,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   }, [tables, localTables]);
   const layout = useMemo(() => seatingPlanWithTables(plan.editor.plan, visibleTables), [plan.editor.plan, visibleTables]);
   const layoutDirty = seatingPlanKey(layout) !== plan.editor.savedKey || (plan.editor.revision === null && visibleTables.length > 0);
-  const layoutBusy = plan.loading || plan.saving || !plan.ready || generating || Boolean(savingGuestId);
+  const layoutBusy = plan.loading || plan.saving || generating || Boolean(savingGuestId);
   const toolbarBusy = layoutBusy || drawing;
 
   const visibleGuests = useMemo(() => {
@@ -206,7 +206,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   }
 
   async function assignGuestAtPoint(guestId: string, point: SeatingPoint) {
-    if (savingGuestId || plan.saving || !plan.ready) return;
+    if (layoutBusy || drawing) return;
     const target = targetAtPoint(point);
     setHoverTarget(null);
 
@@ -310,8 +310,13 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   }
 
   async function saveLayout() {
-    if (toolbarBusy) return;
+    if (toolbarBusy || !plan.ready) return;
     if (await plan.save(layout)) setMessage(d("Denah tersimpan."));
+  }
+
+  async function reloadLayout() {
+    const result = await plan.reload();
+    if (result?.replacedDraft) setMessage(d("Denah dimuat ulang. Gunakan Undo untuk memulihkan perubahan tadi."));
   }
 
   async function printLayout() {
@@ -525,7 +530,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             <option value="">{d("Pilih meja")}</option>{visibleTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}
           </select>
           <div className="flex flex-wrap gap-2 sm:ml-auto">
-            <Button type="button" size="sm" disabled={toolbarBusy || !layoutDirty} onClick={() => void saveLayout()}><Save className="h-4 w-4" />{plan.saving ? d("Menyimpan...") : d("Simpan denah")}</Button>
+            <Button type="button" size="sm" disabled={toolbarBusy || !plan.ready || !layoutDirty} title={!plan.ready ? d("Muat denah sebelum menyimpan.") : undefined} onClick={() => void saveLayout()}><Save className="h-4 w-4" />{plan.saving ? d("Menyimpan...") : d("Simpan denah")}</Button>
             <Button type="button" size="sm" variant="outline" disabled={toolbarBusy || printing} onClick={() => void printLayout()}><Printer className="h-4 w-4" />{printing ? d("Menyiapkan cetak...") : d("Cetak")}</Button>
           </div>
         </div>
@@ -542,8 +547,8 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
           label={d("Denah: pilih meja, lalu gunakan tombol panah untuk menggeser.")} emptyLabel={d("Atur jumlah meja dan kursi untuk membuat denah.")}
         />
         <div className="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground" role="status">
-          <span>{plan.loading ? d("Memuat denah...") : plan.saving || savingGuestId ? d("Menyimpan...") : plan.ready && layoutDirty ? d("Perubahan denah belum disimpan") : ""}</span>
-          {plan.error && <div className="flex flex-wrap items-center gap-2 text-primary"><span>{d(plan.error)}</span><Button type="button" size="sm" variant="outline" disabled={plan.loading || plan.saving || drawing} onClick={() => void plan.reload()}><RefreshCw className="h-4 w-4" />{d("Muat ulang denah")}</Button></div>}
+          <span>{plan.loading ? d("Memuat denah...") : plan.saving || savingGuestId ? d("Menyimpan...") : (plan.ready || plan.editor.past.length > 0) && layoutDirty ? d("Perubahan denah belum disimpan") : ""}</span>
+          {plan.error && <div className="flex flex-wrap items-center gap-2 text-primary"><span>{d(plan.error)}</span><Button type="button" size="sm" variant="outline" disabled={toolbarBusy} onClick={() => void reloadLayout()}><RefreshCw className="h-4 w-4" />{d("Muat ulang denah")}</Button></div>}
         </div>
 
         {swapCandidate && (

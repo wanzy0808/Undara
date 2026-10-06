@@ -32,7 +32,12 @@ export function useSeatingPlan(invitationId: string) {
     const controller = new AbortController(); requests.current.add(controller);
     try {
       const { plan, revision } = await loadSeatingPlan(invitationId, controller.signal);
-      if (!controller.signal.aborted) { dispatch({ type: "LOAD", plan, revision, keepUndo: true }); setReady(true); }
+      if (!controller.signal.aborted) {
+        const currentKey = seatingPlanKey(editor.plan);
+        const replacedDraft = currentKey !== editor.savedKey && currentKey !== seatingPlanKey(plan);
+        dispatch({ type: "LOAD", plan, revision, keepUndo: true }); setReady(true);
+        return { replacedDraft };
+      }
     } catch (error) {
       if (!controller.signal.aborted) setError(error instanceof Error ? error.message : "Denah belum dapat dimuat. Coba lagi.");
     } finally {

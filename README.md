@@ -248,6 +248,8 @@ pnpm db:deploy
 
 The seating editor requires migration `20261006043000_event_seating_plan`. In **Manajemen Tamu → Pengaturan Meja**, use **Pilih / geser** to move tables together with their seats or place guests, **Gambar jalur** to draw with the mouse, then **Simpan denah** to update the event's private layout. Undo/Redo affects layout; guest assignments retain their existing immediate server save. **Cetak** prints the current layout and roster, including unsaved geometry, through the browser's printer/PDF dialog. Long plans use overlapping A4 landscape pages; printing does not auto-save or create a public link.
 
+If layout loading fails, move/draw/print remain available on the displayed local plan; Save requires a successful server load and current revision. Reload keeps an edited draft in Undo. `SEATING_STORAGE_UNAVAILABLE` (503) identifies a missing layout table/column or a cached older Prisma client. After pulling schema changes, stop the dev server, run `pnpm db:deploy` and `pnpm db:generate`, then restart `pnpm dev`; the development Prisma singleton otherwise retains its older client. These steps must run in the environment serving the app, not just in GitHub CI.
+
 ### Private invitation media on a VPS
 
 Customer photo/music uploads do **not** belong in `public/`. Local development may leave `UNDARA_DATA_DIR` blank and uses `.undara-data`. Production must set it to an absolute, persistent path outside the repository/web root, for example:

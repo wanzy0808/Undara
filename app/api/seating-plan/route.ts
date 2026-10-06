@@ -7,6 +7,12 @@ import { parseSeatingPlan, SEATING_MAX_BODY_BYTES } from "@/lib/seating/plan";
 
 const privateHeaders = { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" };
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: privateHeaders });
+const storageUnavailable = () => json({ error: "Penyimpanan denah belum siap. Silakan hubungi pengelola.", code: "SEATING_STORAGE_UNAVAILABLE" }, 503);
+
+function databaseFailure(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "code" in error && (error.code === "P2021" || error.code === "P2022")) return storageUnavailable();
+  return json({ error: fallback }, 500);
+}
 
 async function ownedEvent(userId: string, id: string) {
   return prisma.invitation.findFirst({ where: { id, ownerId: userId }, include: { payment: true } });
@@ -21,11 +27,12 @@ export async function GET(request: Request) {
     const invitation = await ownedEvent(user.id, id);
     if (!invitation) return json({ error: "Acara tidak ditemukan." }, 404);
     if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
+    if (!prisma.seatingPlan) return storageUnavailable();
     const plan = await prisma.seatingPlan.findUnique({ where: { invitationId: id } });
     return json({ layout: plan?.layout ?? null, updatedAt: plan?.updatedAt.toISOString() ?? null });
   } catch (error) {
     console.error("GET /api/seating-plan failed", error);
-    return json({ error: "Denah belum dapat dimuat. Coba lagi." }, 500);
+    return databaseFailure(error, "Denah belum dapat dimuat. Coba lagi.");
   }
 }
 
@@ -46,6 +53,7 @@ export async function PUT(request: Request) {
     const invitation = await ownedEvent(user.id, id);
     if (!invitation) return json({ error: "Acara tidak ditemukan." }, 404);
     if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
+    if (!prisma.seatingPlan) return storageUnavailable();
 
     const result = await prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Invitation" WHERE "id" = ${id} AND "ownerId" = ${user.id} FOR UPDATE`;
@@ -62,6 +70,6 @@ export async function PUT(request: Request) {
     return json(data, status);
   } catch (error) {
     console.error("PUT /api/seating-plan failed", error);
-    return json({ error: "Denah belum tersimpan. Coba lagi." }, 500);
+    return databaseFailure(error, "Denah belum tersimpan. Coba lagi.");
   }
 }

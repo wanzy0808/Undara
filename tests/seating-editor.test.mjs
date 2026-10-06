@@ -210,6 +210,38 @@ test("the actual hook blocks Save after failed initial load, then supports retry
   hook.unmount();
 });
 
+test("offline draft edits survive successful reload in Undo and require a fresh revision before Save", async () => {
+  let failing = true;
+  let persistedPlan = layout(), serverRevision = revision;
+  const requests = [];
+  const hook = hookFixture(async (_url, options) => {
+    requests.push(options);
+    if (failing) return Response.json({ error: "Penyimpanan denah belum siap. Silakan hubungi pengelola." }, { status: 503 });
+    if (options.method === "PUT") {
+      const sent = JSON.parse(options.body);
+      assert.equal(sent.updatedAt, serverRevision);
+      persistedPlan = sent.layout; serverRevision = "2026-10-06T05:02:00.000Z";
+      return Response.json({ layout: persistedPlan, updatedAt: serverRevision });
+    }
+    return Response.json({ layout: persistedPlan, updatedAt: serverRevision });
+  });
+  await flush();
+  const draft = { ...layout(), tables: { [table.id]: { x: 640, y: 410 } }, paths: [[200, 50, 800, 430]] };
+  hook.render().dispatch({ type: "EDIT", plan: draft });
+  assert.equal(await hook.render().save(draft), false);
+  assert.equal(requests.length, 1);
+  failing = false;
+  const result = await hook.render().reload();
+  assert.equal(result.replacedDraft, true);
+  assert.deepEqual(hook.render().editor.plan, layout());
+  hook.render().dispatch({ type: "UNDO" });
+  assert.deepEqual(hook.render().editor.plan, draft);
+  assert.equal(await hook.render().save(draft), true);
+  assert.equal(requests.length, 3);
+  assert.equal((await hook.render().reload()).replacedDraft, false);
+  hook.unmount();
+});
+
 test("hook Save guards duplicate submits and preserves edits made while the request is pending", async () => {
   const put = deferred(), calls = [];
   const hook = hookFixture(async (_url, options) => {
@@ -358,6 +390,7 @@ test("actual canvas native guest drop and keyboard moves use the same logical bo
 const Print = PrintModule.default ?? PrintModule;
 function chartFixture(overrides = {}) {
   const calls = [];
+  let canvasProps;
   const state = { ...editor.emptySeatingEditor(), plan: layout(), revision, savedKey: editor.seatingPlanKey(layout()), past: [plans.emptySeatingPlan()] };
   const plan = { editor: state, loading: false, saving: false, ready: true, error: "", dispatch: (action) => calls.push(action), save: async (value) => { calls.push(value); return true; }, reload: async () => {}, ...overrides };
   const Chart = loadSource("components/Dashboard/SeatingChart.tsx", {
@@ -369,13 +402,13 @@ function chartFixture(overrides = {}) {
     "@/components/Dashboard/DashboardPrimitives": primitives, "@/lib/guests/filters": filters,
     "@/components/Dashboard/seating-chart-geometry": geometry, "@/lib/seating/plan": plans, "@/lib/seating/editor": editor,
     "./use-seating-plan": { useSeatingPlan: () => plan },
-    "./SeatingPlanCanvas": { __esModule: true, default: () => React.createElement("div", { "aria-label": "Denah" }) },
+    "./SeatingPlanCanvas": { __esModule: true, default: (props) => { canvasProps = props; return React.createElement("div", { "aria-label": "Denah" }); } },
     "./SeatingPlanPrint": { __esModule: true, default: Print }, "./seating-plan-print-browser": { printSeatingPlan: async () => () => {} },
   }).default;
-  return { Chart, calls };
+  return { Chart, calls, canvas: () => canvasProps };
 }
 
-test("actual chart toolbar SSR provides localized tools and disables mutations after an unknown failed load", () => {
+test("localized chart keeps local editing/print available after a failed load while Save stays blocked", () => {
   for (const [locale, expected] of [["id", ["Pilih / geser", "Gambar jalur", "Simpan denah", "Cetak"]], ["en", ["Select / move", "Draw route", "Save plan", "Print"]]]) {
     const { Chart } = chartFixture();
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(Chart, { invitationId: "event-a", title: "Naya & Arga", tables: [table], guests: [], onAssigned: async () => {} })));
@@ -386,9 +419,31 @@ test("actual chart toolbar SSR provides localized tools and disables mutations a
     const failed = chartFixture({ ready: false, error: "Denah belum dapat dimuat. Coba lagi." });
     const blocked = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(failed.Chart, { invitationId: "event-a", tables: [table], guests: [], onAssigned: async () => {} })));
     const buttons = blocked.match(/<button\b[^>]*>[\s\S]*?<\/button>/g) || [];
-    for (const label of expected) assert.match(buttons.find((markup) => markup.includes(label)), /disabled=""/);
+    for (const label of [expected[0], expected[1], expected[3]]) assert.doesNotMatch(buttons.find((markup) => markup.includes(label)), /disabled=""/);
+    assert.match(buttons.find((markup) => markup.includes(expected[2])), /disabled=""/);
+    assert.equal(failed.canvas().busy, false);
     assert.ok(blocked.includes(locale === "en" ? "Reload plan" : "Muat ulang denah"));
+    const pending = chartFixture({ loading: true });
+    const pendingHtml = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(pending.Chart, { invitationId: "event-a", tables: [table], guests: [], onAssigned: async () => {} })));
+    const pendingButtons = pendingHtml.match(/<button\b[^>]*>[\s\S]*?<\/button>/g) || [];
+    for (const label of expected) assert.match(pendingButtons.find((markup) => markup.includes(label)), /disabled=""/);
+    assert.equal(pending.canvas().busy, true);
   }
+});
+
+test("real chart table edits and canonical guest assignments work independently of layout storage failure", async () => {
+  const assigned = [], fixture = chartFixture({ ready: false, error: "Penyimpanan denah belum siap. Silakan hubungi pengelola." });
+  renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "id" }, React.createElement(fixture.Chart, {
+    invitationId: "event-a", tables: [table], guests: [{ id: "guest-manual", name: "Naya", source: "MANUAL", tableId: null }],
+    onAssigned: async (...args) => assigned.push(args),
+  })));
+  const canvas = fixture.canvas();
+  canvas.onTableMove(table.id, { x: 700, y: 400 });
+  assert.deepEqual(fixture.calls.at(-1).plan.tables[table.id], { x: 700, y: 400 });
+  canvas.onPath([100, 100, 500, 200]);
+  assert.deepEqual(fixture.calls.at(-1).plan.paths.at(-1), [100, 100, 500, 200]);
+  await canvas.onGuestDrop("guest-manual", geometry.seatingSeatPoint(layout().tables[table.id], 0, table.capacity));
+  assert.deepEqual(assigned, [["guest-manual", table.id, 1]]);
 });
 
 const printHtml = (overrides = {}) => renderToStaticMarkup(React.createElement(Print, {

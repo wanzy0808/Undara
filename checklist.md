@@ -770,3 +770,6 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [ ] Apply `20261006043000_event_seating_plan` to the target database with `pnpm db:deploy` after pull; validate real Save → reopen and event isolation with signed-in owners.
 - [ ] Browser QA on desktop/tablet/phone: moved-table guest drops, occupied-seat swap, scroll/scale, pointer interruption, keyboard Undo/Redo, Light/Dark, failed Save retry and parallel-session conflict → reload/Undo.
 - [ ] Verify actual browser A4/PDF pagination, long names/large layouts and a physical printer; fixture/SSR/adapter tests do not complete this check.
+
+- [x] Keep move/draw/print and canonical guest assignment independent of failed layout storage loading; Save requires a successful load, and reload preserves an edited draft in Undo with ID/EN recovery feedback. Detect missing schema/older cached client with private 503, preserving all access/mutation guards. Focused 38/38, full 739/739, production build 73/73, TypeScript and changed-file ESLint (zero diagnostics) PASS. (6 October 2026)
+- [ ] On the owner's local app: stop dev, pull, deploy migrations, regenerate Prisma and restart dev; verify the previous failed-load state is resolved and Save/reopen works. The screenshot alone does not confirm whether migration, cached client or another server error caused it.

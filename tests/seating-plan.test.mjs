@@ -7,11 +7,11 @@ import { loadSource } from "./helpers/package-access.mjs";
 const layout = () => ({ height: 620, tables: { "table-a": { x: 420, y: 310 } }, paths: [[100, 200, 260, 210, 330, 330]] });
 const user = { id: "owner-a", role: "USER" };
 const origin = loadSource("lib/security/request-origin.ts", {}, { env: { APP_URL: "https://example.test", NODE_ENV: "production" } });
-function fixture({ account = user, ownerId = user.id, access = true, plan = null, tableIds = ["table-a"], lock = true, failure } = {}) {
+function fixture({ account = user, ownerId = user.id, access = true, plan = null, tableIds = ["table-a"], lock = true, failure, oldClient = false } = {}) {
   const calls = { writes: [], locks: [], access: [], reads: [], tables: [] };
   let stored = plan;
   const event = { id: "event-a", ownerId, payment: { status: "PAID", packageKey: "INVITATION_BASIC" } };
-  const readPlan = async ({ where }) => { calls.reads.push(where); if (failure) throw new Error("Database unavailable"); return stored; };
+  const readPlan = async ({ where }) => { calls.reads.push(where); if (failure) throw failure instanceof Error ? failure : new Error("Database unavailable"); return stored; };
   const forbidden = async () => { assert.fail("Layout saving must not mutate guests, tables or invitation content"); };
   const tx = {
     $queryRaw: async (_strings, ...values) => { calls.locks.push(values); return lock && values[0] === event.id && values[1] === event.ownerId ? [{ id: event.id }] : []; },
@@ -32,7 +32,7 @@ function fixture({ account = user, ownerId = user.id, access = true, plan = null
     "@/lib/auth": { getCurrentUser: async () => account },
     "@/lib/prisma": { prisma: {
       invitation: { findFirst: async ({ where }) => where.id === event.id && where.ownerId === ownerId ? event : null },
-      seatingPlan: { findUnique: readPlan },
+      seatingPlan: oldClient ? undefined : { findUnique: readPlan },
       $transaction: async (callback) => callback(tx),
     } },
     "@/lib/packages/server-access": { hasAccountDigitalInvitation: async (...args) => { calls.access.push(args); return access; } },
@@ -162,4 +162,34 @@ test("missing events and temporary database failures return useful errors withou
   const response = await fixture({ failure: true }).route.GET(get());
   assert.equal(response.status, 500);
   assert.deepEqual(await response.json(), { error: "Denah belum dapat dimuat. Coba lagi." });
+});
+
+test("missing seating storage/schema returns a private actionable 503 instead of an empty saved plan", async () => {
+  for (const code of ["P2021", "P2022"]) {
+    const failure = Object.assign(new Error("Private database table/column details"), { code });
+    for (const method of ["GET", "PUT"]) {
+      const { route, calls } = fixture({ failure });
+      const response = await route[method](method === "GET" ? get() : put());
+      assert.equal(response.status, 503);
+      assert.equal(response.headers.get("cache-control"), "private, no-store");
+      assert.deepEqual(await response.json(), { error: "Penyimpanan denah belum siap. Silakan hubungi pengelola.", code: "SEATING_STORAGE_UNAVAILABLE" });
+      assert.equal(calls.writes.length, 0);
+    }
+  }
+});
+
+test("a cached pre-migration Prisma client is detected after ownership/access checks without writes", async () => {
+  for (const method of ["GET", "PUT"]) {
+    const { route, calls } = fixture({ oldClient: true });
+    const response = await route[method](method === "GET" ? get() : put());
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).code, "SEATING_STORAGE_UNAVAILABLE");
+    assert.equal(calls.reads.length, 0);
+    assert.equal(calls.writes.length, 0);
+    assert.equal(calls.locks.length, 0);
+    for (const [options, status] of [[{ account: null }, 401], [{ ownerId: "other-owner" }, 404], [{ access: false }, 402]]) {
+      const blocked = fixture({ ...options, oldClient: true });
+      assert.equal((await blocked.route[method](method === "GET" ? get() : put())).status, status);
+    }
+  }
 });
