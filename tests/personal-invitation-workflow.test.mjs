@@ -22,6 +22,7 @@ const CategoryFields = loadSource("components/Dashboard/PersonalInvitationGuestF
   "react/jsx-runtime": jsxRuntime,
   "@/components/Dashboard/useDashboardI18n": i18n,
   "@/lib/text/display-title-case": titles,
+  "@/lib/guests/personal-envelope": envelope,
 }).PersonalInvitationGuestFields;
 const event = (id = "event-a") => ({
   id, title: id === "event-a" ? "Pernikahan Una & Dara" : "Ulang Tahun Nina",
@@ -81,9 +82,9 @@ function hookHarness() {
 
 function createProps(overrides = {}) {
   return {
-    selectedEvent: event(), availableGuests: [], guestId: "", name: "",
+    selectedEvent: event(), availableGuests: [], guestId: "", name: "", salutation: "BAPAK",
     profile: { ...fields.emptyGuestInvitationForm }, loading: false, busyId: null, drafts: [],
-    setGuestId() {}, setName() {}, setProfile() {}, onAddNames() {}, onAddExisting() {}, onRemoveDraft() {}, onEditDraft() {},
+    setGuestId() {}, setName() {}, setSalutation() {}, setProfile() {}, onAddNames() {}, onAddExisting() {}, onRemoveDraft() {}, onEditDraft() {},
     ...overrides,
   };
 }
@@ -112,6 +113,7 @@ function panelHarness(fetcher) {
     "@/components/Dashboard/PersonalInvitationPanels": { PersonalInvitationCreatePanel: Create, PersonalInvitationListPanel: List },
     "@/components/Dashboard/personal-invitation-helpers": helpers,
     "@/components/Dashboard/PersonalInvitationGuestFields": fields,
+    "@/lib/guests/personal-envelope": envelope,
   });
   const originalFetch = globalThis.fetch;
   globalThis.fetch = fetcher;
@@ -133,17 +135,18 @@ const fetchLists = (url, guests = [guest()], invitations = []) => {
   return Response.json(url.startsWith("/api/guests?") ? { guests } : { invitations });
 };
 
-test("names can be entered before choosing an invitation, with only category and an actual envelope preview", () => {
+test("names use three short salutations before choosing an invitation, with category and an actual envelope preview", () => {
   const props = createProps({ selectedEvent: null, name: "bapak andi" });
-  for (const [locale, label, add] of [["id", "Nama tamu", "Tambah ke daftar"], ["en", "Guest name", "Add to list"]]) {
+  for (const [locale, label, add] of [["id", "Nama", "Tambah ke daftar"], ["en", "Name", "Add to list"]]) {
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(PersonalInvitationCreatePanel, props)));
     assert.ok(html.includes(label)); assert.ok(html.includes(add));
     assert.match(html, /Kepada Yth : Bapak Andi/);
     assert.doesNotMatch(html, /Sumber penerima|Recipient source|<details\b|type="tel"|type="number"|type="checkbox"|Buat undangan/);
     assert.equal((html.match(/<textarea\b/g) ?? []).length, 1);
-    assert.deepEqual([...html.matchAll(/<option value="([^"]+)"/g)].map((match) => match[1]), ["REGULAR", "VIP", "VVIP"]);
+    assert.deepEqual([...html.matchAll(/<option value="([^"]+)"/g)].map((match) => match[1]), ["BAPAK", "IBU", "BAPAK_IBU", "REGULAR", "VIP", "VVIP"]);
     assert.match(html, /value="REGULAR" selected=""/);
-    assert.ok(html.indexOf("<textarea") < html.indexOf("<select"));
+    assert.match(html, /rows="2"/);
+    assert.doesNotMatch(html, /Satu nama per baris|One name per line/);
   }
 });
 
@@ -165,9 +168,36 @@ test("Add uses the selected mode, rejects invalid names and retains exact couple
     [{ personalAddressee: "keluarga wijaya" }, "Kepada Yth : Keluarga Wijaya"],
     [{ personalEnvelopeEnabled: false }, "Amplop tanpa nama"],
   ]) {
-    const tree = harness.render({ guestId: "", name: "andi & sari", profile: { ...fields.emptyGuestInvitationForm, ...profile } });
+    const saved = { ...guest(), name: "andi & sari", ...profile };
+    const tree = harness.render({ guestId: saved.id, availableGuests: [saved], name: saved.name, profile: fields.guestInvitationFormFrom(saved) });
     assert.ok(text(find(tree, "form")).includes(expected));
   }
+});
+
+test("the short title selector previews each choice, rejects title-only names and keeps saved envelopes authoritative", () => {
+  let chosen;
+  const harness = createHarness({ setSalutation(value) { chosen = value; } });
+  for (const [salutation, name, expected] of [
+    ["BAPAK", "Andi", "Kepada Yth : Bapak Andi"],
+    ["IBU", "Ibu Rina", "Kepada Yth : Ibu Rina"],
+    ["BAPAK_IBU", "Andi & Rina", "Kepada Yth : Bapak Andi dan Ibu Rina"],
+    ["BAPAK_IBU", "Andi", "Kepada Yth : Bapak & Ibu Andi"],
+  ]) {
+    const tree = harness.render({ salutation, name });
+    const title = find(tree, fields.PersonalInvitationSalutationField);
+    assert.equal(title.props.value, salutation); title.props.onChange(salutation); assert.equal(chosen, salutation);
+    assert.ok(text(find(tree, "form")).includes(expected));
+    assert.equal(find(tree, "textarea").props.rows, 2);
+    assert.equal(nodes(tree).find((node) => node.type === Button && node.props.type === "submit").props.disabled, false);
+  }
+  const invalid = harness.render({ name: "Bapak" });
+  assert.equal(nodes(invalid).find((node) => node.type === Button && node.props.type === "submit").props.disabled, true);
+  const busy = harness.render({ name: "Andi", busyId: "create-batch" });
+  assert.equal(find(busy, fields.PersonalInvitationSalutationField).props.disabled, true);
+  const saved = { ...guest(), personalAddressee: "Keluarga Wijaya" };
+  const reused = harness.render({ guestId: saved.id, availableGuests: [saved], profile: fields.guestInvitationFormFrom(saved) });
+  assert.equal(find(reused, fields.PersonalInvitationSalutationField), undefined);
+  assert.ok(text(find(reused, "form")).includes("Kepada Yth : Keluarga Wijaya"));
 });
 
 test("saved guest picker searches explicit IDs even for duplicate names and exposes further results", () => {
@@ -208,7 +238,7 @@ test("a multi-name list comes before the invitation picker and is saved only on 
     assert.equal(calls.length, 0);
     const first = view.save.onClick(); await view.save.onClick();
     assert.equal(calls.length, 1);
-    assert.deepEqual(calls[0], { invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category }) => ({ key, name, category })) });
+    assert.deepEqual(calls[0], { invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category, salutation }) => ({ key, name, category, salutation })) });
     assert.equal(Object.hasOwn(calls[0].recipients[0], "invitedPax"), false);
     post.resolve(Response.json({ invitations: [personal(), { ...personal(), id: "second" }] }));
     await first;
@@ -247,6 +277,47 @@ test("saved recipients retain their canonical ID and hidden profile while staged
   } finally { panel.dispose(); }
 });
 
+test("each staged name retains its own editable salutation and sends only its name, category and title", async () => {
+  const calls = [];
+  const panel = panelHarness(async (url, options = {}) => {
+    if (options.method === "POST") {
+      const body = JSON.parse(options.body); calls.push(body);
+      return Response.json({ invitations: body.recipients.map((row) => ({ ...personal(), id: row.key })) });
+    }
+    return fetchLists(url);
+  });
+  try {
+    await panel.settle();
+    for (const [salutation, name] of [["BAPAK", "Andi"], ["IBU", "Rina"], ["BAPAK_IBU", "Budi & Sari"]]) {
+      panel.render().create.setSalutation(salutation); panel.render().create.setName(name); panel.render().create.onAddNames();
+    }
+    let view = panel.render();
+    assert.deepEqual(view.create.drafts.map((row) => [row.name, row.salutation]), [["Andi", "BAPAK"], ["Rina", "IBU"], ["Budi & Sari", "BAPAK_IBU"]]);
+    const key = view.create.drafts[0].key;
+    view.create.onEditDraft(key, { name: "Nina", salutation: "IBU" }); view = panel.render();
+    const preview = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "id" }, React.createElement(PersonalInvitationCreatePanel, view.create)));
+    assert.match(preview, /Kepada Yth : Ibu Nina/); assert.match(preview, /Kepada Yth : Bapak Budi dan Ibu Sari/);
+    await view.save.onClick();
+    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category, salutation }) => ({ key, name, category, salutation })) }]);
+  } finally { panel.dispose(); }
+});
+
+test("editing a saved name refreshes its generated addressee while retaining its title and allowance", async () => {
+  let listed = { ...personal(), name: "Andi", personalAddressee: "Bapak & Ibu Andi", invitedPax: 3 };
+  const writes = [];
+  const panel = panelHarness(async (url, options = {}) => {
+    if (options.method === "PATCH") { const body = JSON.parse(options.body); writes.push(body); listed = { ...listed, ...body }; return Response.json({ invitation: listed }); }
+    return fetchLists(url, [], [listed]);
+  });
+  try {
+    (await panel.settle()).list.onStartEdit(listed); panel.render().list.setEditName("Budi & Rina");
+    panel.render().list.onSaveEdit(listed); const view = await panel.settle();
+    assert.deepEqual(writes, [{ invitationId: "event-a", id: "personal-a", name: "Budi & Rina", phone: listed.phone, category: "REGULAR", personalAddressee: "Bapak Budi dan Ibu Rina" }]);
+    assert.equal(view.list.personal[0].invitedPax, 3);
+    assert.equal(envelope.formatPersonalEnvelopeAddress(view.list.personal[0]), "Kepada Yth : Bapak Budi dan Ibu Rina");
+  } finally { panel.dispose(); }
+});
+
 test("changing a chosen saved name creates a new recipient without copying old contact, addressee or allowance", async () => {
   const saved = { ...guest(), invitedPax: 8, personalAddressee: "Keluarga Andi", personalEnvelopeEnabled: false };
   const calls = []; const panel = panelHarness(async (url, options = {}) => {
@@ -260,7 +331,7 @@ test("changing a chosen saved name creates a new recipient without copying old c
     view.create.setGuestId("guest-from-another-event");
     panel.render().create.onAddNames(); view = panel.render();
     await view.save.onClick();
-    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: [{ key: view.create.drafts[0].key, name: "Bapak Budi", category: "REGULAR" }] }]);
+    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: [{ key: view.create.drafts[0].key, name: "Bapak Budi", category: "REGULAR", salutation: "BAPAK" }] }]);
   } finally { panel.dispose(); }
 });
 

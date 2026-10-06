@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
+import { buildPersonalGuestAddressee, PERSONAL_SALUTATIONS, type PersonalSalutation } from "@/lib/guests/personal-envelope";
 
 const MAX_BATCH = 100;
 const categories = ["REGULAR", "VIP", "VVIP"];
@@ -10,7 +11,7 @@ export class PersonalBatchError extends Error {
   constructor(message: string, public status = 400) { super(message); }
 }
 
-type Recipient = { key: string; name: string; category: string; guestId: string };
+type Recipient = { key: string; name: string; category: string; guestId: string; personalAddressee?: string };
 
 function parseRecipients(value: unknown): Recipient[] {
   if (!Array.isArray(value) || !value.length || value.length > MAX_BATCH) {
@@ -31,10 +32,16 @@ function parseRecipients(value: unknown): Recipient[] {
     }
     if (!guestId && (!name || name.length > 120)) throw new PersonalBatchError("Nama tamu wajib diisi (maksimal 120 karakter).");
     if (!category || category.length > 60 || (!guestId && !categories.includes(category))) throw new PersonalBatchError("Kategori tamu tidak valid.");
+    let personalAddressee: string | undefined;
+    if (item.salutation !== undefined) {
+      if (guestId || !PERSONAL_SALUTATIONS.some((salutation) => salutation === item.salutation)) throw new PersonalBatchError("Sapaan tamu tidak valid.");
+      personalAddressee = buildPersonalGuestAddressee(name, item.salutation as PersonalSalutation);
+      if (!personalAddressee || personalAddressee.length > 160) throw new PersonalBatchError("Nama tamu wajib diisi (maksimal 120 karakter).");
+    }
     const identity = `${guestId ? "guest" : "new"}:${key}`;
     if (keys.has(identity)) throw new PersonalBatchError("Tamu yang sama dipilih lebih dari sekali.");
     keys.add(identity);
-    return { key, name, category, guestId };
+    return { key, name, category, guestId, personalAddressee };
   });
 }
 
@@ -71,7 +78,7 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
       if (row.guestId && !categories.includes(row.category) && row.category !== guest?.category) {
         throw new PersonalBatchError("Kategori tamu tidak valid.");
       }
-      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category)) {
+      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category || (guest.personalAddressee ?? undefined) !== row.personalAddressee)) {
         throw new PersonalBatchError("Tamu ini sudah disimpan. Muat ulang daftar sebelum mengubahnya.", 409);
       }
     }
@@ -85,7 +92,9 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
           ...(row.guestId ? { category: row.category, personalToken: token } : {}),
           ...(published === true ? { personalPublished: true } : {}),
         } })
-        : await tx.guest.create({ data: { invitationId, name: row.name, category: row.category, source: "MANUAL", personalToken: token, personalPublished: published === true } });
+        : await tx.guest.create({ data: { invitationId, name: row.name, category: row.category,
+          ...(row.personalAddressee ? { personalAddressee: row.personalAddressee } : {}),
+          source: "MANUAL", personalToken: token, personalPublished: published === true } });
       const safe = { ...guest };
       Reflect.deleteProperty(safe, "personalPasswordHash");
       invitations.push(safe);

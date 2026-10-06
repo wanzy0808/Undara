@@ -5,6 +5,11 @@ import { useLanguage } from "@/components/I18n/LanguageProvider";
 
 const english: Record<string, string> = {
   "Buat tautan personal": "Create personal links",
+  "Sapaan": "Title",
+  "Bapak": "Mr",
+  "Ibu": "Mrs",
+  "Bapak & Ibu": "Mr & Mrs",
+  "Sapaan tamu tidak valid.": "Invalid guest title.",
   "Tautan personal dibuat.": "Personal links created.",
   "Belum ada undangan tersimpan": "No saved invitations yet",
   "Simpan desain di Edit undangan terlebih dahulu.": "Save the design in Edit invitation first.",

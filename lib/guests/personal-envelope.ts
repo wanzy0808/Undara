@@ -9,7 +9,11 @@ export type PersonalEnvelopeGuest = {
   personalLanguage?: PersonalInvitationLanguage;
 };
 
-const honorificPrefix = /^(?:bapak|pak|ibu|bu|mr|mrs|ms)\.?\s+/iu;
+export const PERSONAL_SALUTATIONS = ["BAPAK", "IBU", "BAPAK_IBU"] as const;
+export type PersonalSalutation = (typeof PERSONAL_SALUTATIONS)[number];
+
+const honorificPrefix = /^(?:bapak|pak|ibu|bu|mr|mrs|ms)\.?(?:\s+|$)/iu;
+const sharedHonorificPrefix = /^(?:bapak\s*(?:&|dan)\s*ibu|mr\s*(?:&|and)\s*mrs)\.?(?:\s+|$)/iu;
 
 function cleanPersonalName(value: string) {
   return displayTitleCase(value.replace(honorificPrefix, "").trim());
@@ -23,6 +27,24 @@ function coupleNames(value: string) {
   return parts.length === 2 ? parts : [];
 }
 
+/** Keep the canonical name separate from its chosen envelope salutation. */
+export function buildPersonalGuestAddressee(name: string, salutation: PersonalSalutation) {
+  const clean = name.trim().replace(sharedHonorificPrefix, "").replace(honorificPrefix, "").trim();
+  if (!clean) return "";
+  if (salutation === "BAPAK_IBU") {
+    const pair = coupleNames(clean);
+    return pair.length === 2
+      ? `Bapak ${pair[0]} dan Ibu ${pair[1]}`
+      : `Bapak & Ibu ${displayTitleCase(clean)}`;
+  }
+  return `${salutation === "BAPAK" ? "Bapak" : "Ibu"} ${displayTitleCase(clean)}`;
+}
+
+export function getPersonalGuestSalutation(guest: PersonalEnvelopeGuest) {
+  if (!guest.personalAddressee) return null;
+  return PERSONAL_SALUTATIONS.find((salutation) => buildPersonalGuestAddressee(guest.name, salutation) === guest.personalAddressee?.trim()) ?? null;
+}
+
 /** Render-only addressee. Stored Guest names are never rewritten. */
 export function formatPersonalEnvelopeAddress(guest: PersonalEnvelopeGuest) {
   if (guest.personalEnvelopeEnabled === false) return "";
@@ -30,7 +52,11 @@ export function formatPersonalEnvelopeAddress(guest: PersonalEnvelopeGuest) {
   if (!raw) return "";
 
   const language: PersonalInvitationLanguage = guest.personalLanguage === "EN" ? "EN" : "ID";
-  if (guest.recipientType === "COUPLE") {
+  if (sharedHonorificPrefix.test(raw)) {
+    const name = cleanPersonalName(raw.replace(sharedHonorificPrefix, ""));
+    if (name) return language === "EN" ? `Dear : Mr & Mrs ${name}` : `Kepada Yth : Bapak & Ibu ${name}`;
+  }
+  if (guest.recipientType === "COUPLE" || /^(?:bapak|pak|mr)\.?\s+.+\s+(?:dan|and|&)\s+(?:ibu|bu|mrs)\.?\s+/iu.test(raw)) {
     const pair = coupleNames(raw);
     if (pair.length === 2) {
       return language === "EN"
@@ -39,6 +65,9 @@ export function formatPersonalEnvelopeAddress(guest: PersonalEnvelopeGuest) {
     }
   }
 
-  const addressee = displayTitleCase(raw);
+  const title = raw.match(/^(bapak|pak|ibu|bu|mr|mrs|ms)\.?\s+(.+)$/iu);
+  const addressee = title && language === "EN"
+    ? `${/^(?:bapak|pak|mr)$/iu.test(title[1]) ? "Mr" : title[1].toLowerCase() === "ms" ? "Ms" : "Mrs"} ${displayTitleCase(title[2])}`
+    : displayTitleCase(raw);
   return language === "EN" ? `Dear : ${addressee}` : `Kepada Yth : ${addressee}`;
 }

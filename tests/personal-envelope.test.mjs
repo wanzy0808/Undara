@@ -1,10 +1,32 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { formatPersonalEnvelopeAddress } from "../lib/guests/personal-envelope.ts";
+import { buildPersonalGuestAddressee, formatPersonalEnvelopeAddress, getPersonalGuestSalutation } from "../lib/guests/personal-envelope.ts";
 import { parsePersonalGuestFields } from "../lib/guests/personal-profile.ts";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("short salutations preserve names, avoid repeated titles and render both shared and separate couple names in ID/EN", () => {
+  for (const [name, salutation, addressee, english] of [
+    ["andi", "BAPAK", "Bapak Andi", "Mr Andi"],
+    ["ibu rina", "IBU", "Ibu Rina", "Mrs Rina"],
+    ["Bapak Andi", "IBU", "Ibu Andi", "Mrs Andi"],
+    ["andi", "BAPAK_IBU", "Bapak & Ibu Andi", "Mr & Mrs Andi"],
+    ["Bapak & Ibu Andi", "BAPAK_IBU", "Bapak & Ibu Andi", "Mr & Mrs Andi"],
+    ["bapak andi & ibu sari", "BAPAK_IBU", "Bapak Andi dan Ibu Sari", "Mr Andi and Mrs Sari"],
+    ["andi dan sari", "BAPAK_IBU", "Bapak Andi dan Ibu Sari", "Mr Andi and Mrs Sari"],
+  ]) {
+    const guest = { name, personalAddressee: buildPersonalGuestAddressee(name, salutation) };
+    assert.equal(guest.name, name);
+    assert.equal(guest.personalAddressee, addressee);
+    assert.equal(getPersonalGuestSalutation(guest), salutation);
+    assert.equal(formatPersonalEnvelopeAddress(guest), `Kepada Yth : ${addressee}`);
+    assert.equal(formatPersonalEnvelopeAddress({ ...guest, personalLanguage: "EN" }), `Dear : ${english}`);
+    assert.equal(formatPersonalEnvelopeAddress({ ...guest, personalEnvelopeEnabled: false }), "");
+  }
+  for (const name of ["", "Bapak", "Ibu", "Bapak & Ibu"]) assert.equal(buildPersonalGuestAddressee(name, "BAPAK_IBU"), "");
+  assert.equal(getPersonalGuestSalutation({ name: "Andi", personalAddressee: "Keluarga Wijaya" }), null);
+});
 
 test("personal envelope formats Indonesian and English couple greetings with Title Case", () => {
   assert.equal(formatPersonalEnvelopeAddress({

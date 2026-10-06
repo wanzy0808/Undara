@@ -3,6 +3,7 @@
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import type { PersonalInvitationGuest } from "@/components/Dashboard/personal-invitation-types";
+import { PERSONAL_SALUTATIONS, type PersonalSalutation } from "@/lib/guests/personal-envelope";
 
 export type GuestInvitationForm = {
   recipientType: "INDIVIDUAL" | "COUPLE" | "FAMILY" | "GROUP";
@@ -51,6 +52,28 @@ export function guestInvitationProfilePayload(value: GuestInvitationForm) {
     personalEnvelopeEnabled: value.personalEnvelopeEnabled,
     personalLanguage: value.personalLanguage,
   };
+}
+
+export function PersonalInvitationSalutationField({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: PersonalSalutation;
+  onChange: (next: PersonalSalutation) => void;
+  disabled?: boolean;
+}) {
+  const { d } = useDashboardI18n();
+  const labels = { BAPAK: "Bapak", IBU: "Ibu", BAPAK_IBU: "Bapak & Ibu" };
+  return (
+    <label className="block min-w-0 text-sm font-medium text-foreground">
+      {d("Sapaan")}
+      <select value={value} onChange={(event) => onChange(event.target.value as PersonalSalutation)} disabled={disabled}
+        className="mt-1.5 min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground">
+        {PERSONAL_SALUTATIONS.map((salutation) => <option key={salutation} value={salutation}>{d(labels[salutation])}</option>)}
+      </select>
+    </label>
+  );
 }
 
 export function PersonalInvitationGuestFields({

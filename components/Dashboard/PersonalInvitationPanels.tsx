@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
-import { formatPersonalEnvelopeAddress } from "@/lib/guests/personal-envelope";
+import { buildPersonalGuestAddressee, formatPersonalEnvelopeAddress, type PersonalSalutation } from "@/lib/guests/personal-envelope";
 import {
   DashboardEmptyState,
   DashboardPanel,
@@ -34,6 +34,7 @@ import {
 } from "@/components/Dashboard/DashboardPrimitives";
 import {
   PersonalInvitationGuestFields,
+  PersonalInvitationSalutationField,
   emptyGuestInvitationForm,
   type GuestInvitationForm,
 } from "@/components/Dashboard/PersonalInvitationGuestFields";
@@ -52,6 +53,8 @@ export function PersonalInvitationCreatePanel({
   setGuestId,
   name,
   setName,
+  salutation,
+  setSalutation,
   profile,
   setProfile,
   loading,
@@ -68,6 +71,8 @@ export function PersonalInvitationCreatePanel({
   setGuestId: (value: string) => void;
   name: string;
   setName: (value: string) => void;
+  salutation: PersonalSalutation;
+  setSalutation: (value: PersonalSalutation) => void;
   profile: GuestInvitationForm;
   setProfile: (next: GuestInvitationForm) => void;
   loading: boolean;
@@ -76,7 +81,7 @@ export function PersonalInvitationCreatePanel({
   onAddExisting: () => void;
   onAddNames: () => void;
   onRemoveDraft: (key: string) => void;
-  onEditDraft: (key: string, value: { name?: string; category?: string }) => void;
+  onEditDraft: (key: string, value: { name?: string; category?: string; salutation?: PersonalSalutation }) => void;
 }) {
   const { d } = useDashboardI18n();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -90,8 +95,10 @@ export function PersonalInvitationCreatePanel({
   const busy = Boolean(busyId) || (Boolean(guestId) && loading);
   let names: string[] = [];
   try { names = splitPersonalGuestNames(name); } catch { /* Invalid names keep Add disabled. */ }
-  const valid = Boolean(profile.category.trim()) && Boolean(guestId ? selectedGuest : names.length);
-  const envelopeAddress = formatPersonalEnvelopeAddress({ name: selectedGuest?.name ?? names[0] ?? "", ...profile });
+  const valid = Boolean(profile.category.trim()) && Boolean(guestId ? selectedGuest : names.length && names.every((name) => buildPersonalGuestAddressee(name, salutation)));
+  const envelopeAddress = formatPersonalEnvelopeAddress({ name: selectedGuest?.name ?? names[0] ?? "", ...profile,
+    ...(!guestId ? { personalAddressee: buildPersonalGuestAddressee(names[0] ?? "", salutation) } : {}),
+  });
 
   return (
     <DashboardPanel title={d("Daftar nama tamu")} actions={drafts.length ? <DashboardStatusBadge>{drafts.length} · {d("Belum disimpan")}</DashboardStatusBadge> : undefined}>
@@ -105,12 +112,15 @@ export function PersonalInvitationCreatePanel({
         className="space-y-5"
       >
         <div className="space-y-2">
+          <div className={`grid gap-3 ${guestId ? "" : "sm:grid-cols-[160px_minmax(0,1fr)]"}`}>
+          {!guestId && <PersonalInvitationSalutationField value={salutation} onChange={setSalutation} disabled={busy} />}
           <label className="block min-w-0 text-sm font-medium text-foreground">
-            {d("Nama tamu")}
-            <textarea value={name} maxLength={121000} rows={3} onChange={(event) => setName(event.target.value)}
-              placeholder={d("Satu nama per baris")} required disabled={busy}
-              className="mt-1.5 block min-h-24 w-full resize-y rounded-[var(--undara-control-radius)] border border-input bg-transparent px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
+            {d("Nama")}
+            <textarea value={name} maxLength={121000} rows={2} onChange={(event) => setName(event.target.value)}
+              placeholder={salutation === "BAPAK_IBU" ? "Andi & Rina" : salutation === "IBU" ? "Rina" : "Andi"} required disabled={busy}
+              className="mt-1.5 block min-h-20 w-full resize-y rounded-[var(--undara-control-radius)] border border-input bg-transparent px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
           </label>
+          </div>
           {availableGuests.length > 0 && (
             <Dialog open={pickerOpen} onOpenChange={(open) => { setPickerOpen(open); if (open) { setQuery(""); setLimit(40); } }}>
               <DialogTrigger render={<Button type="button" size="sm" variant="outline" disabled={busy} />}>
@@ -165,10 +175,16 @@ export function PersonalInvitationCreatePanel({
             {drafts.slice(0, draftLimit).map((draft, index) => (
               <div key={draft.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 border-b border-primary/10 pb-3 sm:grid-cols-[minmax(0,1fr)_minmax(140px,0.4fr)_auto]">
                 <div className="col-span-2 min-w-0 sm:col-span-1">
-                  <Input value={draft.name} maxLength={120} readOnly={Boolean(draft.guestId)} disabled={Boolean(busyId)}
-                    aria-label={`${d("Nama tamu")} ${index + 1}`}
-                    onChange={(event) => onEditDraft(draft.key, { name: event.target.value })} />
-                  <p className="mt-1.5 break-words text-xs text-muted-foreground">{formatPersonalEnvelopeAddress({ ...draft.profile, name: draft.name }) || d("Amplop tanpa nama")}</p>
+                  <div className={`grid items-end gap-2 ${draft.guestId ? "" : "sm:grid-cols-[150px_minmax(0,1fr)]"}`}>
+                    {!draft.guestId && <PersonalInvitationSalutationField value={draft.salutation ?? "BAPAK"}
+                      onChange={(salutation) => onEditDraft(draft.key, { salutation })} disabled={Boolean(busyId)} />}
+                    <Input value={draft.name} maxLength={120} readOnly={Boolean(draft.guestId)} disabled={Boolean(busyId)} className="min-h-11"
+                      aria-label={`${d("Nama tamu")} ${index + 1}`}
+                      onChange={(event) => onEditDraft(draft.key, { name: event.target.value })} />
+                  </div>
+                  <p className="mt-1.5 break-words text-xs text-muted-foreground">{formatPersonalEnvelopeAddress({ ...draft.profile, name: draft.name,
+                    ...(!draft.guestId ? { personalAddressee: buildPersonalGuestAddressee(draft.name, draft.salutation ?? "BAPAK") } : {}),
+                  }) || d("Amplop tanpa nama")}</p>
                 </div>
                 <PersonalInvitationGuestFields value={{ ...emptyGuestInvitationForm, ...draft.profile, category: draft.category }}
                   onChange={(next) => onEditDraft(draft.key, { category: next.category })} disabled={Boolean(busyId)} />

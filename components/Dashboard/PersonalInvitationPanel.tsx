@@ -19,6 +19,7 @@ import {
   PersonalInvitationListPanel,
 } from "@/components/Dashboard/PersonalInvitationPanels";
 import { buildPersonalInvitationPublicUrl, sortPersonalInvitationEvents, splitPersonalGuestNames } from "@/components/Dashboard/personal-invitation-helpers";
+import { buildPersonalGuestAddressee, getPersonalGuestSalutation, type PersonalSalutation } from "@/lib/guests/personal-envelope";
 import {
   emptyGuestInvitationForm,
   guestInvitationFormFrom,
@@ -51,6 +52,7 @@ export default function PersonalInvitationPanel({
   const stagedInput = useRef<string | null>(null);
   const [guestId, setGuestId] = useState("");
   const [name, setName] = useState("");
+  const [salutation, setSalutation] = useState<PersonalSalutation>("BAPAK");
   const [drafts, setDrafts] = useState<PersonalInvitationDraft[]>([]);
   const [profile, setProfile] = useState<GuestInvitationForm>({ ...emptyGuestInvitationForm });
   const [editProfile, setEditProfile] = useState<GuestInvitationForm>({ ...emptyGuestInvitationForm });
@@ -258,8 +260,9 @@ export default function PersonalInvitationPanel({
     if (guestId || creating.current || stagedInput.current === name) return;
     try {
       const names = splitPersonalGuestNames(name);
+      if (names.some((name) => !buildPersonalGuestAddressee(name, salutation))) throw new Error(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
       if (drafts.length + names.length > 1000) throw new Error(d("Simpan daftar sebelum menambahkan lebih dari 1000 tamu."));
-      const rows = names.map((name) => ({ key: crypto.randomUUID(), name, category: profile.category }));
+      const rows = names.map((name) => ({ key: crypto.randomUUID(), name, category: profile.category, salutation }));
       stagedInput.current = name;
       setDrafts((current) => [...current, ...rows]);
       setName("");
@@ -269,15 +272,15 @@ export default function PersonalInvitationPanel({
     }
   }
 
-  function editDraft(key: string, value: { name?: string; category?: string }) {
+  function editDraft(key: string, value: { name?: string; category?: string; salutation?: PersonalSalutation }) {
     if (creating.current) return;
-    setDrafts((current) => current.map((row) => row.key === key ? { ...row, ...(!row.guestId && value.name !== undefined ? { name: value.name } : {}), ...(value.category ? { category: value.category } : {}) } : row));
+    setDrafts((current) => current.map((row) => row.key === key ? { ...row, ...(!row.guestId && value.name !== undefined ? { name: value.name } : {}), ...(!row.guestId && value.salutation ? { salutation: value.salutation } : {}), ...(value.category ? { category: value.category } : {}) } : row));
   }
 
   async function createBatch() {
     if (!selectedEvent || !currentDrafts.length || creating.current) return;
     const rows = currentDrafts.map((row) => ({ ...row, name: row.name.trim() }));
-    if (rows.some((row) => !row.name || row.name.length > 120)) {
+    if (rows.some((row) => !row.name || row.name.length > 120 || (!row.guestId && !buildPersonalGuestAddressee(row.name, row.salutation ?? "BAPAK")))) {
       setNotice(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
       return;
     }
@@ -292,7 +295,7 @@ export default function PersonalInvitationPanel({
         const batch = rows.slice(index, index + 100);
         const response = await fetch("/api/personal-invitations", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ invitationId: eventId, published: false, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category }) }),
+          body: JSON.stringify({ invitationId: eventId, published: false, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category, salutation: row.salutation ?? "BAPAK" }) }),
         });
         const data = await response.json().catch(() => null);
         if (!response.ok || !Array.isArray(data?.invitations) || data.invitations.length !== batch.length) {
@@ -415,10 +418,15 @@ export default function PersonalInvitationPanel({
 
   async function saveEdit(item: PersonalInvitationItem) {
     if (!editName.trim()) return;
+    const salutation = getPersonalGuestSalutation(item);
+    const personalAddressee = salutation ? buildPersonalGuestAddressee(editName, salutation) : undefined;
+    if (salutation && !personalAddressee) { setNotice(d("Nama tamu wajib diisi (maksimal 120 karakter).")); return; }
 
     const ok = await patchPersonalInvitation(
       item.id,
-      { name: editName.trim(), phone: editPhone.trim(), category: editProfile.category },
+      { name: editName.trim(), phone: editPhone.trim(), category: editProfile.category,
+        ...(personalAddressee && personalAddressee !== item.personalAddressee ? { personalAddressee } : {}),
+      },
       d("Data tamu diperbarui."),
     );
 
@@ -477,6 +485,8 @@ export default function PersonalInvitationPanel({
           setGuestId={selectExistingGuest}
           name={currentData && guestId ? availableGuests.find((guest) => guest.id === guestId)?.name ?? "" : name}
           setName={changeRecipientName}
+          salutation={salutation}
+          setSalutation={setSalutation}
           profile={profile}
           setProfile={setProfile}
           loading={loading || !currentData}
