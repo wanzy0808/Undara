@@ -19,7 +19,7 @@ export function SilverLoops({ section = "cover", className = "" }: { section?: I
 /** Individually editable rounded paper blades, with no text or event facts. */
 export function GoldenFan({ section = "cover", className = "" }: { section?: InvitationSectionKey; className?: string }) {
   return <div aria-hidden="true" data-studio-native-object={`object:${section}:golden-fan-art`} className={`gk-fan ${className}`}>
-    <svg viewBox="0 0 400 300" fill="none">
+    <svg viewBox="-70 0 540 300" fill="none">
       {[-70, -50, -30, -10, 10, 30, 50, 70].map((angle, index) => <g key={angle}
         data-studio-native-object={`object:${section}:fan-blade-${index + 1}-art`} className={index % 2 ? "ot-soft-art" : "ot-accent-art"}>
         <rect x="181" y="12" width="38" height="278" rx="19" transform={`rotate(${angle} 200 280)`} fill="currentColor" />

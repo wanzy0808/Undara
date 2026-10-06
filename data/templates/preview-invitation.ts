@@ -1,7 +1,7 @@
 import type { InvitationDesignerInvitation } from "@/components/InvitationStudio/designer-types";
 
 /**
- * Isolated gallery/QA fixture. Never read from or write to a customer's invitation.
+ * Isolated gallery/master/QA fixture. Never read from or write to a customer's invitation.
  * The following photos are existing local public demo assets, not customer uploads.
  */
 export const templateDemoPhoto = "/assets/demo/invitation/couple.webp";
@@ -72,11 +72,39 @@ export const goldenTemplateDemoInvitation: InvitationDesignerInvitation = {
   description: null, ceremonyTime: "17:00", receptionTime: "END",
 };
 
+export const babyTemplateDemoInvitation: InvitationDesignerInvitation = {
+  ...templateDemoInvitation, id: "baby-gallery-preview-only", slug: "baby-gallery-preview-only",
+  eventCategory: "BABY_SHOWER", title: "Menyambut Si Kecil", groomName: "Dara", brideName: "",
+  description: null, venue: "Rumah Cerita", ceremonyTime: "15:00", receptionTime: "END",
+  assets: [],
+};
+export const gatheringTemplateDemoInvitation: InvitationDesignerInvitation = {
+  ...templateDemoInvitation, id: "gathering-gallery-preview-only", slug: "gathering-gallery-preview-only",
+  eventCategory: "OTHER", title: "Temu Cerita", groomName: "", brideName: "",
+  description: null, venue: "Rumah Cerita", ceremonyTime: "16:00", receptionTime: "END",
+  assets: [],
+};
+
 export function getTemplateDemoInvitation(templateKey: string): InvitationDesignerInvitation {
   const key = templateKey.split("::")[0];
+  if (key === "little-cloud") return babyTemplateDemoInvitation;
+  if (key === "gathering") return gatheringTemplateDemoInvitation;
   if (key === "silver-reverie") return silverTemplateDemoInvitation;
   if (key === "golden-keepsake") return goldenTemplateDemoInvitation;
   return key === "confetti-club"
     ? birthdayTemplateDemoInvitation
     : templateDemoInvitation;
+}
+
+
+/** Follow master theme selection/Undo without replacing customer/custom event data. */
+export function resolveTemplateStudioDemo(current: InvitationDesignerInvitation, templateKey: string): InvitationDesignerInvitation {
+  const fixture = getTemplateDemoInvitation(templateKey);
+  const demos = [templateDemoInvitation, birthdayTemplateDemoInvitation, silverTemplateDemoInvitation, goldenTemplateDemoInvitation, babyTemplateDemoInvitation, gatheringTemplateDemoInvitation];
+  const demoIds = new Set(demos.flatMap((demo) => demo.assets.map((asset) => asset.id)));
+  return {
+    ...current, ...fixture,
+    id: current.id, slug: current.slug, templateKey: current.templateKey, accessPaid: current.accessPaid,
+    assets: [...fixture.assets, ...current.assets.filter((asset) => !demoIds.has(asset.id))],
+  };
 }

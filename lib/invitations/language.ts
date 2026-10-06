@@ -5,6 +5,14 @@ export type InvitationLanguage = "ID" | "EN";
 
 /** Text owned by the invitation product. Event data and customer-authored copy are never machine-translated. */
 const english: Record<string, string> = {
+  "Kami sedang menanti cerita kecil yang akan membawa banyak bahagia. Kami ingin berbagi rasa syukur ini bersama Anda.": "We are waiting for a little story that will bring so much joy. We would love to share this grateful moment with you.",
+  "Datanglah untuk berbagi doa, cerita, dan kebersamaan sebelum kami menyambut si kecil.": "Join us for good wishes, stories and togetherness as we prepare to welcome our little one.",
+  "Semoga si kecil dan keluarga selalu dikelilingi kesehatan, kasih, dan hari-hari yang hangat.": "May our little one and family be surrounded by health, love and warm days.",
+  "Terima kasih telah ikut menantikan kebahagiaan kecil ini bersama kami. Kehadiran dan harapan baik Anda sangat berarti.": "Thank you for sharing in the joy of this little arrival. Your presence and kind wishes mean so much.",
+  "Ada pertemuan yang ingin kami isi dengan cerita, tawa, dan kebersamaan. Anda diundang untuk menjadi bagiannya.": "There is a gathering we would love to fill with stories, laughter and togetherness. You are invited to be part of it.",
+  "Luangkan waktu untuk hadir dan menikmati momen ini bersama kami. Kami menantikan kehadiran Anda.": "Make time to join us and enjoy this moment together. We look forward to seeing you.",
+  "Semoga pertemuan ini membawa kenangan baik dan kebersamaan yang terus terjaga.": "May this gathering bring good memories and lasting connections.",
+  "Terima kasih telah membuka ruang untuk bertemu dan berbagi. Sampai jumpa di acara!": "Thank you for making time to meet and share. See you at the event!",
   "Kami ingin merayakan perjalanan yang telah kami jalani bersama, dengan orang-orang yang membuatnya begitu berarti.": "We would love to celebrate our journey together with the people who have made it so meaningful.",
   "Mari hadir dan berbagi cerita pada perayaan hari jadi pernikahan kami. Kehadiran Anda akan melengkapi kebahagiaan ini.": "Please join us to share stories and celebrate our wedding anniversary. Your presence will make this day complete.",
   "Semoga hari-hari berikutnya selalu membawa kesehatan, ketenangan, dan kasih yang terus tumbuh.": "May the days ahead bring health, peace and a love that keeps growing.",

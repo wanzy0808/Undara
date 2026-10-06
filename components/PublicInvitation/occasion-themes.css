@@ -29,7 +29,7 @@
 .gk-seal-mark { width: 24px; height: 24px; border: 1px solid currentColor; transform: rotate(45deg); }
 .ot-address { position: relative; margin: 0; max-width: 30ch; font-size: 15px; overflow-wrap: anywhere; }
 .ot-open { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 48px; padding: 13px 24px; border: 0; border-radius: 4px; background: var(--inv-accent); color: var(--ot-on-accent); font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 160ms cubic-bezier(.23,1,.32,1), opacity 160ms ease; }
-.ot-open:active { transform: scale(.97); }
+.ot-open:active:not(:focus-visible) { transform: scale(.97); }
 .ot-open:disabled { cursor: default; opacity: .7; }
 .ot-scroll { position: relative; display: flex; align-items: center; gap: 16px; font-size: 13px; margin: 36px 0 0; }
 .ot-event-type { position: relative; margin: 0 0 16px; font-size: 16px; letter-spacing: .1em; }
@@ -87,7 +87,7 @@
 .occasion-invitation :is([data-studio-rsvp-element="form"],[data-studio-native-object="object:wishes:form-group"]) { text-align: left; }
 .occasion-invitation :is(input,textarea,select) { min-height: 48px; border: 1px solid var(--ot-input-border); border-radius: 4px; padding: 13px 15px; font-size: 16px; background: var(--inv-surface); color: var(--ot-surface-ink); }
 .occasion-invitation :is(input,textarea)::placeholder { color: var(--ot-surface-ink); opacity: .75; }
-.occasion-invitation [data-studio-rsvp-element="submit"],.occasion-invitation [data-studio-section-element="wishes:button"] { min-height: 48px; border-radius: 4px; font-size: 16px; background: var(--inv-accent); color: var(--ot-on-accent); }
+.occasion-invitation [data-studio-rsvp-element="button"],.occasion-invitation [data-studio-section-element="wishes:button"] { min-height: 48px; border-radius: 4px; font-size: 16px; background: var(--inv-accent); color: var(--ot-on-accent); }
 .ot-identity { position: relative; display: grid; gap: 28px; }
 .ot-identity .ot-identity-photo { position: relative; overflow: hidden; width: min(100%,270px); aspect-ratio: 4 / 5; padding: 8px; background: var(--inv-surface); }
 .ot-identity-photo img { width: 100%; height: 100%; object-fit: cover; }
@@ -113,7 +113,103 @@
 .occasion-invitation .ugc-gallery-edit { min-height: 44px; font-size: 14px; }
 .ot-footer { position: relative; display: flex; justify-content: center; padding: 32px 24px; background: var(--inv-surface); color: var(--ot-surface-ink); }
 .ot-footer-signature { font-family: var(--inv-heading); font-size: 22px; letter-spacing: .03em; }
+
+/* Little Cloud: soft mobile and scalloped paper, no gender-specific decoration. */
+.ot-paper-art { color: var(--inv-surface); }
+.lc-clouds svg,.lc-mobile svg,.gt-rosette svg { display: block; width: 100%; height: auto; }
+.lc-mobile { position: relative; width: min(78%,250px); pointer-events: none; }
+.lc-clouds { position: relative; pointer-events: none; }
+.lc-cover { display: flex; flex-direction: column; align-items: center; padding-top: 24px; padding-bottom: 20px; }
+.lc-cover > .lc-mobile { align-self: flex-start; margin-bottom: 6px; }
+.lc-cover-copy { position: relative; width: 100%; text-align: center; }
+.lc-cover-title { position: relative; font-family: var(--inv-heading); font-size: clamp(35px,9vw,54px); line-height: 1.12; letter-spacing: -.025em; margin: 0 0 28px; text-wrap: balance; }
+.lc-cover .ot-event-type { margin-bottom: 16px; }
+.lc-cover .ot-cover-name { font-size: clamp(30px,8vw,46px); }
+.lc-cover .ot-cover-date { font-size: 16px; margin-top: 20px; }
+.lc-cover > .lc-clouds { width: calc(100% + 96px); margin-top: auto; padding-top: 32px; }
+.lc-cover .ot-scroll { margin: 14px 0 0; }
+.lc-packet { position: relative; width: min(100%,340px); aspect-ratio: 340 / 320; perspective: 950px; }
+.lc-packet .ot-letter-paper { border-radius: 45% 45% 0 0; padding-top: 110px; }
+.lc-packet .lc-mobile { position: absolute; top: 0; left: 30%; width: 50%; }
+.lc-pocket-front { position: absolute; inset: 46% 0 6%; background: var(--inv-soft); border-radius: 0 0 18px 18px; clip-path: polygon(0 0,50% 30%,100% 0,100% 100%,0 100%); }
+.lc-flap-flight { position: absolute; inset: 44% 0 18%; transform-origin: top; transition: transform 600ms cubic-bezier(.23,1,.32,1),opacity 500ms cubic-bezier(.23,1,.32,1); }
+.lc-packet-flap { position: absolute; inset: 0; border-radius: 0 0 45% 45%; background: var(--inv-accent); }
+.lc-packet-seal { position: relative; width: 48px; height: 48px; margin-top: 25%; background: var(--inv-surface); color: var(--inv-accent); border-radius: 50%; padding: 8px; }
+.lc-envelope[data-opening="true"] .lc-flap-flight { transform: rotateX(160deg); opacity: 0; }
+.lc-section-mobile { width: 130px; margin: 0 0 22px auto; }
+.lc-section-clouds { position: absolute; width: 165px; right: -15px; bottom: -5px; opacity: .45; }
+.little-cloud-invitation .ot-section { text-align: center; padding-block: 64px 76px; }
+.little-cloud-invitation [data-studio-native-object="object:greeting:copy-group"],.little-cloud-invitation [data-studio-native-object="object:event:details-group"],.little-cloud-invitation [data-studio-native-object="object:location:details-group"] { margin-inline: auto; }
+.lc-identity { justify-items: center; text-align: center; }
+.lc-identity .ot-identity-photo { width: min(75%,240px); border-radius: 45% 45% 12px 12px; }
+.little-cloud-invitation [data-studio-native-object="object:dateTime:panel"],.little-cloud-invitation [data-studio-native-object="object:gift:panel"] { border-radius: 16px; }
+.little-cloud-invitation :is(input,textarea,select) { border-radius: 12px; }
+.little-cloud-invitation [data-studio-native-object="object:countdown:grid"] > div { border-radius: 16px; background: var(--inv-surface); color: var(--ot-surface-ink); }
+.little-cloud-invitation .ugc-gallery-stage { border-radius: 16px; }
+.little-cloud-invitation .ot-open,.little-cloud-invitation [data-studio-rsvp-element="button"],.little-cloud-invitation [data-studio-section-element="wishes:button"] { border-radius: 12px; }
+/* Gathering: open event poster, folded ribbon and pleated rosette. */
+.gt-rosette { position: relative; width: min(100%,310px); pointer-events: none; }
+.gt-cover { display: flex; flex-direction: column; align-items: flex-start; padding-left: clamp(46px,12%,74px); padding-top: 76px; }
+.gt-cover-copy { position: relative; width: 100%; }
+.gt-cover .ot-cover-name { font-weight: 800; font-size: clamp(48px,12vw,80px); line-height: 1.04; }
+.gt-cover .ot-event-type { margin: 28px 0 0; letter-spacing: 0; font-size: 18px; }
+.gt-cover .ot-cover-date { margin-top: 10px; font-size: 18px; }
+.gt-cover-ribbon { position: absolute; left: 10px; top: 0; width: 24px; height: 80%; background: var(--inv-accent); clip-path: polygon(0 0,100% 0,100% 100%,50% 94%,0 100%); }
+.gt-cover-art-stage { position: relative; width: 100%; margin-top: 44px; min-height: 285px; }
+.gt-cover-art-stage > .gt-rosette { width: min(110%,350px); margin: 0 -18% 0 auto; transform: rotate(-10deg); }
+.gt-cover-art-stage .ot-cover-photo-frame { width: 78%; max-width: 330px; margin: -58% 0 0 -8px; padding: 8px; transform: rotate(-4deg); }
+.gt-cover-art-stage .ot-cover-photo { aspect-ratio: 4 / 3; }
+.gt-cover .ot-scroll { margin-top: auto; padding-top: 24px; }
+.gt-poster-packet { position: relative; width: min(100%,300px); aspect-ratio: 300 / 340; }
+.gt-poster-packet .ot-letter-flight { inset: 0 5% 8%; }
+.gt-poster-packet .ot-letter-paper { padding-bottom: 24px; align-items: flex-start; text-align: left; }
+.gt-poster-packet .ot-letter-paper .gt-rosette { width: 90px; position: absolute; right: 12px; top: 18px; }
+.gt-fold-flight { position: absolute; inset: 50% 0 6%; transform-origin: bottom; transition: transform 600ms cubic-bezier(.23,1,.32,1),opacity 400ms cubic-bezier(.23,1,.32,1); }
+.gt-fold-front { position: absolute; inset: 0; background: var(--inv-accent); clip-path: polygon(0 0,100% 16%,100% 100%,0 100%); }
+.gt-band-flight { position: absolute; inset: 6% 38% 6% 46%; z-index: 1; transition: transform 450ms cubic-bezier(.23,1,.32,1),opacity 250ms cubic-bezier(.23,1,.32,1); }
+.gt-paper-band { position: absolute; inset: 0; background: var(--inv-soft); }
+.gt-envelope[data-opening="true"] .gt-band-flight { transform: translateX(90px) rotate(12deg); opacity: 0; }
+.gt-envelope[data-opening="true"] .gt-fold-flight { transform: rotateX(-110deg); opacity: 0; }
+.gt-section-rosette { width: 125px; margin: 0 0 28px auto; }
+.gathering-invitation .ot-section-title { font-weight: 800; font-size: clamp(31px,8vw,42px); }
+.gathering-invitation [data-invitation-section="event"] { padding-top: 94px; }
+.gt-section-fold { position: absolute; width: 62px; height: 62px; right: 24px; top: 16px; background: var(--inv-soft); clip-path: polygon(0 0,100% 0,100% 100%); }
+.gt-identity { display: flex; flex-direction: column-reverse; align-items: flex-start; }
+.gt-identity .ot-identity-photo { width: min(100%,370px); aspect-ratio: 4 / 3; }
+.gathering-invitation .ot-identity-name { font-weight: 800; }
+.gathering-invitation [data-studio-native-object="object:dateTime:panel"] { border-width: 0; padding-inline: 0; border-block: 1px solid var(--ot-input-border); background: transparent; color: inherit; }
+.gathering-invitation [data-studio-native-object="object:countdown:grid"] { border-block: 1px solid var(--ot-input-border); padding-block: 14px; }
+.gathering-invitation .ugc-gallery-masonry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gathering-invitation .ugc-gallery-masonry-item { margin: 0; border-radius: 0; aspect-ratio: 1; }
+.gathering-invitation .ugc-gallery-masonry-item:first-child { grid-column: 1 / -1; aspect-ratio: 16 / 10; }
+.gathering-invitation [data-studio-native-object="object:closing:copy-group"] { margin-inline: 0; }
+@media (prefers-reduced-motion: reduce) { .lc-flap-flight,.gt-fold-flight,.gt-band-flight { transition: none; } }
+
 @media (min-width: 560px) { .sv-identity { grid-template-columns: 1fr 1fr; align-items: center; }.sv-identity .ot-identity-photo { margin: 0; }.ot-section { padding-inline: 48px; } }
 @media (max-width: 360px) { .ot-cover-name { font-size: 44px; }.ot-envelope,.ot-cover { padding-inline: 24px; }.ot-cover { min-height: 720px; }.ot-section { padding-block: 56px; }.ot-section-title { font-size: 30px; } }
 @media (hover: hover) and (pointer: fine) { .ot-open:not(:disabled):hover { transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) { .ot-door-flight,.ot-seal-flight,.ot-letter-flight,.ot-open { transition: none; }.ot-open:active,.ot-open:not(:disabled):hover { transform: none; } }
+
+.occasion-invitation [data-invitation-subsection="our-story"] { color: var(--ot-surface-ink); }
+.occasion-invitation [data-studio-native-object="object:identity:our-story-kicker"] { display: none; }
+.occasion-invitation [data-studio-native-object="object:identity:our-story-heading"] { font-size: 34px; font-weight: 400; letter-spacing: -.025em; margin-bottom: 24px; }
+.occasion-invitation [data-studio-copy-field="ourStory"] { font-size: 16px; line-height: 1.85; }
+.silver-reverie-invitation [data-invitation-subsection="our-story"] > div { text-align: left; margin-inline: 0; }
+
+.occasion-invitation [data-studio-native-object="object:rsvp:form-group"] { max-width: none; border: 0; background: transparent; color: inherit; padding: 0; box-shadow: none; }
+.occasion-invitation [data-studio-native-object="object:wishes:form-group"] { max-width: none; color: inherit; }
+.occasion-invitation label { font-size: 16px; line-height: 1.5; color: inherit; }
+.occasion-invitation [data-studio-copy-field="prayerWish"] { opacity: 1; }
+.occasion-invitation .ugc-gallery-controls { flex-wrap: wrap; }
+.occasion-invitation :is(.ugc-gallery-arrow,.ugc-gallery-pause) { width: 48px; min-height: 48px; border-radius: 4px; border-color: var(--inv-accent); }
+.occasion-invitation .ugc-gallery-counter { font-size: 14px; letter-spacing: .02em; opacity: 1; }
+.occasion-invitation .ugc-gallery-empty p { font-size: 16px; opacity: 1; }
+.occasion-invitation .ugc-gallery-dots { flex-wrap: wrap; gap: 0; }
+.occasion-invitation .ugc-gallery-dots button { position: relative; width: 44px; height: 44px; background: transparent; }
+.occasion-invitation .ugc-gallery-dots button::after { content: ""; position: absolute; width: 7px; height: 7px; inset: 50% auto auto 50%; transform: translate(-50%,-50%); border-radius: 50%; background: currentColor; }
+.occasion-invitation .ugc-gallery-dots button[aria-current="true"]::after { width: 18px; border-radius: 4px; }
+
+.occasion-invitation :is(form,button,input,textarea,select) { font-family: inherit; }
+.occasion-invitation [data-studio-native-object="object:closing:names"] { font-size: 32px; line-height: 1.2; }
+.little-cloud-invitation .ugc-gallery-slide { border-radius: 16px; }
+.golden-keepsake-invitation .ugc-gallery-slide { border-radius: 4px; padding: 8px; background: var(--inv-bg); }

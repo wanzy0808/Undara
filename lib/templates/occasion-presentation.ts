@@ -10,6 +10,29 @@ type OccasionPresentation = {
 
 /** Presentation only. Event compatibility remains exclusively in catalog.ts. */
 export const occasionPresentations = {
+  "little-cloud": {
+    gallery: "carousel",
+    surfaceSections: ["greeting", "identity", "gallery", "rsvp", "gift"],
+    headings: {
+      greeting: ["Bahagia kecil yang dinanti", "A little joy on its way"],
+      identity: ["Dari keluarga kami", "From our family"],
+      event: ["Mari berbagi bahagia", "Let's share the joy"],
+      gallery: ["Cerita sebelum bertemu", "Memories before we meet"],
+      wishes: ["Harapan untuk si kecil", "Wishes for our little one"],
+      closing: ["Sampai bertemu", "See you soon"],
+    },
+  },
+  gathering: {
+    gallery: "masonry",
+    surfaceSections: ["identity", "event", "gallery", "location", "wishes"],
+    headings: {
+      greeting: ["Ada cerita untuk dibagi", "A story to share"],
+      identity: ["Tentang pertemuan ini", "About this gathering"],
+      event: ["Rencana kita", "Our plans"],
+      gallery: ["Momen bersama", "Moments together"],
+      closing: ["Bertemu, berbagi, mengingat", "Meet, share, remember"],
+    },
+  },
   "silver-reverie": {
     gallery: "masonry",
     surfaceSections: ["greeting", "gallery", "location", "wishes", "closing"],

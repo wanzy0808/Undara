@@ -25,6 +25,8 @@ export const invitationPalettes = {
   midnightVelvet: { name: "Midnight Romance", bg: "#080b18", surface: "#12182b", ink: "#f3e8d8", accent: "#b58a56", soft: "#642b43" },
   decoNoir: { name: "Golden Art Deco", bg: "#0d0f0c", surface: "#171a14", ink: "#f3e7c8", accent: "#c79a45", soft: "#6d552e" },
   velvetHorizon: { name: "Velvet Horizon", bg: "#f1e4d7", surface: "#fff7ed", ink: "#4a302a", accent: "#9a5147", soft: "#c8a89a" },
+  littleCloud: { name: "Little Cloud", bg: "#eff5f5", surface: "#fffaf2", ink: "#24464b", accent: "#366b72", soft: "#e4b89a" },
+  gathering: { name: "Gathering", bg: "#f8f2e6", surface: "#fffcf5", ink: "#26372e", accent: "#315b45", soft: "#df9c70" },
   silverReverie: { name: "Silver Reverie", bg: "#eef1f2", surface: "#fbfaf7", ink: "#263a48", accent: "#536b7a", soft: "#b5c4cd" },
   goldenKeepsake: { name: "Golden Keepsake", bg: "#f4e7ce", surface: "#fffaf0", ink: "#51341c", accent: "#8c5e1a", soft: "#d7b67b" },
   confetti: { name: "Confetti Club", bg: "#fff6e5", surface: "#fffcf5", ink: "#222c51", accent: "#2445ae", soft: "#f77959" },

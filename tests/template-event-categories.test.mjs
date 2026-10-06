@@ -177,7 +177,7 @@ for (const category of ["WEDDING", "BIRTHDAY"]) {
 
 for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "OTHER"]) {
   test(`${category} does not borrow Wedding/Birthday defaults or catalog cards`, () => {
-    const expected = { SILVER_WEDDING: "silver-reverie", GOLDEN_WEDDING: "golden-keepsake" }[category];
+    const expected = { SILVER_WEDDING: "silver-reverie", GOLDEN_WEDDING: "golden-keepsake", BABY_SHOWER: "little-cloud", OTHER: "gathering" }[category];
     if (expected) {
       assert.deepEqual(catalog.templatesForEvent(localCatalog, category).map((item) => item.key), [expected]);
       assert.equal(catalog.defaultInvitationTemplateForEvent(category).key, expected);
@@ -386,7 +386,7 @@ test("explicitly assigned blank custom designs stay usable for all categories wi
   }
 });
 
-for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING"]) {
+for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "OTHER"]) {
   test(`${category} accepts only its own new theme through Save/Publish, gateway and handoff`, async () => {
     const theme = catalog.defaultInvitationTemplateForEvent(category);
     const ownKey = design.makeDesignKey(theme.key, theme.preset.palette, theme.preset.font);

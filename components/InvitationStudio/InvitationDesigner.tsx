@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import {
   ImagePlus,
   Layers3,
@@ -109,7 +109,7 @@ import type {
   InvitationDesignerPanel,
   InvitationDesignState,
 } from "@/components/InvitationStudio/designer-types";
-import { getTemplateDemoInvitation, templateDemoPhoto } from "@/data/templates/preview-invitation";
+import { getTemplateDemoInvitation, resolveTemplateStudioDemo, templateDemoPhoto } from "@/data/templates/preview-invitation";
 
 const blankCanvasSections = {
   ...defaultInvitationSections,
@@ -156,7 +156,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   const catalog = useTemplateCatalog();
   const maxAssetLayers = templateMode ? MAX_TEMPLATE_ASSET_LAYERS : MAX_ASSET_LAYERS;
   const [selectedCatalogKey, setSelectedCatalogKey] = useState("botanical-ivory");
-  const [invitation, setInvitation] = useState<InvitationDesignerInvitation | null>(null);
+  const [invitationState, setInvitation] = useState<InvitationDesignerInvitation | null>(null);
   const [designerLibraryAssets, setDesignerLibraryAssets] = useState<DesignerLibraryAsset[]>([]);
   const [panel, setPanel] = useState<InvitationDesignerPanel>("template");
   const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>("ID");
@@ -288,9 +288,6 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   const [templateDraftId, setTemplateDraftId] = useState<string | null>(null);
   const [templateDraftStatus, setTemplateDraftStatus] = useState<string | null>(null);
   const [templateCustomInvitationId, setTemplateCustomInvitationId] = useState<string | null>(null);
-  const eventScoped = !templateMode || Boolean(templateCustomInvitationId);
-  const eventCatalog = eventScoped && !invitation ? [] : templatesForEvent(catalog, eventScoped ? invitation?.eventCategory : undefined);
-  const readyTemplates = eventCatalog.filter((item) => item.ready);
   const audioMutation = useRef(false);
   const requestedCatalogApplied = useRef(false);
   const [audioBusy, setAudioBusy] = useState(false);
@@ -333,6 +330,12 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     sectionElementStyles: {},
     nativeVisuals: {}, nativeLocks: {},
   });
+  const invitation = useMemo(() => invitationState && templateMode && !templateCustomInvitationId
+    ? resolveTemplateStudioDemo(invitationState, design.template)
+    : invitationState, [invitationState, templateMode, templateCustomInvitationId, design.template]);
+  const eventScoped = !templateMode || Boolean(templateCustomInvitationId);
+  const eventCatalog = eventScoped && !invitation ? [] : templatesForEvent(catalog, eventScoped ? invitation?.eventCategory : undefined);
+  const readyTemplates = eventCatalog.filter((item) => item.ready);
   const assetLayerUsage = templateMode
     ? design.layers.length
     : design.layers.filter((layer) => layer.customerAccess !== "locked").length;

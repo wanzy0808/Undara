@@ -343,3 +343,20 @@ Release QA yang belum dibuktikan browser:
 Readable single-scene generated Cover references are design-only. Runtime geometric art is original native SVG/CSS; individual loops/fan blades and real wrapper frames have independent paint identities, plus delete/restore/lock through the shared Studio codec. Per-theme public asset README records fallback-thumbnail purpose and rights. No numbers of years, names, dates or photographs are baked into production art. Public preview forms remain read-only. Theme gallery settings remain overridable without duplicating gallery/music/RSVP/Wishes/Maps/Gift/countdown engines.
 
 Browser release QA remains pending for both: 320/390/768/1440px, long names/addresses, no photo/one/many, palette light/dark, crop, native paint/delete/restore, save/reload/public, opening keyboard/touch/reduced motion, and music. Source/SSR/handler/build checks do not certify these live-device interactions.
+
+
+## Little Cloud / Gathering production briefs (6 October 2026)
+
+| Brief | Little Cloud | Gathering |
+| --- | --- | --- |
+| Stable key / occasion | `little-cloud` / BABY_SHOWER only | `gathering` / OTHER only |
+| Palette / type | Pale sky #eff5f5, milk #fffaf2, teal ink #24464b, jade #366b72, peach #e4b89a; Young Serif + Instrument Sans | Cream #f8f2e6, paper #fffcf5, pine ink #26372e, green #315b45, apricot #df9c70; Syne + Inter |
+| Opening / cover | Scalloped envelope, moon seal, paper moon mobile, cloud bank and real host name/date | Folded poster envelope, paper band, bold real event title/date, paper ribbon and pleated rosette |
+| Whole journey | Soft greeting/host portrait, rounded paper date, carousel memories, unboxed readable data, gentle functional forms, cloud closing | Open poster copy, landscape identity/photo, folded event note, linear date, wide-first masonry, ruled countdown, square forms, rosette closing |
+| Optional photos | `cover` in Identity only, `gallery` in shared carousel; no demo wedding photos | `cover` in Cover/Identity, `gallery` in shared masonry; no demo wedding photos |
+| Narrative | Four ID/EN narrative slots, no invented child name/gender/birth/due date, no Our Story for non-couple | Four neutral ID/EN narrative slots, actual title from event, no forced wedding/birthday story |
+| Motion / engines | Single 700ms pointer opening, keyboard/Reduced Motion/OFF instant; shared music/RSVP/Maps/Wishes/Gift/countdown/gallery | Same shared gesture contract with poster-band/fold movement; separate visual geometry |
+
+Native cloud layers, moon, two stars and each of 16 rosette pleats have independent section-owned paint targets, with real wrapper frames where background/border differs from image paint. Gallery settings/custom motion override defaults. Isolated master previews follow selected/undone category and retain draft/staff media; customer/custom event data is never replaced by fixtures. All 15 controls remain intact.
+
+Both categories now have matching selectable presets/defaults. Browser release QA remains pending: 320/390/768/1440px and short viewports, long event names, light/dark palette, zero/one/many photos, selection/crop/paint/delete/restore/lock, save/reload/public, pointer/keyboard/reduced motion and audio. Build/SSR/handler checks are recorded separately in PRD Appendix A.

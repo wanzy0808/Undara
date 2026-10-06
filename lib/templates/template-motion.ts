@@ -65,6 +65,8 @@ const confettiClubPhotos: PhotoMotionMap = {
 };
 
 const photoDefaults: Record<string, PhotoMotionMap> = {
+  "little-cloud": { gallery: { animation: "fade", animationDuration: .5, animationStagger: .04 } },
+  "gathering": { cover: { animation: "rise", animationDuration: .5 }, gallery: { animation: "rise", animationDuration: .5, animationStagger: .04 } },
   "silver-reverie": { cover: { animation: "fade", animationDuration: .5 }, gallery: { animation: "rise", animationDuration: .55, animationStagger: .04 } },
   "golden-keepsake": { cover: { animation: "fade", animationDuration: .5 }, gallery: { animation: "fade", animationDuration: .55, animationStagger: .04 } },
   "confetti-club": confettiClubPhotos,
@@ -897,6 +899,8 @@ const confettiClubNative: Record<string, TemplateNativeMotion> = {
 };
 
 const nativeDefaults: Record<string, Record<string, TemplateNativeMotion>> = {
+  "little-cloud": { "heading:cover": { animation: "fade", animationDuration: .55 }, "object:cover:moon-mobile-art": { animation: "rise", animationDuration: .6 } },
+  gathering: { "heading:cover": { animation: "rise", animationDuration: .55 }, "object:cover:rosette-art": { animation: "soft-scale", animationDuration: .6 } },
   "silver-reverie": { "heading:cover": { animation: "rise", animationDuration: .6 }, "object:cover:silver-loops-art": { animation: "fade", animationDuration: .6 } },
   "golden-keepsake": { "heading:cover": { animation: "fade", animationDuration: .6 }, "object:cover:golden-fan-art": { animation: "reveal-up", animationDuration: .6 } },
   "confetti-club": confettiClubNative,

@@ -1,0 +1,3 @@
+# little-cloud
+
+Original Undara geometric SVG/CSS artwork (2026). `preview.svg` is a 390×760 static fallback only. Live previews use CelebrationScene with an isolated category fixture; no demo wedding photographs are used for these categories. Every cloud layer/moon/star or rosette pleat has an independent Studio paint target, and wrapper frames remain independently editable. Runtime artwork contains no names, dates, gender, age, faces or event facts. Optional customer photos live in the existing event photo pipeline; no stock fallback is inserted. Generated design references are preview-only, not raster invitation UI. No new dependencies, fonts or audio files and no licensed third-party artwork.

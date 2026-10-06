@@ -282,6 +282,25 @@ export const invitationTemplates: InvitationTemplate[] = [
     preset: { layout: "editorial", palette: "goldenKeepsake", font: "playfairInter" },
     previewImage: "/templates/golden-keepsake/preview.svg", assetPath: "/templates/golden-keepsake",
   },
+
+  {
+    key: "little-cloud", name: "Little Cloud",
+    description: "Baby Shower lembut dengan bulan gantung, awan berlapis, dan cerita keluarga.",
+    descriptionEn: "A gentle Baby Shower with a paper moon mobile, layered clouds and family stories.",
+    category: "Family", eventCategories: ["BABY_SHOWER"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "littleCloud", font: "youngInstrument" },
+    previewImage: "/templates/little-cloud/preview.svg", assetPath: "/templates/little-cloud",
+  },
+  {
+    key: "gathering", name: "Gathering",
+    description: "Poster perayaan modern untuk acara lainnya, dengan lipatan kertas dan roset geometris.",
+    descriptionEn: "A modern event poster with folded paper, geometric rosettes and bold typography.",
+    category: "Celebration", eventCategories: ["OTHER"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "gathering", font: "syneInter" },
+    previewImage: "/templates/gathering/preview.svg", assetPath: "/templates/gathering",
+  },
 ];
 
 export function templateSupportsEventCategory(
