@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
 
 /**
  * Single public catalog endpoint for /template-design, /d-invitation and Studio.
- * Studio-authored templates carry a persisted designKey and are immediately ready
- * because they reuse the shared invitation renderer. Legacy ZIP/HTML/JSON uploads
- * remain preview-only until they are integrated into the renderer.
+ * Studio-authored templates are ready when their persisted renderer has exactly
+ * one event category. Unclassified blank-canvas masters and legacy uploads stay
+ * preview-only; they must not become a choice in every event category.
  */
 export async function GET() {
   const builtIn = invitationTemplates.map((item) => ({
@@ -38,7 +38,7 @@ export async function GET() {
     const designer = uploaded.map((item) => {
       const parsed = item.designKey ? parseDesignKey(item.designKey) : null;
       const base = parsed ? getInvitationTemplate(parsed.template) : null;
-      const ready = Boolean(item.designKey && base && base.key === parsed?.template);
+      const ready = Boolean(item.designKey && base && base.key === parsed?.template && base.eventCategories.length === 1);
 
       return {
         key: `designer:${item.templateNo}`,

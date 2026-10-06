@@ -62,7 +62,7 @@ import {
 } from "@/components/InvitationStudio/DesignerPanels";
 import { InvitationPreview } from "@/components/InvitationStudio/InvitationPreview";
 import { getInvitationDefaultMusic } from "@/lib/templates/music";
-import { clearTemplateSelection, readTemplateSelection, rememberTemplateSelection } from "@/lib/templates/template-intent";
+import { clearTemplateSelection, isSelectableTemplate, readTemplateSelection, rememberTemplateSelection } from "@/lib/templates/template-intent";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 import type { InvitationLanguage } from "@/lib/invitations/language";
 import { STUDIO_REFRESH_DRAFT_KEY, makeStudioRefreshDraft, recoverStudioRefreshDraft } from "@/lib/templates/studio-refresh-draft";
@@ -453,7 +453,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     // A catalog CTA may select a ready theme for THIS event, but never saves that
     // selection without the owner's explicit Save Design action.
     const requestedTheme = params.get("template") || (params.get("from") === "template" ? readTemplateSelection() : null);
-    const requestedPreset = requestedTheme && isInvitationTemplateCompatible(requestedTheme, next.eventCategory)
+    const requestedPreset = requestedTheme && isSelectableTemplate(requestedTheme) && isInvitationTemplateCompatible(requestedTheme, next.eventCategory)
       ? invitationTemplatePresets[requestedTheme] : undefined;
     const stagedDesign: InvitationDesignState = requestedTheme && requestedTheme !== loadedDesign.template && requestedPreset
       ? { ...loadedDesign, template: requestedTheme, palette: requestedPreset.palette, font: requestedPreset.font, copy: {}, copyEn: {}, copyMotion: {}, layers: [], sectionStyles: {}, rsvpConfig: { ...defaultInvitationRsvpConfig, customFields: [], elementStyles: {} }, sectionLayout: defaultInvitationSectionLayout.map((item) => ({ ...item })), sectionElementStyles: {}, nativeVisuals: {}, nativeLocks: {} }
@@ -2000,6 +2000,15 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     </section>
   );
 
+  const emptyCatalogMessage = locale === "en"
+    ? "No templates are available for this event category yet."
+    : "Belum ada template untuk jenis acara ini.";
+  if (invitation && eventScoped && !design.template) return (
+    <section className="flex-1 overflow-y-auto p-6">
+      <TemplatePanel selected="" onSelect={selectTemplate} templates={eventCatalog} emptyMessage={emptyCatalogMessage} />
+    </section>
+  );
+
   return (
     <section className="undara-invitation-studio-shell" data-inspector={inspectorOpen} data-mobile-canvas={mobileCanvas}>
 
@@ -2019,7 +2028,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
 
         <aside className="undara-studio-inspector" aria-label="Pengaturan desain">
           <fieldset disabled={!invitation || saving} className="min-w-0 border-0 p-0 disabled:opacity-50">
-          {panel === "template" && <TemplatePanel selected={selectedCatalogKey} onSelect={selectTemplate} templates={eventCatalog} onBlankCanvas={templateMode && allowBlankCanvas ? startBlankCanvas : undefined} />}
+          {panel === "template" && <TemplatePanel selected={selectedCatalogKey} onSelect={selectTemplate} templates={eventCatalog} emptyMessage={emptyCatalogMessage} onBlankCanvas={templateMode && allowBlankCanvas ? startBlankCanvas : undefined} />}
           {panel === "sections" && (
             <ContentPanel
               invitationLanguage={invitationLanguage}

@@ -93,28 +93,33 @@ function gatewayFixture({ events = [], selected, designer, user = { id: "user-a"
 const choice = (id, eventCategory) => ({ id, title: id, type: "WEDDING", eventCategory });
 const localCatalog = catalog.invitationTemplates.map((item) => ({ ...item, source: "built-in", ready: true }));
 
-test("event compatibility separates birthdays from all three wedding categories", () => {
-  const birthdays = catalog.templatesForEvent(localCatalog, "BIRTHDAY");
-  assert.deepEqual(birthdays.map((item) => item.key), ["confetti-club"]);
-  for (const category of ["WEDDING", "SILVER_WEDDING", "GOLDEN_WEDDING"]) {
-    const weddings = catalog.templatesForEvent(localCatalog, category);
-    assert.ok(weddings.length > 0);
-    assert.ok(weddings.every((item) => item.key !== "confetti-club"));
-    assert.equal(catalog.isInvitationTemplateCompatible(birthdayKey, category), false);
-    assert.equal(catalog.isInvitationTemplateCompatible(weddingKey, category), true);
+test("each categorized theme appears in exactly one of the six event categories", () => {
+  for (const theme of localCatalog) {
+    assert.equal(theme.eventCategories.length, 1);
+    for (const { key } of categories.eventCategoryOptions) {
+      assert.equal(catalog.templatesForEvent([theme], key).length, Number(theme.eventCategories[0] === key));
+    }
   }
-  assert.equal(catalog.isInvitationTemplateCompatible(weddingKey, "BIRTHDAY"), false);
+  assert.deepEqual(catalog.templatesForEvent(localCatalog, "BIRTHDAY").map((item) => item.key), ["confetti-club"]);
+  assert.ok(catalog.templatesForEvent(localCatalog, "WEDDING").some((item) => item.key === "botanical-ivory"));
+});
+
+test("uncategorized or shared metadata never leaks into a specific event; master catalog stays complete", () => {
+  const ambiguous = { eventCategories: ["WEDDING", "BIRTHDAY"] };
+  for (const { key } of categories.eventCategoryOptions) {
+    assert.deepEqual(catalog.templatesForEvent([catalog.blankCanvasTemplate, ambiguous], key), []);
+  }
+  assert.equal(catalog.templatesForEvent(localCatalog), localCatalog);
+  assert.equal(catalog.templateSupportsEventCategory({ category: "Birthday" }, "BIRTHDAY"), false);
+  assert.equal(catalog.templateSupportsEventCategory({ eventCategories: ["OTHER"] }, "unknown"), false);
   assert.equal(catalog.isInvitationTemplateCompatible("unknown-theme", "WEDDING"), false);
 });
 
-test("other event types retain older themes; master authoring keeps the full catalog", () => {
-  for (const category of ["BABY_SHOWER", "OTHER"]) {
-    assert.ok(catalog.templatesForEvent(localCatalog, category).some((item) => item.key === "botanical-ivory"));
+test("future dedicated templates remain separate for every ordered category pair", () => {
+  const themes = categories.eventCategoryOptions.map(({ key }) => ({ key: "fixture-" + key, eventCategories: [key] }));
+  for (const { key } of categories.eventCategoryOptions) {
+    assert.deepEqual(catalog.templatesForEvent(themes, key).map((item) => item.key), ["fixture-" + key]);
   }
-  assert.equal(catalog.templatesForEvent(localCatalog), localCatalog);
-  for (const item of localCatalog) assert.ok(item.eventCategories.length > 0);
-  assert.equal(catalog.templateSupportsEventCategory({ category: "Birthday" }, "BIRTHDAY"), false,
-    "An aesthetic tag is not event compatibility");
 });
 
 test("the real Studio panel renders only the scoped theme cards", () => {
@@ -141,13 +146,15 @@ test("stale incompatible choices and refresh drafts cannot replace a saved theme
   assert.equal(catalog.canContinueInvitationTemplate(birthdayKey, weddingKey, "WEDDING"), false);
   assert.equal(catalog.canContinueInvitationTemplate(weddingKey, birthdayKey, "BIRTHDAY"), false);
   assert.equal(catalog.canContinueInvitationTemplate(birthdayKey, "", "WEDDING"), false);
+  assert.equal(catalog.canContinueInvitationTemplate("blank-canvas", "", "OTHER"), false);
+  assert.equal(intent.isSelectableTemplate("blank-canvas"), false);
   assert.equal(catalog.canContinueInvitationTemplate(weddingKey, weddingKey, "BIRTHDAY"), true,
     "An already assigned legacy design remains editable");
   assert.equal(intent.isSelectableTemplate("designer:001"), true);
   assert.equal(intent.isSelectableTemplate("designer:abc"), false);
 });
 
-for (const category of ["WEDDING", "SILVER_WEDDING", "GOLDEN_WEDDING", "BIRTHDAY"]) {
+for (const category of ["WEDDING", "BIRTHDAY"]) {
   test(`Save rejects the wrong template for ${category} without writing the event`, async () => {
     const f = saveFixture({ invitation: event({ eventCategory: category }) });
     const response = await f.save({ templateKey: category === "BIRTHDAY" ? weddingKey : birthdayKey });
@@ -165,6 +172,42 @@ for (const category of ["WEDDING", "SILVER_WEDDING", "GOLDEN_WEDDING", "BIRTHDAY
     assert.equal(f.calls.updates[0].eventCategory, category);
     assert.equal(f.calls.updates[0].isPublished, false);
     assert.equal(f.calls.locks, 1);
+  });
+}
+
+for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "OTHER"]) {
+  test(`${category} does not borrow Wedding/Birthday defaults or catalog cards`, () => {
+    assert.deepEqual(catalog.templatesForEvent(localCatalog, category), []);
+    assert.equal(catalog.defaultInvitationTemplateForEvent(category), null);
+    assert.equal(eventInvitationDesignFromKey("", category, "").template, "");
+    const markup = renderToStaticMarkup(createElement(LanguageProvider, null,
+      createElement(TemplatePanel, { selected: "", onSelect: () => {}, templates: [], emptyMessage: "Belum ada template untuk jenis acara ini." })));
+    assert.match(markup, /Belum ada template untuk jenis acara ini/);
+    assert.doesNotMatch(markup, /Canvas Kosong|Romantic Rose|Confetti Club|Cari template/);
+  });
+
+  test(`Save and first Publish reject Wedding/Birthday choices for ${category}`, async () => {
+    for (const templateKey of [weddingKey, birthdayKey]) {
+      const fresh = saveFixture({ invitation: event({ eventCategory: category }) });
+      assert.equal((await fresh.save({ templateKey })).status, 400);
+      assert.deepEqual(fresh.calls.updates, []);
+      const assigned = saveFixture({ invitation: event({ eventCategory: category, templateKey }) });
+      assert.equal((await assigned.save({ templateKey: templateKey + "::decor=%2Fnew.webp" })).status, 200);
+      assert.equal((await assigned.save({ isPublished: true })).status, 400);
+    }
+  });
+
+  test(`gateway never redirects a Wedding/Birthday selection to ${category}`, async () => {
+    const f = gatewayFixture({ events: [choice("other-event", category)] });
+    for (const key of ["botanical-ivory", "confetti-club"]) assert.deepEqual((await f.open(key)).props.events, []);
+  });
+
+  test(`custom handoff rejects a Wedding/Birthday theme for ${category}`, async () => {
+    for (const templateKey of [weddingKey, birthdayKey]) {
+      const f = handoffFixture({ category, templateKey });
+      assert.equal((await f.assign()).status, 400);
+      assert.deepEqual(f.calls, { archives: 0, updates: 0, audits: 0, locks: 0 });
+    }
   });
 }
 
@@ -261,6 +304,7 @@ test("catalog API uses renderer compatibility, regardless of designer aesthetic 
     { templateNo: "001", name: "Birthday", tags: ["Floral"], category: "Floral", designKey: birthdayKey, usesPhotos: true },
     { templateNo: "002", name: "Wedding", tags: ["Birthday"], category: "Birthday", designKey: weddingKey, usesPhotos: false },
     { templateNo: "003", name: "Preview only", tags: ["Birthday"], category: "Birthday", designKey: null },
+    { templateNo: "004", name: "Unclassified blank master", tags: ["Baby Shower"], category: "Baby Shower", designKey: "blank-canvas::pearl::cinzelFauna" },
   ];
   const route = loadSource("app/api/templates/route.ts", {
     "next/server": json, "@/lib/prisma": { prisma: { designerTemplate: { findMany: async () => uploaded } } },
@@ -271,6 +315,10 @@ test("catalog API uses renderer compatibility, regardless of designer aesthetic 
   assert.ok(catalog.templatesForEvent(templates, "WEDDING").some((item) => item.key === "designer:002"));
   assert.ok(!catalog.templatesForEvent(templates, "WEDDING").some((item) => item.key === "designer:001"));
   assert.equal(templates.find((item) => item.key === "designer:003").ready, false);
+  assert.equal(templates.find((item) => item.key === "designer:004").ready, false);
+  for (const { key } of categories.eventCategoryOptions) {
+    assert.ok(!catalog.templatesForEvent(templates, key).some((item) => item.key === "designer:004"));
+  }
 });
 
 function handoffFixture({ category = "WEDDING", templateKey = birthdayKey, current } = {}) {
@@ -318,5 +366,15 @@ test("custom handoff rechecks category and publish state before archiving or wri
     const f = handoffFixture({ category: "BIRTHDAY", templateKey: birthdayKey, current });
     assert.equal((await f.assign()).status, 409);
     assert.deepEqual(f.calls, { archives: 0, updates: 0, audits: 0, locks: 1 });
+  }
+});
+
+
+test("explicitly assigned blank custom designs stay usable for all categories without becoming catalog defaults", async () => {
+  for (const { key } of categories.eventCategoryOptions) {
+    const assigned = saveFixture({ invitation: event({ eventCategory: key, templateKey: "blank-canvas::pearl::cinzelFauna" }) });
+    assert.equal((await assigned.save({ isPublished: true })).status, 200);
+    const handoff = handoffFixture({ category: key, templateKey: "blank-canvas::pearl::cinzelFauna" });
+    assert.equal((await handoff.assign()).status, 200);
   }
 });

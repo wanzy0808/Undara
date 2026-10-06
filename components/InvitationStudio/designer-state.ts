@@ -102,7 +102,7 @@ export function makeInvitationDesignStateKey(state: InvitationDesignState) {
 export function eventInvitationDesignFromKey(key: string, category: string, fallbackDecor: string) {
   const template = defaultInvitationTemplateForEvent(category);
   return invitationDesignStateFromKey(
-    key || makeDesignKey(template.key, template.preset.palette, template.preset.font),
+    key || (template ? makeDesignKey(template.key, template.preset.palette, template.preset.font) : ""),
     fallbackDecor,
   );
 }

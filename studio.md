@@ -103,7 +103,7 @@ Canvas edit tetap menjadi workspace utama, tetapi Studio juga menyediakan **Prev
 
 ### Mode Studio berdasarkan role
 
-**Katalog sesuai event (6 October 2026):** Invitation Mode dan Template Mode untuk custom job terikat event hanya menampilkan tema yang mendukung kategori acara melalui registry `eventCategories`. Ulang tahun dan wedding saling terpisah; master authoring tanpa event tetap melihat semuanya. Acara baru memakai default kompatibel tanpa autosave. Tautan/cookie/draft refresh tidak boleh mengganti tema ke kategori yang salah. Server memeriksa pilihan baru, Publish pertama, dan handoff custom; desain tersimpan tetap utuh dan bisa diedit dengan base yang sama.
+**Katalog sesuai event (6 October 2026):** Invitation Mode dan custom job hanya menampilkan template dengan satu `eventCategories` yang persis sama dengan kategori event. Wedding/Silver/Golden Wedding/Ulang Tahun/Baby Shower/Event Lainnya tidak saling meminjam. Bila belum ada template, tampilkan `Belum ada template untuk jenis acara ini.` tanpa tema lain atau Canvas Kosong otomatis; canvas/Preview/Simpan baru tersedia setelah ada desain yang dipilih atau sudah assigned. Master authoring tetap melihat seluruh koleksi. Blank master tanpa kategori tetap preview-only di katalog publik. URL/cookie/draft, Save/Publish pertama dan custom handoff mengikuti gate yang sama; desain existing dan izin Owner/custom blank tetap dipertahankan.
 
 Studio memakai **satu editor yang sama**, tetapi semantics Save wajib dibedakan berdasarkan role:
 

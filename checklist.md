@@ -740,6 +740,7 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 
 - [x] Tambah satu template ulang tahun `confetti-club` melalui registry tunggal, dengan palette/font dan musik existing.
 - [x] Pisahkan tema ulang tahun/wedding melalui registry `eventCategories` pada Studio, gateway acara, URL/cookie/draft, Save/Publish dan custom handoff; preset Designer mewarisi kategori renderer. Desain lama tetap utuh; master/public catalog tetap lengkap. (6 October 2026)
+- [x] Perketat seluruh enam kategori agar tidak saling muncul, termasuk Wedding/Silver/Golden; kategori tanpa tema mempunyai kondisi kosong tanpa fallback wedding/blank. Blank master tanpa kategori preview-only; desain custom assigned tetap usable. (6 October 2026)
 - [x] Komposisi amplop/cover/section tersendiri; potret tunggal dan Gallery memakai engine foto shared.
 - [x] Native Studio markers dan empat narasi ID/EN; preview birthday terisolasi dari fixture pernikahan/data pelanggan.
 - [x] GitHub Actions pada feature commit: **428/428 regression tests**, Prisma generate, TypeScript, build **72/72** dan Orphan Audit lulus; hasil/run tercatat di Appendix A.

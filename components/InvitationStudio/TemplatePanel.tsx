@@ -16,11 +16,13 @@ export function TemplatePanel({
   onSelect,
   templates,
   onBlankCanvas,
+  emptyMessage,
 }: {
   selected: string;
   onSelect: (key: string) => void;
   templates: CatalogTemplate[];
   onBlankCanvas?: () => void;
+  emptyMessage?: string;
 }) {
   const { locale } = useLanguage();
   const en = locale === "en";
@@ -46,6 +48,13 @@ export function TemplatePanel({
     // Keep the current selection within the first visible cards, even with hundreds of themes.
     return matches.sort((a, b) => Number(b.key === selected) - Number(a.key === selected));
   }, [templates, selected, search, photoFilter, sort]);
+
+  if (templates.length === 0 && emptyMessage && !onBlankCanvas) return (
+    <div>
+      <h2 className="font-[family-name:var(--font-undara-heading)] text-lg font-semibold text-primary">{en ? "Choose a Theme" : "Pilih Tema"}</h2>
+      <p role="status" className="py-5 text-sm text-foreground">{emptyMessage}</p>
+    </div>
+  );
 
   return (
     <div>
