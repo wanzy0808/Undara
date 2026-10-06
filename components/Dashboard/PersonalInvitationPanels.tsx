@@ -851,8 +851,7 @@ export function PersonalInvitationListPanel({
                             onPatch(
                               item.id,
                               {
-                                personalEnvelopeEnabled:
-                                  item.personalEnvelopeEnabled === false,
+                                personalEnvelopeEnabled: item.personalEnvelopeEnabled === false,
                               },
                               item.personalEnvelopeEnabled === false
                                 ? d("Nama penerima di amplop diaktifkan.")

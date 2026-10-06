@@ -450,6 +450,44 @@ test("bulk Publish uses only the current event's unpublished IDs in bounded requ
   } finally { panel.dispose(); }
 });
 
+test("selected Publish filters duplicate, published and foreign IDs before writing", async () => {
+  const calls = [];
+  const list = [
+    { ...personal(), id: "personal-a", personalPublished: false },
+    { ...personal(), id: "personal-b", personalPublished: false },
+    { ...personal(), id: "personal-c", personalPublished: true },
+  ];
+  const panel = panelHarness(async (url, options = {}) => {
+    if (options.method === "PATCH") {
+      const body = JSON.parse(options.body);
+      calls.push(body);
+      return Response.json({ count: body.ids.length });
+    }
+    if (url === "/api/invitations?all=1") {
+      return Response.json({
+        invitations: [{ ...event(), isPublished: true, accessPaid: true }],
+      });
+    }
+    return fetchLists(url, [], list);
+  });
+  try {
+    const view = await panel.settle();
+    await view.list.onPublishSelected([
+      "personal-b",
+      "personal-c",
+      "outside-event",
+      "personal-b",
+    ]);
+    assert.deepEqual(calls, [{
+      invitationId: "event-a",
+      ids: ["personal-b"],
+      published: true,
+    }]);
+  } finally {
+    panel.dispose();
+  }
+});
+
 test("personal links reuse only a saved invitation and creation never saves or publishes its design", async () => {
   const writes = [], lists = [];
   const saved = { ...event("event-b"), templateKey: "confetti-club::saved-design", accessPaid: false, isPublished: false };
@@ -545,20 +583,14 @@ function savedListHarness(overrides = {}) {
 
 const listProps = (overrides = {}) => ({ selectedEvent: { ...event(), isPublished: true, accessPaid: true }, personal: [{ ...personal(), personalPublished: true }], editingId: null, editName: "", editPhone: "", editProfile: fields.emptyGuestInvitationForm, passwordId: null, password: "", busyId: null, loading: false, setEditName() {}, setEditPhone() {}, setEditProfile() {}, setPasswordId() {}, setPassword() {}, onReload() {}, onStartEdit() {}, onSaveEdit() {}, onPatch() {}, onSavePassword() {}, onDisablePassword() {}, onPublishAll() {}, onPublishSelected() {}, onCopyLink() {}, ...overrides });
 
-test("saved recipients render as flat selectable rows with bulk publish and a right-edge send action", () => {
-  const selected = [];
+test("saved recipients render as flat selectable rows with a right-edge send action", () => {
   const rows = [
     { ...personal(), id: "personal-a", name: "Andi", personalPublished: false },
     { ...personal(), id: "personal-b", name: "Rina", personalPublished: true, personalToken: "token-b" },
   ];
-  const harness = savedListHarness({
-    personal: rows,
-    onPublishSelected(ids) {
-      selected.push(ids);
-    },
-  });
+  const harness = savedListHarness({ personal: rows });
   try {
-    let tree = harness.render();
+    const tree = harness.render();
     assert.equal(
       nodes(tree).filter(
         (node) => node.type === "input" && node.props.type === "checkbox",
@@ -569,21 +601,6 @@ test("saved recipients render as flat selectable rows with bulk publish and a ri
       renderToStaticMarkup(tree).includes("undara-dashboard-detail-card"),
       false,
     );
-    const rowCheckbox = nodes(tree).find(
-      (node) =>
-        node.type === "input" &&
-        node.props["aria-label"] === "Pilih tamu: Andi",
-    );
-    rowCheckbox.props.onChange({ target: { checked: true } });
-    tree = harness.render();
-    const publishSelected = nodes(tree).find(
-      (node) =>
-        node.type === Button &&
-        text(node.props.children).includes("Publish terpilih"),
-    );
-    assert.ok(publishSelected);
-    publishSelected.props.onClick();
-    assert.deepEqual(selected, [["personal-a"]]);
     const sendLabels = nodes(tree).filter((node) =>
       node.props["aria-label"]?.startsWith("Kirim:"),
     );
