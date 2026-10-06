@@ -1,9 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowLeftRight, LayoutGrid, UserPlus, X } from "lucide-react";
-import { Circle, Group, Layer, Rect, Stage, Text } from "react-konva";
-import type { KonvaEventObject } from "konva/lib/Node";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeftRight, LayoutGrid, MousePointer2, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +14,13 @@ import {
   DashboardPanel,
 } from "@/components/Dashboard/DashboardPrimitives";
 import { matchesGuestLabels } from "@/lib/guests/filters";
-import {
-  findSeatingSeatTarget,
-  seatingSeatPoint,
-  seatingTablePoint,
-  SEATING_SEAT_RADIUS,
-  SEATING_STAGE_HEIGHT,
-  SEATING_STAGE_WIDTH,
-} from "@/components/Dashboard/seating-chart-geometry";
+import { findSeatingSeatTarget, seatingPlanWithTables } from "@/components/Dashboard/seating-chart-geometry";
+import { SEATING_MAX_PATHS } from "@/lib/seating/plan";
+import { seatingPlanKey } from "@/lib/seating/editor";
+import { useSeatingPlan } from "./use-seating-plan";
+import SeatingPlanCanvas from "./SeatingPlanCanvas";
+import SeatingPlanPrint from "./SeatingPlanPrint";
+import { printSeatingPlan } from "./seating-plan-print-browser";
 import type {
   SeatingChartProps,
   SeatingGuest,
@@ -32,7 +29,7 @@ import type {
   SeatingTable,
 } from "@/components/Dashboard/seating-chart-types";
 
-export default function SeatingChart({ invitationId, guests, tables, onAssigned }: SeatingChartProps) {
+export default function SeatingChart({ invitationId, title = "", guests, tables, onAssigned }: SeatingChartProps) {
   const { d, locale } = useDashboardI18n();
   const { isDarkMode } = useTheme();
   const [draggedGuestId, setDraggedGuestId] = useState<string | null>(null);
@@ -57,6 +54,14 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
     tables[0]?.capacity || 8,
   );
   const [generating, setGenerating] = useState(false);
+  const plan = useSeatingPlan(invitationId);
+  const [tool, setTool] = useState<"move" | "draw">("move");
+  const [drawing, setDrawing] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState("");
+  const [printing, setPrinting] = useState(false);
+  const printCleanup = useRef<(() => void) | null>(null);
+  const printRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => { printRequest.current?.abort(); printCleanup.current?.(); }, []);
 
   const visibleTables = useMemo(() => {
     const known = new Set(tables.map((table) => table.id));
@@ -65,6 +70,10 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
       ...localTables.filter((table) => !known.has(table.id)),
     ];
   }, [tables, localTables]);
+  const layout = useMemo(() => seatingPlanWithTables(plan.editor.plan, visibleTables), [plan.editor.plan, visibleTables]);
+  const layoutDirty = seatingPlanKey(layout) !== plan.editor.savedKey || (plan.editor.revision === null && visibleTables.length > 0);
+  const layoutBusy = plan.loading || plan.saving || !plan.ready || generating || Boolean(savingGuestId);
+  const toolbarBusy = layoutBusy || drawing;
 
   const visibleGuests = useMemo(() => {
     const known = new Set(guests.map((guest) => guest.id));
@@ -100,17 +109,6 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
   const hasRosterFilter = Boolean(categoryFilter || tagFilter);
   const totalSeats = visibleTables.reduce((sum, table) => sum + table.capacity, 0);
   const assignedCount = visibleGuests.filter((guest) => guest.tableId).length;
-
-  const canvas = {
-    background: isDarkMode ? "#111113" : "#FBFAFA",
-    table: "#C07A84",
-    tableText: isDarkMode ? "#111111" : "#FFFFFF",
-    seatEmpty: isDarkMode ? "#0B0B0C" : "#FFFFFF",
-    seatOccupied: "#D9A3AA",
-    seatStroke: "#C07A84",
-    guestText: isDarkMode ? "#FFFFFF" : "#111111",
-    mutedText: isDarkMode ? "#A3A3A3" : "#737373",
-  };
 
   async function generateTables(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -149,6 +147,7 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
         );
         }
         created.push(data.table as SeatingTable);
+        setLocalTables([...created]);
       }
       setLocalTables(created);
       setMessage(locale === "en" ? `Seating plan created: ${count} tables × ${capacity} seats.` : `Denah dibuat: ${count} meja × ${capacity} bangku.`);
@@ -198,7 +197,7 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
   }
 
   function targetAtPoint(point: SeatingPoint) {
-    return findSeatingSeatTarget(point, visibleTables, visibleGuests, draggedGuestId);
+    return findSeatingSeatTarget(point, visibleTables, visibleGuests, draggedGuestId, layout);
   }
 
   function setHoverFromPoint(point: SeatingPoint) {
@@ -207,6 +206,7 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
   }
 
   async function assignGuestAtPoint(guestId: string, point: SeatingPoint) {
+    if (savingGuestId || plan.saving || !plan.ready) return;
     const target = targetAtPoint(point);
     setHoverTarget(null);
 
@@ -309,35 +309,29 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
     setMessage(d("Tukar posisi dibatalkan."));
   }
 
-  async function assignFromDrop(event: React.DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    if (!draggedGuestId) return;
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const scaleX = SEATING_STAGE_WIDTH / rect.width;
-    const scaleY = SEATING_STAGE_HEIGHT / rect.height;
-
-    await assignGuestAtPoint(draggedGuestId, {
-      x: (event.clientX - rect.left) * scaleX,
-      y: (event.clientY - rect.top) * scaleY,
-    });
+  async function saveLayout() {
+    if (toolbarBusy) return;
+    if (await plan.save(layout)) setMessage(d("Denah tersimpan."));
   }
 
-  async function handleCanvasGuestDragEnd(
-    guestId: string,
-    event: KonvaEventObject<DragEvent>,
-  ) {
-    const stage = event.target.getStage();
-    const point = stage?.getPointerPosition();
-    event.target.position({ x: 0, y: 0 });
-
-    if (!point) {
-      setDraggedGuestId(null);
-      setHoverTarget(null);
-      return;
-    }
-
-    await assignGuestAtPoint(guestId, point);
+  async function printLayout() {
+    if (toolbarBusy || printing) return;
+    setPrinting(true);
+    setMessage("");
+    printCleanup.current?.();
+    printRequest.current?.abort();
+    const controller = new AbortController();
+    printRequest.current = controller;
+    try {
+      const dispose = await printSeatingPlan(
+        <SeatingPlanPrint title={title} layout={layout} tables={visibleTables} guests={visibleGuests} locale={locale} />,
+        `${displayTitleCase(title) || d("Denah tamu")} — ${d("Denah tamu")}`,
+        document, undefined, controller.signal,
+      );
+      printCleanup.current = dispose;
+    } catch (error) {
+      if (!controller.signal.aborted) setMessage(d(error instanceof Error ? error.message : "Cetak belum dapat dibuka. Coba lagi."));
+    } finally { if (!controller.signal.aborted) setPrinting(false); }
   }
 
   return (
@@ -485,11 +479,14 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
             {filteredUnassigned.map((guest) => (
               <div
                 key={guest.id}
-                draggable
-                onDragStart={() => {
+                draggable={!toolbarBusy && tool === "move"}
+                onDragStart={(event) => {
+                  event.dataTransfer.setData("text/plain", guest.id);
+                  event.dataTransfer.effectAllowed = "move";
                   setDraggedGuestId(guest.id);
                   setSwapCandidate(null);
                 }}
+                onDragEnd={(event) => { if (event.dataTransfer.dropEffect === "none") { setDraggedGuestId(null); setHoverTarget(null); } }}
                 className="undara-dashboard-detail-card cursor-grab rounded-tr-[22px] border border-primary/20 bg-primary/[0.035] px-4 py-3 text-sm transition hover:border-primary/40 hover:bg-primary/[0.08] active:cursor-grabbing"
               >
                 <div className="truncate font-medium text-foreground">{guest.name}</div>
@@ -518,148 +515,35 @@ export default function SeatingChart({ invitationId, guests, tables, onAssigned 
           }
       >
 
-        <div
-          className="undara-dashboard-seating-stage min-w-0 overflow-hidden bg-primary/[0.025]"
-          onDragOver={(event) => {
-            event.preventDefault();
-            const rect = event.currentTarget.getBoundingClientRect();
-            const scaleX = SEATING_STAGE_WIDTH / rect.width;
-            const scaleY = SEATING_STAGE_HEIGHT / rect.height;
-            setHoverFromPoint({
-              x: (event.clientX - rect.left) * scaleX,
-              y: (event.clientY - rect.top) * scaleY,
-            });
-          }}
-          onDrop={assignFromDrop}
-        >
-          <div className="overflow-auto">
-            <Stage width={SEATING_STAGE_WIDTH} height={SEATING_STAGE_HEIGHT}>
-              <Layer>
-                <Rect
-                  x={0}
-                  y={0}
-                  width={SEATING_STAGE_WIDTH}
-                  height={SEATING_STAGE_HEIGHT}
-                  fill={canvas.background}
-                  listening={false}
-                />
-
-                {visibleTables.map((table, tableIndex) => {
-                  const center = seatingTablePoint(tableIndex, visibleTables.length);
-                  return (
-                    <Group key={table.id}>
-                      <Rect
-                        x={center.x - 48}
-                        y={center.y - 30}
-                        width={96}
-                        height={60}
-                        cornerRadius={table.shape === "ROUND" ? 48 : 10}
-                        fill={canvas.table}
-                      />
-                      <Text
-                        x={center.x - 44}
-                        y={center.y - 8}
-                        width={88}
-                        align="center"
-                        text={table.name}
-                        fontSize={13}
-                        fontStyle="bold"
-                        fill={canvas.tableText}
-                      />
-
-                      {Array.from({ length: table.capacity }).map((_, index) => {
-                        const seat = index + 1;
-                        const point = seatingSeatPoint(center, index, table.capacity);
-                        const guest = visibleGuests.find(
-                          (item) =>
-                            item.tableId === table.id &&
-                            item.seatNumber === seat,
-                        );
-                        const highlighted =
-                          hoverTarget?.table.id === table.id &&
-                          hoverTarget.seat === seat;
-                        const occupiedTarget = highlighted && Boolean(hoverTarget?.guest);
-
-                        return (
-                          <Group key={`${table.id}-${seat}`}>
-                            <Circle
-                              x={point.x}
-                              y={point.y}
-                              radius={highlighted ? SEATING_SEAT_RADIUS + 5 : SEATING_SEAT_RADIUS}
-                              fill={guest ? canvas.seatOccupied : canvas.seatEmpty}
-                              stroke={canvas.seatStroke}
-                              strokeWidth={highlighted ? 5 : 2}
-                              opacity={occupiedTarget ? 0.92 : 1}
-                              draggable={Boolean(guest)}
-                              onDragStart={() => {
-                                if (guest) {
-                                  setDraggedGuestId(guest.id);
-                                  setSwapCandidate(null);
-                                }
-                              }}
-                              onDragMove={(event) => {
-                                if (!guest) return;
-                                const stage = event.target.getStage();
-                                const pointer = stage?.getPointerPosition();
-                                if (pointer) setHoverFromPoint(pointer);
-                              }}
-                              onDragEnd={(event) =>
-                                guest && handleCanvasGuestDragEnd(guest.id, event)
-                              }
-                            />
-                            <Text
-                              x={point.x - 12}
-                              y={point.y - 6}
-                              width={24}
-                              align="center"
-                              text={String(seat)}
-                              fontSize={10}
-                              fontStyle="bold"
-                              fill={guest ? canvas.guestText : canvas.seatStroke}
-                              listening={false}
-                            />
-                            {guest && (
-                              <Text
-                                x={point.x - 42}
-                                y={point.y + 20}
-                                width={84}
-                                align="center"
-                                text={guest.name}
-                                fontSize={9}
-                                fill={canvas.guestText}
-                                listening={false}
-                              />
-                            )}
-                          </Group>
-                        );
-                      })}
-                    </Group>
-                  );
-                })}
-
-                {!visibleTables.length && (
-                  <Text
-                    x={80}
-                    y={285}
-                    width={940}
-                    align="center"
-                    text={d("Atur jumlah meja dan kursi untuk membuat denah.")}
-                    fontSize={15}
-                    fill={canvas.mutedText}
-                  />
-                )}
-              </Layer>
-            </Stage>
+        <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label={d("Alat denah")}>
+          <Button type="button" size="sm" variant={tool === "move" ? "default" : "outline"} aria-pressed={tool === "move"} disabled={toolbarBusy} onClick={() => setTool("move")}><MousePointer2 className="h-4 w-4" />{d("Pilih / geser")}</Button>
+          <Button type="button" size="sm" variant={tool === "draw" ? "default" : "outline"} aria-pressed={tool === "draw"} disabled={toolbarBusy || layout.paths.length >= SEATING_MAX_PATHS} onClick={() => setTool("draw")}><PencilLine className="h-4 w-4" />{d("Gambar jalur")}</Button>
+          <Button type="button" size="icon-sm" variant="outline" aria-label={d("Undo")} title={d("Undo")} disabled={toolbarBusy || !plan.editor.past.length} onClick={() => plan.dispatch({ type: "UNDO" })}><Undo2 className="h-4 w-4" /></Button>
+          <Button type="button" size="icon-sm" variant="outline" aria-label={d("Redo")} title={d("Redo")} disabled={toolbarBusy || !plan.editor.future.length} onClick={() => plan.dispatch({ type: "REDO" })}><Redo2 className="h-4 w-4" /></Button>
+          <Button type="button" size="sm" variant="outline" disabled={toolbarBusy || !layout.paths.length} onClick={() => plan.dispatch({ type: "EDIT", plan: { ...layout, paths: [] } })}><Trash2 className="h-4 w-4" />{d("Hapus jalur")}</Button>
+          <select aria-label={d("Pilih meja")} value={selectedTableId} disabled={toolbarBusy || tool !== "move"} onChange={(event) => setSelectedTableId(event.target.value)} className="min-h-11 max-w-44 rounded-md border border-border bg-background px-3 text-sm">
+            <option value="">{d("Pilih meja")}</option>{visibleTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}
+          </select>
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            <Button type="button" size="sm" disabled={toolbarBusy || !layoutDirty} onClick={() => void saveLayout()}><Save className="h-4 w-4" />{plan.saving ? d("Menyimpan...") : d("Simpan denah")}</Button>
+            <Button type="button" size="sm" variant="outline" disabled={toolbarBusy || printing} onClick={() => void printLayout()}><Printer className="h-4 w-4" />{printing ? d("Menyiapkan cetak...") : d("Cetak")}</Button>
           </div>
         </div>
-
-        <div className="mt-3 flex min-h-10 flex-wrap items-center justify-between gap-3 rounded-lg bg-background px-3 py-2 text-xs text-muted-foreground">
-          <span>{d("Tarik tamu ke kursi untuk menyimpan posisi.")}</span>
-          {savingGuestId && (
-            <span className="font-[family-name:var(--font-undara-mono)] text-[11px] uppercase tracking-[0.1em] text-primary">
-              {d("Menyimpan...")}
-            </span>
-          )}
+        <SeatingPlanCanvas layout={layout} tables={visibleTables} guests={visibleGuests} tool={tool} dark={isDarkMode} busy={layoutBusy}
+          draggedGuestId={draggedGuestId} hoverTarget={hoverTarget} selectedTableId={selectedTableId} onTableSelect={setSelectedTableId}
+          onTableMove={(id, point) => plan.dispatch({ type: "EDIT", plan: { ...layout, tables: { ...layout.tables, [id]: point } } })}
+          onPath={(points) => {
+            if (layout.paths.length >= SEATING_MAX_PATHS) { setMessage(d("Maksimal 20 jalur. Hapus jalur untuk menggambar lagi.")); return; }
+            plan.dispatch({ type: "EDIT", plan: { ...layout, paths: [...layout.paths, points] } });
+          }}
+          onDrawingChange={setDrawing}
+          onGuestStart={(id) => { setDraggedGuestId(id); setSwapCandidate(null); }} onGuestHover={setHoverFromPoint} onGuestDrop={assignGuestAtPoint}
+          onUndo={() => plan.dispatch({ type: "UNDO" })} onRedo={() => plan.dispatch({ type: "REDO" })}
+          label={d("Denah: pilih meja, lalu gunakan tombol panah untuk menggeser.")} emptyLabel={d("Atur jumlah meja dan kursi untuk membuat denah.")}
+        />
+        <div className="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground" role="status">
+          <span>{plan.loading ? d("Memuat denah...") : plan.saving || savingGuestId ? d("Menyimpan...") : plan.ready && layoutDirty ? d("Perubahan denah belum disimpan") : ""}</span>
+          {plan.error && <div className="flex flex-wrap items-center gap-2 text-primary"><span>{d(plan.error)}</span><Button type="button" size="sm" variant="outline" disabled={plan.loading || plan.saving || drawing} onClick={() => void plan.reload()}><RefreshCw className="h-4 w-4" />{d("Muat ulang denah")}</Button></div>}
         </div>
 
         {swapCandidate && (

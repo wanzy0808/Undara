@@ -322,6 +322,7 @@ export function PlacementWorkspace({
           ) : (
             <PlacementPanel
               invitationId={selectedId}
+              title={selectedEvent.title}
               guests={guests}
               tables={tables}
               accent={accent}
@@ -336,12 +337,14 @@ export function PlacementWorkspace({
 
 function PlacementPanel({
   invitationId,
+  title,
   guests,
   tables,
   accent,
   onRefresh,
 }: {
   invitationId: string;
+  title: string;
   guests: DashboardGuest[];
   tables: DashboardTable[];
   accent: string;
@@ -387,6 +390,7 @@ function PlacementPanel({
         <SeatingChart
           key={invitationId}
           invitationId={invitationId}
+          title={title}
           guests={guests}
           tables={tables}
           accent={accent}

@@ -65,7 +65,7 @@ Public visitors can explore all previews without an account. Choosing a usable t
   - 1 invitation template.
   - Publication.
   - RSVP.
-  - Guest management, including table/seating workflow where supported by the workspace.
+  - Guest management, including draggable table/seating layout, freehand bridal routes, event-scoped Save and A4/PDF print with a guest roster.
 - Event creation is not capped at three. Additional events are created and activated independently.
 - Payment/entitlement is event-scoped; buying one invitation must not unlock every event on the account.
 - Event data and invitation design may be prepared before payment. The intended lifecycle is:
@@ -214,7 +214,7 @@ Legacy `/invite/[slug]` routes remain for internal routing/backward-compatible b
 
 - `app/` — Next.js routes, layouts and server API endpoints; retain existing public URLs and event-scoped authorization.
 - `components/Landing/Pintu/`, `components/Layout/`, `components/Brand/`, `components/Marketing/` — landing portals, public shell, shared brand and marketing UI. The production four-door landing uses `components/Landing/Pintu/LandingDoorScene.tsx` and `PortalTransition.tsx`; the old `/jiplak`, `/pintu-lab` preview components and their engines are no longer present.
-- `components/Dashboard/` — customer event, invitation, RSVP, personal invitation, WA Blast, seating and other operational workspaces. `DashboardPrimitives.tsx` owns shared large-panel UI; `DashboardSidebar.tsx` and `dashboard-navigation.ts` own navigation. `EventPanel.tsx` uses adjacent `EventFields.tsx`, `event-panel-helpers.ts` and `event-panel-types.ts`; `SeatingChart.tsx` uses `seating-chart-geometry.ts` and `seating-chart-types.ts`.
+- `components/Dashboard/` — customer event, invitation, RSVP, personal invitation, WA Blast, seating and other operational workspaces. `DashboardPrimitives.tsx` owns shared large-panel UI; `DashboardSidebar.tsx` and `dashboard-navigation.ts` own navigation. `EventPanel.tsx` uses adjacent `EventFields.tsx`, `event-panel-helpers.ts` and `event-panel-types.ts`; `SeatingChart.tsx` coordinates `SeatingPlanCanvas.tsx`, `SeatingPlanPrint.tsx`, `use-seating-plan.ts` and shared seat geometry/types. `lib/seating/` owns the private layout codec, bounded undo/pointer state, client persistence and canonical colors.
 - `components/InvitationStudio/` — live event-scoped Studio. The `/studio` event-selection gateway uses `StudioEntrySection.tsx` here, while the unrelated marketing `DigitalInvitation/StudioSection.tsx` remains the landing CTA. `InvitationDesigner.tsx` owns editing state and save operations; `TemplatePanel.tsx`, `AssetPanel.tsx`, `AssetLayerInspector.tsx`, `PhotoPanel.tsx`, `DesignerPanels.tsx` and `InvitationPreview.tsx` handle their existing presentation; `designer-*.ts` define shared state/types/config. `RsvpForm.tsx` is used by public invitation templates; customer Guest Management resides in `components/Dashboard/`, **not** the removed `components/InvitationStudio/GuestManagement.tsx`.
 - `components/PublicInvitation/` — real template scenes, shared RSVP/Wishes/music/asset rendering; `UniversalInvitationTemplate.tsx` and `RomanticRoseTemplate.tsx` retain their visual identity while sharing `lib/invitations/countdown.ts`. Theme-specific rendered React artwork, such as `ZenAtelierArtwork.tsx`, lives next to the renderer; `assets/templates/zen-atelier/README.md` remains an asset reference, not a runtime code module.
 - `components/Usher/`, `components/Payments/` — operational check-in and package/checkout UI.
@@ -245,6 +245,8 @@ pnpm db:deploy
 ```
 
 `pnpm build` / GitHub Build Validation does **not** apply PostgreSQL migrations. A deployment that updates Prisma schema-dependent application code must run `pnpm db:deploy` against the target production `DATABASE_URL` before the updated app is relied on. If the application returns a database-schema synchronization error while saving/loading events, apply the pending migrations on the server first.
+
+The seating editor requires migration `20261006043000_event_seating_plan`. In **Manajemen Tamu → Pengaturan Meja**, use **Pilih / geser** to move tables together with their seats or place guests, **Gambar jalur** to draw with the mouse, then **Simpan denah** to update the event's private layout. Undo/Redo affects layout; guest assignments retain their existing immediate server save. **Cetak** prints the current layout and roster, including unsaved geometry, through the browser's printer/PDF dialog. Long plans use overlapping A4 landscape pages; printing does not auto-save or create a public link.
 
 ### Private invitation media on a VPS
 

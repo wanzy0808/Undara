@@ -758,3 +758,15 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] DRAFT/REVIEW/PUBLISHED reopen and Save to the same ID, preserving status and author permissions without version records; verified with actual action/route fixtures and dashboard/toolbar SSR.
 - [x] Saved-template editing: 701/701 regression tests, production build (72/72) and TypeScript PASS; no new ESLint diagnostic class compared to committed baseline.
 - [ ] Browser QA with signed-in Owner/Designer: published edit → Save → reopen; verify public catalog update and unchanged existing customer snapshot.
+
+
+### Seating layout, routes and print — 6 October 2026
+
+- [x] Drag tables with their seats; guest drop/atomic swap uses current table positions and the existing canonical Guest records.
+- [x] Freehand mouse/pointer bridal routes with direction, bounded sampling, cancel, Undo/Redo/clear and keyboard table movement.
+- [x] One private server layout per event, same-record Save/reload, table/event/entitlement validation and stale-snapshot rejection; failed load cannot overwrite an unknown plan, and failed Save retains the draft.
+- [x] Isolated print/PDF content with canonical Undara branding, current SVG geometry, A4 landscape pages and full table/seat guest roster; tall maps overlap across pages, and print does not auto-save.
+- [x] 735/735 local regression tests, production build 73/73, TypeScript and changed-source/test ESLint (zero errors/warnings) PASS. Storage commit Build Validation `37414013421` and Orphan Audit `37414013573` PASS; UI commit CI to be observed after publication.
+- [ ] Apply `20261006043000_event_seating_plan` to the target database with `pnpm db:deploy` after pull; validate real Save → reopen and event isolation with signed-in owners.
+- [ ] Browser QA on desktop/tablet/phone: moved-table guest drops, occupied-seat swap, scroll/scale, pointer interruption, keyboard Undo/Redo, Light/Dark, failed Save retry and parallel-session conflict → reload/Undo.
+- [ ] Verify actual browser A4/PDF pagination, long names/large layouts and a physical printer; fixture/SSR/adapter tests do not complete this check.

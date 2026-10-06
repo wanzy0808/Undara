@@ -1301,6 +1301,8 @@ Requirements:
 
 Saat user mengganti event, local seating state harus di-reset agar data event lama tidak tercampur.
 
+Posisi meja default ikut dimaterialisasi saat Simpan agar perubahan jumlah meja tidak menggeser meja yang sudah disimpan. Meja terpilih juga dapat digeser dengan tombol panah (Shift untuk langkah lebih besar). Jalur yang terputus/cancelled tidak disimpan; stroke panjang dipadatkan dalam batas codec. Reload setelah konflik menyediakan Undo untuk memulihkan draft sebelumnya. Denah cetak yang tinggi dibagi ke beberapa halaman A4 dengan area tumpang tindih agar meja/kursi di tepi tetap terbaca; daftar tamu lengkap mengikuti di halaman terpisah.
+
 ---
 
 ## 11. WA Blast
@@ -3133,3 +3135,16 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Implementation / area:** First batch adds one private `SeatingPlan` per Invitation, bounded layout codec, canonical geometry and authenticated no-store GET/PUT. Save locks the owned event, validates actual table IDs and checks the server timestamp before same-record upsert; no Guest or public invitation design writes. Schema/client generation and migration source are distinct from target database deployment. UI/drawing/print follow in a separate commit. Commit: `feat(seating): persist private event floor plans`.
 
 **Observed local validation:** 712/712 regression tests PASS, focused API/codec/origin suite 12/12 PASS, production `next build --webpack` PASS (73/73 entries), TypeScript and changed-source ESLint PASS. Prisma client generated locally with a non-production placeholder URL; this does not connect to or migrate a database. Target migration and browser/physical print verification remain pending. UI/drawing/print is not yet shipped in this storage-only checkpoint. CI will be observed after publication.
+
+**Observed publication follow-up:** Storage commit `b6d46c158c1ebc9640ede855e45cd2b6e079f53a` reached `main`. Build Validation run `37414013421` / job `112108510772` succeeded: downloaded job log confirms 712 tests, 712 passes, zero failures, successful compile and 73/73 static-generation entries. Orphan Audit run `37414013573` succeeded for the same SHA. This does not apply the migration to any target database.
+
+
+### 2026-10-06 — Draggable seating, freehand routes and print
+
+**Request / implementation:** The second batch connects the private event layout to Pengaturan Meja. `SeatingChart.tsx` remains the orchestration layer; its expanded canvas, server state and print responsibilities use `SeatingPlanCanvas.tsx`, `use-seating-plan.ts` and `SeatingPlanPrint.tsx`. Existing Konva and atomic Guest placement/swap remain authoritative. Moving a table moves its seats; guest drop targets use the new centers. Default centers are materialized on Save and preserved on reload. Mouse/pointer route drawing has one captured pointer, bounded sampling, cancellation, direction arrows and Undo/Redo/clear. Selected tables support arrow keys and Shift. The hook blocks Save until a successful load, aborts stale requests on unmount, prevents double submits, retains drafts on failure and keeps newer edits while acknowledging an older Save. Reload can undo back to the prior draft.
+
+**Print / design:** An isolated React print frame uses current geometry and actual guest names, the canonical Undara wordmark/Roboto and light brand colors. SVG and full table/seat roster print as A4 landscape/PDF; tall maps use overlapping pages. Printing never auto-saves, creates a public URL, includes dashboard controls or copies QR tokens. Font/image readiness and abort/failure cleanup are tested at the adapter boundary. Existing Dashboard panels/controls and ID/EN labels are reused; the scoped design pass follows the Undara orchestrator and pinned Taste/Emil/Impeccable guidance. No runtime animation, dependency or additional schema change. Commit: `feat(seating): add draggable plans, bridal paths and printing`.
+
+**Observed local validation:** 735/735 regression tests PASS, including 23 new editor/client/hook/canvas-handler/print-SSR/print-adapter cases and the 11 storage/API cases from the first batch. Production `next build --webpack` PASS (73/73 entries, including TypeScript), standalone `pnpm exec tsc --noEmit` PASS and changed-source/test ESLint PASS (13 files, zero errors/warnings). Repository naming validation required changing the JSX print helper to a `.ts` helper with `createElement`; the full suite passed after that correction. `git diff --check` PASS. UI commit CI is pending publication at this checkpoint.
+
+**Limits / deployment:** Migration `20261006043000_event_seating_plan` has not been applied to a local or production database; run `pnpm db:deploy` against the target instance after pull, then generate its client as needed. Source/handler/SSR/adapter fixtures are not browser E2E or physical-print sign-off. Signed-in save/reopen, actual pointer behavior on desktop/mobile, A4/PDF browser pagination and real printer verification remain open in `checklist.md`. No customer database data was read or modified.

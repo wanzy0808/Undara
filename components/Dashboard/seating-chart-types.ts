@@ -20,6 +20,7 @@ export type SeatingTable = {
 
 export type SeatingChartProps = {
   invitationId: string;
+  title?: string;
   guests: SeatingGuest[];
   tables: SeatingTable[];
   accent?: string;
