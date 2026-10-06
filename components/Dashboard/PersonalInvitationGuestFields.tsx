@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
@@ -60,11 +61,15 @@ export function PersonalInvitationGuestFields({
   guestName = "",
   onChange,
   disabled = false,
+  compact = false,
+  children,
 }: {
   value: GuestInvitationForm;
   guestName?: string;
   onChange: (next: GuestInvitationForm) => void;
   disabled?: boolean;
+  compact?: boolean;
+  children?: ReactNode;
 }) {
   const { d } = useDashboardI18n();
   const envelopePreview = formatPersonalEnvelopeAddress({
@@ -78,8 +83,8 @@ export function PersonalInvitationGuestFields({
     onChange({ ...value, [key]: next });
   }
 
-  return (
-    <div className="space-y-4">
+  const mainFields = (
+    <>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block min-w-0 text-sm font-medium text-foreground">
           {d("Jenis penerima")}
@@ -135,91 +140,102 @@ export function PersonalInvitationGuestFields({
           <option value="VVIP">VVIP</option>
         </select>
       </label>
+    </>
+  );
+  const additionalFields = (
+    <div className="space-y-4">
+      <div className="rounded-[var(--undara-control-radius)] border border-primary/20 bg-primary/[.025] p-3">
+        <label className="flex items-start justify-between gap-4">
+          <span className="min-w-0">
+            <strong className="block text-sm font-semibold text-foreground">{d("Tampilkan nama penerima di amplop")}</strong>
+            <span className="mt-1 block text-xs leading-5 text-muted-foreground">{d("Matikan untuk memakai amplop umum tanpa nama tamu.")}</span>
+          </span>
+          <input
+            type="checkbox"
+            checked={value.personalEnvelopeEnabled}
+            onChange={(event) => set("personalEnvelopeEnabled", event.target.checked)}
+            disabled={disabled}
+            className="mt-1 h-4 w-4 accent-primary"
+            aria-label={d("Tampilkan nama penerima di amplop")}
+          />
+        </label>
+        {value.personalEnvelopeEnabled && (
+          <label className="mt-3 block min-w-0 text-sm font-medium text-foreground">
+            {d("Bahasa sapaan amplop")}
+            <select
+              value={value.personalLanguage}
+              onChange={(event) => set("personalLanguage", event.target.value as "ID" | "EN")}
+              disabled={disabled}
+              className="mt-1.5 min-h-10 w-full border border-primary/25 bg-background px-3 text-sm text-foreground"
+            >
+              <option value="ID">Indonesia</option>
+              <option value="EN">English</option>
+            </select>
+          </label>
+        )}
+        {!compact && value.personalEnvelopeEnabled && (
+          <p className="mt-3 break-words text-xs leading-5 text-muted-foreground" aria-live="polite">
+            {envelopePreview || (value.recipientType === "COUPLE"
+              ? value.personalLanguage === "EN" ? "Dear : Mr Andi and Mrs Sari" : "Kepada Yth : Bapak Andi dan Ibu Sari"
+              : value.personalLanguage === "EN" ? "Dear : [Name]" : "Kepada Yth : [Nama]")}
+          </p>
+        )}
+      </div>
+      <label className="block min-w-0 text-sm font-medium text-foreground">
+        {d("Nama di amplop (opsional)")}
+        <Input
+          value={value.personalAddressee}
+          maxLength={160}
+          onChange={(event) => set("personalAddressee", event.target.value)}
+          placeholder={value.recipientType === "COUPLE" ? d("Contoh: Andi & Sari") : d("Contoh: Bapak Andi & Keluarga")}
+          disabled={disabled || !value.personalEnvelopeEnabled}
+          className="mt-1.5"
+        />
+        <span className="mt-1 block text-xs text-muted-foreground">
+          {d("Kosongkan untuk memakai nama tamu di daftar.")}
+          {value.recipientType === "COUPLE" && (
+            <> {d("Untuk pasangan, tulis dua nama dengan tanda & agar sapaan Bapak/Ibu atau Mr/Mrs terbentuk otomatis.")}</>
+          )}
+        </span>
+      </label>
+      <label className="block min-w-0 text-sm font-medium text-foreground">
+        {d("Kelompok tamu (opsional)")}
+        <Input
+          value={value.groupText}
+          onChange={(event) => set("groupText", event.target.value)}
+          placeholder={d("Keluarga, sahabat, rekan kerja")}
+          disabled={disabled}
+          className="mt-1.5"
+        />
+        <span className="mt-1 block text-xs text-muted-foreground">
+          {d("Pisahkan beberapa kelompok dengan koma.")}
+        </span>
+      </label>
+      <label className="block min-w-0 text-sm font-medium text-foreground">
+        {d("Pesan khusus (opsional)")}
+        <textarea
+          value={value.personalGreeting}
+          maxLength={280}
+          onChange={(event) => set("personalGreeting", event.target.value)}
+          placeholder={d("Sapaan atau pesan singkat untuk penerima")}
+          disabled={disabled}
+          rows={3}
+          className="mt-1.5 min-h-24 w-full resize-y border border-primary/25 bg-background px-3 py-2.5 text-sm text-foreground"
+        />
+      </label>
+    </div>
+  );
+  return compact ? (
+    <details className="border-t border-primary/15 pt-3">
+      <summary className="cursor-pointer text-sm font-semibold text-primary">{d("Pengaturan tambahan")}</summary>
+      <div className="mt-4 space-y-4">{children}{mainFields}{additionalFields}</div>
+    </details>
+  ) : (
+    <div className="space-y-4">
+      {children}{mainFields}
       <details className="border-t border-primary/15 pt-3">
-        <summary className="cursor-pointer text-sm font-semibold text-primary">
-          {d("Pengaturan tambahan")}
-        </summary>
-        <div className="mt-4 space-y-4">
-          <div className="rounded-[var(--undara-control-radius)] border border-primary/20 bg-primary/[.025] p-3">
-            <label className="flex items-start justify-between gap-4">
-              <span className="min-w-0">
-                <strong className="block text-sm font-semibold text-foreground">{d("Tampilkan nama penerima di amplop")}</strong>
-                <span className="mt-1 block text-xs leading-5 text-muted-foreground">{d("Matikan untuk memakai amplop umum tanpa nama tamu.")}</span>
-              </span>
-              <input
-                type="checkbox"
-                checked={value.personalEnvelopeEnabled}
-                onChange={(event) => set("personalEnvelopeEnabled", event.target.checked)}
-                disabled={disabled}
-                className="mt-1 h-4 w-4 accent-primary"
-                aria-label={d("Tampilkan nama penerima di amplop")}
-              />
-            </label>
-            {value.personalEnvelopeEnabled && (
-              <label className="mt-3 block min-w-0 text-sm font-medium text-foreground">
-                {d("Bahasa sapaan amplop")}
-                <select
-                  value={value.personalLanguage}
-                  onChange={(event) => set("personalLanguage", event.target.value as "ID" | "EN")}
-                  disabled={disabled}
-                  className="mt-1.5 min-h-10 w-full border border-primary/25 bg-background px-3 text-sm text-foreground"
-                >
-                  <option value="ID">Indonesia</option>
-                  <option value="EN">English</option>
-                </select>
-              </label>
-            )}
-            {value.personalEnvelopeEnabled && (
-              <p className="mt-3 break-words text-xs leading-5 text-muted-foreground" aria-live="polite">
-                {envelopePreview || (value.recipientType === "COUPLE"
-                  ? value.personalLanguage === "EN" ? "Dear : Mr Andi and Mrs Sari" : "Kepada Yth : Bapak Andi dan Ibu Sari"
-                  : value.personalLanguage === "EN" ? "Dear : [Name]" : "Kepada Yth : [Nama]")}
-              </p>
-            )}
-          </div>
-          <label className="block min-w-0 text-sm font-medium text-foreground">
-            {d("Nama di amplop (opsional)")}
-            <Input
-              value={value.personalAddressee}
-              maxLength={160}
-              onChange={(event) => set("personalAddressee", event.target.value)}
-              placeholder={value.recipientType === "COUPLE" ? d("Contoh: Andi & Sari") : d("Contoh: Bapak Andi & Keluarga")}
-              disabled={disabled || !value.personalEnvelopeEnabled}
-              className="mt-1.5"
-            />
-            <span className="mt-1 block text-xs text-muted-foreground">
-              {d("Kosongkan untuk memakai nama tamu di daftar.")}
-              {value.recipientType === "COUPLE" && (
-                <> {d("Untuk pasangan, tulis dua nama dengan tanda & agar sapaan Bapak/Ibu atau Mr/Mrs terbentuk otomatis.")}</>
-              )}
-            </span>
-          </label>
-          <label className="block min-w-0 text-sm font-medium text-foreground">
-            {d("Kelompok tamu (opsional)")}
-            <Input
-              value={value.groupText}
-              onChange={(event) => set("groupText", event.target.value)}
-              placeholder={d("Keluarga, sahabat, rekan kerja")}
-              disabled={disabled}
-              className="mt-1.5"
-            />
-            <span className="mt-1 block text-xs text-muted-foreground">
-              {d("Pisahkan beberapa kelompok dengan koma.")}
-            </span>
-          </label>
-          <label className="block min-w-0 text-sm font-medium text-foreground">
-            {d("Pesan khusus (opsional)")}
-            <textarea
-              value={value.personalGreeting}
-              maxLength={280}
-              onChange={(event) => set("personalGreeting", event.target.value)}
-              placeholder={d("Sapaan atau pesan singkat untuk penerima")}
-              disabled={disabled}
-              rows={3}
-              className="mt-1.5 min-h-24 w-full resize-y border border-primary/25 bg-background px-3 py-2.5 text-sm text-foreground"
-            />
-          </label>
-        </div>
+        <summary className="cursor-pointer text-sm font-semibold text-primary">{d("Pengaturan tambahan")}</summary>
+        <div className="mt-4">{additionalFields}</div>
       </details>
     </div>
   );

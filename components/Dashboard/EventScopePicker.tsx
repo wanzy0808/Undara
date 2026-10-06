@@ -17,9 +17,10 @@ type Props = {
   value: string;
   onChange: (id: string) => void;
   disabled?: boolean;
+  label?: string;
 };
 
-export default function EventScopePicker({ events, value, onChange, disabled = false }: Props) {
+export default function EventScopePicker({ events, value, onChange, disabled = false, label }: Props) {
   const { d } = useDashboardI18n();
 
   if (!events.length) {
@@ -41,7 +42,7 @@ export default function EventScopePicker({ events, value, onChange, disabled = f
     <div className="max-w-xl">
       <label className="block">
         <span className="mb-1.5 block text-sm font-semibold text-foreground">
-          {d("Pilih acara")}
+          {label ?? d("Pilih acara")}
         </span>
         <span className="relative block">
           <select
@@ -49,7 +50,7 @@ export default function EventScopePicker({ events, value, onChange, disabled = f
             value={value}
             onChange={(event) => onChange(event.target.value)}
             disabled={disabled}
-            aria-label={d("Pilih acara")}
+            aria-label={label ?? d("Pilih acara")}
             className="min-h-11 w-full appearance-none border border-primary/25 bg-background px-4 pr-10 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed"
           >
             {events.map((event) => (

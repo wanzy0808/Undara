@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ContactRound, Eye, Send } from "lucide-react";
 import EventScopePicker from "@/components/Dashboard/EventScopePicker";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
@@ -38,8 +38,12 @@ export default function PersonalInvitationPanel({
   const { d } = useDashboardI18n();
   const [events, setEvents] = useState<PersonalInvitationEvent[]>([]);
   const [eventId, setEventId] = useState("");
+  const activeEventId = useRef(eventId);
   const [personal, setPersonal] = useState<PersonalInvitationItem[]>([]);
   const [guests, setGuests] = useState<PersonalInvitationGuest[]>([]);
+  const [dataEventId, setDataEventId] = useState("");
+  const loadRequest = useRef<AbortController | null>(null);
+  const creating = useRef(false);
   const [guestId, setGuestId] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,6 +63,8 @@ export default function PersonalInvitationPanel({
     () => events.find((event) => event.id === eventId) ?? null,
     [events, eventId],
   );
+
+  useEffect(() => { activeEventId.current = eventId; }, [eventId]);
 
   const loadEvents = useCallback(async () => {
     setEventsLoading(true);
@@ -108,9 +114,15 @@ export default function PersonalInvitationPanel({
   }, [selectedEventId, events]);
 
   const loadCurrent = useCallback(async () => {
-    if (!eventId || !selectedEvent) {
+    if (activeEventId.current !== eventId) return;
+    loadRequest.current?.abort();
+    const request = new AbortController();
+    loadRequest.current = request;
+
+    if (!eventId) {
       setPersonal([]);
       setGuests([]);
+      setDataEventId("");
       setLoading(false);
       return;
     }
@@ -123,14 +135,17 @@ export default function PersonalInvitationPanel({
       const [personalResponse, guestResponse] = await Promise.all([
         fetch(`/api/personal-invitations?invitationId=${encodedId}`, {
           cache: "no-store",
+          signal: request.signal,
         }),
         fetch(`/api/guests?invitationId=${encodedId}`, {
           cache: "no-store",
+          signal: request.signal,
         }),
       ]);
 
       const personalData = await personalResponse.json().catch(() => null);
       const guestData = await guestResponse.json().catch(() => null);
+      if (request.signal.aborted) return;
 
       if (!personalResponse.ok) {
         throw new Error(
@@ -149,18 +164,21 @@ export default function PersonalInvitationPanel({
         (personalData?.invitations ?? []) as PersonalInvitationItem[],
       );
       setGuests((guestData?.guests ?? []) as PersonalInvitationGuest[]);
+      setDataEventId(eventId);
     } catch (error) {
+      if (request.signal.aborted) return;
       setPersonal([]);
       setGuests([]);
+      setDataEventId(eventId);
       setNotice(
         error instanceof Error
           ? error.message
           : d("Personal Invitation belum dapat dimuat."),
       );
     } finally {
-      setLoading(false);
+      if (!request.signal.aborted) setLoading(false);
     }
-  }, [d, eventId, selectedEvent]);
+  }, [d, eventId]);
 
   useEffect(() => {
     loadEvents().catch(() => undefined);
@@ -175,27 +193,44 @@ export default function PersonalInvitationPanel({
     setPasswordId(null);
     setPassword("");
     loadCurrent().catch(() => undefined);
+    return () => loadRequest.current?.abort();
   }, [eventId, loadCurrent]);
 
+  const currentData = dataEventId === eventId;
+  const scopedPersonal = useMemo(() => currentData ? personal : [], [currentData, personal]);
+  const scopedGuests = useMemo(() => currentData ? guests : [], [currentData, guests]);
   const personalIds = useMemo(
-    () => new Set(personal.map((item) => item.id)),
-    [personal],
+    () => new Set(scopedPersonal.map((item) => item.id)),
+    [scopedPersonal],
   );
 
   const availableGuests = useMemo(
-    () => guests.filter((item) => !personalIds.has(item.id)),
-    [guests, personalIds],
+    () => scopedGuests.filter((item) => !personalIds.has(item.id)),
+    [scopedGuests, personalIds],
   );
 
   function selectExistingGuest(id: string) {
-    setGuestId(id);
     const guest = availableGuests.find((item) => item.id === id);
+    if (id && !guest) return;
+    setGuestId(id);
+    setName(guest?.name ?? "");
+    setPhone(guest?.phone ?? "");
     setProfile(guest ? guestInvitationFormFrom(guest) : { ...emptyGuestInvitationForm });
   }
 
-  async function createFromExisting() {
-    if (!eventId || !guestId) return;
+  function changeRecipientName(value: string) {
+    if (guestId) {
+      setGuestId("");
+      setPhone("");
+      setProfile({ ...emptyGuestInvitationForm });
+    }
+    setName(value);
+  }
 
+  async function createFromExisting() {
+    if (!eventId || !guestId || creating.current || !availableGuests.some((guest) => guest.id === guestId)) return;
+
+    creating.current = true;
     setBusyId("create-existing");
     setNotice("");
 
@@ -210,6 +245,7 @@ export default function PersonalInvitationPanel({
         }),
       });
       const data = await response.json().catch(() => null);
+      if (activeEventId.current !== eventId) return;
 
       if (!response.ok) {
         throw new Error(
@@ -218,23 +254,28 @@ export default function PersonalInvitationPanel({
       }
 
       setGuestId("");
+      setName("");
+      setPhone("");
       setProfile({ ...emptyGuestInvitationForm });
       await loadCurrent();
-      setNotice(d("Personal Invitation dibuat untuk acara ini."));
+      if (activeEventId.current === eventId) setNotice(d("Undangan personal dibuat."));
     } catch (error) {
+      if (activeEventId.current !== eventId) return;
       setNotice(
         error instanceof Error
           ? error.message
           : d("Personal Invitation belum dapat dibuat."),
       );
     } finally {
+      creating.current = false;
       setBusyId(null);
     }
   }
 
   async function createNew() {
-    if (!eventId || !name.trim()) return;
+    if (!eventId || !name.trim() || creating.current || guestId) return;
 
+    creating.current = true;
     setBusyId("create-new");
     setNotice("");
 
@@ -250,6 +291,7 @@ export default function PersonalInvitationPanel({
         }),
       });
       const data = await response.json().catch(() => null);
+      if (activeEventId.current !== eventId) return;
 
       if (!response.ok) {
         throw new Error(
@@ -261,14 +303,16 @@ export default function PersonalInvitationPanel({
       setPhone("");
       setProfile({ ...emptyGuestInvitationForm });
       await loadCurrent();
-      setNotice(d("Tamu dan Personal Invitation dibuat untuk acara ini."));
+      if (activeEventId.current === eventId) setNotice(d("Undangan personal dibuat."));
     } catch (error) {
+      if (activeEventId.current !== eventId) return;
       setNotice(
         error instanceof Error
           ? error.message
           : d("Personal Invitation belum dapat dibuat."),
       );
     } finally {
+      creating.current = false;
       setBusyId(null);
     }
   }
@@ -369,13 +413,10 @@ export default function PersonalInvitationPanel({
     }
   }
 
-  const publishedCount = personal.filter(
+  const publishedCount = scopedPersonal.filter(
     (item) => item.personalPublished,
   ).length;
-  const protectedCount = personal.filter(
-    (item) => item.personalPasswordProtected,
-  ).length;
-  const totalViews = personal.reduce(
+  const totalViews = scopedPersonal.reduce(
     (sum, item) => sum + (item.personalViewCount || 0),
     0,
   );
@@ -386,6 +427,7 @@ export default function PersonalInvitationPanel({
         title={d("Undangan Personal")}
       >
         <EventScopePicker
+          label={d("Pilih undangan")}
           events={events}
           value={eventId}
           onChange={(id) => { setEventId(id); onSelectEvent(id); }}
@@ -401,7 +443,7 @@ export default function PersonalInvitationPanel({
             <DashboardMetricCard
               icon={ContactRound}
               label={d("Total")}
-              value={String(personal.length)}
+              value={String(scopedPersonal.length)}
             />
             <DashboardMetricCard
               icon={Send}
@@ -417,27 +459,26 @@ export default function PersonalInvitationPanel({
 
           <div className="mt-5 grid gap-4 2xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.7fr)]">
             <PersonalInvitationCreatePanel
+              key={eventId}
               selectedEvent={selectedEvent}
               availableGuests={availableGuests}
-              guestId={guestId}
+              guestId={currentData ? guestId : ""}
               setGuestId={selectExistingGuest}
-              name={name}
-              setName={setName}
-              phone={phone}
+              name={currentData ? name : ""}
+              setName={changeRecipientName}
+              phone={currentData ? phone : ""}
               setPhone={setPhone}
-              profile={profile}
+              profile={currentData ? profile : { ...emptyGuestInvitationForm }}
               setProfile={setProfile}
-              loading={loading}
+              loading={loading || !currentData}
               busyId={busyId}
-              protectedCount={protectedCount}
-              draftCount={personal.length - publishedCount}
               onCreateExisting={createFromExisting}
               onCreateNew={createNew}
             />
 
             <PersonalInvitationListPanel
               selectedEvent={selectedEvent}
-              personal={personal}
+              personal={scopedPersonal}
               editingId={editingId}
               editName={editName}
               setEditName={setEditName}

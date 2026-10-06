@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ContactRound,
@@ -13,6 +14,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { formatPersonalEnvelopeAddress } from "@/lib/guests/personal-envelope";
@@ -33,6 +42,7 @@ import type {
 } from "@/components/Dashboard/personal-invitation-types";
 
 export function PersonalInvitationCreatePanel({
+  selectedEvent,
   availableGuests,
   guestId,
   setGuestId,
@@ -44,8 +54,6 @@ export function PersonalInvitationCreatePanel({
   setProfile,
   loading,
   busyId,
-  protectedCount,
-  draftCount,
   onCreateExisting,
   onCreateNew,
 }: {
@@ -61,20 +69,25 @@ export function PersonalInvitationCreatePanel({
   setProfile: (next: GuestInvitationForm) => void;
   loading: boolean;
   busyId: string | null;
-  protectedCount: number;
-  draftCount: number;
   onCreateExisting: () => void;
   onCreateNew: () => void;
 }) {
   const { d } = useDashboardI18n();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [limit, setLimit] = useState(40);
   const selectedGuest = availableGuests.find((guest) => guest.id === guestId);
+  const matches = availableGuests.filter((guest) =>
+    `${guest.name} ${guest.phone ?? ""}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+  );
   const busy = loading || Boolean(busyId);
   const valid = Number.isInteger(profile.invitedPax) && profile.invitedPax >= 1
     && profile.invitedPax <= 30 && Boolean(profile.category.trim())
     && Boolean(guestId ? selectedGuest : name.trim());
+  const envelopeAddress = formatPersonalEnvelopeAddress({ name: selectedGuest?.name ?? name, ...profile });
 
   return (
-    <DashboardPanel title={d("Buat Undangan Personal")}>
+    <DashboardPanel title={displayTitleCase(selectedEvent.title.trim() || d("Undangan"))}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -84,79 +97,73 @@ export function PersonalInvitationCreatePanel({
         }}
         className="space-y-5"
       >
-        <label className="block min-w-0 text-sm font-medium text-foreground">
-          {d("Sumber penerima")}
-          <select
-            value={guestId}
-            onChange={(event) => setGuestId(event.target.value)}
-            disabled={busy}
-            className="mt-1.5 min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground"
-          >
-            <option value="">{displayTitleCase(d("Tambah tamu baru"))}</option>
-            {availableGuests.map((guest) => (
-              <option key={guest.id} value={guest.id} className="undara-ui-name">
-                {displayTitleCase(guest.name)}{guest.phone ? ` · ${guest.phone}` : ""}
-              </option>
-            ))}
-          </select>
-          <span className="mt-1 block text-xs text-muted-foreground">
-            {d("Pilih tamu yang sudah ada agar nama dan nomor tidak tersimpan dua kali.")}
-          </span>
-        </label>
+        <div className="space-y-2">
+          <label className="block min-w-0 text-sm font-medium text-foreground">
+            {d("Nama tamu")}
+            <Input value={name} maxLength={120} onChange={(event) => setName(event.target.value)}
+              placeholder={d("Contoh: Bapak Andi")} required disabled={busy} className="mt-1.5" />
+          </label>
+          {availableGuests.length > 0 && (
+            <Dialog open={pickerOpen} onOpenChange={(open) => { setPickerOpen(open); if (open) { setQuery(""); setLimit(40); } }}>
+              <DialogTrigger render={<Button type="button" size="sm" variant="outline" disabled={busy} />}>
+                <ContactRound className="size-4" />{d("Pilih tamu tersimpan")}
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{d("Daftar tamu")}</DialogTitle>
+                  <DialogDescription>{displayTitleCase(selectedEvent.title)}</DialogDescription>
+                </DialogHeader>
+                <Input type="search" value={query} aria-label={d("Cari nama tamu")}
+                  placeholder={d("Cari nama tamu")} onChange={(event) => { setQuery(event.target.value); setLimit(40); }} />
+                <div className="max-h-[45dvh] space-y-1 overflow-y-auto">
+                  {matches.slice(0, limit).map((guest) => (
+                    <Button key={guest.id} type="button" variant="ghost" disabled={busy}
+                      className="h-auto min-h-11 w-full justify-start whitespace-normal py-3 text-left"
+                      onClick={() => { setGuestId(guest.id); setPickerOpen(false); }}>
+                      <span className="min-w-0">
+                        <span className="block break-words">{displayTitleCase(guest.name)}</span>
+                        {(guest.phone || guest.category) && <span className="mt-1 block text-xs text-muted-foreground">{[guest.phone, guest.category === "REGULAR" ? d("Reguler") : guest.category].filter(Boolean).join(" · ")}</span>}
+                      </span>
+                    </Button>
+                  ))}
+                  {!matches.length && <DashboardEmptyState title={d("Tidak ada hasil")} />}
+                </div>
+                {matches.length > limit && <Button type="button" variant="outline" onClick={() => setLimit((current) => current + 40)}>{d("Tampilkan lebih banyak")}</Button>}
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
 
-        {selectedGuest ? (
-          <div className="border-y border-primary/15 py-3">
-            <p className="undara-ui-name text-sm font-semibold text-foreground">{selectedGuest.name}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{selectedGuest.phone || d("Tanpa nomor WhatsApp")}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {d("Data ini terhubung dengan RSVP, WA Blast, dan pengaturan meja.")}
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block min-w-0 text-sm font-medium text-foreground">
-              {d("Nama penerima")}
-              <Input
-                value={name}
-                maxLength={120}
-                onChange={(event) => setName(event.target.value)}
-                placeholder={d("Contoh: Bapak Andi")}
-                required
-                disabled={busy}
-                className="mt-1.5"
-              />
-            </label>
-            <label className="block min-w-0 text-sm font-medium text-foreground">
-              {d("Nomor WhatsApp (opsional)")}
-              <Input
-                type="tel"
-                value={phone}
-                maxLength={32}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="08xxxxxxxxxx"
-                disabled={busy}
-                className="mt-1.5"
-              />
-            </label>
-          </div>
-        )}
-
-        <PersonalInvitationGuestFields value={profile} guestName={selectedGuest?.name ?? name} onChange={setProfile} disabled={busy} />
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary/15 pt-4">
-          <p className="text-xs text-muted-foreground">
-            {d("Buat satu tautan personal untuk penerima ini.")}
+        <div className="border-y border-primary/15 py-3" aria-live="polite">
+          <p className="text-xs text-muted-foreground">{d("Sapaan di amplop")}</p>
+          <p className="mt-1 break-words text-sm font-medium text-foreground">
+            {envelopeAddress || (profile.personalEnvelopeEnabled ? profile.personalLanguage === "EN" ? "Dear : [Name]" : "Kepada Yth : [Nama tamu]" : d("Amplop tanpa nama"))}
           </p>
+        </div>
+
+        <PersonalInvitationGuestFields compact value={profile} guestName={selectedGuest?.name ?? name} onChange={setProfile} disabled={busy}>
+          <label className="block min-w-0 text-sm font-medium text-foreground">
+            {d("Nomor WhatsApp (opsional)")}
+            <Input
+              type="tel"
+              value={phone}
+              maxLength={32}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="08xxxxxxxxxx"
+              disabled={busy}
+              readOnly={Boolean(selectedGuest)}
+              className="mt-1.5"
+            />
+          </label>
+        </PersonalInvitationGuestFields>
+
+        <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={!valid || busy}>
             <Plus className="size-4" />
             {busyId ? d("Menyimpan...") : d("Buat undangan")}
           </Button>
         </div>
       </form>
-      <div className="flex flex-wrap gap-4 border-t border-primary/15 pt-3 text-xs text-muted-foreground">
-        <span>{d("Password")}: {protectedCount}</span>
-        <span>{d("Draft")}: {draftCount}</span>
-      </div>
     </DashboardPanel>
   );
 }
@@ -233,7 +240,7 @@ export function PersonalInvitationListPanel({
             icon={ContactRound}
             title={d("Belum ada Personal Invitation")}
             description={d(
-              "Buat undangan personal dari daftar tamu atau tambahkan tamu baru.",
+              "Isi nama tamu untuk membuat undangan personal.",
             )}
           />
         )}
