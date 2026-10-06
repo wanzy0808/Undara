@@ -1,18 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { ContactRound, Eye, Send } from "lucide-react";
 import EventScopePicker from "@/components/Dashboard/EventScopePicker";
 import { Button } from "@/components/ui/button";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import {
-  DashboardMetricCard,
   DashboardEmptyState,
-  DashboardMetricGrid,
   DashboardNotice,
   DashboardPage,
-  DashboardPageHeader,
 } from "@/components/Dashboard/DashboardPrimitives";
 import {
   PersonalInvitationCreatePanel,
@@ -74,8 +69,6 @@ export default function PersonalInvitationPanel({
     () => savedEvents.find((event) => event.id === eventId) ?? null,
     [savedEvents, eventId],
   );
-  const designEvent = selectedEvent ?? events.find((event) => event.id === selectedEventId) ?? events[0];
-
   useEffect(() => { activeEventId.current = eventId; }, [eventId]);
 
   const loadEvents = useCallback(async () => {
@@ -317,35 +310,80 @@ export default function PersonalInvitationPanel({
     }
   }
 
-  async function publishAll() {
-    const ids = scopedPersonal.filter((item) => !item.personalPublished).map((item) => item.id);
-    if (!eventId || !ids.length || creating.current || !selectedEvent?.isPublished || !selectedEvent.accessPaid) return;
+  async function publishIds(
+    ids: string[],
+    busyKey: "publish-batch" | "publish-selected",
+    successMessage: string,
+  ) {
+    const available = new Set(
+      scopedPersonal.filter((item) => !item.personalPublished).map((item) => item.id),
+    );
+    const uniqueIds = Array.from(new Set(ids)).filter((id) => available.has(id));
+    if (
+      !eventId ||
+      !uniqueIds.length ||
+      creating.current ||
+      !selectedEvent?.isPublished ||
+      !selectedEvent.accessPaid
+    ) return;
+
     creating.current = true;
-    setBusyId("publish-batch");
+    setBusyId(busyKey);
     setNotice("");
     let published = 0;
     let failure = "";
     try {
-      for (let index = 0; index < ids.length; index += 100) {
+      for (let index = 0; index < uniqueIds.length; index += 100) {
         if (activeEventId.current !== eventId) break;
-        const batch = ids.slice(index, index + 100);
+        const batch = uniqueIds.slice(index, index + 100);
         const response = await fetch("/api/personal-invitations", {
-          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ invitationId: eventId, ids: batch, published: true }),
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ invitationId: eventId, ids: batch, published: true }),
         });
         const data = await response.json().catch(() => null);
-        if (!response.ok || data?.count !== batch.length) throw new Error(data?.error || d("Personal Invitation belum dapat diperbarui."));
+        if (!response.ok || data?.count !== batch.length) {
+          throw new Error(
+            data?.error || d("Personal Invitation belum dapat diperbarui."),
+          );
+        }
         published += batch.length;
       }
     } catch (error) {
-      failure = error instanceof Error ? d(error.message) : d("Personal Invitation belum dapat diperbarui.");
+      failure =
+        error instanceof Error
+          ? d(error.message)
+          : d("Personal Invitation belum dapat diperbarui.");
     } finally {
       if (activeEventId.current === eventId) {
         await loadCurrent();
-        if (activeEventId.current === eventId) setNotice(failure ? `${published} ${d("tamu dipublish")}. ${failure}` : d("Semua undangan personal dipublish."));
+        if (activeEventId.current === eventId) {
+          setNotice(
+            failure
+              ? `${published} ${d("tamu dipublish")}. ${failure}`
+              : successMessage,
+          );
+        }
       }
       creating.current = false;
       setBusyId(null);
     }
+  }
+
+  async function publishAll() {
+    await publishIds(
+      scopedPersonal.filter((item) => !item.personalPublished).map((item) => item.id),
+      "publish-batch",
+      d("Semua undangan personal dipublish."),
+    );
+  }
+
+  async function publishSelected(ids: string[]) {
+    await publishIds(
+      ids,
+      "publish-selected",
+      d("Undangan terpilih dipublish."),
+    );
   }
 
   async function copyLink(item: PersonalInvitationItem) {
@@ -464,20 +502,11 @@ export default function PersonalInvitationPanel({
     }
   }
 
-  const publishedCount = scopedPersonal.filter(
-    (item) => item.personalPublished,
-  ).length;
-  const totalViews = scopedPersonal.reduce(
-    (sum, item) => sum + (item.personalViewCount || 0),
-    0,
-  );
-
   return (
     <DashboardPage>
-      <DashboardPageHeader title={d("Undangan Personal")} />
-      {notice && <DashboardNotice className="mt-4">{notice}</DashboardNotice>}
+      {notice && <DashboardNotice>{notice}</DashboardNotice>}
 
-      <div className="mt-5">
+      <div className={notice ? "mt-4" : ""}>
         <PersonalInvitationCreatePanel
           selectedEvent={selectedEvent}
           availableGuests={availableGuests}
@@ -494,65 +523,90 @@ export default function PersonalInvitationPanel({
           drafts={currentDrafts}
           onAddExisting={addExisting}
           onAddNames={addNames}
-          onRemoveDraft={(key) => { if (!creating.current) setDrafts((current) => current.filter((row) => row.key !== key)); }}
+          onRemoveDraft={(key) => {
+            if (!creating.current) {
+              setDrafts((current) => current.filter((row) => row.key !== key));
+            }
+          }}
           onEditDraft={editDraft}
         />
       </div>
 
-      <section className="mt-5 space-y-4" aria-label={d("Pilih undangan")}>
-        {eventsLoading ? <p className="text-sm text-muted-foreground">{d("Memuat...")}</p> : savedEvents.length ? (
-        <EventScopePicker
-          label={d("Pilih undangan")}
-          events={savedEvents}
-          value={eventId}
-          onChange={(id) => { setEventId(id); onSelectEvent(id); }}
-          disabled={eventsLoading || Boolean(busyId)}
-        />
-        ) : <DashboardEmptyState title={d("Belum ada undangan tersimpan")} description={d("Simpan desain di Edit undangan terlebih dahulu.")} />}
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" disabled={!selectedEvent || !currentDrafts.length || Boolean(busyId)} onClick={createBatch}>
+      <section
+        className="mt-4 border-y border-primary/15 py-4"
+        aria-label={d("Pilih undangan")}
+      >
+        <div className="flex flex-col gap-3 md:flex-row md:items-end">
+          <div className="w-full max-w-sm">
+            {eventsLoading ? (
+              <p className="text-sm text-muted-foreground">{d("Memuat...")}</p>
+            ) : savedEvents.length ? (
+              <EventScopePicker
+                label={d("Pilih undangan")}
+                events={savedEvents}
+                value={eventId}
+                onChange={(id) => {
+                  setEventId(id);
+                  onSelectEvent(id);
+                }}
+                disabled={eventsLoading || Boolean(busyId)}
+              />
+            ) : (
+              <DashboardEmptyState
+                title={d("Belum ada undangan tersimpan")}
+                description={d("Simpan desain di Edit undangan terlebih dahulu.")}
+              />
+            )}
+          </div>
+          <Button
+            type="button"
+            className="w-full md:w-auto"
+            disabled={!selectedEvent || !currentDrafts.length || Boolean(busyId)}
+            onClick={createBatch}
+          >
             {busyId === "create-batch" ? d("Menyimpan...") : d("Buat tautan personal")}
           </Button>
-          {designEvent && <Button asChild variant="outline"><Link href={`/dashboard/editor?invitationId=${encodeURIComponent(designEvent.id)}`}>{d("Edit undangan")}</Link></Button>}
         </div>
-        {selectedEvent && (!selectedEvent.isPublished || !selectedEvent.accessPaid) && <p className="text-sm text-muted-foreground">{d(!selectedEvent.isPublished ? "Terbitkan undangan acara untuk Publish personal." : "Aktifkan akses Undangan Digital sebelum publish.")}</p>}
+        {selectedEvent && (!selectedEvent.isPublished || !selectedEvent.accessPaid) && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {d(
+              !selectedEvent.isPublished
+                ? "Terbitkan undangan acara untuk Publish personal."
+                : "Aktifkan akses Undangan Digital sebelum publish.",
+            )}
+          </p>
+        )}
       </section>
 
       {selectedEvent && (
-        <>
-          <DashboardMetricGrid className="mt-5 xl:grid-cols-3">
-            <DashboardMetricCard icon={ContactRound} label={d("Total")} value={String(scopedPersonal.length)} />
-            <DashboardMetricCard icon={Send} label={d("Publish")} value={String(publishedCount)} />
-            <DashboardMetricCard icon={Eye} label={d("Dibuka")} value={String(totalViews)} />
-          </DashboardMetricGrid>
-          <div className="mt-5">
-            <PersonalInvitationListPanel
-              selectedEvent={selectedEvent}
-              personal={scopedPersonal}
-              editingId={editingId}
-              editName={editName}
-              setEditName={setEditName}
-              editPhone={editPhone}
-              setEditPhone={setEditPhone}
-              editProfile={editProfile}
-              setEditProfile={setEditProfile}
-              passwordId={passwordId}
-              setPasswordId={setPasswordId}
-              password={password}
-              setPassword={setPassword}
-              busyId={busyId}
-              loading={loading}
-              onReload={() => void loadCurrent()}
-              onStartEdit={startEdit}
-              onSaveEdit={(item) => void saveEdit(item)}
-              onPatch={patchPersonalInvitation}
-              onSavePassword={(item) => void savePassword(item)}
-              onDisablePassword={(item) => void disablePassword(item)}
-              onPublishAll={publishAll}
-              onCopyLink={copyLink}
-            />
-          </div>
-        </>
+        <div className="mt-4">
+          <PersonalInvitationListPanel
+            selectedEvent={selectedEvent}
+            personal={scopedPersonal}
+            editingId={editingId}
+            editName={editName}
+            setEditName={setEditName}
+            editPhone={editPhone}
+            setEditPhone={setEditPhone}
+            editProfile={editProfile}
+            setEditProfile={setEditProfile}
+            passwordId={passwordId}
+            setPasswordId={setPasswordId}
+            password={password}
+            setPassword={setPassword}
+            busyId={busyId}
+            loading={loading}
+            onReload={() => void loadCurrent()}
+            onStartEdit={startEdit}
+            onSaveEdit={(item) => void saveEdit(item)}
+            onPatch={patchPersonalInvitation}
+            onSavePassword={(item) => void savePassword(item)}
+            onDisablePassword={(item) => void disablePassword(item)}
+            onPublishAll={publishAll}
+            onPublishSelected={(ids) => void publishSelected(ids)}
+            onCopyLink={copyLink}
+          />
+        </div>
       )}
     </DashboardPage>
   );

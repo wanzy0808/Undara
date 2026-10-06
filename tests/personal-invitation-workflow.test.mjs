@@ -469,8 +469,8 @@ test("personal links reuse only a saved invitation and creation never saves or p
     view.create.setName("Ibu Rina"); panel.render().create.onAddNames();
     view = panel.render(); assert.equal(view.save.disabled, false);
     const links = nodes(view.tree).filter((node) => node.props.href);
-    assert.ok(links.some((node) => node.props.href === "/dashboard/editor?invitationId=event-b"));
-    assert.doesNotMatch(text(view.tree), /Simpan draf|Simpan & Publish/);
+    assert.ok(links.every((node) => !String(node.props.href).startsWith("/dashboard/editor?")));
+    assert.doesNotMatch(text(view.tree), /Edit undangan|Simpan draf|Simpan & Publish/);
     await view.save.onClick();
     assert.equal(writes.length, 1); assert.equal(writes[0].url, "/api/personal-invitations");
     assert.equal(writes[0].invitationId, "event-b"); assert.equal(writes[0].published, false);
@@ -480,7 +480,7 @@ test("personal links reuse only a saved invitation and creation never saves or p
   } finally { panel.dispose(); }
 });
 
-test("with no saved design, names remain available and the owned event links to Edit invitation", async () => {
+test("with no saved design, names remain available without an Edit invitation button", async () => {
   const requests = [];
   const panel = panelHarness(async (url, options = {}) => {
     requests.push({ url, options });
@@ -495,7 +495,7 @@ test("with no saved design, names remain available and the owned event links to 
     await panel.render().save.onClick();
     assert.deepEqual(panel.render().create.drafts.map((row) => row.name), ["Ibu Rina"]);
     assert.ok(requests.every((request) => request.url === "/api/invitations?all=1" && !request.options.method));
-    assert.ok(nodes(panel.render().tree).some((node) => node.props.href === "/dashboard/editor?invitationId=event-a"));
+    assert.ok(nodes(panel.render().tree).every((node) => node.props.href !== "/dashboard/editor?invitationId=event-a"));
   } finally { panel.dispose(); }
 });
 
@@ -514,18 +514,99 @@ test("queued names are editable/removable by row identity, preserve duplicate na
   assert.deepEqual(edits, [["draft-41", { name: "Bapak Budi" }], ["draft-41", { category: "VIP" }]]); assert.deepEqual(removed, ["draft-41"]);
 });
 
-const listProps = (overrides = {}) => ({ selectedEvent: { ...event(), isPublished: true, accessPaid: true }, personal: [{ ...personal(), personalPublished: true }], editingId: null, editName: "", editPhone: "", editProfile: fields.emptyGuestInvitationForm, passwordId: null, password: "", busyId: null, loading: false, setEditName() {}, setEditPhone() {}, setEditProfile() {}, setPasswordId() {}, setPassword() {}, onReload() {}, onStartEdit() {}, onSaveEdit() {}, onPatch() {}, onSavePassword() {}, onDisablePassword() {}, onPublishAll() {}, onCopyLink() {}, ...overrides });
+function savedListHarness(overrides = {}) {
+  const hooks = hookHarness();
+  const production = loadSource("components/Dashboard/PersonalInvitationPanels.tsx", {
+    react: hooks.hooks,
+    "react/jsx-runtime": jsxRuntime,
+    "next/link": (props) => React.createElement("a", props, props.children),
+    "lucide-react": icons,
+    "@/components/ui/button": { Button },
+    "@/components/ui/input": { Input },
+    "@/components/ui/dialog": dialogs,
+    "@/components/Dashboard/useDashboardI18n": i18n,
+    "@/lib/text/display-title-case": titles,
+    "@/lib/guests/personal-envelope": envelope,
+    "@/components/Dashboard/DashboardPrimitives": primitives,
+    "@/components/Dashboard/PersonalInvitationGuestFields": fields,
+    "@/components/Dashboard/personal-invitation-helpers": helpers,
+  });
+  let props = listProps(overrides);
+  return {
+    render(next = {}) {
+      props = { ...props, ...next };
+      return hooks.render(() => production.PersonalInvitationListPanel(props));
+    },
+    dispose() {
+      hooks.unmount();
+    },
+  };
+}
+
+const listProps = (overrides = {}) => ({ selectedEvent: { ...event(), isPublished: true, accessPaid: true }, personal: [{ ...personal(), personalPublished: true }], editingId: null, editName: "", editPhone: "", editProfile: fields.emptyGuestInvitationForm, passwordId: null, password: "", busyId: null, loading: false, setEditName() {}, setEditPhone() {}, setEditProfile() {}, setPasswordId() {}, setPassword() {}, onReload() {}, onStartEdit() {}, onSaveEdit() {}, onPatch() {}, onSavePassword() {}, onDisablePassword() {}, onPublishAll() {}, onPublishSelected() {}, onCopyLink() {}, ...overrides });
+
+test("saved recipients render as flat selectable rows with bulk publish and a right-edge send action", () => {
+  const selected = [];
+  const rows = [
+    { ...personal(), id: "personal-a", name: "Andi", personalPublished: false },
+    { ...personal(), id: "personal-b", name: "Rina", personalPublished: true, personalToken: "token-b" },
+  ];
+  const harness = savedListHarness({
+    personal: rows,
+    onPublishSelected(ids) {
+      selected.push(ids);
+    },
+  });
+  try {
+    let tree = harness.render();
+    assert.equal(
+      nodes(tree).filter(
+        (node) => node.type === "input" && node.props.type === "checkbox",
+      ).length,
+      3,
+    );
+    assert.equal(
+      renderToStaticMarkup(tree).includes("undara-dashboard-detail-card"),
+      false,
+    );
+    const rowCheckbox = nodes(tree).find(
+      (node) =>
+        node.type === "input" &&
+        node.props["aria-label"] === "Pilih tamu: Andi",
+    );
+    rowCheckbox.props.onChange({ target: { checked: true } });
+    tree = harness.render();
+    const publishSelected = nodes(tree).find(
+      (node) =>
+        node.type === Button &&
+        text(node.props.children).includes("Publish terpilih"),
+    );
+    assert.ok(publishSelected);
+    publishSelected.props.onClick();
+    assert.deepEqual(selected, [["personal-a"]]);
+    const sendLabels = nodes(tree).filter((node) =>
+      node.props["aria-label"]?.startsWith("Kirim:"),
+    );
+    assert.deepEqual(
+      sendLabels.map((node) => node.props["aria-label"]),
+      ["Kirim: Andi", "Kirim: Rina"],
+    );
+  } finally {
+    harness.dispose();
+  }
+});
 
 test("individual share controls use the actual recipient, optional phone and personal URL and never imply automatic delivery", () => {
   const published = { ...personal(), personalPublished: true, name: "Andi & Sari", recipientType: "COUPLE", personalLanguage: "EN", phone: "+62 812 3456 7890" };
   const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "en" }, React.createElement(PersonalInvitationListPanel, listProps({ personal: [published] }))));
-  assert.match(html, /Copy link/); assert.match(html, /Send via WhatsApp/); assert.match(html, /wa.me\/6281234567890\?text=/);
+  assert.match(html, /Copy link/); assert.match(html, /Send<\/a>/); assert.match(html, /wa.me\/6281234567890\?text=/);
   const share = new URL(helpers.buildPersonalInvitationWhatsAppUrl(event(), published));
   assert.equal(share.searchParams.get("text"), `Dear : Mr Andi and Mrs Sari\n\n${event().title}\n${helpers.buildPersonalInvitationPublicUrl(event().slug, published.personalToken)}`);
   assert.equal(new URL(helpers.buildPersonalInvitationWhatsAppUrl(event(), { ...published, phone: null })).pathname, "/");
   for (const overrides of [{ personal: [personal()] }, { selectedEvent: event() }]) {
     const locked = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "en" }, React.createElement(PersonalInvitationListPanel, listProps(overrides))));
-    assert.doesNotMatch(locked, /Copy link|Send via WhatsApp|wa.me/);
+    assert.doesNotMatch(locked, /Copy link|wa.me/);
+    assert.match(locked, /Send<\/button>/);
   }
 });
 

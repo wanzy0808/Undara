@@ -58,18 +58,25 @@ export function PersonalInvitationSalutationField({
   value,
   onChange,
   disabled = false,
+  showLabel = true,
 }: {
   value: PersonalSalutation;
   onChange: (next: PersonalSalutation) => void;
   disabled?: boolean;
+  showLabel?: boolean;
 }) {
   const { d } = useDashboardI18n();
   const labels = { BAPAK: "Bapak", IBU: "Ibu", BAPAK_IBU: "Bapak & Ibu" };
   return (
     <label className="block min-w-0 text-sm font-medium text-foreground">
-      {d("Sapaan")}
-      <select value={value} onChange={(event) => onChange(event.target.value as PersonalSalutation)} disabled={disabled}
-        className="mt-1.5 min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground">
+      {showLabel && d("Sapaan")}
+      <select
+        value={value}
+        aria-label={!showLabel ? d("Sapaan") : undefined}
+        onChange={(event) => onChange(event.target.value as PersonalSalutation)}
+        disabled={disabled}
+        className={`${showLabel ? "mt-1.5 " : ""}min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground`}
+      >
         {PERSONAL_SALUTATIONS.map((salutation) => <option key={salutation} value={salutation}>{d(labels[salutation])}</option>)}
       </select>
     </label>
@@ -80,21 +87,24 @@ export function PersonalInvitationGuestFields({
   value,
   onChange,
   disabled = false,
+  showLabel = true,
 }: {
   value: GuestInvitationForm;
   onChange: (next: GuestInvitationForm) => void;
   disabled?: boolean;
+  showLabel?: boolean;
 }) {
   const { d } = useDashboardI18n();
 
   return (
     <label className="block min-w-0 text-sm font-medium text-foreground">
-      {d("Kategori tamu")}
+      {showLabel && d("Kategori tamu")}
       <select
         value={value.category}
+        aria-label={!showLabel ? d("Kategori tamu") : undefined}
         onChange={(event) => onChange({ ...value, category: event.target.value })}
         disabled={disabled}
-        className="mt-1.5 min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground"
+        className={`${showLabel ? "mt-1.5 " : ""}min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground`}
       >
         {value.category && !["REGULAR", "VIP", "VVIP"].includes(value.category) && (
           <option value={value.category} disabled>{displayTitleCase(value.category)}</option>
