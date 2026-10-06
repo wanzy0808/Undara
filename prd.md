@@ -3189,3 +3189,11 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Observed local validation:** Focused personal workflow/envelope suite **15/15** PASS; full regression **765/765**, standalone TypeScript, production webpack build **73/73** and changed-file whitespace check PASS. ESLint adds **zero new diagnostics**: five changed presentation/translation/test files are clean; orchestration retains its three existing `react-hooks/set-state-in-effect` findings, compared against the committed parent. Nine new cases run the actual component/handler/effect code with SSR or deterministic hook/fetch boundaries, covering localized title/name-first disclosure, exact ID/EN/override/OFF greeting, saved-guest search/pagination/IDs, name-only defaults and duplicate-submit prevention, canonical reuse, editing a selected name, cross-event late loads/creation and retry after failure. Exact-commit CI will be checked after publication.
 
 **Validation limits:** No new migration or production data change. Authenticated browser/target-database checks for create → preview → publish/share and received invitation → RSVP remain open; handler fixtures and SSR do not establish those end-to-end results.
+
+### 2026-10-06 — Prevent duplicate dropdown arrows after the rebrand
+
+**Cause / fix:** Owner's screenshot shows two adjacent arrows in the Personal Invitation event picker. Its external Lucide arrow uses the existing `data-dc-native-chevron` opt-out, while the global CSS only recognizes `data-undara-native-chevron` and paints a second background arrow. The shared rule now honors both markers in normal, hover, focus and disabled states. Event/QR pickers keep their existing external arrow, compact time selectors keep native chrome, and ordinary form selects retain the shared single-arrow treatment. No component/data/API behavior changes.
+
+**Files / commit:** `app/globals.css` and this Appendix A; `fix(ui): avoid duplicate dropdown arrows`.
+
+**Observed local validation:** Existing regression suite **765/765** PASS; production webpack build **73/73**, including TypeScript, and `git diff --check` PASS. Source inspection confirms all five legacy-marked select controls are covered. Exact-commit CI is checked after publication; the owner's localhost after pull has not been inspected directly.

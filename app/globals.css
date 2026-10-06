@@ -743,9 +743,10 @@ aside nav > p { font-family: var(--font-undara-heading); }
 
 /* Data-form dropdowns: the browser-owned chevron can hug the right edge.
    Replace ONLY these form select arrows with a 15px Rose chevron inset 18px;
-   nav menus and controls with their own external/compact arrows opt out. */
-:is(.undara-dashboard, .undara-usher) main select:not([data-undara-native-chevron]),
-:is(.undara-dashboard, .undara-usher) main select:not([data-undara-native-chevron]):is(:hover, :focus, :focus-visible, :disabled) {
+   nav menus and controls with their own external/compact arrows opt out.
+   Keep the legacy marker compatible with existing controls after the rebrand. */
+:is(.undara-dashboard, .undara-usher) main select:not([data-undara-native-chevron]):not([data-dc-native-chevron]),
+:is(.undara-dashboard, .undara-usher) main select:not([data-undara-native-chevron]):not([data-dc-native-chevron]):is(:hover, :focus, :focus-visible, :disabled) {
   -webkit-appearance: none;
   appearance: none;
   padding-right: 3rem !important;
