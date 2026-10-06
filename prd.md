@@ -1243,6 +1243,8 @@ Tidak ada fallback ke first WEDDING event.
 
 Personal public URL menggunakan event slug + personal token.
 
+Mutasi massal menggunakan endpoint Personal Invitation yang sama dan Guest canonical: `POST` menerima `recipients` serta opsi `published`; `PATCH` menerima ID personal eksplisit untuk Publish massal. Setiap proses dibatasi 100 penerima, memvalidasi seluruh ID/profile sebelum menulis, dan berjalan dalam transaksi dengan lock event milik user. Publish massal memeriksa ulang event configured/terbit dan entitlement Digital event atau grant Owner. Draf tidak membutuhkan pembayaran. UUID acak per nama baru menghasilkan token stabil dalam scope owner/event agar retry tidak membuat Guest ganda; nama yang sama tetap boleh mewakili orang berbeda. Reuse Guest hanya mengubah kategori/token/publikasi yang diminta, mempertahankan RSVP, jumlah hadir/kuota, check-in, kontak, kursi, amplop dan password. Tidak ada tabel penerima atau migrasi baru.
+
 ### 9.4 Guest Category & Tags — P1
 
 Guest harus mendukung:
@@ -3207,3 +3209,12 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Files / commit:** `components/Dashboard/{PersonalInvitationPanel,PersonalInvitationPanels,PersonalInvitationGuestFields}.tsx`, personal envelope/workflow regression tests, README, checklist and §9.3/Appendix A; `refactor(personal): show only guest category settings`.
 
 **Observed local validation:** Focused personal tests **15/15**, full regression **765/765**, standalone TypeScript, production webpack build **73/73** and `git diff --check` PASS. Four changed presentation/test files have zero ESLint diagnostics; orchestration retains its three existing effect findings with no new diagnostics. Updated actual-component SSR checks confirm ID/EN, the three choices and absent advanced inputs. Production-handler fixtures exercise each category, current legacy data, minimal create/edit payloads and retained allowance/type/tags/envelope/greeting/RSVP/check-in/seating data. Exact-commit CI is observed after publication; authenticated browser and target-database QA remain open in the checklist.
+
+
+### 2026-10-06 — Atomic personal-invitation batches
+
+**Request / implementation:** Owner wants to list guest names before choosing the invitation, publish together and share recipients individually. This first checkpoint adds the existing API's mass-creation and explicit-ID publication branches; the UI handoff follows separately. `lib/guests/personal-batch.ts` validates bounded batches, locks and rereads the owned configured event, checks current parent publication/event payment or Owner grant, preflights saved IDs and commits the whole batch atomically. New per-row random UUIDs yield event/owner-scoped stable tokens for safe retries without a second Guest table; identical names do not merge. Hidden canonical guest state and passwords remain intact and password hashes never appear in batch responses.
+
+**Files / commit:** existing personal API, new personal-batch domain helper and handler regression fixture, canonical §9.3 and Appendix A; `feat(personal): add atomic recipient creation and publishing batches`.
+
+**Observed validation:** 7/7 new real-handler tests PASS, standalone TypeScript PASS. Changed helper/test lint clean; existing API's pre-existing unused password-hash warning remains. Handler tests cover auth/origin/event ownership, limits and row identities, draft preparation without payment, shared Guest profile retention, concurrent idempotent retries, rollback on foreign final ID or DB failure, exact-ID bulk publication and real event-payment/Owner-grant parsing. This is isolated-boundary testing, not authenticated browser/PostgreSQL E2E. Full final UI regression/build/CI validation belongs to the next checkpoint. No migration or production-data write.

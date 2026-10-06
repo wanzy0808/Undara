@@ -6,6 +6,7 @@ import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 import { hashInvitationPassword } from "@/lib/invitations/password";
 import { parsePersonalGuestFields } from "@/lib/guests/personal-profile";
 import { findGuestsByContact } from "@/lib/guests/identity";
+import { createPersonalBatch, publishPersonalBatch, PersonalBatchError } from "@/lib/guests/personal-batch";
 
 async function getEventInvitation(userId: string, invitationId: string) {
   if (!invitationId) return null;
@@ -92,6 +93,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Acara wajib dipilih." }, { status: 400 });
     }
 
+    if (body.recipients !== undefined) {
+      return NextResponse.json(await createPersonalBatch(user.id, invitationId, body.recipients, body.published), { status: 201 });
+    }
+
     const invitation = await getEventInvitation(user.id, invitationId);
     if (!invitation) {
       return NextResponse.json({ error: "Acara tidak ditemukan." }, { status: 404 });
@@ -173,6 +178,7 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof PersonalBatchError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("POST /api/personal-invitations failed", error);
     return NextResponse.json({ error: "Personal Invitation belum dapat dibuat." }, { status: 500 });
   }
@@ -192,6 +198,11 @@ export async function PATCH(request: Request) {
     const invitationId = String(body.invitationId ?? "").trim();
     if (!invitationId) {
       return NextResponse.json({ error: "Acara wajib dipilih." }, { status: 400 });
+    }
+
+    if (body.ids !== undefined) {
+      if (body.published !== true) return NextResponse.json({ error: "Status publikasi tidak valid." }, { status: 400 });
+      return NextResponse.json(await publishPersonalBatch(user.id, invitationId, body.ids));
     }
 
     const invitation = await getEventInvitation(user.id, invitationId);
@@ -299,6 +310,7 @@ export async function PATCH(request: Request) {
       event: { id: invitation.id, slug: invitation.slug, title: invitation.title },
     });
   } catch (error) {
+    if (error instanceof PersonalBatchError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("PATCH /api/personal-invitations failed", error);
     return NextResponse.json({ error: "Personal Invitation belum dapat diperbarui." }, { status: 500 });
   }
