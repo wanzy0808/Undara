@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { isEditableTemplateStatus } from "@/lib/templates/template-editing";
 
 type ReviewTemplate = {
   id: string;
@@ -12,6 +13,7 @@ type ReviewTemplate = {
   category: string;
   description: string;
   status: string;
+  designKey?: string | null;
   updatedAt: string;
   isCustom?: boolean;
   designer: {
@@ -81,7 +83,7 @@ export default function OwnerTemplateReview() {
   const [templates, setTemplates] = useState<ReviewTemplate[]>([]);
   const [users, setUsers] = useState<AssignmentUser[]>([]);
   const [authors, setAuthors] = useState<AssignmentAuthor[]>([]);
-  const [message, setMessage] = useState("Memuat antrean template...");
+  const [message, setMessage] = useState("Memuat template...");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [targetUserId, setTargetUserId] = useState("");
@@ -102,7 +104,7 @@ export default function OwnerTemplateReview() {
     ]);
 
     if (!templateResponse.ok) {
-      setMessage(templateData.error || "Antrean template belum dapat dimuat.");
+      setMessage(templateData.error || "Template belum dapat dimuat.");
       return;
     }
 
@@ -220,7 +222,7 @@ export default function OwnerTemplateReview() {
     <section className="rounded-2xl border border-primary/35 bg-background p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-[family-name:var(--font-undara-heading)] text-xl text-primary">Template Custom & Review</h2>
+          <h2 className="font-[family-name:var(--font-undara-heading)] text-xl text-primary">Template Studio</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Custom request ditautkan ke event user sejak awal. Owner/Designer hanya mendapat akses ke foto event yang sedang ditugaskan.
           </p>
@@ -277,7 +279,7 @@ export default function OwnerTemplateReview() {
       </div>
 
       {!templates.length && !message ? (
-        <p className="mt-5 text-sm text-muted-foreground">Tidak ada template yang menunggu tindakan Owner.</p>
+        <p className="mt-5 text-sm text-muted-foreground">Belum ada template tersimpan.</p>
       ) : (
         <div className="mt-5 divide-y divide-border">
           {templates.map((item) => {
@@ -303,7 +305,9 @@ export default function OwnerTemplateReview() {
                   {item.description && <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>}
 
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <Button asChild size="sm" variant="outline"><Link href={`/owner/studio?draft=${encodeURIComponent(item.id)}`}>Buka di Studio</Link></Button>
+                    {item.designKey && isEditableTemplateStatus(item.status) && (
+                      <Button asChild size="sm" variant="outline"><Link href={`/owner/studio?draft=${encodeURIComponent(item.id)}`}>Lanjut edit</Link></Button>
+                    )}
                     {item.status === "DRAFT" && (
                       <Button type="button" size="sm" disabled={busyId === item.id} onClick={() => void transition(item.id, "SUBMIT_REVIEW")}>
                         {busyId === item.id ? "Memproses..." : "Kirim Review"}

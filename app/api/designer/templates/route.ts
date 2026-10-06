@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getInvitationTemplate } from "@/lib/templates/catalog";
 import { parseDesignKey } from "@/lib/templates/design";
+import { editableTemplateStatuses, isEditableTemplateStatus } from "@/lib/templates/template-editing";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 
 async function requireTemplateAuthor() {
@@ -94,20 +95,7 @@ export async function GET(request: Request) {
   if (reviewScope) {
     if (!reviewer) return NextResponse.json({ error: "Hanya Owner/Admin yang dapat membuka antrean review." }, { status: 403 });
     const templates = await prisma.designerTemplate.findMany({
-      where: author.role === "OWNER"
-        ? {
-            OR: [
-              { status: "REVIEW" },
-              { status: "DRAFT", designerId: author.id },
-              { status: "DRAFT", customInvitationId: { not: null } },
-            ],
-          }
-        : {
-            OR: [
-              { status: "REVIEW" },
-              { status: "DRAFT", customInvitationId: { not: null } },
-            ],
-          },
+      where: { status: { in: [...editableTemplateStatuses] } },
       orderBy: { updatedAt: "asc" },
       include: {
         designer: { select: { id: true, firstName: true, lastName: true, email: true } },
@@ -312,8 +300,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ template: updated, ready: false });
     }
 
-    if (current.status !== "DRAFT") {
-      return NextResponse.json({ error: "Hanya template Draft yang dapat diedit." }, { status: 409 });
+    if (!isEditableTemplateStatus(current.status)) {
+      return NextResponse.json({ error: "Template ini sudah tidak dapat diedit." }, { status: 409 });
     }
 
     const designKey = String(body?.designKey ?? "").trim();
@@ -340,11 +328,18 @@ export async function PATCH(request: Request) {
     const musicUrl = safePublicUrl(body?.musicUrl) || null;
 
     const updated = await prisma.designerTemplate.update({
-      where: { id: current.id },
+      where: {
+        id: current.id,
+        status: { in: [...editableTemplateStatuses] },
+        ...(reviewer ? {} : { designerId: author.id }),
+      },
       data: { name, tags, previewUrl, designKey, category, description, usesPhotos, musicUrl },
     });
-    return NextResponse.json({ template: updated, ready: false });
+    return NextResponse.json({ template: updated, ready: updated.status === "PUBLISHED" && Boolean(updated.designKey) });
   } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2025") {
+      return NextResponse.json({ error: "Template ini sudah tidak dapat diedit. Muat ulang Studio." }, { status: 409 });
+    }
     console.error("PATCH /api/designer/templates Studio failed", error);
     return NextResponse.json({ error: "Draft template belum dapat disimpan." }, { status: 500 });
   }

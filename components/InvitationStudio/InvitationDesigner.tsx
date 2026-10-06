@@ -19,6 +19,7 @@ import { defaultGallerySettings, defaultPhotoAssignments, type CroppablePhotoSlo
 import { getEventCategory } from "@/lib/events/catalog";
 import { templatePhotoMotion } from "@/lib/templates/template-motion";
 import { canContinueInvitationTemplate, getInvitationTemplate, isInvitationTemplateCompatible, templatesForEvent } from "@/lib/templates/catalog";
+import { isEditableTemplateStatus } from "@/lib/templates/template-editing";
 import PhotoPanel from "@/components/InvitationStudio/PhotoPanel";
 import AssetPanel from "@/components/InvitationStudio/AssetPanel";
 import TextObjectPanel from "@/components/InvitationStudio/TextObjectPanel";
@@ -361,8 +362,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       let defaultMusic: string;
 
       if (savedDraft) {
-        if (savedDraft.status !== "DRAFT" && savedDraft.status !== "REVIEW") throw new Error("Template ini sudah tidak dapat dibuka sebagai draft.");
-        if (!savedDraft.designKey) throw new Error("Draft template belum memiliki design yang dapat diedit.");
+        if (!isEditableTemplateStatus(savedDraft.status)) throw new Error("Template ini sudah tidak dapat diedit.");
+        if (!savedDraft.designKey) throw new Error("Template belum memiliki desain yang dapat diedit.");
         initialKey = savedDraft.designKey;
         loadedDesign = invitationDesignStateFromKey(initialKey, customFallbackDecor);
         defaultMusic = savedDraft.musicUrl || customInvitation?.musicUrl || getInvitationDefaultMusic(loadedDesign.template).url;
@@ -434,11 +435,9 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       setHistory([]);
       setFuture([]);
       setNotice(savedDraft
-        ? savedDraft.status === "REVIEW"
-          ? `${savedDraft.isCustom ? "Custom" : "Template"} #${savedDraft.templateNo} sedang direview. Preview tersedia, editing dikunci sampai dikembalikan ke Draft.`
-          : savedDraft.isCustom && customInvitation
+        ? savedDraft.isCustom && customInvitation
             ? `Custom #${savedDraft.templateNo} untuk “${customInvitation.title}” dimuat. Foto user dapat diposisikan/crop tanpa menyalin file ke Library Designer.`
-            : `Draft Template #${savedDraft.templateNo} dimuat.`
+            : `Template #${savedDraft.templateNo} dimuat.`
         : "");
       return;
     }
@@ -1880,6 +1879,10 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   async function save() {
     if (!invitation) return;
     if (saving || audioMutation.current) return;
+    if (templateMode && templateDraftId && !isEditableTemplateStatus(templateDraftStatus)) {
+      setNotice("Template ini sudah tidak dapat diedit. Muat ulang Studio.");
+      return;
+    }
     setSaving(true);
     setNotice(templateMode ? "Menyimpan template..." : "Menyimpan...");
     try {
@@ -1932,7 +1935,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
         );
         setNotice(templateCustomInvitationId
           ? `Custom #${savedTemplate.templateNo} tersimpan. Foto tetap milik event user dan tidak disalin ke Library Designer.`
-          : `Draft Template #${savedTemplate.templateNo} tersimpan. Draft belum tampil di katalog sebelum dipublikasikan.`);
+          : `Template #${savedTemplate.templateNo} tersimpan.`);
         return;
       }
 
@@ -2121,7 +2124,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
             canUndo={history.length > 0}
             canRedo={future.length > 0}
             templateMode={templateMode}
-            dirty={templateMode && templateDraftStatus === "REVIEW" ? false : dirty}
+            savedTemplate={Boolean(templateDraftId)}
+            dirty={dirty && (!templateMode || !templateDraftId || isEditableTemplateStatus(templateDraftStatus))}
             labels={{
               hidePanel: copy.hidePanel,
               showPanel: copy.showPanel,

@@ -194,6 +194,8 @@ The homepage `/` uses a dedicated woodland atmosphere instead of the older cloud
 
 Invitation Studio menyediakan warna per elemen dari inspector kanan: warna teks/latar/garis, fill shape, tint foto/artwork dan warna frame. Rail kiri berisi Katalog, Isi, Teks, Foto, Aset, Musik. Palet desain lama tetap dirender; codec draft/Save dan renderer publik memakai override yang sama. Lihat `studio.md` dan `prd.md` untuk batas ownership, styling komponen protected dan status QA.
 
+Saved Studio templates reopen from Designer or Owner panels and **Simpan** updates the same `DesignerTemplate` ID. DRAFT, REVIEW and PUBLISHED remain editable by their author or Owner/Admin; saving preserves status, including a Published template staying in the catalog. No V1/V2 or version history is needed. First publication still requires Review and Owner/Admin approval; archived custom jobs remain closed, and customer invitation snapshots stay independent.
+
 Invitation identity remains database-first through PostgreSQL/Prisma. Browser cookies/localStorage are not used as the source of truth for event identity.
 
 The invitation root domain is configurable through `NEXT_PUBLIC_INVITATION_ROOT_DOMAIN`. The existing `dcwedding.com` fallback remains for backward compatibility until a separate domain migration is defined; new customer-facing product copy uses the Undara brand and event terminology.

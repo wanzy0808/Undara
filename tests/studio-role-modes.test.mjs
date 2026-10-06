@@ -38,7 +38,7 @@ test("staff Save creates a draft template while customer Save stays event-scoped
   assert.match(templateApi, /\["OWNER", "ADMIN", "DESIGNER", "EDITOR"\]\.includes\(user\.role\)/);
   assert.match(templateApi, /designKey,/);
   assert.match(templateApi, /export async function PATCH\(request: Request\)/);
-  assert.match(templateApi, /current\.status !== "DRAFT"/);
+  assert.match(templateApi, /isEditableTemplateStatus\(current\.status\)/);
   assert.match(templateApi, /status: "DRAFT"/);
   assert.match(templateApi, /ready: false/);
   assert.doesNotMatch(templateApi, /prisma\.invitation\.update/);
@@ -92,7 +92,7 @@ test("template catalog publication is gated by review and Owner/Admin approval",
   assert.match(templateApi, /data: \{ status: "PUBLISHED" \}/);
   assert.match(templateApi, /action === "RETURN_DRAFT"/);
   assert.match(designerDashboard, /Kirim ke Owner/);
-  assert.match(read("components/InvitationStudio/InvitationDesigner.tsx"), /templateDraftStatus === "REVIEW" \? false : dirty/);
+  assert.match(read("components/InvitationStudio/InvitationDesigner.tsx"), /isEditableTemplateStatus\(templateDraftStatus\)/);
   assert.match(designerDashboard, /action: "SUBMIT_REVIEW"/);
   assert.match(ownerDashboard, /<OwnerTemplateReview \/>/);
   assert.match(ownerReview, /scope=review/);

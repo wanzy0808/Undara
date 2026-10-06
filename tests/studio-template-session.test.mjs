@@ -6,6 +6,7 @@ import ts from "typescript";
 import { invitationTemplates } from "../lib/templates/catalog.ts";
 import { templateDemoInvitation, getTemplateDemoInvitation, templateDemoPhoto } from "../data/templates/preview-invitation.ts";
 import { getInvitationDefaultMusic } from "../lib/templates/music.ts";
+import { isEditableTemplateStatus } from "../lib/templates/template-editing.ts";
 import { invitationDesignStateFromKey, makeInvitationDesignStateKey } from "../components/InvitationStudio/designer-state.ts";
 import { invitationTemplatePresets, invitationDecorOptions } from "../components/InvitationStudio/designer-config.ts";
 import { makeStudioSavedState, makeStudioServerRevision } from "../components/InvitationStudio/designer-persistence.ts";
@@ -38,17 +39,18 @@ function studio(overrides = {}) {
     design: invitationDesignStateFromKey("silver-reverie"),
     selectedCatalogKey: "silver-reverie", history: [], future: [],
     templateMode: true, templateDraftId: null, templateCustomInvitationId: null,
-    templateDraftStatus: null, saving: false, notice: "", audioMutation: { current: false },
+    templateDraftStatus: overrides.templateDraftId ? "DRAFT" : null, saving: false, notice: "", audioMutation: { current: false },
     musicUrl: "", eventTag: "", dressCode: "", savedState: "", serverRevision: "",
     invitation: { ...templateDemoInvitation, id: templateStudioEntryId(), assets: [] },
     catalog: invitationTemplates,
     invitationDesignStateFromKey, makeInvitationDesignStateKey, makeStudioSavedState, makeStudioServerRevision,
     STUDIO_REFRESH_DRAFT_KEY, makeStudioRefreshDraft, recoverStudioRefreshDraft, templateStudioEntryId, URL, URLSearchParams,
     invitationTemplatePresets, invitationDecorOptions, getInvitationDefaultMusic, getTemplateDemoInvitation, templateDemoPhoto,
+    isEditableTemplateStatus,
     clearTemplateSelection: () => {},
     saveStudioTemplateDraft: async (payload, draftId) => {
       saves.push({ payload, draftId });
-      const result = { id: draftId || "draft-first-save", templateNo: 27, status: "DRAFT", updatedAt: "2026-10-06T02:10:00.000Z" };
+      const result = { id: draftId || "draft-first-save", templateNo: 27, status: state.templateDraftStatus || "DRAFT", updatedAt: "2026-10-06T02:10:00.000Z" };
       savedDraft = { ...payload, ...result, musicUrl: payload.musicUrl || null };
       return result;
     },
@@ -202,4 +204,35 @@ test("actual custom Save/edit/reload preserves authored copy and owned data with
   assert.deepEqual(state.invitation.assets, customer.assets);
   assert.equal(state.invitation.musicUrl, customer.musicUrl);
   assert.equal(state.musicUrl, "");
+});
+
+for (const status of ["DRAFT", "REVIEW", "PUBLISHED"]) {
+  test(`actual ${status} Studio load/edit/Save/reopen retains the same record and authored design`, async () => {
+    const { state, saves, invitationSaves } = studio({ templateDraftId: "saved-existing", templateDraftStatus: status });
+    await state.save();
+    await state.load();
+    assert.equal(state.templateDraftStatus, status);
+    assert.ok(!state.notice.includes("dikunci"));
+    state.change({ copy: { greeting: "Repaired greeting" }, sectionStyles: { cover: { background: "#e8d6c2" } } });
+    await state.save();
+    assert.equal(state.templateDraftStatus, status);
+    assert.equal(state.notice, "Template #27 tersimpan.");
+    assert.equal(state.dirty, false);
+    assert.ok(saves.every((save) => save.draftId === "saved-existing"));
+    assert.equal(invitationSaves.length, 0);
+    await state.load();
+    assert.equal(state.design.copy.greeting, "Repaired greeting");
+    assert.equal(state.design.sectionStyles.cover.background, "#e8d6c2");
+    assert.equal(state.templateDraftId, "saved-existing");
+  });
+}
+
+test("actual Studio refuses archived template loading and saving", async () => {
+  const { state, saves } = studio({ templateDraftId: "closed", templateDraftStatus: "ARCHIVED" });
+  await state.save();
+  assert.equal(saves.length, 0);
+  assert.match(state.notice, /tidak dapat diedit/);
+  state.loadStudioTemplateDraft = async () => ({ id: "closed", status: "ARCHIVED", designKey: "silver-reverie" });
+  state.window.location.href = "https://undara.example/owner/studio?draft=closed";
+  await assert.rejects(state.load(), /tidak dapat diedit/);
 });

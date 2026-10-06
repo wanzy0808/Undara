@@ -21,6 +21,7 @@ export default function StudioCanvasToolbar({
   canUndo,
   canRedo,
   templateMode,
+  savedTemplate = false,
   dirty,
   labels,
   onToggleInspector,
@@ -39,6 +40,7 @@ export default function StudioCanvasToolbar({
   canUndo: boolean;
   canRedo: boolean;
   templateMode: boolean;
+  savedTemplate?: boolean;
   dirty: boolean;
   labels: {
     hidePanel: string;
@@ -128,7 +130,7 @@ export default function StudioCanvasToolbar({
         <Save className="h-4 w-4" />
         {saving
           ? labels.saving
-          : templateMode
+          : templateMode && !savedTemplate
             ? (locale === "en" ? "Save Draft" : "Simpan Draft")
             : labels.save}
       </Button>

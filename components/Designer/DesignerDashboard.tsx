@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { isEditableTemplateStatus } from "@/lib/templates/template-editing";
 
 type Template = {
   id: string;
@@ -125,22 +126,22 @@ export default function DesignerDashboard() {
                     <p className="mt-1 text-xs text-primary">{item.customInvitation ? `Event: ${item.customInvitation.title}` : "Custom selesai · akses data user ditutup"}</p>
                   ) : <p className="mt-1 text-xs text-muted-foreground">Nilai order terkait: {rupiah(item.orderValue)}</p>}
                   <div className="mt-2 flex flex-wrap gap-1">{item.tags.map((tag) => <span key={tag} className="rounded-md border border-border px-2 py-1 text-[10px] text-muted-foreground">{tag}</span>)}</div>
-                  {item.templateFile ? (
-                    <a className="mt-3 inline-block text-xs text-primary underline" href={item.templateFile} target="_blank" rel="noreferrer">Buka file template</a>
-                  ) : (
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {item.templateFile ? (
+                      <a className="text-xs text-primary underline" href={item.templateFile} target="_blank" rel="noreferrer">Buka file template</a>
+                    ) : (
                       <p className="text-xs text-primary">
                         {item.status === "PUBLISHED" ? "Template Studio · tampil di katalog" : item.isCustom ? "Custom Studio · khusus event yang ditugaskan" : "Template Studio · draft belum tampil di katalog"}
                       </p>
-                      {item.status === "DRAFT" && (
-                        <>
-                          <Button asChild size="sm" variant="outline"><Link href={`/designer/studio?draft=${encodeURIComponent(item.id)}`}>Lanjut edit</Link></Button>
-                          <Button type="button" size="sm" disabled={busyId === item.id} onClick={() => void submitForReview(item.id)}>{busyId === item.id ? "Mengirim..." : "Kirim ke Owner"}</Button>
-                        </>
-                      )}
-                      {item.status === "REVIEW" && <span className="text-xs text-muted-foreground">Menunggu konfirmasi Owner</span>}
-                    </div>
-                  )}
+                    )}
+                    {item.designKey && isEditableTemplateStatus(item.status) && (
+                      <Button asChild size="sm" variant="outline"><Link href={`/designer/studio?draft=${encodeURIComponent(item.id)}`}>Lanjut edit</Link></Button>
+                    )}
+                    {!item.templateFile && item.status === "DRAFT" && (
+                      <Button type="button" size="sm" disabled={busyId === item.id} onClick={() => void submitForReview(item.id)}>{busyId === item.id ? "Mengirim..." : "Kirim ke Owner"}</Button>
+                    )}
+                    {item.status === "REVIEW" && <span className="text-xs text-muted-foreground">Menunggu konfirmasi Owner</span>}
+                  </div>
                 </div>
               </article>
             ))}

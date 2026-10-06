@@ -751,3 +751,10 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Add Little Cloud (BABY_SHOWER) and Gathering (OTHER) with native geometric art, category fixtures and shared functional controls; all six categories have dedicated choices and the catalog has 19 built-ins. Browser/device release QA remains pending. (6 October 2026)
 
 - [x] Perbaiki histori pilihan katalog Undo/Redo dan identitas pemulihan refresh untuk Save pertama/master/custom; baseline musik bawaan/inherited konsisten pada Save/Load. Handler/effect regression fixtures tersedia; QA browser/production tetap terbuka. (6 October 2026)
+
+
+### Saved template editing — 6 October 2026
+
+- [x] DRAFT/REVIEW/PUBLISHED reopen and Save to the same ID, preserving status and author permissions without version records; verified with actual action/route fixtures and dashboard/toolbar SSR.
+- [x] Saved-template editing: 701/701 regression tests, production build (72/72) and TypeScript PASS; no new ESLint diagnostic class compared to committed baseline.
+- [ ] Browser QA with signed-in Owner/Designer: published edit → Save → reopen; verify public catalog update and unchanged existing customer snapshot.
