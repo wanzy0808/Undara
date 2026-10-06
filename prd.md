@@ -1297,6 +1297,8 @@ Requirements:
 - table full mengembalikan conflict response (HTTP `409`);
 - seating roster menerima guest manual atau RSVP eligible/attending sesuai rule produk.
 
+**Denah bebas, Simpan dan Cetak (arahan owner 6 Oktober 2026):** tamu tetap dapat ditarik dari roster/antar-kursi dengan penyimpanan assignment dan swap atomik existing. Meja beserta kursinya dapat digeser bebas pada denah; target drop selalu dihitung dari posisi meja terbaru. Mode **Gambar jalur** mengikuti drag mouse/pointer untuk menggambar lintasan pengantin bebas dengan penunjuk arah; mode pilih tetap untuk penempatan tamu/meja. Undo/Redo dan hapus jalur berlaku pada layout selama sesi. **Simpan denah** memperbarui satu record per event di server, meliputi posisi meja dan jalur; buka ulang membaca layout terakhir, tanpa menulis ulang Guest/seat assignment. Tolak ownership/event mismatch, entitlement yang tidak memenuhi, titik/ukuran tidak valid serta Save dari snapshot server yang sudah berubah. Layout privat tidak dibawa ke undangan publik. **Cetak** menampilkan denah vektor dengan posisi/jalur terbaru dan daftar tamu per meja dalam lembar terang A4 landscape; browser dapat memilih printer atau PDF. Cetak tidak melakukan Save otomatis atau mencetak Dashboard/sidebar. Feedback loading/error/retry/unsaved harus ringkas, menggunakan ID/EN dan token brand existing.
+
 Saat user mengganti event, local seating state harus di-reset agar data event lama tidak tercampur.
 
 ---
@@ -3122,3 +3124,12 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Implementation / area:** Shared editable-status policy for DRAFT/REVIEW/PUBLISHED, authenticated same-record PATCH with an atomic status/ownership guard, Studio load/save and toolbar, Designer continuation links and Owner saved-template list. Save preserves catalog status; first publication still requires Review and Owner/Admin. ARCHIVED custom jobs and temporary customer-media access remain closed; template saves never update customer Invitation snapshots. No schema, migration or dependency change. Commit: `fix(studio): allow editing saved invitation templates`.
 
 **Observed local validation:** 701/701 regression tests PASS, including 18 added actual-handler/action and SSR cases for same-ID Save, Review/Published status preservation, author/Owner/Admin boundaries, origin rejection, atomic archive/reassignment guards, first-publication approval, closed customer media, continuation links and existing-template Save labels. Focused suite 36/36 PASS. Production `next build --webpack` PASS (72/72 entries), `pnpm exec tsc --noEmit` PASS and `git diff --check` PASS. New helper, route, toolbar and changed tests have no ESLint diagnostics; existing Studio/dashboard hook errors and warnings match the committed baseline (5 errors, 6 warnings; no new diagnostic class after excluding line-number code frames). CI is pending publication at this checkpoint. Browser/device, production database and real signed-in save/reload have not been verified; fixtures are not E2E.
+
+
+### 2026-10-06 — Event-scoped seating plan storage
+
+**Request / rationale:** Owner requests draggable guest/table layout, freehand bridal route drawing, Save and print/PDF. Canonical §10 now specifies those operations while retaining atomic Guest assignment/swap and tenant isolation.
+
+**Implementation / area:** First batch adds one private `SeatingPlan` per Invitation, bounded layout codec, canonical geometry and authenticated no-store GET/PUT. Save locks the owned event, validates actual table IDs and checks the server timestamp before same-record upsert; no Guest or public invitation design writes. Schema/client generation and migration source are distinct from target database deployment. UI/drawing/print follow in a separate commit. Commit: `feat(seating): persist private event floor plans`.
+
+**Observed local validation:** 712/712 regression tests PASS, focused API/codec/origin suite 12/12 PASS, production `next build --webpack` PASS (73/73 entries), TypeScript and changed-source ESLint PASS. Prisma client generated locally with a non-production placeholder URL; this does not connect to or migrate a database. Target migration and browser/physical print verification remain pending. UI/drawing/print is not yet shipped in this storage-only checkpoint. CI will be observed after publication.

@@ -61,6 +61,7 @@ export const ModelName = {
   PaymentOrder: 'PaymentOrder',
   DesignerAsset: 'DesignerAsset',
   DesignerTemplate: 'DesignerTemplate',
+  SeatingPlan: 'SeatingPlan',
   WeddingTable: 'WeddingTable',
   Guest: 'Guest',
   GuestWish: 'GuestWish',
@@ -269,6 +270,15 @@ export const DesignerTemplateScalarFieldEnum = {
 } as const
 
 export type DesignerTemplateScalarFieldEnum = (typeof DesignerTemplateScalarFieldEnum)[keyof typeof DesignerTemplateScalarFieldEnum]
+
+
+export const SeatingPlanScalarFieldEnum = {
+  invitationId: 'invitationId',
+  layout: 'layout',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SeatingPlanScalarFieldEnum = (typeof SeatingPlanScalarFieldEnum)[keyof typeof SeatingPlanScalarFieldEnum]
 
 
 export const WeddingTableScalarFieldEnum = {

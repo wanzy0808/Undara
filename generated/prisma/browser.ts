@@ -68,6 +68,11 @@ export type DesignerAsset = Prisma.DesignerAssetModel
  */
 export type DesignerTemplate = Prisma.DesignerTemplateModel
 /**
+ * Model SeatingPlan
+ *
+ */
+export type SeatingPlan = Prisma.SeatingPlanModel
+/**
  * Model WeddingTable
  * 
  */

@@ -407,6 +407,7 @@ export const ModelName = {
   PaymentOrder: 'PaymentOrder',
   DesignerAsset: 'DesignerAsset',
   DesignerTemplate: 'DesignerTemplate',
+  SeatingPlan: 'SeatingPlan',
   WeddingTable: 'WeddingTable',
   Guest: 'Guest',
   GuestWish: 'GuestWish',
@@ -427,7 +428,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "emailVerificationToken" | "accountActionToken" | "invitation" | "invitationAsset" | "payment" | "paymentOrder" | "designerAsset" | "designerTemplate" | "weddingTable" | "guest" | "guestWish" | "auditLog" | "waBlastTemplate"
+    modelProps: "user" | "session" | "emailVerificationToken" | "accountActionToken" | "invitation" | "invitationAsset" | "payment" | "paymentOrder" | "designerAsset" | "designerTemplate" | "seatingPlan" | "weddingTable" | "guest" | "guestWish" | "auditLog" | "waBlastTemplate"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1171,6 +1172,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SeatingPlan: {
+      payload: Prisma.$SeatingPlanPayload<ExtArgs>
+      fields: Prisma.SeatingPlanFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SeatingPlanFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SeatingPlanFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>
+        }
+        findFirst: {
+          args: Prisma.SeatingPlanFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SeatingPlanFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>
+        }
+        findMany: {
+          args: Prisma.SeatingPlanFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>[]
+        }
+        create: {
+          args: Prisma.SeatingPlanCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>
+        }
+        createMany: {
+          args: Prisma.SeatingPlanCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SeatingPlanCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>[]
+        }
+        delete: {
+          args: Prisma.SeatingPlanDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>
+        }
+        update: {
+          args: Prisma.SeatingPlanUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>
+        }
+        deleteMany: {
+          args: Prisma.SeatingPlanDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SeatingPlanUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SeatingPlanUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>[]
+        }
+        upsert: {
+          args: Prisma.SeatingPlanUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SeatingPlanPayload>
+        }
+        aggregate: {
+          args: Prisma.SeatingPlanAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSeatingPlan>
+        }
+        groupBy: {
+          args: Prisma.SeatingPlanGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SeatingPlanGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SeatingPlanCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SeatingPlanCountAggregateOutputType> | number
+        }
+      }
+    }
     WeddingTable: {
       payload: Prisma.$WeddingTablePayload<ExtArgs>
       fields: Prisma.WeddingTableFieldRefs
@@ -1767,6 +1842,15 @@ export const DesignerTemplateScalarFieldEnum = {
 export type DesignerTemplateScalarFieldEnum = (typeof DesignerTemplateScalarFieldEnum)[keyof typeof DesignerTemplateScalarFieldEnum]
 
 
+export const SeatingPlanScalarFieldEnum = {
+  invitationId: 'invitationId',
+  layout: 'layout',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SeatingPlanScalarFieldEnum = (typeof SeatingPlanScalarFieldEnum)[keyof typeof SeatingPlanScalarFieldEnum]
+
+
 export const WeddingTableScalarFieldEnum = {
   id: 'id',
   invitationId: 'invitationId',
@@ -2259,6 +2343,7 @@ export type GlobalOmitConfig = {
   paymentOrder?: Prisma.PaymentOrderOmit
   designerAsset?: Prisma.DesignerAssetOmit
   designerTemplate?: Prisma.DesignerTemplateOmit
+  seatingPlan?: Prisma.SeatingPlanOmit
   weddingTable?: Prisma.WeddingTableOmit
   guest?: Prisma.GuestOmit
   guestWish?: Prisma.GuestWishOmit

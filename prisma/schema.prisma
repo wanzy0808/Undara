@@ -166,6 +166,7 @@ model Invitation {
   orders             PaymentOrder[]
   assets             InvitationAsset[]
   tables             WeddingTable[]
+  seatingPlan        SeatingPlan?
   guests             Guest[]
   guestWishes        GuestWish[]
   waBlastTemplates   WaBlastTemplate[]
@@ -268,6 +269,13 @@ model DesignerTemplate {
   @@index([designerId, createdAt])
   @@index([status, createdAt])
   @@index([customInvitationId, status])
+}
+
+model SeatingPlan {
+  invitationId String     @id
+  layout       Json
+  updatedAt    DateTime   @updatedAt
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
 }
 
 model WeddingTable {
