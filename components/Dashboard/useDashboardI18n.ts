@@ -33,7 +33,6 @@ const english: Record<string, string> = {
   "Salin tautan": "Copy link",
   "Kirim": "Send",
   "Pilih semua tamu": "Select all guests",
-  "Pilih tamu": "Select guest",
   "Pengaturan": "Settings",
   "Tersimpan": "Saved",
   "Kirim WhatsApp": "Send via WhatsApp",
