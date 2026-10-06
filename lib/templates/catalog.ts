@@ -263,6 +263,25 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewImage: "/templates/confetti-club/preview.svg",
     assetPath: "/templates/confetti-club",
   },
+
+  {
+    key: "silver-reverie", name: "Silver Reverie",
+    description: "Perayaan Silver Wedding dengan kertas perak, foto editorial, dan lembar kenangan.",
+    descriptionEn: "Silver Wedding stationery with silver paper, editorial portraits and a memory album.",
+    category: "Anniversary", eventCategories: ["SILVER_WEDDING"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "silverReverie", font: "cormorantManrope" },
+    previewImage: "/templates/silver-reverie/preview.svg", assetPath: "/templates/silver-reverie",
+  },
+  {
+    key: "golden-keepsake", name: "Golden Keepsake",
+    description: "Folio Golden Wedding bernuansa emas hangat, lipatan kipas, dan album sepanjang waktu.",
+    descriptionEn: "A warm Golden Wedding folio with golden paper fans and an album through time.",
+    category: "Anniversary", eventCategories: ["GOLDEN_WEDDING"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "goldenKeepsake", font: "playfairInter" },
+    previewImage: "/templates/golden-keepsake/preview.svg", assetPath: "/templates/golden-keepsake",
+  },
 ];
 
 export function templateSupportsEventCategory(

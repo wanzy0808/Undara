@@ -43,6 +43,8 @@ export const invitationDefaultTracks: Record<string, { title: string; file: stri
   "velvet-horizon": bundledTracks.eternalLove,
   "serein": bundledTracks.untilWeMeetAgain,
   "confetti-club": bundledTracks.theySay,
+  "silver-reverie": bundledTracks.untilWeMeetAgain,
+  "golden-keepsake": bundledTracks.eternalLove,
 };
 
 export function getInvitationDefaultMusic(templateKey: string) {

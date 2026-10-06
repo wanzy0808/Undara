@@ -177,9 +177,16 @@ for (const category of ["WEDDING", "BIRTHDAY"]) {
 
 for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "OTHER"]) {
   test(`${category} does not borrow Wedding/Birthday defaults or catalog cards`, () => {
-    assert.deepEqual(catalog.templatesForEvent(localCatalog, category), []);
-    assert.equal(catalog.defaultInvitationTemplateForEvent(category), null);
-    assert.equal(eventInvitationDesignFromKey("", category, "").template, "");
+    const expected = { SILVER_WEDDING: "silver-reverie", GOLDEN_WEDDING: "golden-keepsake" }[category];
+    if (expected) {
+      assert.deepEqual(catalog.templatesForEvent(localCatalog, category).map((item) => item.key), [expected]);
+      assert.equal(catalog.defaultInvitationTemplateForEvent(category).key, expected);
+      assert.equal(eventInvitationDesignFromKey("", category, "").template, expected);
+    } else {
+      assert.deepEqual(catalog.templatesForEvent(localCatalog, category), []);
+      assert.equal(catalog.defaultInvitationTemplateForEvent(category), null);
+      assert.equal(eventInvitationDesignFromKey("", category, "").template, "");
+    }
     const markup = renderToStaticMarkup(createElement(LanguageProvider, null,
       createElement(TemplatePanel, { selected: "", onSelect: () => {}, templates: [], emptyMessage: "Belum ada template untuk jenis acara ini." })));
     assert.match(markup, /Belum ada template untuk jenis acara ini/);
@@ -378,3 +385,24 @@ test("explicitly assigned blank custom designs stay usable for all categories wi
     assert.equal((await handoff.assign()).status, 200);
   }
 });
+
+for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING"]) {
+  test(`${category} accepts only its own new theme through Save/Publish, gateway and handoff`, async () => {
+    const theme = catalog.defaultInvitationTemplateForEvent(category);
+    const ownKey = design.makeDesignKey(theme.key, theme.preset.palette, theme.preset.font);
+    const f = saveFixture({ invitation: event({ eventCategory: category }), digital: true });
+    assert.equal((await f.save({ templateKey: ownKey, isPublished: true })).status, 200);
+    assert.equal(f.calls.updates[0].templateKey, ownKey);
+    assert.equal(f.calls.updates[0].eventCategory, category);
+    assert.equal(f.calls.updates[0].isPublished, true);
+    const gateway = gatewayFixture({ events: [choice("own", category), choice("wrong", category === "SILVER_WEDDING" ? "GOLDEN_WEDDING" : "SILVER_WEDDING")] });
+    await assert.rejects(() => gateway.open(theme.key), (error) => error.url?.startsWith("/dashboard/editor?invitationId=own"));
+    const handoff = handoffFixture({ category, templateKey: ownKey });
+    assert.equal((await handoff.assign()).status, 200);
+    for (const otherCategory of categories.eventCategoryOptions.map((item) => item.key).filter((key) => key !== category)) {
+      const wrong = saveFixture({ invitation: event({ eventCategory: otherCategory }), digital: true });
+      assert.equal((await wrong.save({ templateKey: ownKey, isPublished: true })).status, 400);
+      assert.deepEqual(wrong.calls.updates, []);
+    }
+  });
+}

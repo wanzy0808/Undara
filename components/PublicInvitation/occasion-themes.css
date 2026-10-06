@@ -1,0 +1,119 @@
+/* New occasion artworks share functional controls, not one fixed composition. */
+.occasion-invitation { border: 0; border-radius: 0; font-size: 16px; line-height: 1.7; }
+.occasion-invitation ::selection { background: var(--inv-accent); color: var(--ot-on-accent); }
+.occasion-invitation :is(button,a,input,select,textarea):focus-visible { outline: 2px solid var(--inv-accent); outline-offset: 4px; }
+.occasion-invitation :is(input,select,textarea) { caret-color: var(--inv-accent); }
+.occasion-invitation a { text-underline-offset: .2em; }
+.ot-accent-art { color: var(--inv-accent); }
+.ot-soft-art { color: var(--inv-soft); }
+.ot-envelope, .ot-cover { position: relative; min-height: 760px; overflow: hidden; padding: 48px clamp(24px,7%,48px) 32px; background: var(--inv-bg); color: var(--inv-ink); }
+[data-invitation-background-override="true"] > :is(.ot-envelope,.ot-cover) { background: transparent; }
+.ot-envelope { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 28px; text-align: center; }
+.ot-envelope-title { position: relative; font-family: var(--inv-heading); font-size: clamp(30px,7vw,43px); line-height: 1.2; max-width: 14ch; margin: 0; text-wrap: balance; }
+.ot-stationery { position: relative; width: min(100%,350px); aspect-ratio: 350 / 310; perspective: 950px; }
+.ot-paper-back { position: absolute; inset: 6% 0; background: var(--inv-soft); box-shadow: 0 16px 30px color-mix(in srgb,var(--inv-ink) 12%,transparent); }
+.ot-letter-flight { position: absolute; inset: 0 8% 12%; }
+.ot-letter-paper { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 14px; background: var(--inv-surface); color: var(--ot-surface-ink); padding: 28px 18px; }
+.ot-letter-paper h1 { position: relative; margin: 0; font-family: var(--inv-heading); font-size: clamp(27px,7vw,38px); line-height: 1.14; overflow-wrap: anywhere; }
+.ot-letter-paper p { position: relative; margin: 0; font-size: 14px; }
+.ot-door-flight { position: absolute; inset: 6% 50% 6% 0; transform-origin: left; }
+.ot-door-flight-right { inset: 6% 0 6% 50%; transform-origin: right; }
+.ot-door { position: absolute; inset: 0; background: var(--inv-soft); }
+.ot-door-right { background: color-mix(in srgb,var(--inv-soft) 85%,var(--inv-surface)); }
+.sv-envelope .ot-door-left { border-radius: 0 45% 45% 0; }
+.sv-envelope .ot-door-right { border-radius: 45% 0 0 45%; }
+.ot-seal-flight { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.ot-seal { position: relative; width: 72px; height: 72px; display: grid; place-items: center; border-radius: 50%; background: var(--inv-accent); color: var(--ot-on-accent); box-shadow: 0 4px 12px color-mix(in srgb,var(--inv-ink) 15%,transparent); }
+.ot-seal .ot-seal-loops { position: relative; inset: auto; width: 40px; height: 52px; }
+.ot-seal-loops :is(.ot-accent-art,.ot-soft-art) { color: inherit; }
+.gk-seal-mark { width: 24px; height: 24px; border: 1px solid currentColor; transform: rotate(45deg); }
+.ot-address { position: relative; margin: 0; max-width: 30ch; font-size: 15px; overflow-wrap: anywhere; }
+.ot-open { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 48px; padding: 13px 24px; border: 0; border-radius: 4px; background: var(--inv-accent); color: var(--ot-on-accent); font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 160ms cubic-bezier(.23,1,.32,1), opacity 160ms ease; }
+.ot-open:active { transform: scale(.97); }
+.ot-open:disabled { cursor: default; opacity: .7; }
+.ot-scroll { position: relative; display: flex; align-items: center; gap: 16px; font-size: 13px; margin: 36px 0 0; }
+.ot-event-type { position: relative; margin: 0 0 16px; font-size: 16px; letter-spacing: .1em; }
+.ot-cover-name { position: relative; margin: 0; font-family: var(--inv-heading); font-size: clamp(48px,12vw,80px); line-height: 1.03; letter-spacing: -.025em; font-weight: 400; overflow-wrap: anywhere; text-wrap: balance; }
+.ot-cover-date { position: relative; margin: 24px 0 0; font-size: 17px; }
+.ot-cover-photo-frame { position: relative; width: min(70%,270px); padding: 8px; background: var(--inv-surface); box-shadow: 0 10px 25px color-mix(in srgb,var(--inv-ink) 14%,transparent); }
+.ot-cover-photo { position: relative; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; }
+.ot-cover-photo img { width: 100%; height: 100%; object-fit: cover; }
+.ot-edit-photo { position: absolute; inset: auto 8px 8px; min-height: 44px; border: 0; padding: 8px; background: var(--inv-surface); color: var(--ot-surface-ink); font-family: inherit; font-size: 14px; cursor: pointer; }
+.ot-photo-add { position: relative; min-height: 48px; border: 1px solid var(--inv-accent); padding: 12px 22px; background: var(--inv-surface); color: var(--ot-surface-ink); cursor: pointer; }
+.sv-cover { display: flex; flex-direction: column; align-items: flex-start; padding-top: 58px; }
+.sv-cover .ot-cover-photo-frame { transform: rotate(-6deg); margin: 0 0 42px 5px; width: min(72%,285px); }
+.sv-cover-copy { position: relative; width: min(100%,420px); }
+.sv-paper-curve { position: absolute; inset: -10% 8% 4% -35%; background: var(--inv-surface); border-radius: 0 0 70% 0; box-shadow: 10px 18px 28px color-mix(in srgb,var(--inv-ink) 8%,transparent); }
+.sv-loops { position: absolute; right: -5%; top: -25px; width: 47%; pointer-events: none; }
+.sv-loops svg { display: block; width: 100%; height: auto; }
+.sv-cover-without-photo { justify-content: flex-end; padding-top: 240px; }
+.sv-cover-without-photo > .sv-loops { width: 66%; right: 9%; top: 34px; }
+.ot-letter-paper .sv-loops { width: 40%; top: 12px; right: 8%; }
+.gk-cover { display: flex; flex-direction: column; align-items: center; text-align: center; padding-bottom: 72px; }
+.gk-cover-copy { position: relative; width: 100%; padding: 10px 0 30px; }
+.gk-cover .ot-event-type { margin: 24px 0 0; }
+.gk-cover .ot-cover-photo-frame { width: min(68%,260px); border-radius: 50%; margin: 0 0 26px; padding: 6px; }
+.gk-cover .ot-cover-photo { border-radius: 50%; }
+.gk-folio-edge { position: absolute; left: 16px; inset-block: 0; width: 12px; background: var(--inv-soft); border-radius: 0 0 100% 0; box-shadow: 8px 0 18px color-mix(in srgb,var(--inv-accent) 16%,transparent); }
+.gk-fan { position: relative; width: min(100%,310px); pointer-events: none; }
+.gk-fan svg { display: block; width: 100%; height: auto; }
+.gk-cover > .gk-fan { position: absolute; width: 67%; bottom: -22px; right: -16%; transform: rotate(-20deg); opacity: .7; }
+.gk-cover .ot-scroll { align-self: flex-start; margin-top: auto; padding-top: 12px; }
+.ot-letter-paper .gk-fan { position: absolute; width: 60%; top: 0; right: 10%; opacity: .5; }
+.gk-envelope .ot-door { background: var(--inv-accent); }
+.gk-envelope .ot-door-right { background: color-mix(in srgb,var(--inv-accent) 83%,var(--inv-surface)); }
+.gk-envelope .ot-seal { background: var(--inv-surface); color: var(--inv-accent); }
+.ot-envelope[data-opening="true"] .ot-door-flight-left { transform: rotateY(-110deg); opacity: 0; }
+.ot-envelope[data-opening="true"] .ot-door-flight-right { transform: rotateY(110deg); opacity: 0; }
+.ot-envelope[data-opening="true"] .ot-seal-flight { transform: translateY(14px); opacity: 0; }
+.ot-envelope[data-opening="true"] .ot-letter-flight { transform: translateY(-30px); }
+.ot-door-flight { transition: transform 600ms cubic-bezier(.23,1,.32,1), opacity 600ms cubic-bezier(.23,1,.32,1); }
+.ot-seal-flight { transition: transform 200ms cubic-bezier(.23,1,.32,1), opacity 160ms ease; }
+.ot-letter-flight { transition: transform 650ms cubic-bezier(.23,1,.32,1); }
+.ot-section { padding-block: 68px; }
+.ot-section-title { margin: 0 0 28px; font-size: clamp(30px,7vw,44px); font-weight: 400; letter-spacing: -.025em; line-height: 1.16; text-wrap: balance; }
+.occasion-invitation [data-studio-copy-field] { font-size: 16px; line-height: 1.85; }
+.occasion-invitation [data-studio-native-object="object:greeting:copy-group"] { opacity: 1; max-width: 38ch; margin-inline: 0; }
+.occasion-invitation [data-studio-native-object="object:event:details-group"] { margin-inline: 0; font-size: 16px; }
+.occasion-invitation [data-studio-native-object="object:event:event-title"] { font-family: var(--inv-heading); font-size: 28px; font-weight: 400; line-height: 1.2; }
+.occasion-invitation [data-studio-native-object="object:dateTime:panel"] { padding: 28px 20px; border-radius: 0; background: var(--inv-surface); color: var(--ot-surface-ink); border: 1px solid var(--ot-input-border); }
+.occasion-invitation [data-studio-native-object="object:countdown:grid"] { text-align: center; gap: 8px; }
+.occasion-invitation [data-studio-native-object="object:countdown:grid"] > div { border: 0; border-radius: 0; background: transparent; padding: 12px 0; }
+.occasion-invitation [data-studio-native-object="object:countdown:grid"] > div > p:first-child { font-size: clamp(30px,7vw,42px); font-variant-numeric: tabular-nums; color: inherit; }
+.occasion-invitation [data-studio-native-object="object:location:details-group"] { margin-inline: 0; font-size: 16px; }
+.occasion-invitation [data-studio-native-object="object:location:details-group"] a { min-height: 48px; padding: 14px 24px; border-radius: 4px; color: var(--ot-on-accent); background: var(--inv-accent); }
+.occasion-invitation [data-studio-native-object="object:gift:panel"] { border-radius: 0; padding: 28px 22px; background: var(--inv-surface); color: var(--ot-surface-ink); }
+.occasion-invitation [data-studio-native-object="object:gift:panel"] button { min-height: 48px; padding: 12px 18px; background: var(--inv-accent); color: var(--ot-on-accent); border: 0; border-radius: 4px; }
+.occasion-invitation :is([data-studio-rsvp-element="form"],[data-studio-native-object="object:wishes:form-group"]) { text-align: left; }
+.occasion-invitation :is(input,textarea,select) { min-height: 48px; border: 1px solid var(--ot-input-border); border-radius: 4px; padding: 13px 15px; font-size: 16px; background: var(--inv-surface); color: var(--ot-surface-ink); }
+.occasion-invitation :is(input,textarea)::placeholder { color: var(--ot-surface-ink); opacity: .75; }
+.occasion-invitation [data-studio-rsvp-element="submit"],.occasion-invitation [data-studio-section-element="wishes:button"] { min-height: 48px; border-radius: 4px; font-size: 16px; background: var(--inv-accent); color: var(--ot-on-accent); }
+.ot-identity { position: relative; display: grid; gap: 28px; }
+.ot-identity .ot-identity-photo { position: relative; overflow: hidden; width: min(100%,270px); aspect-ratio: 4 / 5; padding: 8px; background: var(--inv-surface); }
+.ot-identity-photo img { width: 100%; height: 100%; object-fit: cover; }
+.ot-identity-name { font-family: var(--inv-heading); margin: 0; font-size: clamp(32px,7vw,46px); line-height: 1.2; overflow-wrap: anywhere; }
+.ot-parents { margin-top: 14px; display: grid; gap: 12px; font-size: 14px; line-height: 1.7; }
+.sv-identity { grid-template-columns: 1fr; }
+.sv-identity .ot-identity-photo { margin-left: auto; border-radius: 0; }
+.gk-identity { text-align: center; justify-items: center; }
+.gk-identity .ot-identity-photo { border-radius: 50% 50% 0 0; }
+.sv-section-loops { position: relative; inset: auto; width: 110px; margin: 0 0 26px auto; }
+.gk-section-fan { width: 150px; margin: 0 auto 28px; }
+.golden-keepsake-invitation .ot-section { text-align: center; }
+.golden-keepsake-invitation [data-studio-native-object="object:greeting:copy-group"],.golden-keepsake-invitation [data-studio-native-object="object:event:details-group"],.golden-keepsake-invitation [data-studio-native-object="object:location:details-group"] { margin-inline: auto; }
+.golden-keepsake-invitation [data-invitation-section="event"] { padding-top: 90px; padding-bottom: 90px; }
+.golden-keepsake-invitation [data-studio-native-object="object:dateTime:panel"] { border: 0; border-block: 1px solid var(--ot-input-border); padding-block: 34px; background: transparent; }
+.gk-fold-mark { position: absolute; width: 28px; height: 28px; left: 20px; top: 20px; background: var(--inv-soft); clip-path: polygon(0 0,100% 0,0 100%); }
+.ot-gallery { position: relative; }
+.silver-reverie-invitation .ugc-gallery-masonry { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 18px; }
+.silver-reverie-invitation .ugc-gallery-masonry-item { margin: 0; border-radius: 0; padding: 6px; background: var(--inv-bg); aspect-ratio: 3 / 4; }
+.silver-reverie-invitation .ugc-gallery-masonry-item:first-child { grid-column: 1 / -1; aspect-ratio: 4 / 3; }
+.silver-reverie-invitation .ugc-gallery-masonry-item:nth-child(3n) { margin-top: 26px; }
+.golden-keepsake-invitation .ugc-gallery-stage { border-radius: 50% 50% 0 0; background: var(--inv-bg); }
+.occasion-invitation .ugc-gallery-edit { min-height: 44px; font-size: 14px; }
+.ot-footer { position: relative; display: flex; justify-content: center; padding: 32px 24px; background: var(--inv-surface); color: var(--ot-surface-ink); }
+.ot-footer-signature { font-family: var(--inv-heading); font-size: 22px; letter-spacing: .03em; }
+@media (min-width: 560px) { .sv-identity { grid-template-columns: 1fr 1fr; align-items: center; }.sv-identity .ot-identity-photo { margin: 0; }.ot-section { padding-inline: 48px; } }
+@media (max-width: 360px) { .ot-cover-name { font-size: 44px; }.ot-envelope,.ot-cover { padding-inline: 24px; }.ot-cover { min-height: 720px; }.ot-section { padding-block: 56px; }.ot-section-title { font-size: 30px; } }
+@media (hover: hover) and (pointer: fine) { .ot-open:not(:disabled):hover { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .ot-door-flight,.ot-seal-flight,.ot-letter-flight,.ot-open { transition: none; }.ot-open:active,.ot-open:not(:disabled):hover { transform: none; } }

@@ -65,6 +65,8 @@ const confettiClubPhotos: PhotoMotionMap = {
 };
 
 const photoDefaults: Record<string, PhotoMotionMap> = {
+  "silver-reverie": { cover: { animation: "fade", animationDuration: .5 }, gallery: { animation: "rise", animationDuration: .55, animationStagger: .04 } },
+  "golden-keepsake": { cover: { animation: "fade", animationDuration: .5 }, gallery: { animation: "fade", animationDuration: .55, animationStagger: .04 } },
   "confetti-club": confettiClubPhotos,
   "romantic-rose": romanticRosePhotos,
   serein: sereinPhotos,
@@ -895,6 +897,8 @@ const confettiClubNative: Record<string, TemplateNativeMotion> = {
 };
 
 const nativeDefaults: Record<string, Record<string, TemplateNativeMotion>> = {
+  "silver-reverie": { "heading:cover": { animation: "rise", animationDuration: .6 }, "object:cover:silver-loops-art": { animation: "fade", animationDuration: .6 } },
+  "golden-keepsake": { "heading:cover": { animation: "fade", animationDuration: .6 }, "object:cover:golden-fan-art": { animation: "reveal-up", animationDuration: .6 } },
   "confetti-club": confettiClubNative,
   "romantic-rose": romanticRoseNative,
   serein: sereinNative,

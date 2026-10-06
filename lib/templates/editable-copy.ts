@@ -25,6 +25,18 @@ export function availableEditableCopyFields(templateKey: string, isWedding = tru
 }
 
 export function invitationCopyDefaults(templateKey: string, eventDescription?: string | null): EditableInvitationCopy {
+  if (templateKey === "silver-reverie") return {
+    greeting: eventDescription?.trim() || "Kami ingin merayakan perjalanan yang telah kami jalani bersama, dengan orang-orang yang membuatnya begitu berarti.",
+    attendanceRequest: "Mari hadir dan berbagi cerita pada perayaan hari jadi pernikahan kami. Kehadiran Anda akan melengkapi kebahagiaan ini.",
+    prayerWish: "Semoga hari-hari berikutnya selalu membawa kesehatan, ketenangan, dan kasih yang terus tumbuh.",
+    closing: "Terima kasih telah menemani perjalanan ini dengan doa dan kebersamaan. Sampai bertemu di hari perayaan.",
+  };
+  if (templateKey === "golden-keepsake") return {
+    greeting: eventDescription?.trim() || "Ada banyak kenangan yang kami simpan, dan satu hari istimewa yang ingin kami rayakan bersama Anda.",
+    attendanceRequest: "Dengan penuh syukur kami mengundang Anda untuk berkumpul dan merayakan hari jadi pernikahan kami.",
+    prayerWish: "Semoga keluarga kita selalu dikelilingi kasih, kesehatan, dan kebersamaan yang hangat.",
+    closing: "Waktu menjadi lebih berharga ketika dibagi dengan orang-orang tersayang. Terima kasih telah menjadi bagian dari cerita kami.",
+  };
   if (templateKey === "confetti-club") return {
     greeting: eventDescription?.trim() || "Ada satu hari yang ingin kami rayakan bersama orang-orang tersayang. Kamu diundang!",
     attendanceRequest: "Yuk, datang dan ikut merayakan. Kehadiranmu akan membuat hari ini semakin hangat.",

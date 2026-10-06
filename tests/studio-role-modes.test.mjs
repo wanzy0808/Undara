@@ -15,7 +15,7 @@ test("Owner and Designer use the shared Studio in Template Mode", () => {
   assert.match(editorPage, /mode\?: "invitation" \| "template"/);
   assert.match(editorPage, /<InvitationDesigner mode=\{mode\}/);
   assert.match(editor, /const templateMode = mode === "template"/);
-  assert.match(editor, /templateDemoInvitation/);
+  assert.match(editor, /getTemplateDemoInvitation\(loadedDesign.template\)/);
 });
 
 test("staff Save creates a draft template while customer Save stays event-scoped", () => {

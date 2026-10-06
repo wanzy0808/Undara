@@ -61,8 +61,22 @@ export const birthdayTemplateDemoInvitation: InvitationDesignerInvitation = {
   ],
 };
 
+export const silverTemplateDemoInvitation: InvitationDesignerInvitation = {
+  ...templateDemoInvitation, id: "silver-gallery-preview-only", slug: "silver-gallery-preview-only",
+  eventCategory: "SILVER_WEDDING", title: "Hari Jadi Pernikahan Una & Dara",
+  description: null, ceremonyTime: "16:00", receptionTime: "END",
+};
+export const goldenTemplateDemoInvitation: InvitationDesignerInvitation = {
+  ...templateDemoInvitation, id: "golden-gallery-preview-only", slug: "golden-gallery-preview-only",
+  eventCategory: "GOLDEN_WEDDING", title: "Perayaan Kebersamaan Una & Dara",
+  description: null, ceremonyTime: "17:00", receptionTime: "END",
+};
+
 export function getTemplateDemoInvitation(templateKey: string): InvitationDesignerInvitation {
-  return templateKey.split("::")[0] === "confetti-club"
+  const key = templateKey.split("::")[0];
+  if (key === "silver-reverie") return silverTemplateDemoInvitation;
+  if (key === "golden-keepsake") return goldenTemplateDemoInvitation;
+  return key === "confetti-club"
     ? birthdayTemplateDemoInvitation
     : templateDemoInvitation;
 }

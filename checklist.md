@@ -745,3 +745,5 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Native Studio markers dan empat narasi ID/EN; preview birthday terisolasi dari fixture pernikahan/data pelanggan.
 - [x] GitHub Actions pada feature commit: **428/428 regression tests**, Prisma generate, TypeScript, build **72/72** dan Orphan Audit lulus; hasil/run tercatat di Appendix A.
 - [ ] QA browser desktop/mobile, artwork editing/background/crop, nama panjang, keyboard/Reduced Motion dan Simpan → reload → public.
+
+- [x] Add distinct Silver Reverie (SILVER_WEDDING) / Golden Keepsake (GOLDEN_WEDDING) presets with native artwork, isolated category previews, shared 15-section engines and localized narrative. Browser/device release QA remains pending. (6 October 2026)

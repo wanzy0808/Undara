@@ -327,3 +327,19 @@ Release QA yang belum dibuktikan browser:
 - [ ] Tanpa foto, satu foto, banyak foto; crop, geser, Gallery Settings, Simpan → reload → public.
 - [ ] Klik/select/resize/delete artwork, edit surface per section, lock dan keyboard/touch.
 - [ ] Opening pointer/keyboard, Reduced Motion, section animation OFF, RSVP/Wishes preview read-only dan musik.
+
+
+## Anniversary production briefs — Silver Reverie / Golden Keepsake (6 October 2026)
+
+| Brief | Silver Reverie | Golden Keepsake |
+| --- | --- | --- |
+| Stable key / occasion | `silver-reverie` / SILVER_WEDDING only | `golden-keepsake` / GOLDEN_WEDDING only |
+| Palette / type | Silver-blue paper #eef1f2, white #fbfaf7, pewter #536b7a, ink #263a48; Cormorant Garamond + Manrope | Honey paper #f4e7ce, ivory #fffaf0, gold #8c5e1a, espresso #51341c; Playfair Display + Inter |
+| Opening / cover | Curved stationery, two silver loops, tilted photo, left-aligned type | Golden gatefold folio, oval photo, rounded paper fan, centered classic type |
+| Whole scroll | Open editorial greeting, offset identity, plain details, framed date, wide-first masonry memories, unboxed countdown, readable functional forms, small silver closing | Warm letter greeting, centered identity and optional Our Story, open event details, folio date, stack album, tabular countdown, square stationery forms, fan closing |
+| Photos / narrative | Optional `cover`/`gallery`, event assets only; four narrative fields + optional real Our Story | Optional `cover`/`gallery`, event assets only; four narrative fields + optional real Our Story |
+| Motion | Single 700 ms gatefold open (transform/opacity); keyboard/Reduced Motion/OFF instant; shared overrides win | Same shared opening contract with different gatefold artwork; native fan reveal, shared overrides win |
+
+Readable single-scene generated Cover references are design-only. Runtime geometric art is original native SVG/CSS; individual loops/fan blades and real wrapper frames have independent paint identities, plus delete/restore/lock through the shared Studio codec. Per-theme public asset README records fallback-thumbnail purpose and rights. No numbers of years, names, dates or photographs are baked into production art. Public preview forms remain read-only. Theme gallery settings remain overridable without duplicating gallery/music/RSVP/Wishes/Maps/Gift/countdown engines.
+
+Browser release QA remains pending for both: 320/390/768/1440px, long names/addresses, no photo/one/many, palette light/dark, crop, native paint/delete/restore, save/reload/public, opening keyboard/touch/reduced motion, and music. Source/SSR/handler/build checks do not certify these live-device interactions.

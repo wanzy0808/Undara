@@ -5,6 +5,15 @@ export type InvitationLanguage = "ID" | "EN";
 
 /** Text owned by the invitation product. Event data and customer-authored copy are never machine-translated. */
 const english: Record<string, string> = {
+  "Kami ingin merayakan perjalanan yang telah kami jalani bersama, dengan orang-orang yang membuatnya begitu berarti.": "We would love to celebrate our journey together with the people who have made it so meaningful.",
+  "Mari hadir dan berbagi cerita pada perayaan hari jadi pernikahan kami. Kehadiran Anda akan melengkapi kebahagiaan ini.": "Please join us to share stories and celebrate our wedding anniversary. Your presence will make this day complete.",
+  "Semoga hari-hari berikutnya selalu membawa kesehatan, ketenangan, dan kasih yang terus tumbuh.": "May the days ahead bring health, peace and a love that keeps growing.",
+  "Terima kasih telah menemani perjalanan ini dengan doa dan kebersamaan. Sampai bertemu di hari perayaan.": "Thank you for being part of our journey with your kindness and good wishes. See you at the celebration.",
+  "Ada banyak kenangan yang kami simpan, dan satu hari istimewa yang ingin kami rayakan bersama Anda.": "We hold so many memories close, and there is one special day we would love to celebrate with you.",
+  "Dengan penuh syukur kami mengundang Anda untuk berkumpul dan merayakan hari jadi pernikahan kami.": "With gratitude, we invite you to gather with us and celebrate our wedding anniversary.",
+  "Semoga keluarga kita selalu dikelilingi kasih, kesehatan, dan kebersamaan yang hangat.": "May our family always be surrounded by love, good health and warm togetherness.",
+  "Waktu menjadi lebih berharga ketika dibagi dengan orang-orang tersayang. Terima kasih telah menjadi bagian dari cerita kami.": "Time becomes more precious when shared with those we love. Thank you for being part of our story.",
+  "Gulir untuk membaca": "Scroll to read",
   "Ulang Tahun": "Birthday",
   "Mode desain": "Design mode",
   "Ada pesta untukmu": "You are invited",

@@ -109,7 +109,7 @@ import type {
   InvitationDesignerPanel,
   InvitationDesignState,
 } from "@/components/InvitationStudio/designer-types";
-import { templateDemoInvitation, templateDemoPhoto } from "@/data/templates/preview-invitation";
+import { getTemplateDemoInvitation, templateDemoPhoto } from "@/data/templates/preview-invitation";
 
 const blankCanvasSections = {
   ...defaultInvitationSections,
@@ -376,7 +376,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
             accessPaid: true,
           }
         : {
-            ...templateDemoInvitation,
+            ...getTemplateDemoInvitation(loadedDesign.template),
             id: studioEntryId,
             templateKey: initialKey,
             accessPaid: true,

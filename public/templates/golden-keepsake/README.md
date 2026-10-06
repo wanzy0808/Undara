@@ -1,0 +1,3 @@
+# golden-keepsake
+
+Original native SVG/CSS stationery by Undara (2026). `preview.svg` is a 390×760 static catalog fallback only; live previews use AnniversaryScene with isolated demo data. No customer data, photo, or event facts are baked into runtime artwork. The geometric artwork in AnniversaryArtwork exposes individual Studio paint targets; all colors follow the selected invitation palette. Generated design references are preview-only and are not shipped as raster invitation UI. Photos use the existing event asset/crop pipeline. No new fonts, audio files, dependencies or licensed third-party artwork.
