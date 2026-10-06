@@ -133,6 +133,8 @@ test("bulk writes require login, trusted origin, explicit owned configured invit
     [{}, { ...good, recipients: [{ key: "guessed", name: "Rina" }] }, {}, 400],
     [{}, { ...good, recipients: [recipient(" ")] }, {}, 400], [{}, { ...good, recipients: [recipient("x".repeat(121))] }, {}, 400],
     [{}, { ...good, recipients: [recipient("Rina", "Custom")] }, {}, 400],
+    [{}, { ...good, recipients: [{ ...recipient(), category: 7 }] }, {}, 400],
+    [{}, { ...good, recipients: [{ ...recipient(), guestId: 7 }] }, {}, 400],
     [{}, { ...good, recipients: [good.recipients[0], good.recipients[0]] }, {}, 400],
     [{}, { ...good, published: "true" }, {}, 400],
   ]) {

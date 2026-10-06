@@ -9,7 +9,7 @@ import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import * as dialogs from "../components/ui/dialog.tsx";
 import { LanguageProvider } from "../components/I18n/LanguageProvider.tsx";
-import { PersonalInvitationCreatePanel } from "../components/Dashboard/PersonalInvitationPanels.tsx";
+import { PersonalInvitationCreatePanel, PersonalInvitationListPanel } from "../components/Dashboard/PersonalInvitationPanels.tsx";
 import * as fields from "../components/Dashboard/PersonalInvitationGuestFields.tsx";
 import * as helpers from "../components/Dashboard/personal-invitation-helpers.ts";
 import * as titles from "../lib/text/display-title-case.ts";
@@ -82,8 +82,8 @@ function hookHarness() {
 function createProps(overrides = {}) {
   return {
     selectedEvent: event(), availableGuests: [], guestId: "", name: "",
-    profile: { ...fields.emptyGuestInvitationForm }, loading: false, busyId: null,
-    setGuestId() {}, setName() {}, setProfile() {}, onCreateNew() {}, onCreateExisting() {},
+    profile: { ...fields.emptyGuestInvitationForm }, loading: false, busyId: null, drafts: [],
+    setGuestId() {}, setName() {}, setProfile() {}, onAddNames() {}, onAddExisting() {}, onRemoveDraft() {}, onEditDraft() {},
     ...overrides,
   };
 }
@@ -107,7 +107,7 @@ function panelHarness(fetcher) {
   const Create = () => null, List = () => null, Picker = () => null;
   const { default: Panel } = loadSource("components/Dashboard/PersonalInvitationPanel.tsx", {
     react: hooks.hooks, "react/jsx-runtime": jsxRuntime, "lucide-react": icons,
-    "@/components/Dashboard/EventScopePicker": Picker, "@/components/Dashboard/useDashboardI18n": i18n,
+    "@/components/ui/button": { Button }, "@/components/Dashboard/EventScopePicker": Picker, "@/components/Dashboard/useDashboardI18n": i18n,
     "@/components/Dashboard/DashboardPrimitives": primitives,
     "@/components/Dashboard/PersonalInvitationPanels": { PersonalInvitationCreatePanel: Create, PersonalInvitationListPanel: List },
     "@/components/Dashboard/personal-invitation-helpers": helpers,
@@ -118,7 +118,7 @@ function panelHarness(fetcher) {
   let selectedEventId = "event-a";
   const render = (commit = true) => {
     const tree = hooks.render(() => Panel({ selectedEventId, onSelectEvent(id) { selectedEventId = id; } }), commit);
-    return { create: find(tree, Create)?.props, list: find(tree, List)?.props, picker: find(tree, Picker)?.props, tree };
+    return { save: nodes(tree).find((node) => node.type === Button && /Simpan draf|Menyimpan/.test(text(node.props.children)))?.props, savePublish: nodes(tree).find((node) => node.type === Button && text(node.props.children) === "Simpan & Publish")?.props, create: find(tree, Create)?.props, list: find(tree, List)?.props, picker: find(tree, Picker)?.props, tree };
   };
   return {
     render, commit: () => hooks.commit(),
@@ -133,32 +133,30 @@ const fetchLists = (url, guests = [guest()], invitations = []) => {
   return Response.json(url.startsWith("/api/guests?") ? { guests } : { invitations });
 };
 
-test("creation shows the saved invitation title, guest name, category and live addressee without additional settings", () => {
-  const props = createProps({ name: "bapak andi" });
-  for (const [locale, label] of [["id", "Nama tamu"], ["en", "Guest name"]]) {
+test("names can be entered before choosing an invitation, with only category and an actual envelope preview", () => {
+  const props = createProps({ selectedEvent: null, name: "bapak andi" });
+  for (const [locale, label, add] of [["id", "Nama tamu", "Tambah ke daftar"], ["en", "Guest name", "Add to list"]]) {
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(PersonalInvitationCreatePanel, props)));
-    assert.match(html, /Pernikahan Una &amp; Dara/);
-    assert.ok(html.includes(label));
+    assert.ok(html.includes(label)); assert.ok(html.includes(add));
     assert.match(html, /Kepada Yth : Bapak Andi/);
-    assert.doesNotMatch(html, /Sumber penerima|Recipient source/);
-    assert.doesNotMatch(html, /<details\b|<textarea\b|type="tel"|type="number"|type="checkbox"/);
-    assert.equal((html.match(/<select\b/g) ?? []).length, 1);
+    assert.doesNotMatch(html, /Sumber penerima|Recipient source|<details\b|type="tel"|type="number"|type="checkbox"|Buat undangan/);
+    assert.equal((html.match(/<textarea\b/g) ?? []).length, 1);
     assert.deepEqual([...html.matchAll(/<option value="([^"]+)"/g)].map((match) => match[1]), ["REGULAR", "VIP", "VVIP"]);
     assert.match(html, /value="REGULAR" selected=""/);
-    assert.ok(html.indexOf('value="bapak andi"') < html.indexOf("<select"));
-    assert.ok(html.indexOf("<select") < html.indexOf("Kepada Yth : Bapak Andi"));
+    assert.ok(html.indexOf("<textarea") < html.indexOf("<select"));
   }
 });
 
-test("name-first form submits the right recipient mode and keeps exact couple, override and disabled-envelope previews", () => {
-  let created = 0, reused = 0;
-  const harness = createHarness({ onCreateNew() { created++; }, onCreateExisting() { reused++; } });
+test("Add uses the selected mode, rejects invalid names and retains exact couple, override and disabled-envelope previews", () => {
+  let added = 0, reused = 0;
+  const harness = createHarness({ onAddNames() { added++; }, onAddExisting() { reused++; } });
   const submit = (tree) => find(tree, "form").props.onSubmit({ preventDefault() {} });
   submit(harness.render());
-  submit(harness.render({ name: "Andi" }));
-  submit(harness.render({ busyId: "create-new" }));
-  submit(harness.render({ busyId: null, guestId: "missing" }));
-  assert.equal(created, 1);
+  submit(harness.render({ name: "Andi\nSari" }));
+  submit(harness.render({ busyId: "create-batch" }));
+  submit(harness.render({ busyId: null, name: "x".repeat(121) }));
+  submit(harness.render({ name: "Andi", guestId: "missing" }));
+  assert.equal(added, 1);
   submit(harness.render({ guestId: "guest-a", availableGuests: [guest()], name: guest().name }));
   assert.equal(reused, 1);
   for (const [profile, expected] of [
@@ -172,7 +170,7 @@ test("name-first form submits the right recipient mode and keeps exact couple, o
   }
 });
 
-test("saved guest picker searches and selects explicit IDs even for duplicate names, and exposes further results", () => {
+test("saved guest picker searches explicit IDs even for duplicate names and exposes further results", () => {
   const chosen = [];
   const guests = Array.from({ length: 43 }, (_, i) => ({ ...guest(`guest-${i}`), phone: `08123${i}` }));
   const harness = createHarness({ availableGuests: guests, setGuestId(id) { chosen.push(id); } });
@@ -182,185 +180,267 @@ test("saved guest picker searches and selects explicit IDs even for duplicate na
   let rows = nodes(tree).filter((node) => node.type === Button && /^guest-/.test(node.key ?? ""));
   assert.equal(rows.length, 40);
   nodes(tree).find((node) => node.type === Button && text(node.props.children) === "Tampilkan lebih banyak").props.onClick();
-  tree = harness.render();
-  rows = nodes(tree).filter((node) => node.type === Button && /^guest-/.test(node.key ?? ""));
-  assert.equal(rows.length, 43);
-  rows[41].props.onClick();
+  rows = nodes(harness.render()).filter((node) => node.type === Button && /^guest-/.test(node.key ?? ""));
+  assert.equal(rows.length, 43); rows[41].props.onClick();
   assert.deepEqual(chosen, ["guest-41"]);
   assert.equal(find(harness.render(), dialogs.Dialog).props.open, false);
   nodes(tree).find((node) => node.type === Input && node.props.type === "search").props.onChange({ target: { value: "0812342" } });
   rows = nodes(harness.render()).filter((node) => node.type === Button && /^guest-/.test(node.key ?? ""));
-  assert.equal(rows.length, 1);
-  rows[0].props.onClick();
+  assert.equal(rows.length, 1); rows[0].props.onClick();
   assert.deepEqual(chosen, ["guest-41", "guest-42"]);
 });
 
-test("typing only a name creates a draft for the selected invitation with safe defaults and blocks repeated submission", async () => {
+test("a multi-name list comes before the invitation picker and is saved only on request, with duplicate-submit protection", async () => {
   const post = deferred(), calls = [];
   const panel = panelHarness(async (url, options = {}) => {
     if (options.method === "POST") { calls.push(JSON.parse(options.body)); return post.promise; }
     return fetchLists(url);
   });
   try {
-    (await panel.settle()).create.setName("  Ibu Rina  ");
-    const view = panel.render();
-    const first = view.create.onCreateNew();
-    await view.create.onCreateNew();
+    (await panel.settle()).create.setName(" Ibu Rina \r\n\n Bapak Andi ");
+    let view = panel.render();
+    view.create.onAddNames(); view.create.onAddNames();
+    view = panel.render();
+    assert.deepEqual(view.create.drafts.map((row) => [row.name, row.category]), [["Ibu Rina", "REGULAR"], ["Bapak Andi", "REGULAR"]]);
+    assert.equal(new Set(view.create.drafts.map((row) => row.key)).size, 2);
+    const treeNodes = nodes(view.tree);
+    assert.ok(treeNodes.findIndex((node) => node.props === view.create) < treeNodes.findIndex((node) => node.props === view.picker));
+    assert.equal(calls.length, 0);
+    const first = view.save.onClick(); await view.save.onClick();
     assert.equal(calls.length, 1);
-    assert.deepEqual(calls[0], { invitationId: "event-a", name: "Ibu Rina", phone: "", ...fields.guestInvitationProfilePayload(fields.emptyGuestInvitationForm) });
-    assert.equal(calls[0].invitedPax, 1);
-    assert.equal(calls[0].personalEnvelopeEnabled, true);
-    assert.equal(calls[0].category, "REGULAR");
-    assert.equal(Object.hasOwn(calls[0], "published"), false);
-    post.resolve(Response.json({ invitation: personal() }));
+    assert.deepEqual(calls[0], { invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category }) => ({ key, name, category })) });
+    assert.equal(Object.hasOwn(calls[0].recipients[0], "invitedPax"), false);
+    post.resolve(Response.json({ invitations: [personal(), { ...personal(), id: "second" }] }));
     await first;
-    assert.equal(panel.render().create.name, "");
+    assert.deepEqual(panel.render().create.drafts, []);
   } finally { panel.dispose(); }
 });
 
-test("reusing a saved guest and changing their category retains the canonical ID, allowance and hidden envelope profile", async () => {
+test("saved recipients retain their canonical ID and hidden profile while staged category and later contact edits use minimal writes", async () => {
   const saved = { ...guest(), recipientType: "FAMILY", invitedPax: 4, category: "Keluarga utama", tags: ["Keluarga"], personalAddressee: "Bapak Andi & Keluarga", personalLanguage: "EN", personalEnvelopeEnabled: false, personalGreeting: "Terima kasih", plusOnes: 2, rsvpStatus: "ATTENDING", checkedIn: true, table: { id: "table-a", name: "Meja 1" } };
-  let listed = { ...personal(), ...saved, id: "personal-a" };
-  const calls = [];
+  let listed = { ...personal(), ...saved, id: "personal-a" }; const calls = [];
   const panel = panelHarness(async (url, options = {}) => {
-    if (options.method === "POST") { calls.push(JSON.parse(options.body)); return Response.json({ invitation: personal() }); }
-    if (options.method === "PATCH") {
-      const body = JSON.parse(options.body);
-      calls.push(body);
-      listed = { ...listed, category: body.category, name: body.name, phone: body.phone };
-      return Response.json({ invitation: listed });
-    }
+    if (options.method === "POST") { calls.push(JSON.parse(options.body)); return Response.json({ invitations: [listed] }); }
+    if (options.method === "PATCH") { const body = JSON.parse(options.body); calls.push(body); listed = { ...listed, category: body.category, name: body.name, phone: body.phone }; return Response.json({ invitation: listed }); }
     return fetchLists(url, [saved, listed], [listed]);
   });
   try {
-    let view = await panel.settle();
-    assert.deepEqual(view.create.availableGuests.map((item) => item.id), ["guest-a"]);
-    view.create.setGuestId("guest-a");
-    view = panel.render();
+    (await panel.settle()).create.setGuestId("guest-a");
+    let view = panel.render();
     assert.equal(view.create.name, saved.name);
-    assert.deepEqual(view.create.profile, fields.guestInvitationFormFrom(saved));
-    const legacyControl = CategoryFields({ value: view.create.profile, onChange: view.create.setProfile });
-    assert.deepEqual(nodes(legacyControl).filter((node) => node.type === "option" && !node.props.disabled).map((node) => node.props.value), ["REGULAR", "VIP", "VVIP"]);
-    assert.equal(find(legacyControl, "select").props.value, saved.category);
-    for (const category of ["REGULAR", "VIP", "VVIP"]) {
-      const control = CategoryFields({ value: view.create.profile, onChange: view.create.setProfile });
-      find(control, "select").props.onChange({ target: { value: category } });
-      view = panel.render();
-      assert.deepEqual(view.create.profile, { ...fields.guestInvitationFormFrom(saved), category });
-    }
-    await view.create.onCreateExisting();
-    assert.deepEqual(calls, [{ invitationId: "event-a", guestId: "guest-a", category: "VVIP" }]);
-    assert.equal(panel.render().create.name, "");
-
-    panel.render().list.onStartEdit(listed);
-    view = panel.render();
+    const legacy = CategoryFields({ value: view.create.profile, onChange: view.create.setProfile });
+    assert.equal(find(legacy, "select").props.value, saved.category);
+    assert.deepEqual(nodes(legacy).filter((node) => node.type === "option" && !node.props.disabled).map((node) => node.props.value), ["REGULAR", "VIP", "VVIP"]);
+    view.create.onAddExisting(); view.create.onAddExisting();
+    view = panel.render(); assert.equal(view.create.drafts.length, 1);
+    const row = view.create.drafts[0];
+    assert.deepEqual(row.profile, fields.guestInvitationFormFrom(saved));
+    for (const category of ["REGULAR", "VIP", "VVIP"]) { view.create.onEditDraft(row.key, { category }); view = panel.render(); }
+    await view.save.onClick();
+    assert.deepEqual(calls[0], { invitationId: "event-a", recipients: [{ guestId: "guest-a", category: "VVIP" }], published: false });
+    panel.render().list.onStartEdit(listed); view = panel.render();
     const editControl = CategoryFields({ value: view.list.editProfile, onChange: view.list.setEditProfile });
     find(editControl, "select").props.onChange({ target: { value: "VIP" } });
-    panel.render().list.onSaveEdit(listed);
-    view = await panel.settle();
+    panel.render().list.onSaveEdit(listed); view = await panel.settle();
     assert.deepEqual(calls[1], { invitationId: "event-a", id: "personal-a", name: saved.name, phone: saved.phone, category: "VIP" });
     for (const key of ["recipientType", "invitedPax", "tags", "personalAddressee", "personalLanguage", "personalEnvelopeEnabled", "personalGreeting", "plusOnes", "rsvpStatus", "checkedIn", "table"]) assert.deepEqual(view.list.personal[0][key], saved[key]);
   } finally { panel.dispose(); }
 });
 
-test("editing a selected name starts a new recipient and drops the old guest's phone, addressee and allowance", async () => {
+test("changing a chosen saved name creates a new recipient without copying old contact, addressee or allowance", async () => {
   const saved = { ...guest(), invitedPax: 8, personalAddressee: "Keluarga Andi", personalEnvelopeEnabled: false };
-  const calls = [];
-  const panel = panelHarness(async (url, options = {}) => {
-    if (options.method === "POST") { calls.push(JSON.parse(options.body)); return Response.json({ invitation: personal() }); }
+  const calls = []; const panel = panelHarness(async (url, options = {}) => {
+    if (options.method === "POST") { calls.push(JSON.parse(options.body)); return Response.json({ invitations: [personal()] }); }
     return fetchLists(url, [saved]);
   });
   try {
     (await panel.settle()).create.setGuestId("guest-a");
     panel.render().create.setName("Bapak Budi");
-    const view = panel.render().create;
-    assert.equal(view.guestId, "");
-    assert.equal(view.name, "Bapak Budi");
-    assert.deepEqual(view.profile, fields.emptyGuestInvitationForm);
-    view.setGuestId("guest-from-another-event");
-    assert.equal(panel.render().create.guestId, "");
-    await panel.render().create.onCreateNew();
-    assert.deepEqual(calls, [{ invitationId: "event-a", name: "Bapak Budi", phone: "", ...fields.guestInvitationProfilePayload(fields.emptyGuestInvitationForm) }]);
+    let view = panel.render(); assert.equal(view.create.guestId, ""); assert.deepEqual(view.create.profile, fields.emptyGuestInvitationForm);
+    view.create.setGuestId("guest-from-another-event");
+    panel.render().create.onAddNames(); view = panel.render();
+    await view.save.onClick();
+    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: [{ key: view.create.drafts[0].key, name: "Bapak Budi", category: "REGULAR" }] }]);
   } finally { panel.dispose(); }
 });
 
-test("event switches hide previous recipients immediately and cancel late responses before they can replace the current list", async () => {
-  const old = deferred(), calls = [];
-  let hold = false;
+test("event switching retains new names, scopes saved recipients and cancels old roster responses", async () => {
+  const old = deferred(), calls = []; let hold = false;
   const panel = panelHarness(async (url, options = {}) => {
     calls.push({ url, options });
     if (hold && url.includes("invitationId=event-a")) return old.promise;
     return fetchLists(url, [guest(url.includes("event-b") ? "guest-b" : "guest-a")], [personal()]);
   });
   try {
-    let view = await panel.settle();
-    view.create.setName("Ibu Rina");
-    hold = true;
-    view.list.onReload();
-    panel.render().picker.onChange("event-b");
+    let view = await panel.settle(); view.create.setGuestId("guest-a"); panel.render().create.onAddExisting();
+    panel.render().create.setName("Ibu Rina"); panel.render().create.onAddNames(); panel.render().create.setName("Belum ditambahkan");
+    hold = true; panel.render().list.onReload(); panel.render().picker.onChange("event-b");
     view = panel.render(false);
-    assert.equal(view.picker.label, "Pilih undangan");
-    assert.equal(view.create.selectedEvent.title, "Ulang Tahun Nina");
-    assert.equal(view.create.name, "");
-    assert.equal(view.create.loading, true);
-    assert.deepEqual(view.create.availableGuests, []);
-    assert.deepEqual(view.list.personal, []);
-    panel.commit();
-    view = await panel.settle();
-    assert.deepEqual(view.create.availableGuests.map((item) => item.id), ["guest-b"]);
-    const stale = calls.filter((call) => call.url.includes("invitationId=event-a")).slice(-2);
-    assert.ok(stale.every((call) => call.options.signal.aborted));
-    old.resolve(Response.json({ guests: [guest("stale-guest")], invitations: [personal()] }));
-    await flush();
-    assert.deepEqual(panel.render().create.availableGuests.map((item) => item.id), ["guest-b"]);
+    assert.equal(view.create.name, "Belum ditambahkan"); assert.deepEqual(view.create.drafts.map((row) => row.name), ["Ibu Rina"]);
+    assert.deepEqual(view.create.availableGuests, []); assert.deepEqual(view.list.personal, []);
+    panel.commit(); view = await panel.settle();
+    assert.deepEqual(view.create.availableGuests.map((row) => row.id), ["guest-b"]);
+    assert.ok(calls.filter((call) => call.url.includes("invitationId=event-a")).slice(-2).every((call) => call.options.signal.aborted));
+    old.resolve(Response.json({ guests: [guest("stale")], invitations: [personal()] })); await flush();
+    assert.deepEqual(panel.render().create.availableGuests.map((row) => row.id), ["guest-b"]);
+    hold = false; panel.render().picker.onChange("event-a"); view = await panel.settle();
+    assert.deepEqual(view.create.drafts.map((row) => row.name), ["Bapak Andi", "Ibu Rina"]);
   } finally { panel.dispose(); }
 });
 
-test("a failed creation retains the guest name and a failed load supports retry", async () => {
-  let failing = true;
+test("failed creation keeps exact draft keys for retry and failed guest loading supports reload", async () => {
+  let failing = true; const calls = [];
   const panel = panelHarness(async (url, options = {}) => {
-    if (options.method === "POST") return Response.json({ error: "Tamu ini sudah ada." }, { status: 409 });
+    if (options.method === "POST") { calls.push(JSON.parse(options.body)); return Response.json({ error: "Coba lagi." }, { status: 500 }); }
     if (url.startsWith("/api/guests?") && failing) return Response.json({ error: "Daftar tamu belum dapat dimuat." }, { status: 500 });
     return fetchLists(url);
   });
   try {
-    let view = await panel.settle();
-    assert.equal(view.list.loading, false);
-    failing = false;
-    view.list.onReload();
-    view = await panel.settle();
-    assert.deepEqual(view.create.availableGuests.map((item) => item.id), ["guest-a"]);
-    view.create.setName("Bapak Andi");
-    await panel.render().create.onCreateNew();
-    view = panel.render();
-    assert.equal(view.create.name, "Bapak Andi");
-    assert.equal(view.create.busyId, null);
-    assert.ok(text(view.tree).includes("Tamu ini sudah ada."));
+    let view = await panel.settle(); failing = false; view.list.onReload(); view = await panel.settle();
+    assert.deepEqual(view.create.availableGuests.map((row) => row.id), ["guest-a"]);
+    view.create.setName("Bapak Andi"); panel.render().create.onAddNames();
+    const original = panel.render().create.drafts;
+    await panel.render().save.onClick(); await panel.render().save.onClick();
+    view = panel.render(); assert.deepEqual(view.create.drafts, original); assert.deepEqual(calls[0], calls[1]);
+    assert.equal(view.create.busyId, null); assert.ok(text(view.tree).includes("Coba lagi."));
   } finally { panel.dispose(); }
 });
 
-test("a completed creation for a previous invitation cannot reload or clear the newly selected invitation", async () => {
-  const post = deferred(), calls = [];
+test("a late invitation-selector refresh cannot revert the currently selected event or its queued names", async () => {
+  const old = deferred(), calls = []; let delayed = false;
   const panel = panelHarness(async (url, options = {}) => {
-    calls.push({ url, options });
-    if (options.method === "POST") return post.promise;
-    return fetchLists(url, [guest(url.includes("event-b") ? "guest-b" : "guest-a")]);
+    if (url === "/api/invitations?all=1") {
+      calls.push(options);
+      if (delayed && calls.length === 2) return old.promise;
+    }
+    return fetchLists(url);
   });
   try {
-    (await panel.settle()).create.setName("Bapak Andi");
-    const pending = panel.render().create.onCreateNew();
-    panel.selectEvent("event-b");
-    let view = await panel.settle();
-    assert.equal(view.create.selectedEvent.id, "event-b");
-    assert.deepEqual(view.create.availableGuests.map((item) => item.id), ["guest-b"]);
-    const previousLoads = calls.filter((call) => call.url.includes("invitationId=event-a")).length;
-    post.resolve(Response.json({ invitation: personal() }));
-    await pending;
-    view = panel.render();
-    assert.equal(view.create.selectedEvent.id, "event-b");
-    assert.equal(view.create.busyId, null);
-    assert.deepEqual(view.create.availableGuests.map((item) => item.id), ["guest-b"]);
-    assert.equal(calls.filter((call) => call.url.includes("invitationId=event-a")).length, previousLoads);
-    assert.equal(JSON.parse(calls.find((call) => call.options.method === "POST").options.body).invitationId, "event-a");
+    await panel.settle(); delayed = true; panel.selectEvent("event-b"); await panel.settle();
+    panel.selectEvent("event-a"); await panel.settle();
+    assert.equal(calls[1].signal.aborted, true);
+    panel.render().create.setName("Ibu Rina"); panel.render().create.onAddNames();
+    old.resolve(Response.json({ invitations: [event(), event("event-b")] })); await flush();
+    assert.equal(panel.render().picker.value, "event-a");
+    assert.deepEqual(panel.render().create.drafts.map((row) => row.name), ["Ibu Rina"]);
   } finally { panel.dispose(); }
+});
+
+test("completion for an old event cannot reload or clear the current event's input", async () => {
+  const post = deferred(), calls = [];
+  const panel = panelHarness(async (url, options = {}) => { calls.push({ url, options }); if (options.method === "POST") return post.promise; return fetchLists(url, [guest(url.includes("event-b") ? "guest-b" : "guest-a")]); });
+  try {
+    (await panel.settle()).create.setName("Bapak Andi"); panel.render().create.onAddNames();
+    const pending = panel.render().save.onClick(); panel.selectEvent("event-b"); await panel.settle();
+    panel.render().create.setName("Ibu Nina"); const loads = calls.filter((call) => call.url.includes("invitationId=event-a")).length;
+    post.resolve(Response.json({ invitations: [personal()] })); await pending;
+    const view = panel.render(); assert.equal(view.create.selectedEvent.id, "event-b"); assert.equal(view.create.name, "Ibu Nina");
+    assert.deepEqual(view.create.availableGuests.map((row) => row.id), ["guest-b"]);
+    assert.equal(calls.filter((call) => call.url.includes("invitationId=event-a")).length, loads);
+  } finally { panel.dispose(); }
+});
+
+test("large name batches remove only acknowledged rows and retry the failed remainder without resubmitting saved names", async () => {
+  const calls = []; let failing = true;
+  const panel = panelHarness(async (url, options = {}) => {
+    if (options.method === "POST") {
+      const body = JSON.parse(options.body); calls.push(body);
+      if (calls.length === 3 && failing) return Response.json({ error: "Jaringan gagal." }, { status: 500 });
+      return Response.json({ invitations: body.recipients.map((row) => ({ ...personal(), id: row.key })) });
+    }
+    return fetchLists(url);
+  });
+  try {
+    (await panel.settle()).create.setName(Array.from({ length: 205 }, (_, i) => `Tamu ${i}`).join("\n")); panel.render().create.onAddNames();
+    const rows = panel.render().create.drafts;
+    await panel.render().save.onClick();
+    assert.deepEqual(calls.map((call) => call.recipients.length), [100, 100, 5]);
+    assert.deepEqual(panel.render().create.drafts, rows.slice(200));
+    assert.ok(text(panel.render().tree).includes("200 tamu tersimpan. Jaringan gagal."));
+    failing = false; await panel.render().save.onClick(); assert.deepEqual(calls[2], calls[3]);
+    assert.deepEqual(panel.render().create.drafts, []);
+  } finally { panel.dispose(); }
+});
+
+test("bulk Publish uses only the current event's unpublished IDs in bounded requests and blocks repeated submits", async () => {
+  const calls = [], first = deferred(); let count = 0;
+  const list = Array.from({ length: 202 }, (_, i) => ({ ...personal(), id: `personal-${i}`, personalPublished: i === 201 }));
+  const panel = panelHarness(async (url, options = {}) => {
+    if (options.method === "PATCH") { const body = JSON.parse(options.body); calls.push(body); if (++count === 1) return first.promise; return Response.json({ count: body.ids.length }); }
+    if (url === "/api/invitations?all=1") return Response.json({ invitations: [{ ...event(), isPublished: true, accessPaid: true }] });
+    return fetchLists(url, [], list);
+  });
+  try {
+    const view = await panel.settle(); const pending = view.list.onPublishAll(); await view.list.onPublishAll();
+    assert.equal(calls.length, 1); first.resolve(Response.json({ count: 100 })); await pending;
+    assert.deepEqual(calls.map((call) => call.ids.length), [100, 100, 1]);
+    assert.ok(calls.every((call) => call.invitationId === "event-a" && call.published === true));
+    assert.deepEqual(calls.flatMap((call) => call.ids), list.filter((row) => !row.personalPublished).map((row) => row.id));
+  } finally { panel.dispose(); }
+});
+
+test("saving and publishing together is explicit and unavailable when the parent invitation cannot be shared", async () => {
+  for (const eligible of [false, true]) {
+    const calls = []; const panel = panelHarness(async (url, options = {}) => {
+      if (options.method === "POST") { const body = JSON.parse(options.body); calls.push(body); return Response.json({ invitations: body.recipients.map(() => personal()) }); }
+      if (url === "/api/invitations?all=1") return Response.json({ invitations: [{ ...event(), isPublished: eligible, accessPaid: eligible }] });
+      return fetchLists(url);
+    });
+    try {
+      (await panel.settle()).create.setName("Ibu Rina"); panel.render().create.onAddNames();
+      assert.equal(panel.render().savePublish.disabled, !eligible);
+      await panel.render().savePublish.onClick();
+      assert.equal(calls.length, eligible ? 1 : 0);
+      if (eligible) assert.equal(calls[0].published, true);
+    } finally { panel.dispose(); }
+  }
+});
+
+test("queued names are editable/removable by row identity, preserve duplicate names and expose remaining rows", () => {
+  const edits = [], removed = [];
+  const drafts = Array.from({ length: 43 }, (_, i) => ({ key: `draft-${i}`, name: "Bapak Andi", category: "REGULAR" }));
+  const harness = createHarness({ drafts, onEditDraft: (...args) => edits.push(args), onRemoveDraft: (key) => removed.push(key) });
+  let tree = harness.render();
+  assert.equal(nodes(tree).filter((node) => node.type === Input).length, 40);
+  nodes(tree).find((node) => node.type === Button && text(node.props.children) === "Tampilkan lebih banyak").props.onClick();
+  tree = harness.render(); assert.equal(nodes(tree).filter((node) => node.type === Input).length, 43);
+  nodes(tree).find((node) => node.type === Input && node.props["aria-label"] === "Nama tamu 42").props.onChange({ target: { value: "Bapak Budi" } });
+  const category = nodes(tree).filter((node) => node.type === fields.PersonalInvitationGuestFields)[42];
+  category.props.onChange({ ...category.props.value, category: "VIP" });
+  nodes(tree).filter((node) => node.type === Button && node.props["aria-label"]?.startsWith("Hapus:"))[41].props.onClick();
+  assert.deepEqual(edits, [["draft-41", { name: "Bapak Budi" }], ["draft-41", { category: "VIP" }]]); assert.deepEqual(removed, ["draft-41"]);
+});
+
+const listProps = (overrides = {}) => ({ selectedEvent: { ...event(), isPublished: true, accessPaid: true }, personal: [{ ...personal(), personalPublished: true }], editingId: null, editName: "", editPhone: "", editProfile: fields.emptyGuestInvitationForm, passwordId: null, password: "", busyId: null, loading: false, setEditName() {}, setEditPhone() {}, setEditProfile() {}, setPasswordId() {}, setPassword() {}, onReload() {}, onStartEdit() {}, onSaveEdit() {}, onPatch() {}, onSavePassword() {}, onDisablePassword() {}, onPublishAll() {}, onCopyLink() {}, ...overrides });
+
+test("individual share controls use the actual recipient, optional phone and personal URL and never imply automatic delivery", () => {
+  const published = { ...personal(), personalPublished: true, name: "Andi & Sari", recipientType: "COUPLE", personalLanguage: "EN", phone: "+62 812 3456 7890" };
+  const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "en" }, React.createElement(PersonalInvitationListPanel, listProps({ personal: [published] }))));
+  assert.match(html, /Copy link/); assert.match(html, /Send via WhatsApp/); assert.match(html, /wa.me\/6281234567890\?text=/);
+  const share = new URL(helpers.buildPersonalInvitationWhatsAppUrl(event(), published));
+  assert.equal(share.searchParams.get("text"), `Dear : Mr Andi and Mrs Sari\n\n${event().title}\n${helpers.buildPersonalInvitationPublicUrl(event().slug, published.personalToken)}`);
+  assert.equal(new URL(helpers.buildPersonalInvitationWhatsAppUrl(event(), { ...published, phone: null })).pathname, "/");
+  for (const overrides of [{ personal: [personal()] }, { selectedEvent: event() }]) {
+    const locked = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "en" }, React.createElement(PersonalInvitationListPanel, listProps(overrides))));
+    assert.doesNotMatch(locked, /Copy link|Send via WhatsApp|wa.me/);
+  }
+});
+
+test("copying a recipient link changes no delivery markers and reports clipboard failures", async () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "navigator"); const copies = [], requests = []; let denied = false;
+  Object.defineProperty(globalThis, "navigator", { configurable: true, value: { clipboard: { async writeText(value) { if (denied) throw new Error("Denied"); copies.push(value); } } } });
+  const row = { ...personal(), personalPublished: true };
+  const panel = panelHarness(async (url, options = {}) => {
+    requests.push(options.method);
+    if (url === "/api/invitations?all=1") return Response.json({ invitations: [{ ...event(), isPublished: true, accessPaid: true }] });
+    return fetchLists(url, [], [row]);
+  });
+  try {
+    await (await panel.settle()).list.onCopyLink(row);
+    assert.deepEqual(copies, [helpers.buildPersonalInvitationPublicUrl(event().slug, row.personalToken)]);
+    denied = true; await panel.render().list.onCopyLink(row);
+    assert.ok(text(panel.render().tree).includes("Gagal menyalin tautan."));
+    assert.ok(requests.every((method) => method === undefined));
+    assert.equal(panel.render().list.personal[0].personalSharedAt, undefined);
+  } finally { panel.dispose(); if (original) Object.defineProperty(globalThis, "navigator", original); else delete globalThis.navigator; }
 });

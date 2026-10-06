@@ -25,6 +25,8 @@ const guestSelect = {
   recipientType: true,
   invitedPax: true,
   personalGreeting: true,
+  personalEnvelopeEnabled: true,
+  personalLanguage: true,
   personalSharedAt: true,
   source: true,
   rsvpStatus: true,

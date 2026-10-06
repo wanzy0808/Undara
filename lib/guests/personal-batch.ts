@@ -19,6 +19,9 @@ function parseRecipients(value: unknown): Recipient[] {
   const keys = new Set<string>();
   return value.map((item) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) throw new PersonalBatchError("Data tamu tidak valid.");
+    if ((item.guestId !== undefined && typeof item.guestId !== "string") || (item.category !== undefined && typeof item.category !== "string")) {
+      throw new PersonalBatchError("Data tamu tidak valid.");
+    }
     const guestId = typeof item.guestId === "string" ? item.guestId.trim() : "";
     const key = guestId || (typeof item.key === "string" ? item.key : "");
     const name = typeof item.name === "string" ? item.name.trim() : "";

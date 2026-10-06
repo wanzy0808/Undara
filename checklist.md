@@ -784,12 +784,13 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [ ] Observe exact-commit Build Validation and Orphan Audit after publication; target-app/browser checks remain separate.
 - [ ] On the signed-in target app, verify repeated Add → Save/reopen, confirmed Empty → reload → Add, cancel/failed reset, guest roster/pax/tickets and Light/Dark desktop/mobile behavior. Existing storage migration must already be deployed.
 
-### Personal invitation name-first flow — 6 October 2026
+### Personal invitation guest-list flow — 6 October 2026
 
-- [x] Show the saved invitation title, enter guest name directly and preview its “Kepada Yth” line; remove the recipient-source selector from the main form.
-- [x] Name-only creation with existing safe defaults and a directly visible Reguler/VIP/VVIP category selector; remove Additional settings from create/edit while retaining stored guest profile data.
-- [x] Searchable saved-guest selection uses explicit Guest IDs, fills the actual recipient profile and preserves canonical RSVP/seating/check-in identity; changing the chosen name returns to a new recipient.
-- [x] Block duplicate creation submits, retain names after failure and hide/cancel stale invitation loads and creation responses on event switch.
-- [x] Focused personal workflow/envelope tests 15/15, full regression 765/765, TypeScript, production build 73/73 and whitespace checks PASS. No new ESLint diagnostics versus the committed parent; orchestration's three existing effect findings remain.
-- [ ] On the signed-in target app, verify long invitation/guest names, saved-guest search/keyboard selection, category create/edit, retained ID/EN/without-name envelope profiles, event switching and Light/Dark desktop/mobile behavior.
-- [ ] Verify real create → preview → publish/share → open personal link → RSVP reuses the canonical recipient and preserves invited allowance, seating and check-in. Existing publish/password/entitlement requirements still apply.
+- [x] List names first, one per line, with Reguler/VIP/VVIP and live envelope greetings; edit/remove staged rows before the invitation picker. No recipient-source/Additional settings/creation phone or pax controls.
+- [x] Save drafts, explicit Save & Publish and Publish all use the existing event-owned Guest/API; batches of 100 validate/commit atomically and preserve stable row identities on retry. Name-only rows do not merge by name.
+- [x] Searchable saved recipients reuse explicit Guest IDs and preserve legacy profiles/allowance, RSVP, seats and check-in; queued existing recipients stay event-scoped while new names survive event changes.
+- [x] Per-recipient Copy link and WhatsApp composer contain the actual name/event/personal URL. Opening/copying never claims delivery, sets the manual shared marker or consumes WA Blast credits. Parent publication and Digital access remain required.
+- [x] Abort stale roster/selector requests, ignore old mutation responses, block repeated submissions and retain failed batch remainders.
+- [x] Final local validation: focused personal tests 29/29, full regression 779/779, standalone TypeScript, production build 73/73 and whitespace checks PASS; no new lint findings versus committed orchestration baseline. Exact published-commit CI is observed after the publication checkpoint.
+- [ ] On the signed-in target app, verify name paste/edit/remove, progressive lists, saved-guest search/keyboard selection, category create/edit, retained ID/EN/without-name envelope profiles, event switching, clipboard/WhatsApp and Light/Dark desktop/mobile behavior. Pending rows must be saved before refreshing/leaving.
+- [ ] Verify real save → preview → bulk/individual publish/share → open received personal link → RSVP reuses the canonical recipient and preserves invited allowance, seating and check-in. Test current payment/Owner grants and network retry against the target database; isolated handler/SSR tests are not that E2E.

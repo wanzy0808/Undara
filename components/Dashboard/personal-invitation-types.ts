@@ -1,4 +1,14 @@
 import type { EventScopeOption } from "@/components/Dashboard/EventScopePicker";
+import type { GuestInvitationForm } from "@/components/Dashboard/PersonalInvitationGuestFields";
+
+export type PersonalInvitationDraft = {
+  key: string;
+  name: string;
+  category: string;
+  guestId?: string;
+  invitationId?: string;
+  profile?: GuestInvitationForm;
+};
 
 export type PersonalInvitationGuest = {
   id: string;

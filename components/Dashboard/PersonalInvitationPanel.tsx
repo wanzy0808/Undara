@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ContactRound, Eye, Send } from "lucide-react";
 import EventScopePicker from "@/components/Dashboard/EventScopePicker";
+import { Button } from "@/components/ui/button";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import {
   DashboardMetricCard,
@@ -15,15 +16,15 @@ import {
   PersonalInvitationCreatePanel,
   PersonalInvitationListPanel,
 } from "@/components/Dashboard/PersonalInvitationPanels";
-import { sortPersonalInvitationEvents } from "@/components/Dashboard/personal-invitation-helpers";
+import { buildPersonalInvitationPublicUrl, sortPersonalInvitationEvents, splitPersonalGuestNames } from "@/components/Dashboard/personal-invitation-helpers";
 import {
   emptyGuestInvitationForm,
   guestInvitationFormFrom,
-  guestInvitationProfilePayload,
   type GuestInvitationForm,
 } from "@/components/Dashboard/PersonalInvitationGuestFields";
 import type {
   PersonalInvitationEvent,
+  PersonalInvitationDraft,
   PersonalInvitationGuest,
   PersonalInvitationItem,
 } from "@/components/Dashboard/personal-invitation-types";
@@ -43,10 +44,12 @@ export default function PersonalInvitationPanel({
   const [guests, setGuests] = useState<PersonalInvitationGuest[]>([]);
   const [dataEventId, setDataEventId] = useState("");
   const loadRequest = useRef<AbortController | null>(null);
+  const eventRequest = useRef<AbortController | null>(null);
   const creating = useRef(false);
+  const stagedInput = useRef<string | null>(null);
   const [guestId, setGuestId] = useState("");
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [drafts, setDrafts] = useState<PersonalInvitationDraft[]>([]);
   const [profile, setProfile] = useState<GuestInvitationForm>({ ...emptyGuestInvitationForm });
   const [editProfile, setEditProfile] = useState<GuestInvitationForm>({ ...emptyGuestInvitationForm });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -67,14 +70,19 @@ export default function PersonalInvitationPanel({
   useEffect(() => { activeEventId.current = eventId; }, [eventId]);
 
   const loadEvents = useCallback(async () => {
+    eventRequest.current?.abort();
+    const request = new AbortController();
+    eventRequest.current = request;
     setEventsLoading(true);
     setNotice("");
 
     try {
       const response = await fetch("/api/invitations?all=1", {
         cache: "no-store",
+        signal: request.signal,
       });
       const data = await response.json().catch(() => null);
+      if (request.signal.aborted) return;
 
       if (!response.ok) {
         throw new Error(data?.error || d("Daftar acara belum dapat dimuat."));
@@ -95,6 +103,7 @@ export default function PersonalInvitationPanel({
         return configured.find((event) => event.accessPaid)?.id ?? configured[0]?.id ?? "";
       });
     } catch (error) {
+      if (request.signal.aborted) return;
       setEvents([]);
       setEventId("");
       setNotice(
@@ -103,7 +112,7 @@ export default function PersonalInvitationPanel({
           : d("Daftar acara belum dapat dimuat."),
       );
     } finally {
-      setEventsLoading(false);
+      if (!request.signal.aborted) setEventsLoading(false);
     }
   }, [d, selectedEventId]);
 
@@ -182,12 +191,11 @@ export default function PersonalInvitationPanel({
 
   useEffect(() => {
     loadEvents().catch(() => undefined);
+    return () => eventRequest.current?.abort();
   }, [loadEvents]);
 
   useEffect(() => {
     setGuestId("");
-    setName("");
-    setPhone("");
     setProfile({ ...emptyGuestInvitationForm });
     setEditingId(null);
     setPasswordId(null);
@@ -205,115 +213,137 @@ export default function PersonalInvitationPanel({
   );
 
   const availableGuests = useMemo(
-    () => scopedGuests.filter((item) => !personalIds.has(item.id)),
-    [scopedGuests, personalIds],
+    () => scopedGuests.filter((item) => !personalIds.has(item.id) && !drafts.some((draft) => draft.guestId === item.id)),
+    [scopedGuests, personalIds, drafts],
   );
+
+  const currentDrafts = drafts.filter((draft) => !draft.guestId || draft.invitationId === eventId);
 
   function selectExistingGuest(id: string) {
     const guest = availableGuests.find((item) => item.id === id);
     if (id && !guest) return;
     setGuestId(id);
-    setName(guest?.name ?? "");
-    setPhone(guest?.phone ?? "");
+    setName("");
     setProfile(guest ? guestInvitationFormFrom(guest) : { ...emptyGuestInvitationForm });
   }
 
   function changeRecipientName(value: string) {
+    stagedInput.current = null;
     if (guestId) {
       setGuestId("");
-      setPhone("");
       setProfile({ ...emptyGuestInvitationForm });
     }
     setName(value);
   }
 
-  async function createFromExisting() {
-    if (!eventId || !guestId || creating.current || !availableGuests.some((guest) => guest.id === guestId)) return;
+  function addExisting() {
+    const guest = availableGuests.find((item) => item.id === guestId);
+    if (!guest || !eventId || creating.current) return;
+    if (drafts.length >= 1000) { setNotice(d("Simpan daftar sebelum menambahkan lebih dari 1000 tamu.")); return; }
+    setDrafts((current) => current.some((row) => row.guestId === guest.id) ? current : [...current, { key: `guest:${eventId}:${guest.id}`, guestId: guest.id, invitationId: eventId, name: guest.name, category: profile.category, profile: guestInvitationFormFrom(guest) }]);
+    setGuestId("");
+    setName("");
+    setProfile({ ...emptyGuestInvitationForm });
+  }
 
-    creating.current = true;
-    setBusyId("create-existing");
-    setNotice("");
-
+  function addNames() {
+    if (guestId || creating.current || stagedInput.current === name) return;
     try {
-      const response = await fetch("/api/personal-invitations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invitationId: eventId,
-          guestId,
-          category: profile.category,
-        }),
-      });
-      const data = await response.json().catch(() => null);
-      if (activeEventId.current !== eventId) return;
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error || d("Personal Invitation belum dapat dibuat."),
-        );
-      }
-
-      setGuestId("");
+      const names = splitPersonalGuestNames(name);
+      if (drafts.length + names.length > 1000) throw new Error(d("Simpan daftar sebelum menambahkan lebih dari 1000 tamu."));
+      const rows = names.map((name) => ({ key: crypto.randomUUID(), name, category: profile.category }));
+      stagedInput.current = name;
+      setDrafts((current) => [...current, ...rows]);
       setName("");
-      setPhone("");
-      setProfile({ ...emptyGuestInvitationForm });
-      await loadCurrent();
-      if (activeEventId.current === eventId) setNotice(d("Undangan personal dibuat."));
+      setNotice("");
     } catch (error) {
-      if (activeEventId.current !== eventId) return;
-      setNotice(
-        error instanceof Error
-          ? error.message
-          : d("Personal Invitation belum dapat dibuat."),
-      );
+      setNotice(error instanceof Error ? d(error.message) : d("Data tamu tidak valid."));
+    }
+  }
+
+  function editDraft(key: string, value: { name?: string; category?: string }) {
+    if (creating.current) return;
+    setDrafts((current) => current.map((row) => row.key === key ? { ...row, ...(!row.guestId && value.name !== undefined ? { name: value.name } : {}), ...(value.category ? { category: value.category } : {}) } : row));
+  }
+
+  async function createBatch(published: boolean) {
+    if (!eventId || !currentDrafts.length || creating.current || (published && (!selectedEvent?.isPublished || !selectedEvent.accessPaid))) return;
+    const rows = currentDrafts.map((row) => ({ ...row, name: row.name.trim() }));
+    if (rows.some((row) => !row.name || row.name.length > 120)) {
+      setNotice(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
+      return;
+    }
+    creating.current = true;
+    setBusyId("create-batch");
+    setNotice("");
+    let saved = 0;
+    let failure = "";
+    try {
+      for (let index = 0; index < rows.length; index += 100) {
+        if (activeEventId.current !== eventId) break;
+        const batch = rows.slice(index, index + 100);
+        const response = await fetch("/api/personal-invitations", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ invitationId: eventId, published, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category }) }),
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !Array.isArray(data?.invitations) || data.invitations.length !== batch.length) {
+          throw new Error(data?.error || d("Personal Invitation belum dapat dibuat."));
+        }
+        const keys = new Set(batch.map((row) => row.key));
+        setDrafts((current) => current.filter((row) => !keys.has(row.key)));
+        saved += batch.length;
+      }
+    } catch (error) {
+      failure = error instanceof Error ? d(error.message) : d("Personal Invitation belum dapat dibuat.");
     } finally {
+      if (activeEventId.current === eventId) {
+        await loadCurrent();
+        if (activeEventId.current === eventId) setNotice(failure ? `${saved ? `${saved} ${d("tamu tersimpan")}. ` : ""}${failure}` : d(published ? "Daftar tamu disimpan dan dipublish." : "Daftar tamu disimpan sebagai draf."));
+      }
       creating.current = false;
       setBusyId(null);
     }
   }
 
-  async function createNew() {
-    if (!eventId || !name.trim() || creating.current || guestId) return;
-
+  async function publishAll() {
+    const ids = scopedPersonal.filter((item) => !item.personalPublished).map((item) => item.id);
+    if (!eventId || !ids.length || creating.current || !selectedEvent?.isPublished || !selectedEvent.accessPaid) return;
     creating.current = true;
-    setBusyId("create-new");
+    setBusyId("publish-batch");
     setNotice("");
-
+    let published = 0;
+    let failure = "";
     try {
-      const response = await fetch("/api/personal-invitations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invitationId: eventId,
-          name: name.trim(),
-          phone: phone.trim(),
-          ...guestInvitationProfilePayload(profile),
-        }),
-      });
-      const data = await response.json().catch(() => null);
-      if (activeEventId.current !== eventId) return;
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error || d("Personal Invitation belum dapat dibuat."),
-        );
+      for (let index = 0; index < ids.length; index += 100) {
+        if (activeEventId.current !== eventId) break;
+        const batch = ids.slice(index, index + 100);
+        const response = await fetch("/api/personal-invitations", {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ invitationId: eventId, ids: batch, published: true }),
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok || data?.count !== batch.length) throw new Error(data?.error || d("Personal Invitation belum dapat diperbarui."));
+        published += batch.length;
       }
-
-      setName("");
-      setPhone("");
-      setProfile({ ...emptyGuestInvitationForm });
-      await loadCurrent();
-      if (activeEventId.current === eventId) setNotice(d("Undangan personal dibuat."));
     } catch (error) {
-      if (activeEventId.current !== eventId) return;
-      setNotice(
-        error instanceof Error
-          ? error.message
-          : d("Personal Invitation belum dapat dibuat."),
-      );
+      failure = error instanceof Error ? d(error.message) : d("Personal Invitation belum dapat diperbarui.");
     } finally {
+      if (activeEventId.current === eventId) {
+        await loadCurrent();
+        if (activeEventId.current === eventId) setNotice(failure ? `${published} ${d("tamu dipublish")}. ${failure}` : d("Semua undangan personal dipublish."));
+      }
       creating.current = false;
       setBusyId(null);
+    }
+  }
+
+  async function copyLink(item: PersonalInvitationItem) {
+    if (creating.current || !selectedEvent?.isPublished || !selectedEvent.accessPaid || !item.personalPublished || !scopedPersonal.some((row) => row.id === item.id)) return;
+    try {
+      await navigator.clipboard.writeText(buildPersonalInvitationPublicUrl(selectedEvent.slug, item.personalToken));
+      if (activeEventId.current === eventId) setNotice(d("Tautan disalin."));
+    } catch {
+      if (activeEventId.current === eventId) setNotice(d("Gagal menyalin tautan. Periksa izin clipboard browser."));
     }
   }
 
@@ -322,8 +352,9 @@ export default function PersonalInvitationPanel({
     body: Record<string, unknown>,
     successMessage: string,
   ) {
-    if (!eventId) return false;
+    if (!eventId || creating.current) return false;
 
+    creating.current = true;
     setBusyId(id);
     setNotice("");
 
@@ -334,6 +365,7 @@ export default function PersonalInvitationPanel({
         body: JSON.stringify({ invitationId: eventId, id, ...body }),
       });
       const data = await response.json().catch(() => null);
+      if (activeEventId.current !== eventId) return false;
 
       if (!response.ok) {
         throw new Error(
@@ -349,9 +381,11 @@ export default function PersonalInvitationPanel({
         ),
       );
       await loadCurrent();
+      if (activeEventId.current !== eventId) return false;
       setNotice(successMessage);
       return true;
     } catch (error) {
+      if (activeEventId.current !== eventId) return false;
       setNotice(
         error instanceof Error
           ? error.message
@@ -359,6 +393,7 @@ export default function PersonalInvitationPanel({
       );
       return false;
     } finally {
+      creating.current = false;
       setBusyId(null);
     }
   }
@@ -423,9 +458,30 @@ export default function PersonalInvitationPanel({
 
   return (
     <DashboardPage>
-      <DashboardPageHeader
-        title={d("Undangan Personal")}
-      >
+      <DashboardPageHeader title={d("Undangan Personal")} />
+      {notice && <DashboardNotice className="mt-4">{notice}</DashboardNotice>}
+
+      <div className="mt-5">
+        <PersonalInvitationCreatePanel
+          selectedEvent={selectedEvent}
+          availableGuests={availableGuests}
+          guestId={currentData ? guestId : ""}
+          setGuestId={selectExistingGuest}
+          name={currentData && guestId ? availableGuests.find((guest) => guest.id === guestId)?.name ?? "" : name}
+          setName={changeRecipientName}
+          profile={profile}
+          setProfile={setProfile}
+          loading={loading || !currentData}
+          busyId={busyId}
+          drafts={currentDrafts}
+          onAddExisting={addExisting}
+          onAddNames={addNames}
+          onRemoveDraft={(key) => { if (!creating.current) setDrafts((current) => current.filter((row) => row.key !== key)); }}
+          onEditDraft={editDraft}
+        />
+      </div>
+
+      <section className="mt-5 space-y-4" aria-label={d("Pilih undangan")}>
         <EventScopePicker
           label={d("Pilih undangan")}
           events={events}
@@ -433,47 +489,25 @@ export default function PersonalInvitationPanel({
           onChange={(id) => { setEventId(id); onSelectEvent(id); }}
           disabled={eventsLoading || Boolean(busyId)}
         />
-      </DashboardPageHeader>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" disabled={!selectedEvent || !currentDrafts.length || Boolean(busyId)} onClick={() => createBatch(false)}>
+            {busyId === "create-batch" ? d("Menyimpan...") : d("Simpan draf")}
+          </Button>
+          <Button type="button" disabled={!selectedEvent?.isPublished || !selectedEvent.accessPaid || !currentDrafts.length || Boolean(busyId)} onClick={() => createBatch(true)}>
+            <Send className="size-4" />{d("Simpan & Publish")}
+          </Button>
+        </div>
+        {selectedEvent && (!selectedEvent.isPublished || !selectedEvent.accessPaid) && <p className="text-sm text-muted-foreground">{d(!selectedEvent.isPublished ? "Terbitkan undangan acara untuk Publish personal." : "Aktifkan akses Undangan Digital sebelum publish.")}</p>}
+      </section>
 
-      {notice && <DashboardNotice className="mt-4">{notice}</DashboardNotice>}
-
-      {!events.length ? null : selectedEvent ? (
+      {selectedEvent && (
         <>
-          <DashboardMetricGrid className="mt-4 xl:grid-cols-3">
-            <DashboardMetricCard
-              icon={ContactRound}
-              label={d("Total")}
-              value={String(scopedPersonal.length)}
-            />
-            <DashboardMetricCard
-              icon={Send}
-              label={d("Publish")}
-              value={String(publishedCount)}
-            />
-            <DashboardMetricCard
-              icon={Eye}
-              label={d("Dibuka")}
-              value={String(totalViews)}
-            />
+          <DashboardMetricGrid className="mt-5 xl:grid-cols-3">
+            <DashboardMetricCard icon={ContactRound} label={d("Total")} value={String(scopedPersonal.length)} />
+            <DashboardMetricCard icon={Send} label={d("Publish")} value={String(publishedCount)} />
+            <DashboardMetricCard icon={Eye} label={d("Dibuka")} value={String(totalViews)} />
           </DashboardMetricGrid>
-
-          <div className="mt-5 grid gap-4 2xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.7fr)]">
-            <PersonalInvitationCreatePanel
-              key={eventId}
-              selectedEvent={selectedEvent}
-              availableGuests={availableGuests}
-              guestId={currentData ? guestId : ""}
-              setGuestId={selectExistingGuest}
-              name={currentData ? name : ""}
-              setName={changeRecipientName}
-              profile={currentData ? profile : { ...emptyGuestInvitationForm }}
-              setProfile={setProfile}
-              loading={loading || !currentData}
-              busyId={busyId}
-              onCreateExisting={createFromExisting}
-              onCreateNew={createNew}
-            />
-
+          <div className="mt-5">
             <PersonalInvitationListPanel
               selectedEvent={selectedEvent}
               personal={scopedPersonal}
@@ -496,10 +530,12 @@ export default function PersonalInvitationPanel({
               onPatch={patchPersonalInvitation}
               onSavePassword={(item) => void savePassword(item)}
               onDisablePassword={(item) => void disablePassword(item)}
+              onPublishAll={publishAll}
+              onCopyLink={copyLink}
             />
           </div>
         </>
-      ) : null}
+      )}
     </DashboardPage>
   );
 }

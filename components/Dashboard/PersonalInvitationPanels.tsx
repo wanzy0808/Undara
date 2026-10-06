@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ContactRound,
+  Copy,
   Eye,
   KeyRound,
   PenLine,
@@ -11,6 +12,7 @@ import {
   RefreshCw,
   Send,
   ShieldOff,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,11 +34,13 @@ import {
 } from "@/components/Dashboard/DashboardPrimitives";
 import {
   PersonalInvitationGuestFields,
+  emptyGuestInvitationForm,
   type GuestInvitationForm,
 } from "@/components/Dashboard/PersonalInvitationGuestFields";
-import { buildPersonalInvitationPublicUrl } from "@/components/Dashboard/personal-invitation-helpers";
+import { buildPersonalInvitationPublicUrl, buildPersonalInvitationWhatsAppUrl, splitPersonalGuestNames } from "@/components/Dashboard/personal-invitation-helpers";
 import type {
   PersonalInvitationEvent,
+  PersonalInvitationDraft,
   PersonalInvitationGuest,
   PersonalInvitationItem,
 } from "@/components/Dashboard/personal-invitation-types";
@@ -52,10 +56,13 @@ export function PersonalInvitationCreatePanel({
   setProfile,
   loading,
   busyId,
-  onCreateExisting,
-  onCreateNew,
+  drafts,
+  onAddExisting,
+  onAddNames,
+  onRemoveDraft,
+  onEditDraft,
 }: {
-  selectedEvent: PersonalInvitationEvent;
+  selectedEvent: PersonalInvitationEvent | null;
   availableGuests: PersonalInvitationGuest[];
   guestId: string;
   setGuestId: (value: string) => void;
@@ -65,38 +72,44 @@ export function PersonalInvitationCreatePanel({
   setProfile: (next: GuestInvitationForm) => void;
   loading: boolean;
   busyId: string | null;
-  onCreateExisting: () => void;
-  onCreateNew: () => void;
+  drafts: PersonalInvitationDraft[];
+  onAddExisting: () => void;
+  onAddNames: () => void;
+  onRemoveDraft: (key: string) => void;
+  onEditDraft: (key: string, value: { name?: string; category?: string }) => void;
 }) {
   const { d } = useDashboardI18n();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(40);
+  const [draftLimit, setDraftLimit] = useState(40);
   const selectedGuest = availableGuests.find((guest) => guest.id === guestId);
   const matches = availableGuests.filter((guest) =>
     `${guest.name} ${guest.phone ?? ""}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
   );
-  const busy = loading || Boolean(busyId);
-  const valid = Boolean(profile.category.trim())
-    && Boolean(guestId ? selectedGuest : name.trim());
-  const envelopeAddress = formatPersonalEnvelopeAddress({ name: selectedGuest?.name ?? name, ...profile });
+  const busy = Boolean(busyId) || (Boolean(guestId) && loading);
+  let names: string[] = [];
+  try { names = splitPersonalGuestNames(name); } catch { /* Invalid names keep Add disabled. */ }
+  const valid = Boolean(profile.category.trim()) && Boolean(guestId ? selectedGuest : names.length);
+  const envelopeAddress = formatPersonalEnvelopeAddress({ name: selectedGuest?.name ?? names[0] ?? "", ...profile });
 
   return (
-    <DashboardPanel title={displayTitleCase(selectedEvent.title.trim() || d("Undangan"))}>
+    <DashboardPanel title={d("Daftar nama tamu")} actions={drafts.length ? <DashboardStatusBadge>{drafts.length} · {d("Belum disimpan")}</DashboardStatusBadge> : undefined}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
           if (!valid || busy) return;
-          if (guestId) onCreateExisting();
-          else onCreateNew();
+          if (guestId) onAddExisting();
+          else onAddNames();
         }}
         className="space-y-5"
       >
         <div className="space-y-2">
           <label className="block min-w-0 text-sm font-medium text-foreground">
             {d("Nama tamu")}
-            <Input value={name} maxLength={120} onChange={(event) => setName(event.target.value)}
-              placeholder={d("Contoh: Bapak Andi")} required disabled={busy} className="mt-1.5" />
+            <textarea value={name} maxLength={121000} rows={3} onChange={(event) => setName(event.target.value)}
+              placeholder={d("Satu nama per baris")} required disabled={busy}
+              className="mt-1.5 block min-h-24 w-full resize-y rounded-[var(--undara-control-radius)] border border-input bg-transparent px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
           </label>
           {availableGuests.length > 0 && (
             <Dialog open={pickerOpen} onOpenChange={(open) => { setPickerOpen(open); if (open) { setQuery(""); setLimit(40); } }}>
@@ -106,7 +119,7 @@ export function PersonalInvitationCreatePanel({
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>{d("Daftar tamu")}</DialogTitle>
-                  <DialogDescription>{displayTitleCase(selectedEvent.title)}</DialogDescription>
+                  <DialogDescription>{displayTitleCase(selectedEvent?.title ?? "")}</DialogDescription>
                 </DialogHeader>
                 <Input type="search" value={query} aria-label={d("Cari nama tamu")}
                   placeholder={d("Cari nama tamu")} onChange={(event) => { setQuery(event.target.value); setLimit(40); }} />
@@ -141,10 +154,32 @@ export function PersonalInvitationCreatePanel({
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={!valid || busy}>
             <Plus className="size-4" />
-            {busyId ? d("Menyimpan...") : d("Buat undangan")}
+            {d("Tambah ke daftar")}
           </Button>
         </div>
       </form>
+
+      {drafts.length > 0 && (
+        <div className="mt-5 space-y-3 border-t border-primary/15 pt-4">
+          <div className="max-h-[32rem] space-y-3 overflow-y-auto pr-1">
+            {drafts.slice(0, draftLimit).map((draft, index) => (
+              <div key={draft.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 border-b border-primary/10 pb-3 sm:grid-cols-[minmax(0,1fr)_minmax(140px,0.4fr)_auto]">
+                <div className="col-span-2 min-w-0 sm:col-span-1">
+                  <Input value={draft.name} maxLength={120} readOnly={Boolean(draft.guestId)} disabled={Boolean(busyId)}
+                    aria-label={`${d("Nama tamu")} ${index + 1}`}
+                    onChange={(event) => onEditDraft(draft.key, { name: event.target.value })} />
+                  <p className="mt-1.5 break-words text-xs text-muted-foreground">{formatPersonalEnvelopeAddress({ ...draft.profile, name: draft.name }) || d("Amplop tanpa nama")}</p>
+                </div>
+                <PersonalInvitationGuestFields value={{ ...emptyGuestInvitationForm, ...draft.profile, category: draft.category }}
+                  onChange={(next) => onEditDraft(draft.key, { category: next.category })} disabled={Boolean(busyId)} />
+                <Button type="button" size="icon" variant="ghost" className="size-11 shrink-0" disabled={Boolean(busyId)} aria-label={`${d("Hapus")}: ${draft.name}`}
+                  onClick={() => onRemoveDraft(draft.key)}><Trash2 className="size-4" /></Button>
+              </div>
+            ))}
+          </div>
+          {drafts.length > draftLimit && <Button type="button" variant="outline" disabled={Boolean(busyId)} onClick={() => setDraftLimit((current) => current + 40)}>{d("Tampilkan lebih banyak")}</Button>}
+        </div>
+      )}
     </DashboardPanel>
   );
 }
@@ -171,6 +206,8 @@ export function PersonalInvitationListPanel({
   onPatch,
   onSavePassword,
   onDisablePassword,
+  onPublishAll,
+  onCopyLink,
 }: {
   selectedEvent: PersonalInvitationEvent;
   personal: PersonalInvitationItem[];
@@ -197,22 +234,29 @@ export function PersonalInvitationListPanel({
   ) => Promise<boolean>;
   onSavePassword: (item: PersonalInvitationItem) => void;
   onDisablePassword: (item: PersonalInvitationItem) => void;
+  onPublishAll: () => void;
+  onCopyLink: (item: PersonalInvitationItem) => void;
 }) {
   const { d } = useDashboardI18n();
+  const canPublish = selectedEvent.isPublished && selectedEvent.accessPaid;
+  const busy = Boolean(busyId);
 
   return (
     <DashboardPanel
-      title={d("Daftar undangan")}
+      title={displayTitleCase(selectedEvent.title.trim() || d("Daftar undangan"))}
       actions={
+        <div className="flex flex-wrap gap-2">
+        {personal.some((item) => !item.personalPublished) && <Button type="button" size="sm" disabled={loading || busy || !canPublish} onClick={onPublishAll}><Send className="size-4" />{d("Publish semua")}</Button>}
         <Button
           type="button"
           size="sm"
           onClick={onReload}
-          disabled={loading}
+          disabled={loading || busy}
         >
           <RefreshCw className="h-4 w-4" />
           {d("Muat ulang")}
         </Button>
+        </div>
       }
     >
       <div className="space-y-3">
@@ -221,7 +265,7 @@ export function PersonalInvitationListPanel({
             icon={ContactRound}
             title={d("Belum ada Personal Invitation")}
             description={d(
-              "Isi nama tamu untuk membuat undangan personal.",
+              "Tambahkan nama ke daftar, lalu pilih undangan dan simpan.",
             )}
           />
         )}
@@ -248,6 +292,7 @@ export function PersonalInvitationListPanel({
                         <label className="text-sm font-medium text-foreground">
                           {d("Nama penerima")}
                           <Input
+                            disabled={busy}
                             value={editName}
                             maxLength={120}
                             onChange={(event) => setEditName(event.target.value)}
@@ -257,6 +302,7 @@ export function PersonalInvitationListPanel({
                         <label className="text-sm font-medium text-foreground">
                           {d("Nomor WhatsApp (opsional)")}
                           <Input
+                            disabled={busy}
                             type="tel"
                             maxLength={32}
                             value={editPhone}
@@ -268,7 +314,7 @@ export function PersonalInvitationListPanel({
                       <PersonalInvitationGuestFields
                         value={editProfile}
                         onChange={setEditProfile}
-                        disabled={busyId === item.id}
+                        disabled={busy}
                       />
                     </div>
                   ) : (
@@ -285,7 +331,7 @@ export function PersonalInvitationListPanel({
                         {item.phone || d("Tanpa nomor")} · {item.personalViewCount || 0} {d("kali dibuka")}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {item.category || d("Reguler")} · {item.invitedPax ?? 1} {d("orang diundang")}
+                        {!item.category || item.category === "REGULAR" ? d("Reguler") : item.category} · {item.invitedPax ?? 1} {d("orang diundang")}
                         {(item.tags?.length ?? 0) > 0 ? ` · ${item.tags?.join(", ")}` : ""}
                       </p>
                       {item.personalGreeting && (
@@ -318,7 +364,7 @@ export function PersonalInvitationListPanel({
                     <Button
                       type="button"
                       size="sm"
-                      disabled={busyId === item.id}
+                      disabled={busy}
                       onClick={() => onSaveEdit(item)}
                     >
                       {d("Simpan edit")}
@@ -327,6 +373,7 @@ export function PersonalInvitationListPanel({
                     <Button
                       type="button"
                       size="sm"
+                      disabled={busy}
                       onClick={() => onStartEdit(item)}
                     >
                       <PenLine className="h-4 w-4" />
@@ -337,7 +384,7 @@ export function PersonalInvitationListPanel({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={busyId === item.id}
+                    disabled={busy || (!item.personalPublished && !canPublish)}
                     onClick={() =>
                       onPatch(
                         item.id,
@@ -390,7 +437,7 @@ export function PersonalInvitationListPanel({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={busyId === item.id}
+                  disabled={busy}
                   onClick={() => onPatch(
                     item.id,
                     { personalEnvelopeEnabled: item.personalEnvelopeEnabled === false },
@@ -407,6 +454,7 @@ export function PersonalInvitationListPanel({
                 <Button
                   type="button"
                   size="sm"
+                  disabled={busy}
                   onClick={() => {
                     setPasswordId(passwordOpen ? null : item.id);
                     setPassword("");
@@ -422,7 +470,7 @@ export function PersonalInvitationListPanel({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={busyId === item.id}
+                    disabled={busy}
                     onClick={() => onDisablePassword(item)}
                   >
                     <ShieldOff className="h-4 w-4" />
@@ -430,8 +478,10 @@ export function PersonalInvitationListPanel({
                   </Button>
                 )}
 
-                {item.personalPublished && publicUrl && (
+                {item.personalPublished && canPublish && publicUrl && (
                   <>
+                    <Button type="button" size="sm" disabled={busy} onClick={() => onCopyLink(item)}><Copy className="size-4" />{d("Salin tautan")}</Button>
+                    <Button asChild size="sm" variant="outline"><a href={buildPersonalInvitationWhatsAppUrl(selectedEvent, item)} target="_blank" rel="noreferrer"><Send className="size-4" />{d("Kirim WhatsApp")}</a></Button>
                     <Button asChild size="sm">
                       <a href={publicUrl} target="_blank" rel="noreferrer">
                         {d("Buka publik")}
@@ -440,7 +490,7 @@ export function PersonalInvitationListPanel({
                     <Button
                       type="button"
                       size="sm"
-                      disabled={busyId === item.id}
+                      disabled={busy}
                       onClick={() => onPatch(
                         item.id,
                         { markShared: !item.personalSharedAt },
@@ -458,6 +508,7 @@ export function PersonalInvitationListPanel({
               {passwordOpen && (
                 <div className="mt-4 flex flex-col gap-2 border-t border-primary/20 pt-4 sm:flex-row sm:items-center">
                   <Input
+                    disabled={busy}
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
@@ -468,7 +519,7 @@ export function PersonalInvitationListPanel({
                     type="button"
                     size="sm"
                     disabled={
-                      password.trim().length < 6 || busyId === item.id
+                      password.trim().length < 6 || busy
                     }
                     onClick={() => onSavePassword(item)}
                   >
