@@ -787,9 +787,9 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 ### Personal invitation name-first flow — 6 October 2026
 
 - [x] Show the saved invitation title, enter guest name directly and preview its “Kepada Yth” line; remove the recipient-source selector from the main form.
-- [x] Name-only creation with existing safe defaults; phone, allowance/category/groups and envelope/message controls in one initially closed Additional settings section.
+- [x] Name-only creation with existing safe defaults and a directly visible Reguler/VIP/VVIP category selector; remove Additional settings from create/edit while retaining stored guest profile data.
 - [x] Searchable saved-guest selection uses explicit Guest IDs, fills the actual recipient profile and preserves canonical RSVP/seating/check-in identity; changing the chosen name returns to a new recipient.
 - [x] Block duplicate creation submits, retain names after failure and hide/cancel stale invitation loads and creation responses on event switch.
 - [x] Focused personal workflow/envelope tests 15/15, full regression 765/765, TypeScript, production build 73/73 and whitespace checks PASS. No new ESLint diagnostics versus the committed parent; orchestration's three existing effect findings remain.
-- [ ] On the signed-in target app, verify long invitation/guest names, saved-guest search/keyboard selection, optional settings, ID/EN/without-name envelopes, event switching and Light/Dark desktop/mobile behavior.
+- [ ] On the signed-in target app, verify long invitation/guest names, saved-guest search/keyboard selection, category create/edit, retained ID/EN/without-name envelope profiles, event switching and Light/Dark desktop/mobile behavior.
 - [ ] Verify real create → preview → publish/share → open personal link → RSVP reuses the canonical recipient and preserves invited allowance, seating and check-in. Existing publish/password/entitlement requirements still apply.

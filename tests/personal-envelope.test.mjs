@@ -50,12 +50,9 @@ test("personal invitation profile validates envelope toggle and language", () =>
 });
 
 test("Personal Invitation dashboard previews and directly toggles the exact envelope addressee", () => {
-  const fields = read("components/Dashboard/PersonalInvitationGuestFields.tsx");
   const panels = read("components/Dashboard/PersonalInvitationPanels.tsx");
   const i18n = read("components/Dashboard/useDashboardI18n.ts");
 
-  assert.match(fields, /Kepada Yth : Bapak Andi dan Ibu Sari/);
-  assert.match(fields, /Dear : Mr Andi and Mrs Sari/);
   assert.match(panels, /formatPersonalEnvelopeAddress\(item\)/);
   assert.match(panels, /personalEnvelopeEnabled: item\.personalEnvelopeEnabled === false/);
   assert.match(panels, /Aktifkan nama amplop/);
@@ -65,6 +62,7 @@ test("Personal Invitation dashboard previews and directly toggles the exact enve
 
 test("dashboard and every ready envelope path receive the personal recipient line", () => {
   const fields = read("components/Dashboard/PersonalInvitationGuestFields.tsx");
+  const panels = read("components/Dashboard/PersonalInvitationPanels.tsx");
   const publicPage = read("app/invite/[slug]/p/[token]/page.tsx");
   const previewPage = read("app/dashboard/personal-invitation/[guestId]/page.tsx");
   const universal = read("components/PublicInvitation/UniversalInvitationTemplate.tsx");
@@ -75,9 +73,8 @@ test("dashboard and every ready envelope path receive the personal recipient lin
 
   assert.match(fields, /personalEnvelopeEnabled/);
   assert.match(fields, /personalLanguage/);
-  assert.match(fields, /Bahasa sapaan amplop/);
-  assert.match(fields, /formatPersonalEnvelopeAddress\(/);
-  assert.match(fields, /name: guestName/);
+  assert.match(panels, /formatPersonalEnvelopeAddress\(/);
+  assert.match(panels, /name: selectedGuest\?\.name \?\? name/);
   assert.match(publicPage, /personalEnvelopeEnabled: guest\.personalEnvelopeEnabled/);
   assert.match(previewPage, /<PublicInvitationRenderer/);
   assert.match(universal, /formatPersonalEnvelopeAddress\(\{ \.\.\.personalGuest, personalLanguage: language \}\)/);

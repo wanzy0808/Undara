@@ -48,8 +48,6 @@ export function PersonalInvitationCreatePanel({
   setGuestId,
   name,
   setName,
-  phone,
-  setPhone,
   profile,
   setProfile,
   loading,
@@ -63,8 +61,6 @@ export function PersonalInvitationCreatePanel({
   setGuestId: (value: string) => void;
   name: string;
   setName: (value: string) => void;
-  phone: string;
-  setPhone: (value: string) => void;
   profile: GuestInvitationForm;
   setProfile: (next: GuestInvitationForm) => void;
   loading: boolean;
@@ -81,8 +77,7 @@ export function PersonalInvitationCreatePanel({
     `${guest.name} ${guest.phone ?? ""}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
   );
   const busy = loading || Boolean(busyId);
-  const valid = Number.isInteger(profile.invitedPax) && profile.invitedPax >= 1
-    && profile.invitedPax <= 30 && Boolean(profile.category.trim())
+  const valid = Boolean(profile.category.trim())
     && Boolean(guestId ? selectedGuest : name.trim());
   const envelopeAddress = formatPersonalEnvelopeAddress({ name: selectedGuest?.name ?? name, ...profile });
 
@@ -134,28 +129,14 @@ export function PersonalInvitationCreatePanel({
           )}
         </div>
 
+        <PersonalInvitationGuestFields value={profile} onChange={setProfile} disabled={busy} />
+
         <div className="border-y border-primary/15 py-3" aria-live="polite">
           <p className="text-xs text-muted-foreground">{d("Sapaan di amplop")}</p>
           <p className="mt-1 break-words text-sm font-medium text-foreground">
             {envelopeAddress || (profile.personalEnvelopeEnabled ? profile.personalLanguage === "EN" ? "Dear : [Name]" : "Kepada Yth : [Nama tamu]" : d("Amplop tanpa nama"))}
           </p>
         </div>
-
-        <PersonalInvitationGuestFields compact value={profile} guestName={selectedGuest?.name ?? name} onChange={setProfile} disabled={busy}>
-          <label className="block min-w-0 text-sm font-medium text-foreground">
-            {d("Nomor WhatsApp (opsional)")}
-            <Input
-              type="tel"
-              value={phone}
-              maxLength={32}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="08xxxxxxxxxx"
-              disabled={busy}
-              readOnly={Boolean(selectedGuest)}
-              className="mt-1.5"
-            />
-          </label>
-        </PersonalInvitationGuestFields>
 
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={!valid || busy}>
@@ -286,7 +267,6 @@ export function PersonalInvitationListPanel({
                       </div>
                       <PersonalInvitationGuestFields
                         value={editProfile}
-                        guestName={editName}
                         onChange={setEditProfile}
                         disabled={busyId === item.id}
                       />

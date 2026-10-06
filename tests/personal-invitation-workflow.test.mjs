@@ -18,6 +18,11 @@ import { loadSource } from "./helpers/package-access.mjs";
 
 const d = (text) => text;
 const i18n = { useDashboardI18n: () => ({ d, locale: "id" }) };
+const CategoryFields = loadSource("components/Dashboard/PersonalInvitationGuestFields.tsx", {
+  "react/jsx-runtime": jsxRuntime,
+  "@/components/Dashboard/useDashboardI18n": i18n,
+  "@/lib/text/display-title-case": titles,
+}).PersonalInvitationGuestFields;
 const event = (id = "event-a") => ({
   id, title: id === "event-a" ? "Pernikahan Una & Dara" : "Ulang Tahun Nina",
   slug: id, venue: "Jakarta", eventDate: "2026-11-01", createdAt: "2026-10-01",
@@ -76,9 +81,9 @@ function hookHarness() {
 
 function createProps(overrides = {}) {
   return {
-    selectedEvent: event(), availableGuests: [], guestId: "", name: "", phone: "",
+    selectedEvent: event(), availableGuests: [], guestId: "", name: "",
     profile: { ...fields.emptyGuestInvitationForm }, loading: false, busyId: null,
-    setGuestId() {}, setName() {}, setPhone() {}, setProfile() {}, onCreateNew() {}, onCreateExisting() {},
+    setGuestId() {}, setName() {}, setProfile() {}, onCreateNew() {}, onCreateExisting() {},
     ...overrides,
   };
 }
@@ -128,7 +133,7 @@ const fetchLists = (url, guests = [guest()], invitations = []) => {
   return Response.json(url.startsWith("/api/guests?") ? { guests } : { invitations });
 };
 
-test("creation shows the saved invitation title and live addressee, with optional fields in one closed disclosure", () => {
+test("creation shows the saved invitation title, guest name, category and live addressee without additional settings", () => {
   const props = createProps({ name: "bapak andi" });
   for (const [locale, label] of [["id", "Nama tamu"], ["en", "Guest name"]]) {
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(PersonalInvitationCreatePanel, props)));
@@ -136,12 +141,12 @@ test("creation shows the saved invitation title and live addressee, with optiona
     assert.ok(html.includes(label));
     assert.match(html, /Kepada Yth : Bapak Andi/);
     assert.doesNotMatch(html, /Sumber penerima|Recipient source/);
-    assert.equal((html.match(/<details\b/g) ?? []).length, 1);
-    assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
-    const details = html.slice(html.indexOf("<details"), html.indexOf("</details>"));
-    for (const attribute of ['type="tel"', 'type="number"', 'type="checkbox"', 'maxlength="160"', 'maxlength="280"']) assert.ok(details.toLowerCase().includes(attribute), attribute);
-    assert.ok(html.indexOf('value="bapak andi"') < html.indexOf("<details"));
-    assert.ok(html.indexOf("Kepada Yth : Bapak Andi") < html.indexOf("<details"));
+    assert.doesNotMatch(html, /<details\b|<textarea\b|type="tel"|type="number"|type="checkbox"/);
+    assert.equal((html.match(/<select\b/g) ?? []).length, 1);
+    assert.deepEqual([...html.matchAll(/<option value="([^"]+)"/g)].map((match) => match[1]), ["REGULAR", "VIP", "VVIP"]);
+    assert.match(html, /value="REGULAR" selected=""/);
+    assert.ok(html.indexOf('value="bapak andi"') < html.indexOf("<select"));
+    assert.ok(html.indexOf("<select") < html.indexOf("Kepada Yth : Bapak Andi"));
   }
 });
 
@@ -156,7 +161,6 @@ test("name-first form submits the right recipient mode and keeps exact couple, o
   assert.equal(created, 1);
   submit(harness.render({ guestId: "guest-a", availableGuests: [guest()], name: guest().name }));
   assert.equal(reused, 1);
-  assert.equal(nodes(harness.render()).find((node) => node.type === Input && node.props.type === "tel").props.readOnly, true);
   for (const [profile, expected] of [
     [{ recipientType: "COUPLE", personalLanguage: "ID" }, "Kepada Yth : Bapak Andi dan Ibu Sari"],
     [{ recipientType: "COUPLE", personalLanguage: "EN" }, "Dear : Mr Andi and Mrs Sari"],
@@ -214,12 +218,19 @@ test("typing only a name creates a draft for the selected invitation with safe d
   } finally { panel.dispose(); }
 });
 
-test("reusing a saved guest fills the name and profile but posts the canonical ID without renaming their RSVP record", async () => {
-  const saved = { ...guest(), recipientType: "FAMILY", invitedPax: 4, category: "VIP", tags: ["Keluarga"], personalAddressee: "Bapak Andi & Keluarga", plusOnes: 2, rsvpStatus: "ATTENDING", checkedIn: true, table: { id: "table-a", name: "Meja 1" } };
+test("reusing a saved guest and changing their category retains the canonical ID, allowance and hidden envelope profile", async () => {
+  const saved = { ...guest(), recipientType: "FAMILY", invitedPax: 4, category: "Keluarga utama", tags: ["Keluarga"], personalAddressee: "Bapak Andi & Keluarga", personalLanguage: "EN", personalEnvelopeEnabled: false, personalGreeting: "Terima kasih", plusOnes: 2, rsvpStatus: "ATTENDING", checkedIn: true, table: { id: "table-a", name: "Meja 1" } };
+  let listed = { ...personal(), ...saved, id: "personal-a" };
   const calls = [];
   const panel = panelHarness(async (url, options = {}) => {
     if (options.method === "POST") { calls.push(JSON.parse(options.body)); return Response.json({ invitation: personal() }); }
-    return fetchLists(url, [saved, personal()], [personal()]);
+    if (options.method === "PATCH") {
+      const body = JSON.parse(options.body);
+      calls.push(body);
+      listed = { ...listed, category: body.category, name: body.name, phone: body.phone };
+      return Response.json({ invitation: listed });
+    }
+    return fetchLists(url, [saved, listed], [listed]);
   });
   try {
     let view = await panel.settle();
@@ -227,29 +238,49 @@ test("reusing a saved guest fills the name and profile but posts the canonical I
     view.create.setGuestId("guest-a");
     view = panel.render();
     assert.equal(view.create.name, saved.name);
-    assert.equal(view.create.phone, saved.phone);
     assert.deepEqual(view.create.profile, fields.guestInvitationFormFrom(saved));
+    const legacyControl = CategoryFields({ value: view.create.profile, onChange: view.create.setProfile });
+    assert.deepEqual(nodes(legacyControl).filter((node) => node.type === "option" && !node.props.disabled).map((node) => node.props.value), ["REGULAR", "VIP", "VVIP"]);
+    assert.equal(find(legacyControl, "select").props.value, saved.category);
+    for (const category of ["REGULAR", "VIP", "VVIP"]) {
+      const control = CategoryFields({ value: view.create.profile, onChange: view.create.setProfile });
+      find(control, "select").props.onChange({ target: { value: category } });
+      view = panel.render();
+      assert.deepEqual(view.create.profile, { ...fields.guestInvitationFormFrom(saved), category });
+    }
     await view.create.onCreateExisting();
-    assert.deepEqual(calls, [{ invitationId: "event-a", guestId: "guest-a", ...fields.guestInvitationProfilePayload(fields.guestInvitationFormFrom(saved)) }]);
-    for (const key of ["name", "phone", "rsvpStatus", "plusOnes", "checkedIn", "tableId", "seatNumber"]) assert.equal(Object.hasOwn(calls[0], key), false);
+    assert.deepEqual(calls, [{ invitationId: "event-a", guestId: "guest-a", category: "VVIP" }]);
     assert.equal(panel.render().create.name, "");
-    assert.equal(panel.render().create.phone, "");
+
+    panel.render().list.onStartEdit(listed);
+    view = panel.render();
+    const editControl = CategoryFields({ value: view.list.editProfile, onChange: view.list.setEditProfile });
+    find(editControl, "select").props.onChange({ target: { value: "VIP" } });
+    panel.render().list.onSaveEdit(listed);
+    view = await panel.settle();
+    assert.deepEqual(calls[1], { invitationId: "event-a", id: "personal-a", name: saved.name, phone: saved.phone, category: "VIP" });
+    for (const key of ["recipientType", "invitedPax", "tags", "personalAddressee", "personalLanguage", "personalEnvelopeEnabled", "personalGreeting", "plusOnes", "rsvpStatus", "checkedIn", "table"]) assert.deepEqual(view.list.personal[0][key], saved[key]);
   } finally { panel.dispose(); }
 });
 
 test("editing a selected name starts a new recipient and drops the old guest's phone, addressee and allowance", async () => {
   const saved = { ...guest(), invitedPax: 8, personalAddressee: "Keluarga Andi", personalEnvelopeEnabled: false };
-  const panel = panelHarness(async (url) => fetchLists(url, [saved]));
+  const calls = [];
+  const panel = panelHarness(async (url, options = {}) => {
+    if (options.method === "POST") { calls.push(JSON.parse(options.body)); return Response.json({ invitation: personal() }); }
+    return fetchLists(url, [saved]);
+  });
   try {
     (await panel.settle()).create.setGuestId("guest-a");
     panel.render().create.setName("Bapak Budi");
     const view = panel.render().create;
     assert.equal(view.guestId, "");
     assert.equal(view.name, "Bapak Budi");
-    assert.equal(view.phone, "");
     assert.deepEqual(view.profile, fields.emptyGuestInvitationForm);
     view.setGuestId("guest-from-another-event");
     assert.equal(panel.render().create.guestId, "");
+    await panel.render().create.onCreateNew();
+    assert.deepEqual(calls, [{ invitationId: "event-a", name: "Bapak Budi", phone: "", ...fields.guestInvitationProfilePayload(fields.emptyGuestInvitationForm) }]);
   } finally { panel.dispose(); }
 });
 

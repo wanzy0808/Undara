@@ -241,7 +241,7 @@ export default function PersonalInvitationPanel({
         body: JSON.stringify({
           invitationId: eventId,
           guestId,
-          ...guestInvitationProfilePayload(profile),
+          category: profile.category,
         }),
       });
       const data = await response.json().catch(() => null);
@@ -375,7 +375,7 @@ export default function PersonalInvitationPanel({
 
     const ok = await patchPersonalInvitation(
       item.id,
-      { name: editName.trim(), phone: editPhone.trim(), ...guestInvitationProfilePayload(editProfile) },
+      { name: editName.trim(), phone: editPhone.trim(), category: editProfile.category },
       d("Data tamu diperbarui."),
     );
 
@@ -466,8 +466,6 @@ export default function PersonalInvitationPanel({
               setGuestId={selectExistingGuest}
               name={currentData ? name : ""}
               setName={changeRecipientName}
-              phone={currentData ? phone : ""}
-              setPhone={setPhone}
               profile={currentData ? profile : { ...emptyGuestInvitationForm }}
               setProfile={setProfile}
               loading={loading || !currentData}
