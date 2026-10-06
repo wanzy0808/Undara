@@ -3264,4 +3264,4 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 
 **Affected files / commit:** `components/Dashboard/{PersonalInvitationPanel,PersonalInvitationPanels,PersonalInvitationGuestFields,useDashboardI18n}.tsx`, `tests/personal-invitation-workflow.test.mjs`, and `prd.md`; commit `refactor(personal): compact recipient table and sending flow`.
 
-**Validation status:** Source-level regression expectations cover the removed editor CTA, flat checkbox rows, selected publication and per-row Send behavior. Exact GitHub CI/build status must be observed after publication; authenticated browser/device and target-database create → publish → send/received-link behavior remain production QA items.
+**Validation status:** GitHub Build Validation passed the source regression suite and the Next.js production build on commit `b00e4dd1da902a50908f5a4a09d65bdcba010869`; Orphan Audit also passed. Authenticated browser/device and target-database create → publish → send/received-link behavior remain production QA items.
