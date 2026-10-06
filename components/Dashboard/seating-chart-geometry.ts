@@ -4,7 +4,7 @@ import type {
   SeatingSeatTarget,
   SeatingTable,
 } from "@/components/Dashboard/seating-chart-types";
-import { clampSeatingPoint, seatingPlanForTables, SEATING_TABLE_MARGIN, type SeatingPlan } from "@/lib/seating/plan";
+import { clampSeatingPoint, seatingPlanForTables, SEATING_MAX_HEIGHT, SEATING_TABLE_MARGIN, type SeatingPlan } from "@/lib/seating/plan";
 
 export const SEATING_STAGE_WIDTH = 1100;
 export const SEATING_STAGE_HEIGHT = 620;
@@ -46,6 +46,25 @@ export function seatingTableCenter(id: string, index: number, total: number, pla
 export function seatingPlanWithTables(plan: SeatingPlan, tables: SeatingTable[]): SeatingPlan {
   const current = seatingPlanForTables(plan, tables.map((table) => table.id));
   return { ...current, tables: Object.fromEntries(tables.map((table, index) => [table.id, seatingTableCenter(table.id, index, tables.length, current)])) };
+}
+
+/** Keep existing geometry and put additions in the next available grid spaces. */
+export function seatingPlanWithAddedTables(plan: SeatingPlan, existing: SeatingTable[], added: SeatingTable[]): SeatingPlan {
+  const current = seatingPlanWithTables(plan, existing);
+  const next = seatingPlanForTables(current, [...existing, ...added].map((table) => table.id));
+  const positions = { ...current.tables };
+  for (const table of added) {
+    let point: SeatingPoint | undefined;
+    for (let y = SEATING_TABLE_MARGIN; y <= SEATING_MAX_HEIGHT - SEATING_TABLE_MARGIN && !point; y += SEATING_TABLE_GAP_Y) {
+      for (const x of [175, 425, 675, 925]) {
+        if (Object.values(positions).every((other) => Math.hypot(other.x - x, other.y - y) >= 185)) { point = { x, y }; break; }
+      }
+    }
+    point ??= clampSeatingPoint(seatingTablePoint(Object.keys(positions).length, existing.length + added.length, next.height), next.height, SEATING_TABLE_MARGIN);
+    next.height = Math.max(next.height, point.y + SEATING_TABLE_MARGIN);
+    positions[table.id] = point;
+  }
+  return { ...next, tables: positions };
 }
 
 export function seatingSeatPoint(

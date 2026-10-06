@@ -773,3 +773,13 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 
 - [x] Keep move/draw/print and canonical guest assignment independent of failed layout storage loading; Save requires a successful load, and reload preserves an edited draft in Undo with ID/EN recovery feedback. Detect missing schema/older cached client with private 503, preserving all access/mutation guards. Focused 38/38, full 739/739, production build 73/73, TypeScript and changed-file ESLint (zero diagnostics) PASS. (6 October 2026)
 - [ ] On the owner's local app: stop dev, pull, deploy migrations, regenerate Prisma and restart dev; verify the previous failed-load state is resolved and Save/reopen works. The screenshot alone does not confirm whether migration, cached client or another server error caused it.
+
+### Seating add/reset and simplified controls — 6 October 2026
+
+- [x] Direct table drag/selection without a Select/Move button or table dropdown; Draw toggles off and Escape returns to dragging.
+- [x] Repeatable atomic table additions, server numbering, shared event lock/100-table limit, preserved prior geometry/assignments and vacant-grid placement.
+- [x] Separate confirmed Empty action: exact table/layout snapshot, atomic event-scoped reset, Guest identity/RSVP/pax/tokens/check-in preserved, failure retains drafts and success drops deleted-table Undo.
+- [x] Focused editor/layout/table mutation tests 55/55 PASS; source includes parent refresh and localized shared-dialog states.
+- [x] Full regression 756/756, production build 73/73, TypeScript, scoped ESLint (14 files, zero errors/warnings) and changed-file whitespace check PASS.
+- [ ] Observe exact-commit Build Validation and Orphan Audit after publication; target-app/browser checks remain separate.
+- [ ] On the signed-in target app, verify repeated Add → Save/reopen, confirmed Empty → reload → Add, cancel/failed reset, guest roster/pax/tickets and Light/Dark desktop/mobile behavior. Existing storage migration must already be deployed.

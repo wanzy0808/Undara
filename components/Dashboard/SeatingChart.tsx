@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, LayoutGrid, MousePointer2, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
+import { ArrowLeftRight, LayoutGrid, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import {
@@ -14,7 +15,7 @@ import {
   DashboardPanel,
 } from "@/components/Dashboard/DashboardPrimitives";
 import { matchesGuestLabels } from "@/lib/guests/filters";
-import { findSeatingSeatTarget, seatingPlanWithTables } from "@/components/Dashboard/seating-chart-geometry";
+import { findSeatingSeatTarget, seatingPlanWithAddedTables, seatingPlanWithTables } from "@/components/Dashboard/seating-chart-geometry";
 import { SEATING_MAX_PATHS } from "@/lib/seating/plan";
 import { seatingPlanKey } from "@/lib/seating/editor";
 import { useSeatingPlan } from "./use-seating-plan";
@@ -29,7 +30,7 @@ import type {
   SeatingTable,
 } from "@/components/Dashboard/seating-chart-types";
 
-export default function SeatingChart({ invitationId, title = "", guests, tables, onAssigned }: SeatingChartProps) {
+export default function SeatingChart({ invitationId, title = "", guests, tables, onAssigned, onTablesChanged }: SeatingChartProps) {
   const { d, locale } = useDashboardI18n();
   const { isDarkMode } = useTheme();
   const [draggedGuestId, setDraggedGuestId] = useState<string | null>(null);
@@ -41,6 +42,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [tagFilter, setTagFilter] = useState("");
   const [localGuests, setLocalGuests] = useState<SeatingGuest[]>([]);
   const [localTables, setLocalTables] = useState<SeatingTable[]>([]);
+  const [removedTableIds, setRemovedTableIds] = useState<string[]>([]);
   const [guestOverrides, setGuestOverrides] = useState<
     Record<string, Partial<SeatingGuest>>
   >({});
@@ -49,11 +51,14 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
     guestId: string;
     target: SeatingSeatTarget;
   } | null>(null);
-  const [tableCount, setTableCount] = useState(tables.length || 1);
+  const [tableCount, setTableCount] = useState(1);
   const [seatsPerTable, setSeatsPerTable] = useState(
     tables[0]?.capacity || 8,
   );
   const [generating, setGenerating] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const tableRequest = useRef<AbortController | null>(null);
+  const tableMutationBusy = useRef(false);
   const plan = useSeatingPlan(invitationId);
   const [tool, setTool] = useState<"move" | "draw">("move");
   const [drawing, setDrawing] = useState(false);
@@ -61,15 +66,15 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [printing, setPrinting] = useState(false);
   const printCleanup = useRef<(() => void) | null>(null);
   const printRequest = useRef<AbortController | null>(null);
-  useEffect(() => () => { printRequest.current?.abort(); printCleanup.current?.(); }, []);
+  useEffect(() => () => { tableRequest.current?.abort(); printRequest.current?.abort(); printCleanup.current?.(); }, []);
 
   const visibleTables = useMemo(() => {
     const known = new Set(tables.map((table) => table.id));
     return [
-      ...tables,
+      ...tables.filter((table) => !removedTableIds.includes(table.id)),
       ...localTables.filter((table) => !known.has(table.id)),
     ];
-  }, [tables, localTables]);
+  }, [tables, localTables, removedTableIds]);
   const layout = useMemo(() => seatingPlanWithTables(plan.editor.plan, visibleTables), [plan.editor.plan, visibleTables]);
   const layoutDirty = seatingPlanKey(layout) !== plan.editor.savedKey || (plan.editor.revision === null && visibleTables.length > 0);
   const layoutBusy = plan.loading || plan.saving || generating || Boolean(savingGuestId);
@@ -112,56 +117,60 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
   async function generateTables(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const count = Math.max(1, Math.floor(tableCount));
-    const capacity = Math.max(1, Math.floor(seatsPerTable));
-
-    if (visibleTables.length > 0) {
-      setMessage(
-        d("Denah sudah memiliki meja. Gunakan data meja yang sudah tersimpan."),
-      );
+    if (toolbarBusy || tableMutationBusy.current) return;
+    const count = tableCount, capacity = seatsPerTable;
+    if (!Number.isInteger(count) || count < 1 || count > 100 - visibleTables.length) {
+      setMessage(d("Jumlah meja melebihi sisa ruang (maksimal 100 meja)."));
+      return;
+    }
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 50) {
+      setMessage(d("Kapasitas meja wajib 1–50 kursi."));
       return;
     }
 
+    tableMutationBusy.current = true;
+    const controller = new AbortController(); tableRequest.current = controller;
     setGenerating(true);
     setMessage("");
     try {
-      const created: SeatingTable[] = [];
-      for (let index = 1; index <= count; index += 1) {
-        const response = await fetch("/api/tables", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            invitationId,
-            name: locale === "en" ? `Table ${index}` : `Meja ${index}`,
-            capacity,
-            shape: "ROUND",
-          }),
-        });
-        const data = await response.json().catch(() => null);
-        if (!response.ok) {
-          throw new Error(
-          data?.error ||
-            (locale === "en"
-              ? `Table ${index} could not be created.`
-              : `Meja ${index} gagal dibuat.`),
-        );
-        }
-        created.push(data.table as SeatingTable);
-        setLocalTables([...created]);
-      }
-      setLocalTables(created);
-      setMessage(locale === "en" ? `Seating plan created: ${count} tables × ${capacity} seats.` : `Denah dibuat: ${count} meja × ${capacity} bangku.`);
+      const response = await fetch("/api/tables", {
+        method: "POST", signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitationId, count, capacity, shape: "ROUND", locale }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error || "Meja gagal dibuat.");
+      if (!Array.isArray(data?.tables) || data.tables.length !== count || data.tables.some((table: SeatingTable) => !table?.id || !table.name || !Number.isInteger(table.capacity))) throw new Error("Data meja tidak valid.");
+      if (controller.signal.aborted) return;
+      const created = data.tables as SeatingTable[];
+      plan.dispatch({ type: "EDIT", plan: seatingPlanWithAddedTables(layout, visibleTables, created) });
+      setLocalTables((current) => [...current, ...created]);
+      setSelectedTableId(created[0].id);
+      setTool("move");
+      setMessage(locale === "en" ? `${count} tables added, ${capacity} seats each.` : `${count} meja ditambahkan, masing-masing ${capacity} kursi.`);
+      void onTablesChanged?.().catch(() => {});
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : locale === "en"
-            ? "Seating plan could not be created."
-            : "Denah gagal dibuat.",
-      );
+      if (!controller.signal.aborted) setMessage(d(error instanceof Error ? error.message : "Meja gagal dibuat."));
     } finally {
-      setGenerating(false);
+      tableMutationBusy.current = false;
+      if (!controller.signal.aborted) setGenerating(false);
     }
+  }
+
+  async function clearLayout() {
+    if (toolbarBusy || !plan.ready || tableMutationBusy.current) return;
+    tableMutationBusy.current = true;
+    setMessage("");
+    try {
+      if (!(await plan.clear(visibleTables.map((table) => table.id)))) return;
+      setRemovedTableIds((current) => [...current, ...visibleTables.map((table) => table.id)]);
+      setLocalTables([]);
+      setGuestOverrides((current) => ({ ...current, ...Object.fromEntries(visibleGuests.map((guest) => [guest.id, { ...current[guest.id], tableId: null, seatNumber: null }])) }));
+      setSelectedTableId(""); setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null); setTool("move");
+      setConfirmReset(false);
+      setMessage(d("Denah dikosongkan. Tamu kembali ke daftar belum ditempatkan."));
+      void onTablesChanged?.().catch(() => {});
+    } finally { tableMutationBusy.current = false; }
   }
 
   async function addManualGuest(event: React.FormEvent<HTMLFormElement>) {
@@ -353,11 +362,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
           <form onSubmit={generateTables} className="mt-4 space-y-3">
             <label className="block">
-              <span className="mb-1.5 block text-xs font-medium">{d("Jumlah meja")}</span>
+              <span className="mb-1.5 block text-xs font-medium">{d("Meja ditambahkan")}</span>
               <Input
                 type="number"
                 min={1}
-                max={100}
+                max={Math.max(1, 100 - visibleTables.length)}
+                disabled={toolbarBusy || visibleTables.length >= 100}
                 value={tableCount}
                 onChange={(event) => setTableCount(Number(event.target.value))}
               />
@@ -368,6 +378,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 type="number"
                 min={1}
                 max={50}
+                disabled={toolbarBusy || visibleTables.length >= 100}
                 value={seatsPerTable}
                 onChange={(event) => setSeatsPerTable(Number(event.target.value))}
               />
@@ -376,15 +387,11 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
               type="submit"
               size="sm"
               className="w-full"
-              disabled={generating || visibleTables.length > 0}
-              title={visibleTables.length ? d("Denah meja sudah tersimpan") : d("Buat denah meja")}
+              disabled={toolbarBusy || visibleTables.length >= 100}
+              title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
             >
               <LayoutGrid className="h-4 w-4" />
-              {generating
-                ? d("Membuat denah meja...")
-                : visibleTables.length
-                  ? d("Denah meja tersimpan")
-                  : d("Buat denah meja")}
+              {generating ? d("Menambahkan meja...") : d("Tambah meja")}
             </Button>
           </form>
 
@@ -521,14 +528,21 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       >
 
         <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label={d("Alat denah")}>
-          <Button type="button" size="sm" variant={tool === "move" ? "default" : "outline"} aria-pressed={tool === "move"} disabled={toolbarBusy} onClick={() => setTool("move")}><MousePointer2 className="h-4 w-4" />{d("Pilih / geser")}</Button>
-          <Button type="button" size="sm" variant={tool === "draw" ? "default" : "outline"} aria-pressed={tool === "draw"} disabled={toolbarBusy || layout.paths.length >= SEATING_MAX_PATHS} onClick={() => setTool("draw")}><PencilLine className="h-4 w-4" />{d("Gambar jalur")}</Button>
+          <Button type="button" size="sm" variant={tool === "draw" ? "default" : "outline"} aria-pressed={tool === "draw"} disabled={toolbarBusy || (tool !== "draw" && layout.paths.length >= SEATING_MAX_PATHS)} onClick={() => { setTool(tool === "draw" ? "move" : "draw"); setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null); }}><PencilLine className="h-4 w-4" />{d("Gambar jalur")}</Button>
           <Button type="button" size="icon-sm" variant="outline" aria-label={d("Undo")} title={d("Undo")} disabled={toolbarBusy || !plan.editor.past.length} onClick={() => plan.dispatch({ type: "UNDO" })}><Undo2 className="h-4 w-4" /></Button>
           <Button type="button" size="icon-sm" variant="outline" aria-label={d("Redo")} title={d("Redo")} disabled={toolbarBusy || !plan.editor.future.length} onClick={() => plan.dispatch({ type: "REDO" })}><Redo2 className="h-4 w-4" /></Button>
           <Button type="button" size="sm" variant="outline" disabled={toolbarBusy || !layout.paths.length} onClick={() => plan.dispatch({ type: "EDIT", plan: { ...layout, paths: [] } })}><Trash2 className="h-4 w-4" />{d("Hapus jalur")}</Button>
-          <select aria-label={d("Pilih meja")} value={selectedTableId} disabled={toolbarBusy || tool !== "move"} onChange={(event) => setSelectedTableId(event.target.value)} className="min-h-11 max-w-44 rounded-md border border-border bg-background px-3 text-sm">
-            <option value="">{d("Pilih meja")}</option>{visibleTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}
-          </select>
+          <Dialog open={confirmReset} onOpenChange={(open) => { if (!plan.saving) setConfirmReset(open); }}>
+            <DialogTrigger render={<Button type="button" size="sm" variant="outline" disabled={toolbarBusy || !plan.ready || (!visibleTables.length && !layout.paths.length)} title={!plan.ready ? d("Muat denah sebelum mengosongkan.") : undefined} />}><Trash2 className="h-4 w-4" />{d("Kosongkan denah")}</DialogTrigger>
+            <DialogContent showCloseButton={!plan.saving}>
+              <DialogHeader><DialogTitle>{d("Kosongkan denah?")}</DialogTitle><DialogDescription>{d("Semua meja, jalur dan penempatan kursi akan dihapus. Data tamu tetap tersimpan. Tindakan ini tidak bisa di-Undo.")}</DialogDescription></DialogHeader>
+              <DialogFooter>
+                <Button type="button" variant="outline" disabled={plan.saving} onClick={() => setConfirmReset(false)}>{d("Batal")}</Button>
+                <Button type="button" disabled={toolbarBusy || !plan.ready} onClick={() => void clearLayout()}>{plan.saving ? d("Mengosongkan...") : d("Ya, kosongkan")}</Button>
+              </DialogFooter>
+              {plan.error && <p role="alert" className="text-xs text-primary">{d(plan.error)}</p>}
+            </DialogContent>
+          </Dialog>
           <div className="flex flex-wrap gap-2 sm:ml-auto">
             <Button type="button" size="sm" disabled={toolbarBusy || !plan.ready || !layoutDirty} title={!plan.ready ? d("Muat denah sebelum menyimpan.") : undefined} onClick={() => void saveLayout()}><Save className="h-4 w-4" />{plan.saving ? d("Menyimpan...") : d("Simpan denah")}</Button>
             <Button type="button" size="sm" variant="outline" disabled={toolbarBusy || printing} onClick={() => void printLayout()}><Printer className="h-4 w-4" />{printing ? d("Menyiapkan cetak...") : d("Cetak")}</Button>
@@ -542,6 +556,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             plan.dispatch({ type: "EDIT", plan: { ...layout, paths: [...layout.paths, points] } });
           }}
           onDrawingChange={setDrawing}
+          onExitDraw={() => setTool("move")}
           onGuestStart={(id) => { setDraggedGuestId(id); setSwapCandidate(null); }} onGuestHover={setHoverFromPoint} onGuestDrop={assignGuestAtPoint}
           onUndo={() => plan.dispatch({ type: "UNDO" })} onRedo={() => plan.dispatch({ type: "REDO" })}
           label={d("Denah: pilih meja, lalu gunakan tombol panah untuk menggeser.")} emptyLabel={d("Atur jumlah meja dan kursi untuk membuat denah.")}

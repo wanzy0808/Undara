@@ -24,6 +24,7 @@ export type SeatingChartProps = {
   guests: SeatingGuest[];
   tables: SeatingTable[];
   accent?: string;
+  onTablesChanged?: () => Promise<void>;
   onAssigned: (
     guestId: string,
     tableId: string,

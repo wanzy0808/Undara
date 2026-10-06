@@ -13,12 +13,13 @@ import type { SeatingGuest, SeatingSeatTarget, SeatingTable } from "./seating-ch
 const noPoints: number[] = [];
 export default function SeatingPlanCanvas({
   layout, tables, guests, tool, dark, busy, draggedGuestId, hoverTarget, selectedTableId,
-  onTableSelect, onTableMove, onPath, onDrawingChange, onGuestStart, onGuestHover, onGuestDrop, onUndo, onRedo, label, emptyLabel,
+  onTableSelect, onTableMove, onPath, onDrawingChange, onExitDraw, onGuestStart, onGuestHover, onGuestDrop, onUndo, onRedo, label, emptyLabel,
 }: {
   layout: SeatingPlan; tables: SeatingTable[]; guests: SeatingGuest[]; tool: "move" | "draw";
   dark: boolean; busy: boolean; draggedGuestId: string | null; hoverTarget: SeatingSeatTarget | null; selectedTableId: string;
   onTableSelect: (id: string) => void; onTableMove: (id: string, point: SeatingPoint) => void; onPath: (points: number[]) => void;
   onDrawingChange: (drawing: boolean) => void; onGuestStart: (id: string) => void; onGuestHover: (point: SeatingPoint) => void;
+  onExitDraw: () => void;
   onGuestDrop: (id: string, point: SeatingPoint) => Promise<void>; onUndo: () => void; onRedo: () => void;
   label: string; emptyLabel: string;
 }) {
@@ -108,7 +109,7 @@ export default function SeatingPlanCanvas({
         const point = pointAt(event); if (point) void onGuestDrop(draggedGuestId, point);
       }}
       onKeyDown={(event) => {
-        if (event.key === "Escape") { cancelPath(); return; }
+        if (event.key === "Escape") { cancelPath(); onExitDraw(); return; }
         if (busy) return;
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
           event.preventDefault(); cancelPath(); if (event.shiftKey) onRedo(); else onUndo(); return;

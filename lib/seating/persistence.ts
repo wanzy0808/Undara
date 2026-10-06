@@ -29,3 +29,14 @@ export async function saveSeatingPlan(invitationId: string, plan: SeatingPlan, r
   if (!savedPlan || typeof data.updatedAt !== "string") throw new Error("Data denah tidak valid.");
   return { plan: savedPlan, revision: data.updatedAt };
 }
+
+export async function clearSeatingPlan(invitationId: string, tableIds: string[], revision: string | null, signal?: AbortSignal, fetcher: Fetcher = fetch) {
+  const { response, data } = await seatingResponse("/api/seating-plan", {
+    method: "DELETE", headers: { "Content-Type": "application/json" }, signal,
+    body: JSON.stringify({ invitationId, tableIds, updatedAt: revision }),
+  }, "Denah belum dapat dikosongkan. Coba lagi.", fetcher);
+  if (!response.ok) throw new Error(data?.error || "Denah belum dapat dikosongkan. Coba lagi.");
+  const plan = parseSeatingPlan(data?.layout);
+  if (!plan || Object.keys(plan.tables).length || plan.paths.length || typeof data.updatedAt !== "string") throw new Error("Data denah tidak valid.");
+  return { plan, revision: data.updatedAt };
+}

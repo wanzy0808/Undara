@@ -12,6 +12,7 @@ import * as icons from "lucide-react";
 import * as primitives from "../components/Dashboard/DashboardPrimitives.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
+import * as dialogs from "../components/ui/dialog.tsx";
 import { LanguageProvider } from "../components/I18n/LanguageProvider.tsx";
 import { useDashboardI18n } from "../components/Dashboard/useDashboardI18n.ts";
 import * as filters from "../lib/guests/filters.ts";
@@ -38,6 +39,19 @@ test("default table positions become saved geometry and survive adding/removing 
   assert.deepEqual(next.tables["table-b"], saved.tables["table-b"]);
   assert.deepEqual(Object.keys(geometry.seatingPlanWithTables(next, [table]).tables), [table.id]);
   assert.equal(plans.parseSeatingPlan(next) !== null, true);
+});
+
+test("table additions keep prior positions/routes and use vacant spaces rather than stacking on old tables", () => {
+  const existing = [table], added = Array.from({ length: 12 }, (_, i) => ({ ...table, id: `new-${i}` }));
+  const original = { ...layout(), tables: { [table.id]: { x: 175, y: 110 } } };
+  const result = geometry.seatingPlanWithAddedTables(original, existing, added);
+  assert.deepEqual(result.tables[table.id], original.tables[table.id]);
+  assert.deepEqual(result.paths, original.paths);
+  const centers = Object.values(result.tables);
+  for (let i = 0; i < centers.length; i++) for (let j = i + 1; j < centers.length; j++) assert.ok(Math.hypot(centers[i].x - centers[j].x, centers[i].y - centers[j].y) >= 185);
+  assert.ok(result.height > 620); assert.ok(plans.parseSeatingPlan(result));
+  const maximum = geometry.seatingPlanWithAddedTables(plans.emptySeatingPlan(), [], Array.from({ length: 100 }, (_, i) => ({ ...table, id: `max-${i}` })));
+  assert.equal(Object.keys(maximum.tables).length, 100); assert.ok(plans.parseSeatingPlan(maximum));
 });
 
 test("moved tables drive the real seat drop geometry, including occupied seats and self drops", () => {
@@ -180,6 +194,7 @@ function hookFixture(fetcher) {
     "@/lib/seating/persistence": {
       loadSeatingPlan: (id, signal) => persistence.loadSeatingPlan(id, signal, fetcher),
       saveSeatingPlan: (id, plan, stamp, signal) => persistence.saveSeatingPlan(id, plan, stamp, signal, fetcher),
+      clearSeatingPlan: (id, ids, stamp, signal) => persistence.clearSeatingPlan(id, ids, stamp, signal, fetcher),
     },
   });
   const render = () => { index = 0; const result = invokeHook("event-a"); mounting = false; return result; };
@@ -302,6 +317,59 @@ test("failed Save retains the hook's draft and revision for a successful retry",
   hook.unmount();
 });
 
+test("actual Empty persistence sends the current revision/table IDs and rejects nonempty or failed responses", async () => {
+  const calls = [], stamp = "2026-10-06T05:02:00.000Z";
+  const result = await persistence.clearSeatingPlan("event-a", [table.id], revision, undefined, async (url, options) => {
+    calls.push([url, options]); return Response.json({ layout: plans.emptySeatingPlan(), updatedAt: stamp });
+  });
+  assert.deepEqual(result, { plan: plans.emptySeatingPlan(), revision: stamp });
+  assert.equal(calls[0][0], "/api/seating-plan"); assert.equal(calls[0][1].method, "DELETE");
+  assert.deepEqual(JSON.parse(calls[0][1].body), { invitationId: "event-a", tableIds: [table.id], updatedAt: revision });
+  await assert.rejects(persistence.clearSeatingPlan("event-a", [table.id], revision, undefined, async () => Response.json({ layout: layout(), updatedAt: stamp })), /Data denah tidak valid/);
+  await assert.rejects(persistence.clearSeatingPlan("event-a", [table.id], revision, undefined, async () => Response.json({ error: "Conflict" }, { status: 409 })), /Conflict/);
+  await assert.rejects(persistence.clearSeatingPlan("event-a", [table.id], revision, undefined, async () => { throw new TypeError("Offline"); }), /belum dapat dikosongkan/);
+});
+
+test("actual hook Empty preserves drafts on failure and clears deleted-table Undo only after success", async () => {
+  let failing = true;
+  const calls = [];
+  const hook = hookFixture(async (_url, options) => {
+    if (options.method !== "DELETE") return Response.json({ layout: layout(), updatedAt: revision });
+    calls.push(JSON.parse(options.body));
+    return failing ? Response.json({ error: "temporary failure" }, { status: 500 }) : Response.json({ layout: plans.emptySeatingPlan(), updatedAt: "2026-10-06T05:02:00.000Z" });
+  });
+  await flush();
+  const draft = { ...layout(), paths: [] };
+  hook.render().dispatch({ type: "EDIT", plan: draft });
+  assert.equal(await hook.render().clear([table.id]), false);
+  assert.deepEqual(hook.render().editor.plan, draft); assert.equal(hook.render().editor.revision, revision); assert.equal(hook.render().editor.past.length, 1);
+  failing = false;
+  assert.equal(await hook.render().clear([table.id]), true);
+  const current = hook.render();
+  assert.deepEqual(current.editor.plan, plans.emptySeatingPlan()); assert.equal(current.editor.past.length, 0); assert.equal(current.editor.future.length, 0);
+  assert.equal(current.editor.savedKey, editor.seatingPlanKey(current.editor.plan)); assert.equal(current.error, "");
+  assert.ok(calls.every((call) => call.updatedAt === revision && call.tableIds[0] === table.id));
+  hook.unmount();
+});
+
+test("actual Empty blocks unknown revisions and concurrent mutations and aborts cleanly on unmount", async () => {
+  const pending = deferred(), calls = [];
+  const hook = hookFixture(async (_url, options) => {
+    calls.push(options);
+    return options.method === "DELETE" ? pending.promise : Response.json({ layout: layout(), updatedAt: revision });
+  });
+  assert.equal(await hook.render().clear([table.id]), false);
+  await flush();
+  const view = hook.render(), clearing = view.clear([table.id]);
+  assert.equal(await view.clear([table.id]), false); assert.equal(await view.save(layout()), false); assert.equal(await view.reload(), undefined);
+  assert.equal(calls.filter((call) => call.method === "DELETE").length, 1);
+  hook.unmount();
+  const writes = hook.writes();
+  assert.equal(calls.at(-1).signal.aborted, true);
+  pending.resolve(Response.json({ layout: plans.emptySeatingPlan(), updatedAt: revision }));
+  assert.equal(await clearing, false); assert.equal(hook.writes(), writes);
+});
+
 function elements(element, match) {
   if (!element || typeof element !== "object") return [];
   return [...(match(element) ? [element] : []), ...React.Children.toArray(element.props?.children).flatMap((child) => elements(child, match))];
@@ -323,7 +391,7 @@ function canvasFixture(overrides = {}) {
     layout: layout(), tables: [table], guests: [{ id: "guest-a", name: "Naya", tableId: table.id, seatNumber: 1 }],
     tool: "draw", dark: false, busy: false, draggedGuestId: "guest-a", hoverTarget: null, selectedTableId: table.id,
     onTableSelect: (id) => calls.tables.push(["select", id]), onTableMove: (id, point) => calls.tables.push(["move", id, point]),
-    onPath: (points) => calls.paths.push(points), onDrawingChange: (v) => calls.drawing.push(v),
+    onPath: (points) => calls.paths.push(points), onDrawingChange: (v) => calls.drawing.push(v), onExitDraw: () => calls.drawing.push("exit"),
     onGuestStart: (id) => calls.guests.push(["start", id]), onGuestHover: (p) => calls.guests.push(["hover", p]), onGuestDrop: async (id, p) => calls.guests.push(["drop", id, p]),
     onUndo: () => calls.tables.push(["undo"]), onRedo: () => calls.tables.push(["redo"]), label: "Denah", emptyLabel: "Empty", ...overrides,
   };
@@ -353,7 +421,7 @@ test("actual canvas cancelled/lost pointers and Escape discard unfinished stroke
     if (action === "escape") tree.props.onKeyDown({ key: "Escape" }); else tree.props[action](pointer(1));
     tree.props.onPointerUp(pointer(1, 500, 210));
     assert.equal(calls.paths.length, 0);
-    assert.deepEqual(calls.drawing, [true, false]);
+    assert.deepEqual(calls.drawing, action === "escape" ? [true, false, "exit"] : [true, false]);
     assert.equal(calls.capture.size, 0);
   }
   const busy = canvasFixture({ busy: true });
@@ -388,32 +456,42 @@ test("actual canvas native guest drop and keyboard moves use the same logical bo
 });
 
 const Print = PrintModule.default ?? PrintModule;
-function chartFixture(overrides = {}) {
+function chartFixture(overrides = {}, interactive = false) {
   const calls = [];
   let canvasProps;
+  const cells = [];
+  let index = 0;
   const state = { ...editor.emptySeatingEditor(), plan: layout(), revision, savedKey: editor.seatingPlanKey(layout()), past: [plans.emptySeatingPlan()] };
-  const plan = { editor: state, loading: false, saving: false, ready: true, error: "", dispatch: (action) => calls.push(action), save: async (value) => { calls.push(value); return true; }, reload: async () => {}, ...overrides };
+  const plan = { editor: state, loading: false, saving: false, ready: true, error: "", dispatch: (action) => { calls.push(action); if (interactive) plan.editor = editor.seatingEditorReducer(plan.editor, action); }, save: async (value) => { calls.push(value); return true; }, reload: async () => {}, clear: async () => true, ...overrides };
+  const hooks = interactive ? {
+    useEffect() {}, useMemo: (fn) => fn(),
+    useState(initial) { const key = index++; if (!(key in cells)) cells[key] = initial; return [cells[key], (value) => { cells[key] = typeof value === "function" ? value(cells[key]) : value; }]; },
+    useRef(value) { const key = index++; if (!(key in cells)) cells[key] = { current: value }; return cells[key]; },
+  } : { useEffect() {}, useState: (initial) => [initial, () => {}], useRef: (value) => ({ current: value }), useMemo: (fn) => fn() };
   const Chart = loadSource("components/Dashboard/SeatingChart.tsx", {
     "react/jsx-runtime": jsxRuntime,
-    react: { useEffect() {}, useState: (initial) => [initial, () => {}], useRef: (value) => ({ current: value }), useMemo: (fn) => fn() },
+    react: hooks,
     "lucide-react": icons, "@/components/Theme/ThemeProvider": { useTheme: () => ({ isDarkMode: false }) },
     "@/components/ui/button": { Button }, "@/components/ui/input": { Input },
-    "@/components/Dashboard/useDashboardI18n": { useDashboardI18n }, "@/lib/text/display-title-case": titles,
+    "@/components/ui/dialog": dialogs,
+    "@/components/Dashboard/useDashboardI18n": { useDashboardI18n: interactive ? () => ({ d: (text) => text, locale: "id" }) : useDashboardI18n }, "@/lib/text/display-title-case": titles,
     "@/components/Dashboard/DashboardPrimitives": primitives, "@/lib/guests/filters": filters,
     "@/components/Dashboard/seating-chart-geometry": geometry, "@/lib/seating/plan": plans, "@/lib/seating/editor": editor,
     "./use-seating-plan": { useSeatingPlan: () => plan },
     "./SeatingPlanCanvas": { __esModule: true, default: (props) => { canvasProps = props; return React.createElement("div", { "aria-label": "Denah" }); } },
     "./SeatingPlanPrint": { __esModule: true, default: Print }, "./seating-plan-print-browser": { printSeatingPlan: async () => () => {} },
   }).default;
-  return { Chart, calls, canvas: () => canvasProps };
+  return { Chart, calls, plan, canvas: () => canvasProps, render: (props) => { index = 0; return Chart(props); } };
 }
 
 test("localized chart keeps local editing/print available after a failed load while Save stays blocked", () => {
-  for (const [locale, expected] of [["id", ["Pilih / geser", "Gambar jalur", "Simpan denah", "Cetak"]], ["en", ["Select / move", "Draw route", "Save plan", "Print"]]]) {
+  for (const [locale, expected] of [["id", ["Tambah meja", "Gambar jalur", "Simpan denah", "Cetak"]], ["en", ["Add tables", "Draw route", "Save plan", "Print"]]]) {
     const { Chart } = chartFixture();
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(Chart, { invitationId: "event-a", title: "Naya & Arga", tables: [table], guests: [], onAssigned: async () => {} })));
     for (const label of expected) assert.ok(html.includes(label), label);
-    assert.match(html, /aria-pressed="true"/);
+    assert.match(html, /aria-pressed="false"/);
+    assert.doesNotMatch(html, /Pilih \/ geser|Select \/ move|aria-label="(?:Pilih meja|Select table)"/);
+    assert.ok(html.includes(locale === "en" ? "Empty plan" : "Kosongkan denah"));
     assert.match(html, /aria-label="Undo"/);
     assert.match(html, /aria-label="Redo"/);
     const failed = chartFixture({ ready: false, error: "Denah belum dapat dimuat. Coba lagi." });
@@ -444,6 +522,107 @@ test("real chart table edits and canonical guest assignments work independently 
   assert.deepEqual(fixture.calls.at(-1).plan.paths.at(-1), [100, 100, 500, 200]);
   await canvas.onGuestDrop("guest-manual", geometry.seatingSeatPoint(layout().tables[table.id], 0, table.capacity));
   assert.deepEqual(assigned, [["guest-manual", table.id, 1]]);
+});
+
+const labelOf = (node) => typeof node === "string" ? node : React.Children.toArray(node?.props?.children).map(labelOf).join("");
+const chartCanvas = (tree) => elements(tree, (el) => Boolean(el.props?.onTableMove && el.props?.onDrawingChange))[0].props;
+const chartButton = (tree, label) => elements(tree, (el) => el.type === Button && labelOf(el) === label)[0];
+const chartProps = { invitationId: "event-a", tables: [table], guests: [{ id: "guest-a", name: "Naya", source: "MANUAL", tableId: table.id, seatNumber: 2 }], onAssigned: async () => {} };
+
+test("actual chart toggles Draw back to direct table dragging, including Escape and the route limit", () => {
+  const f = chartFixture({}, true);
+  let tree = f.render(chartProps);
+  assert.equal(chartCanvas(tree).tool, "move");
+  assert.equal(chartButton(tree, "Pilih / geser"), undefined);
+  assert.equal(elements(tree, (el) => el.type === "select" && el.props["aria-label"] === "Pilih meja").length, 0);
+  chartButton(tree, "Gambar jalur").props.onClick();
+  tree = f.render(chartProps); assert.equal(chartCanvas(tree).tool, "draw");
+  chartButton(tree, "Gambar jalur").props.onClick();
+  tree = f.render(chartProps); assert.equal(chartCanvas(tree).tool, "move");
+  chartButton(tree, "Gambar jalur").props.onClick();
+  f.plan.dispatch({ type: "EDIT", plan: { ...layout(), paths: Array.from({ length: 20 }, () => [100, 100, 500, 200]) } });
+  tree = f.render(chartProps);
+  assert.equal(chartButton(tree, "Gambar jalur").props.disabled, false);
+  chartCanvas(tree).onExitDraw();
+  tree = f.render(chartProps); assert.equal(chartCanvas(tree).tool, "move");
+  assert.equal(chartButton(tree, "Gambar jalur").props.disabled, true);
+  chartCanvas(tree).onTableSelect(table.id);
+  assert.equal(chartCanvas(f.render(chartProps)).selectedTableId, table.id);
+});
+
+test("actual chart Add is repeatable, guards double submits and retains old geometry/assignments after refresh", async () => {
+  const originalFetch = globalThis.fetch, pending = deferred(), calls = [];
+  let refreshes = 0;
+  globalThis.fetch = async (_url, options) => { calls.push(options); return pending.promise; };
+  try {
+    const f = chartFixture({}, true), props = { ...chartProps, onTablesChanged: async () => { refreshes++; } };
+    let tree = f.render(props);
+    const inputs = elements(tree, (el) => el.type === Input && el.props.type === "number");
+    assert.equal(inputs[0].props.value, 1); assert.equal(chartButton(tree, "Tambah meja").props.disabled, false);
+    inputs[0].props.onChange({ target: { value: "2" } });
+    tree = f.render(props);
+    const submit = elements(tree, (el) => el.type === "form")[0].props.onSubmit;
+    const adding = submit({ preventDefault() {} });
+    await submit({ preventDefault() {} });
+    assert.equal(calls.length, 1); assert.deepEqual(JSON.parse(calls[0].body), { invitationId: "event-a", count: 2, capacity: 8, shape: "ROUND", locale: "id" });
+    assert.equal(chartButton(f.render(props), "Menambahkan meja...").props.disabled, true);
+    const added = [2, 3].map((i) => ({ ...table, id: `new-${i}`, name: `Meja ${i}` }));
+    pending.resolve(Response.json({ tables: added }, { status: 201 })); await adding;
+    tree = f.render({ ...props, tables: [table, ...added] });
+    assert.equal(chartCanvas(tree).tables.length, 3);
+    assert.deepEqual(chartCanvas(tree).layout.tables[table.id], layout().tables[table.id]);
+    assert.deepEqual(chartCanvas(tree).guests[0], props.guests[0]); assert.equal(refreshes, 1);
+    elements(tree, (el) => el.type === Input && el.props.type === "number")[0].props.onChange({ target: { value: "1" } });
+    globalThis.fetch = async () => Response.json({ tables: [{ ...table, id: "new-4", name: "Meja 4" }] }, { status: 201 });
+    await elements(f.render({ ...props, tables: [table, ...added] }), (el) => el.type === "form")[0].props.onSubmit({ preventDefault() {} });
+    tree = f.render(props);
+    assert.equal(chartCanvas(tree).tables.length, 4); assert.equal(refreshes, 2);
+    assert.deepEqual(chartCanvas(tree).layout.tables[table.id], layout().tables[table.id]);
+    assert.deepEqual(chartCanvas(tree).layout.paths, layout().paths);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("actual chart failed Add retains tables and the layout, and the allowance disables additions at 100", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ error: "Maksimal 100 meja per acara." }, { status: 409 });
+  try {
+    const f = chartFixture({}, true);
+    await elements(f.render(chartProps), (el) => el.type === "form")[0].props.onSubmit({ preventDefault() {} });
+    const tree = f.render(chartProps);
+    assert.deepEqual(chartCanvas(tree).tables, [table]); assert.deepEqual(chartCanvas(tree).layout, layout());
+    assert.equal(chartButton(tree, "Tambah meja").props.disabled, false);
+    const full = f.render({ ...chartProps, tables: Array.from({ length: 100 }, (_, i) => ({ ...table, id: `full-${i}` })) });
+    assert.equal(chartButton(full, "Tambah meja").props.disabled, true);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("actual chart Empty waits for success, drops stale table props and returns guests to the roster", async () => {
+  let succeeds = false, refreshes = 0;
+  const ids = [];
+  const f = chartFixture({ clear: async (tables) => {
+    ids.push(tables);
+    if (!succeeds) return false;
+    f.plan.dispatch({ type: "LOAD", plan: plans.emptySeatingPlan(), revision }); return true;
+  } }, true);
+  const props = { ...chartProps, onTablesChanged: async () => { refreshes++; } };
+  let tree = f.render(props);
+  elements(tree, (el) => el.type === dialogs.Dialog)[0].props.onOpenChange(true);
+  tree = f.render(props); assert.equal(elements(tree, (el) => el.type === dialogs.Dialog)[0].props.open, true);
+  chartButton(tree, "Batal").props.onClick();
+  assert.equal(elements(f.render(props), (el) => el.type === dialogs.Dialog)[0].props.open, false); assert.equal(ids.length, 0);
+  elements(f.render(props), (el) => el.type === dialogs.Dialog)[0].props.onOpenChange(true);
+  chartButton(f.render(props), "Ya, kosongkan").props.onClick(); await flush();
+  tree = f.render(props); assert.equal(chartCanvas(tree).tables.length, 1); assert.equal(chartCanvas(tree).guests[0].tableId, table.id);
+  assert.equal(elements(tree, (el) => el.type === dialogs.Dialog)[0].props.open, true);
+  succeeds = true;
+  chartButton(tree, "Ya, kosongkan").props.onClick(); await flush();
+  tree = f.render(props);
+  assert.deepEqual(ids, [[table.id], [table.id]]); assert.equal(refreshes, 1);
+  assert.equal(chartCanvas(tree).tables.length, 0); assert.deepEqual(chartCanvas(tree).layout, plans.emptySeatingPlan());
+  assert.deepEqual(chartCanvas(tree).guests[0], { ...props.guests[0], tableId: null, seatNumber: null });
+  assert.equal(elements(tree, (el) => el.props?.draggable === true).length, 1);
+  assert.equal(elements(tree, (el) => el.type === dialogs.Dialog)[0].props.open, false);
+  assert.equal(chartButton(tree, "Tambah meja").props.disabled, false);
 });
 
 const printHtml = (overrides = {}) => renderToStaticMarkup(React.createElement(Print, {

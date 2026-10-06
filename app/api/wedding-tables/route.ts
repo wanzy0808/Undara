@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
+import { createEventTables, type SeatingTableShape } from "@/lib/seating/table-storage";
 
 const ALLOWED_SHAPES = new Set(["ROUND", "RECTANGLE", "SQUARE"]);
 
@@ -66,15 +67,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bentuk meja tidak valid." }, { status: 400 });
     }
 
-    const count = await prisma.weddingTable.count({ where: { invitationId: invitation.id } });
-    if (count >= 100) {
-      return NextResponse.json({ error: "Maksimal 100 meja per acara." }, { status: 409 });
-    }
-
-    const table = await prisma.weddingTable.create({
-      data: { invitationId: invitation.id, name, capacity, shape },
-    });
-    return NextResponse.json({ table }, { status: 201 });
+    const result = await createEventTables(user.id, invitation.id, { name, capacity, shape: shape as SeatingTableShape });
+    if (result.error) return NextResponse.json({ error: result.error }, { status: result.status });
+    return NextResponse.json({ table: result.tables![0] }, { status: 201 });
   } catch (error) {
     console.error("POST /api/wedding-tables failed", error);
     return NextResponse.json({ error: "Meja gagal dibuat." }, { status: 500 });

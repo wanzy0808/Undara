@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 import { emptySeatingEditor, seatingEditorReducer, seatingPlanKey } from "@/lib/seating/editor";
-import { loadSeatingPlan, saveSeatingPlan } from "@/lib/seating/persistence";
+import { clearSeatingPlan, loadSeatingPlan, saveSeatingPlan } from "@/lib/seating/persistence";
 import type { SeatingPlan } from "@/lib/seating/plan";
 
 export function useSeatingPlan(invitationId: string) {
@@ -64,5 +64,24 @@ export function useSeatingPlan(invitationId: string) {
     }
   }
 
-  return { editor, dispatch, loading, saving, ready, error, reload, save };
+  async function clear(tableIds: string[]) {
+    if (busy.current || loading || saving || !ready) return false;
+    busy.current = true; setSaving(true); setError("");
+    const controller = new AbortController(); requests.current.add(controller);
+    try {
+      const result = await clearSeatingPlan(invitationId, tableIds, editor.revision, controller.signal);
+      if (controller.signal.aborted) return false;
+      // Deleted server tables cannot be restored by layout-only Undo.
+      dispatch({ type: "LOAD", plan: result.plan, revision: result.revision });
+      return true;
+    } catch (error) {
+      if (!controller.signal.aborted) setError(error instanceof Error ? error.message : "Denah belum dapat dikosongkan. Coba lagi.");
+      return false;
+    } finally {
+      requests.current.delete(controller); busy.current = false;
+      if (!controller.signal.aborted) setSaving(false);
+    }
+  }
+
+  return { editor, dispatch, loading, saving, ready, error, reload, save, clear };
 }

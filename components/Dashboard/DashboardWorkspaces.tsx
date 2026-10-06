@@ -395,6 +395,7 @@ function PlacementPanel({
           tables={tables}
           accent={accent}
           onAssigned={assignGuest}
+          onTablesChanged={onRefresh}
         />
     </div>
   );
