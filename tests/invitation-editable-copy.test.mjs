@@ -79,7 +79,7 @@ test("Studio's live canvas, Undo/Redo, Save and public renderer share narrative 
   assert.match(selectionInspector, /<CopyTextInspector[\s\S]*onMotion=\{\(patch\) => onUpdateCopyMotion\(selectedCopyField, patch\)\}/);
   assert.doesNotMatch(selectionInspector, /onSetNarrativeCopy/);
   assert.match(persistence, /templateKey: designKey,/);
-  assert.match(studio, /setDesign\(invitationDesignStateFromKey\(key, design\.decor\)\)/);
+  assert.match(studio, /setDesign\(invitationDesignStateFromKey\(checkpoint\.designKey, design\.decor\)\)/);
   const customerSave = persistence.split('fetcher("/api/invitations", {')[1]?.split("const data = await response.json()")[0] || "";
   assert.doesNotMatch(customerSave, /description:\s*|eventNotes:\s*|groomName:\s*|brideName:\s*|venue:\s*|eventDate:\s*/);
   assert.match(preview, /<RomanticRoseTemplate invitation=\{previewInvitation\} designKey=\{designKey\}/);

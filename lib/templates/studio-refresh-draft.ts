@@ -2,6 +2,11 @@
 export const STUDIO_REFRESH_DRAFT_KEY = "dc-organizer:studio:refresh-draft:v1";
 const MAX_DRAFT_LENGTH = 120_000;
 
+/** Template drafts have their own edit session, including custom drafts for one event. */
+export function templateStudioEntryId(draftId?: string | null): string {
+  return draftId ? `template-studio-draft:${draftId}` : "template-studio-draft";
+}
+
 export type StudioRefreshDraft = {
   version: 1;
   invitationId: string;

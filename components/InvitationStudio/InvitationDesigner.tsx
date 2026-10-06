@@ -65,7 +65,7 @@ import { getInvitationDefaultMusic } from "@/lib/templates/music";
 import { clearTemplateSelection, isSelectableTemplate, readTemplateSelection, rememberTemplateSelection } from "@/lib/templates/template-intent";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 import type { InvitationLanguage } from "@/lib/invitations/language";
-import { STUDIO_REFRESH_DRAFT_KEY, makeStudioRefreshDraft, recoverStudioRefreshDraft } from "@/lib/templates/studio-refresh-draft";
+import { STUDIO_REFRESH_DRAFT_KEY, makeStudioRefreshDraft, recoverStudioRefreshDraft, templateStudioEntryId } from "@/lib/templates/studio-refresh-draft";
 import {
   invitationDecorOptions,
   invitationTemplatePresets,
@@ -128,6 +128,8 @@ const blankCanvasSections = {
   footer: false,
   music: false,
 };
+
+type StudioDesignCheckpoint = { designKey: string; catalogKey: string };
 
 export default function InvitationDesigner({ mode = "invitation", allowBlankCanvas = false }: { mode?: "invitation" | "template"; allowBlankCanvas?: boolean }) {
   const { locale } = useLanguage();
@@ -294,8 +296,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [notice, setNotice] = useState("Memuat undangan...");
-  const [history, setHistory] = useState<string[]>([]);
-  const [future, setFuture] = useState<string[]>([]);
+  const [history, setHistory] = useState<StudioDesignCheckpoint[]>([]);
+  const [future, setFuture] = useState<StudioDesignCheckpoint[]>([]);
   const [musicUrl, setMusicUrl] = useState("");
   const [eventTag, setEventTag] = useState("");
   const [dressCode, setDressCode] = useState("");
@@ -333,6 +335,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   const invitation = useMemo(() => invitationState && templateMode && !templateCustomInvitationId
     ? resolveTemplateStudioDemo(invitationState, design.template)
     : invitationState, [invitationState, templateMode, templateCustomInvitationId, design.template]);
+  const studioEntryId = templateMode ? templateStudioEntryId(templateDraftId) : invitation?.id;
   const eventScoped = !templateMode || Boolean(templateCustomInvitationId);
   const eventCatalog = eventScoped && !invitation ? [] : templatesForEvent(catalog, eventScoped ? invitation?.eventCategory : undefined);
   const readyTemplates = eventCatalog.filter((item) => item.ready);
@@ -371,7 +374,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
         defaultMusic = getInvitationDefaultMusic(baseKey).url;
       }
 
-      const studioEntryId = savedDraft ? `template-studio-draft:${savedDraft.id}` : "template-studio-draft";
+      const studioEntryId = templateStudioEntryId(savedDraft?.id);
       const previewInvitation: InvitationDesignerInvitation = customInvitation
         ? {
             ...customInvitation,
@@ -412,8 +415,9 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
         if (!sameStudioEntry) window.history.replaceState({ ...historyState, __dcStudioDraftEntry: studioEntryId }, "", window.location.href);
       } catch { /* Optional refresh draft. */ }
 
+      const restoredDesign = refreshed ? invitationDesignStateFromKey(refreshed[0], customFallbackDecor) : loadedDesign;
       setInvitation(previewInvitation);
-      setDesign(refreshed ? invitationDesignStateFromKey(refreshed[0], customFallbackDecor) : loadedDesign);
+      setDesign(restoredDesign);
       setMusicUrl(refreshed ? refreshed[1] : defaultMusic);
       setEventTag(refreshed ? refreshed[2] : previewTag);
       setDressCode(refreshed ? refreshed[3] : previewDressCode);
@@ -422,7 +426,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
       setTemplateDraftId(savedDraft?.id || null);
       setTemplateDraftStatus(savedDraft?.status || null);
       setTemplateCustomInvitationId(customInvitation?.id || null);
-      setSelectedCatalogKey(loadedDesign.template);
+      setSelectedCatalogKey(restoredDesign.template);
       setCanvasStage("envelope");
       setSelectedLayerId(null);
       setCopiedAssetLayer(null);
@@ -544,13 +548,13 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
 
   useEffect(() => {
     // Do not auto-save to the API: this snapshot is only for Ctrl/Cmd+R in this tab.
-    if (!invitation || !savedState || !serverRevision) return;
+    if (!studioEntryId || !savedState || !serverRevision) return;
     try {
       if (dirty) window.sessionStorage.setItem(STUDIO_REFRESH_DRAFT_KEY,
-        JSON.stringify(makeStudioRefreshDraft(invitation.id, serverRevision, currentState)));
+        JSON.stringify(makeStudioRefreshDraft(studioEntryId, serverRevision, currentState)));
       else window.sessionStorage.removeItem(STUDIO_REFRESH_DRAFT_KEY);
     } catch { /* Private mode, storage quota, or disabled storage must not break editing. */ }
-  }, [invitation?.id, savedState, serverRevision, currentState, dirty]);
+  }, [studioEntryId, savedState, serverRevision, currentState, dirty]);
   useEffect(() => {
     const clearDraft = () => {
       try { window.sessionStorage.removeItem(STUDIO_REFRESH_DRAFT_KEY); } catch { /* Optional cache. */ }
@@ -595,7 +599,7 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
     : supportedPhotoSlots.filter((slot) => slot !== "personOne" && slot !== "personTwo");
 
   function change(next: Partial<InvitationDesignState>) {
-    setHistory((current) => [...current.slice(-14), designKey]);
+    setHistory((current) => [...current.slice(-14), { designKey, catalogKey: selectedCatalogKey }]);
     setFuture([]);
     setDesign((current) => ({ ...current, ...next }));
   }
@@ -1815,18 +1819,20 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
   }, [invitation, saving, audioBusy, canvasStage, selectedPhotoSlot, selectedAssetLayer, selectedAssetLayers, selectedLayerIds, copiedAssetLayer, copiedAssetLayers, design.layers, design.nativeVisuals, design.nativeLocks, design.sections, design.sectionLayout, selectedSectionKey, selectedSectionInstanceId, activeNativeKey, locale]);
 
   function undo() {
-    const key = history.at(-1);
-    if (!key) return;
-    setFuture((current) => [...current, designKey]);
-    setDesign(invitationDesignStateFromKey(key, design.decor));
+    const checkpoint = history.at(-1);
+    if (!checkpoint) return;
+    setFuture((current) => [...current, { designKey, catalogKey: selectedCatalogKey }]);
+    setDesign(invitationDesignStateFromKey(checkpoint.designKey, design.decor));
+    setSelectedCatalogKey(checkpoint.catalogKey);
     setHistory((current) => current.slice(0, -1));
   }
 
   function redo() {
-    const key = future.at(-1);
-    if (!key) return;
-    setHistory((current) => [...current, designKey]);
-    setDesign(invitationDesignStateFromKey(key, design.decor));
+    const checkpoint = future.at(-1);
+    if (!checkpoint) return;
+    setHistory((current) => [...current, { designKey, catalogKey: selectedCatalogKey }]);
+    setDesign(invitationDesignStateFromKey(checkpoint.designKey, design.decor));
+    setSelectedCatalogKey(checkpoint.catalogKey);
     setFuture((current) => current.slice(0, -1));
   }
 
@@ -1906,13 +1912,13 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
         setTemplateDraftStatus(savedTemplate.status);
         setSavedState(currentState);
         try { window.sessionStorage.removeItem(STUDIO_REFRESH_DRAFT_KEY); } catch { /* Optional cache. */ }
-        const studioEntryId = `template-studio-draft:${savedTemplate.id}`;
+        const studioEntryId = templateStudioEntryId(savedTemplate.id);
         setInvitation((current) => current ? { ...current, templateKey: templateDesignKey } : current);
         setServerRevision(JSON.stringify([
           "template-studio",
           savedTemplate.id,
           templateDesignKey,
-          musicUrl,
+          musicUrl || invitation.musicUrl || getInvitationDefaultMusic(design.template).url,
           savedTemplate.updatedAt || "",
           templateCustomInvitationId ? invitation.assets.map((asset) => [asset.id, asset.url]) : [],
         ]));

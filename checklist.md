@@ -749,3 +749,5 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Add distinct Silver Reverie (SILVER_WEDDING) / Golden Keepsake (GOLDEN_WEDDING) presets with native artwork, isolated category previews, shared 15-section engines and localized narrative. Browser/device release QA remains pending. (6 October 2026)
 
 - [x] Add Little Cloud (BABY_SHOWER) and Gathering (OTHER) with native geometric art, category fixtures and shared functional controls; all six categories have dedicated choices and the catalog has 19 built-ins. Browser/device release QA remains pending. (6 October 2026)
+
+- [x] Perbaiki histori pilihan katalog Undo/Redo dan identitas pemulihan refresh untuk Save pertama/master/custom; baseline musik bawaan/inherited konsisten pada Save/Load. Handler/effect regression fixtures tersedia; QA browser/production tetap terbuka. (6 October 2026)
