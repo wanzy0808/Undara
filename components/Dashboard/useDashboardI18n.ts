@@ -4,6 +4,10 @@ import { useCallback } from "react";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 
 const english: Record<string, string> = {
+  "Buat tautan personal": "Create personal links",
+  "Tautan personal dibuat.": "Personal links created.",
+  "Belum ada undangan tersimpan": "No saved invitations yet",
+  "Simpan desain di Edit undangan terlebih dahulu.": "Save the design in Edit invitation first.",
   "Isi 1 sampai 100 tamu per proses.": "Enter 1 to 100 guests per request.",
   "Identitas tamu tidak valid.": "Invalid guest identity.",
   "Kategori tamu tidak valid.": "Invalid guest category.",
@@ -19,8 +23,6 @@ const english: Record<string, string> = {
   "Belum disimpan": "Not saved",
   "Satu nama per baris": "One name per line",
   "Tambah ke daftar": "Add to list",
-  "Simpan draf": "Save drafts",
-  "Simpan & Publish": "Save & Publish",
   "Publish semua": "Publish all",
   "Salin tautan": "Copy link",
   "Kirim WhatsApp": "Send via WhatsApp",
@@ -31,8 +33,6 @@ const english: Record<string, string> = {
   "Simpan daftar sebelum menambahkan lebih dari 1000 tamu.": "Save the list before adding more than 1000 guests.",
   "Nama tamu wajib diisi (maksimal 120 karakter).": "Enter a guest name (up to 120 characters).",
   "Data tamu tidak valid.": "Invalid guest details.",
-  "Daftar tamu disimpan dan dipublish.": "Guest list saved and published.",
-  "Daftar tamu disimpan sebagai draf.": "Guest list saved as drafts.",
   "Semua undangan personal dipublish.": "All personal invitations published.",
   "tamu tersimpan": "guests saved",
   "tamu dipublish": "guests published",

@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ContactRound, Eye, Send } from "lucide-react";
 import EventScopePicker from "@/components/Dashboard/EventScopePicker";
 import { Button } from "@/components/ui/button";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import {
   DashboardMetricCard,
+  DashboardEmptyState,
   DashboardMetricGrid,
   DashboardNotice,
   DashboardPage,
@@ -62,10 +64,15 @@ export default function PersonalInvitationPanel({
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
 
-  const selectedEvent = useMemo(
-    () => events.find((event) => event.id === eventId) ?? null,
-    [events, eventId],
+  const savedEvents = useMemo(
+    () => events.filter((event) => Boolean(event.templateKey?.trim())),
+    [events],
   );
+  const selectedEvent = useMemo(
+    () => savedEvents.find((event) => event.id === eventId) ?? null,
+    [savedEvents, eventId],
+  );
+  const designEvent = selectedEvent ?? events.find((event) => event.id === selectedEventId) ?? events[0];
 
   useEffect(() => { activeEventId.current = eventId; }, [eventId]);
 
@@ -95,12 +102,13 @@ export default function PersonalInvitationPanel({
       );
 
       setEvents(configured);
+      const saved = configured.filter((event) => Boolean(event.templateKey?.trim()));
       setEventId((current) => {
-        if (selectedEventId && configured.some((event) => event.id === selectedEventId)) {
+        if (selectedEventId && saved.some((event) => event.id === selectedEventId)) {
           return selectedEventId;
         }
-        if (configured.some((event) => event.id === current)) return current;
-        return configured.find((event) => event.accessPaid)?.id ?? configured[0]?.id ?? "";
+        if (saved.some((event) => event.id === current)) return current;
+        return saved.find((event) => event.accessPaid)?.id ?? saved[0]?.id ?? "";
       });
     } catch (error) {
       if (request.signal.aborted) return;
@@ -117,10 +125,10 @@ export default function PersonalInvitationPanel({
   }, [d, selectedEventId]);
 
   useEffect(() => {
-    if (selectedEventId && events.some((event) => event.id === selectedEventId)) {
+    if (selectedEventId && savedEvents.some((event) => event.id === selectedEventId)) {
       setEventId(selectedEventId);
     }
-  }, [selectedEventId, events]);
+  }, [selectedEventId, savedEvents]);
 
   const loadCurrent = useCallback(async () => {
     if (activeEventId.current !== eventId) return;
@@ -266,8 +274,8 @@ export default function PersonalInvitationPanel({
     setDrafts((current) => current.map((row) => row.key === key ? { ...row, ...(!row.guestId && value.name !== undefined ? { name: value.name } : {}), ...(value.category ? { category: value.category } : {}) } : row));
   }
 
-  async function createBatch(published: boolean) {
-    if (!eventId || !currentDrafts.length || creating.current || (published && (!selectedEvent?.isPublished || !selectedEvent.accessPaid))) return;
+  async function createBatch() {
+    if (!selectedEvent || !currentDrafts.length || creating.current) return;
     const rows = currentDrafts.map((row) => ({ ...row, name: row.name.trim() }));
     if (rows.some((row) => !row.name || row.name.length > 120)) {
       setNotice(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
@@ -284,7 +292,7 @@ export default function PersonalInvitationPanel({
         const batch = rows.slice(index, index + 100);
         const response = await fetch("/api/personal-invitations", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ invitationId: eventId, published, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category }) }),
+          body: JSON.stringify({ invitationId: eventId, published: false, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category }) }),
         });
         const data = await response.json().catch(() => null);
         if (!response.ok || !Array.isArray(data?.invitations) || data.invitations.length !== batch.length) {
@@ -299,7 +307,7 @@ export default function PersonalInvitationPanel({
     } finally {
       if (activeEventId.current === eventId) {
         await loadCurrent();
-        if (activeEventId.current === eventId) setNotice(failure ? `${saved ? `${saved} ${d("tamu tersimpan")}. ` : ""}${failure}` : d(published ? "Daftar tamu disimpan dan dipublish." : "Daftar tamu disimpan sebagai draf."));
+        if (activeEventId.current === eventId) setNotice(failure ? `${saved ? `${saved} ${d("tamu tersimpan")}. ` : ""}${failure}` : d("Tautan personal dibuat."));
       }
       creating.current = false;
       setBusyId(null);
@@ -482,20 +490,20 @@ export default function PersonalInvitationPanel({
       </div>
 
       <section className="mt-5 space-y-4" aria-label={d("Pilih undangan")}>
+        {eventsLoading ? <p className="text-sm text-muted-foreground">{d("Memuat...")}</p> : savedEvents.length ? (
         <EventScopePicker
           label={d("Pilih undangan")}
-          events={events}
+          events={savedEvents}
           value={eventId}
           onChange={(id) => { setEventId(id); onSelectEvent(id); }}
           disabled={eventsLoading || Boolean(busyId)}
         />
+        ) : <DashboardEmptyState title={d("Belum ada undangan tersimpan")} description={d("Simpan desain di Edit undangan terlebih dahulu.")} />}
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" disabled={!selectedEvent || !currentDrafts.length || Boolean(busyId)} onClick={() => createBatch(false)}>
-            {busyId === "create-batch" ? d("Menyimpan...") : d("Simpan draf")}
+          <Button type="button" disabled={!selectedEvent || !currentDrafts.length || Boolean(busyId)} onClick={createBatch}>
+            {busyId === "create-batch" ? d("Menyimpan...") : d("Buat tautan personal")}
           </Button>
-          <Button type="button" disabled={!selectedEvent?.isPublished || !selectedEvent.accessPaid || !currentDrafts.length || Boolean(busyId)} onClick={() => createBatch(true)}>
-            <Send className="size-4" />{d("Simpan & Publish")}
-          </Button>
+          {designEvent && <Button asChild variant="outline"><Link href={`/dashboard/editor?invitationId=${encodeURIComponent(designEvent.id)}`}>{d("Edit undangan")}</Link></Button>}
         </div>
         {selectedEvent && (!selectedEvent.isPublished || !selectedEvent.accessPaid) && <p className="text-sm text-muted-foreground">{d(!selectedEvent.isPublished ? "Terbitkan undangan acara untuk Publish personal." : "Aktifkan akses Undangan Digital sebelum publish.")}</p>}
       </section>

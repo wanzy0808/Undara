@@ -42,6 +42,7 @@ export type PersonalInvitationItem = PersonalInvitationGuest & {
 
 export type PersonalInvitationEvent = EventScopeOption & {
   slug: string;
+  templateKey: string;
   eventConfigured: boolean;
   accessPaid: boolean;
   createdAt: string;

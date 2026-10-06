@@ -18,7 +18,9 @@ function fixture(options = {}) {
     && (!where.id?.in || where.id.in.includes(guest.id))
     && (!where.personalToken?.in || where.personalToken.in.includes(guest.personalToken))
     && (!Object.hasOwn(where.personalToken ?? {}, "not") || guest.personalToken != null);
+  const findInvitation = async ({ where }) => where.id === "event-a" && where.ownerId === "owner-a" && options.configured !== false ? { id: "event-a", ownerId: "owner-a", templateKey: options.templateKey ?? "romantic-rose", isPublished: options.published !== false, payment } : null;
   const prisma = {
+    invitation: { findFirst: findInvitation },
     async $transaction(callback) {
       const previous = tail;
       let release;
@@ -28,7 +30,7 @@ function fixture(options = {}) {
       try {
         const tx = {
           $queryRaw: async (sql, ...values) => { calls.locks.push({ sql: sql.join("?"), values }); return values[0] === "event-a" && values[1] === "owner-a" && options.lock !== false ? [{ id: "event-a" }] : []; },
-          invitation: { findFirst: async ({ where }) => where.id === "event-a" && where.ownerId === "owner-a" && options.configured !== false ? { id: "event-a", ownerId: "owner-a", isPublished: options.published !== false, payment } : null },
+          invitation: { findFirst: findInvitation },
           guest: {
             findMany: async ({ where }) => draft.filter((guest) => matches(guest, where)),
             update: async ({ where, data }) => {
@@ -174,4 +176,15 @@ test("bulk publishing updates only explicit personal recipients and rolls back f
   const f = fixture({ guests: [{ ...saved(), personalToken: null }] });
   assert.equal((await f.route.PATCH(request("PATCH", { invitationId: "event-a", ids: ["guest-a"], published: true }))).status, 404);
   assert.equal(f.calls.writes.length, 0);
+});
+
+
+test("single and batch personal-link creation require an already saved design, ignoring request-supplied templates", async () => {
+  const f = fixture({ templateKey: "", published: false }); const before = f.state();
+  for (const body of [{ name: "Ibu Rina" }, { recipients: [recipient()] }]) {
+    const res = await f.route.POST(request("POST", { invitationId: "event-a", templateKey: "romantic-rose::pretend-saved", ...body }));
+    assert.equal(res.status, 409);
+    assert.match((await res.json()).error, /Edit undangan/);
+    assert.deepEqual(f.state(), before); assert.equal(f.calls.writes.length, 0);
+  }
 });

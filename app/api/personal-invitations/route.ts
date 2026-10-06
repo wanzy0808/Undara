@@ -101,6 +101,9 @@ export async function POST(request: Request) {
     if (!invitation) {
       return NextResponse.json({ error: "Acara tidak ditemukan." }, { status: 404 });
     }
+    if (!invitation.templateKey.trim()) {
+      return NextResponse.json({ error: "Simpan desain di Edit undangan terlebih dahulu." }, { status: 409 });
+    }
     let profile;
     try {
       profile = parsePersonalGuestFields(body);

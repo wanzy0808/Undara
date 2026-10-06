@@ -112,6 +112,7 @@ async function mutateBatch<T>(ownerId: string, invitationId: string, publish: bo
     if (!locked.length) throw new PersonalBatchError("Acara tidak ditemukan.", 404);
     const invitation = await tx.invitation.findFirst({ where: { id: invitationId, ownerId, eventConfigured: true }, include: { payment: true } });
     if (!invitation) throw new PersonalBatchError("Acara tidak ditemukan.", 404);
+    if (!invitation.templateKey.trim()) throw new PersonalBatchError("Simpan desain di Edit undangan terlebih dahulu.", 409);
     if (publish && !invitation.isPublished) throw new PersonalBatchError("Terbitkan undangan acara sebelum membagikan undangan personal.", 409);
     if (publish && !(await hasAccountDigitalInvitation(ownerId, invitation.payment))) throw new PersonalBatchError("Aktifkan akses Undangan Digital sebelum publish.", 403);
     return write(tx);

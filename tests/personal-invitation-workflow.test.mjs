@@ -26,7 +26,7 @@ const CategoryFields = loadSource("components/Dashboard/PersonalInvitationGuestF
 const event = (id = "event-a") => ({
   id, title: id === "event-a" ? "Pernikahan Una & Dara" : "Ulang Tahun Nina",
   slug: id, venue: "Jakarta", eventDate: "2026-11-01", createdAt: "2026-10-01",
-  eventConfigured: true, accessPaid: false, isPublished: false,
+  templateKey: "romantic-rose", eventConfigured: true, accessPaid: false, isPublished: false,
 });
 const guest = (id = "guest-a") => ({ id, name: "Bapak Andi", phone: "081234567890", category: "REGULAR" });
 const personal = () => ({ ...guest("personal-a"), personalToken: "token-a", personalPublished: false, personalPasswordProtected: false, personalViewCount: 0 });
@@ -106,7 +106,7 @@ function panelHarness(fetcher) {
   const hooks = hookHarness();
   const Create = () => null, List = () => null, Picker = () => null;
   const { default: Panel } = loadSource("components/Dashboard/PersonalInvitationPanel.tsx", {
-    react: hooks.hooks, "react/jsx-runtime": jsxRuntime, "lucide-react": icons,
+    react: hooks.hooks, "react/jsx-runtime": jsxRuntime, "next/link": (props) => React.createElement("a", props, props.children), "lucide-react": icons,
     "@/components/ui/button": { Button }, "@/components/Dashboard/EventScopePicker": Picker, "@/components/Dashboard/useDashboardI18n": i18n,
     "@/components/Dashboard/DashboardPrimitives": primitives,
     "@/components/Dashboard/PersonalInvitationPanels": { PersonalInvitationCreatePanel: Create, PersonalInvitationListPanel: List },
@@ -118,7 +118,7 @@ function panelHarness(fetcher) {
   let selectedEventId = "event-a";
   const render = (commit = true) => {
     const tree = hooks.render(() => Panel({ selectedEventId, onSelectEvent(id) { selectedEventId = id; } }), commit);
-    return { save: nodes(tree).find((node) => node.type === Button && /Simpan draf|Menyimpan/.test(text(node.props.children)))?.props, savePublish: nodes(tree).find((node) => node.type === Button && text(node.props.children) === "Simpan & Publish")?.props, create: find(tree, Create)?.props, list: find(tree, List)?.props, picker: find(tree, Picker)?.props, tree };
+    return { save: nodes(tree).find((node) => node.type === Button && /Buat tautan personal|Menyimpan/.test(text(node.props.children)))?.props, create: find(tree, Create)?.props, list: find(tree, List)?.props, picker: find(tree, Picker)?.props, tree };
   };
   return {
     render, commit: () => hooks.commit(),
@@ -379,21 +379,53 @@ test("bulk Publish uses only the current event's unpublished IDs in bounded requ
   } finally { panel.dispose(); }
 });
 
-test("saving and publishing together is explicit and unavailable when the parent invitation cannot be shared", async () => {
-  for (const eligible of [false, true]) {
-    const calls = []; const panel = panelHarness(async (url, options = {}) => {
-      if (options.method === "POST") { const body = JSON.parse(options.body); calls.push(body); return Response.json({ invitations: body.recipients.map(() => personal()) }); }
-      if (url === "/api/invitations?all=1") return Response.json({ invitations: [{ ...event(), isPublished: eligible, accessPaid: eligible }] });
-      return fetchLists(url);
-    });
-    try {
-      (await panel.settle()).create.setName("Ibu Rina"); panel.render().create.onAddNames();
-      assert.equal(panel.render().savePublish.disabled, !eligible);
-      await panel.render().savePublish.onClick();
-      assert.equal(calls.length, eligible ? 1 : 0);
-      if (eligible) assert.equal(calls[0].published, true);
-    } finally { panel.dispose(); }
-  }
+test("personal links reuse only a saved invitation and creation never saves or publishes its design", async () => {
+  const writes = [], lists = [];
+  const saved = { ...event("event-b"), templateKey: "confetti-club::saved-design", accessPaid: false, isPublished: false };
+  const panel = panelHarness(async (url, options = {}) => {
+    if (options.method) {
+      writes.push({ url, ...JSON.parse(options.body) });
+      return Response.json({ invitations: [personal()] });
+    }
+    if (url === "/api/invitations?all=1") return Response.json({ invitations: [{ ...event(), templateKey: "", accessPaid: true }, saved] });
+    lists.push(url); return fetchLists(url, [], []);
+  });
+  try {
+    let view = await panel.settle();
+    assert.deepEqual(view.picker.events.map((event) => event.id), ["event-b"]);
+    assert.equal(view.picker.value, "event-b");
+    assert.ok(lists.every((url) => url.includes("invitationId=event-b")));
+    view.create.setName("Ibu Rina"); panel.render().create.onAddNames();
+    view = panel.render(); assert.equal(view.save.disabled, false);
+    const links = nodes(view.tree).filter((node) => node.props.href);
+    assert.ok(links.some((node) => node.props.href === "/dashboard/editor?invitationId=event-b"));
+    assert.doesNotMatch(text(view.tree), /Simpan draf|Simpan & Publish/);
+    await view.save.onClick();
+    assert.equal(writes.length, 1); assert.equal(writes[0].url, "/api/personal-invitations");
+    assert.equal(writes[0].invitationId, "event-b"); assert.equal(writes[0].published, false);
+    assert.equal(Object.hasOwn(writes[0], "templateKey"), false);
+    assert.equal(Object.hasOwn(writes[0], "isPublished"), false);
+    assert.equal(saved.templateKey, "confetti-club::saved-design"); assert.equal(saved.isPublished, false);
+  } finally { panel.dispose(); }
+});
+
+test("with no saved design, names remain available and the owned event links to Edit invitation", async () => {
+  const requests = [];
+  const panel = panelHarness(async (url, options = {}) => {
+    requests.push({ url, options });
+    return Response.json({ invitations: [{ ...event(), templateKey: "" }] });
+  });
+  try {
+    const view = await panel.settle();
+    assert.equal(view.picker, undefined); assert.equal(view.list, undefined);
+    assert.equal(find(view.tree, primitives.DashboardEmptyState).props.title, "Belum ada undangan tersimpan");
+    view.create.setName("Ibu Rina"); panel.render().create.onAddNames();
+    assert.equal(panel.render().save.disabled, true);
+    await panel.render().save.onClick();
+    assert.deepEqual(panel.render().create.drafts.map((row) => row.name), ["Ibu Rina"]);
+    assert.ok(requests.every((request) => request.url === "/api/invitations?all=1" && !request.options.method));
+    assert.ok(nodes(panel.render().tree).some((node) => node.props.href === "/dashboard/editor?invitationId=event-a"));
+  } finally { panel.dispose(); }
 });
 
 test("queued names are editable/removable by row identity, preserve duplicate names and expose remaining rows", () => {
