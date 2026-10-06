@@ -603,7 +603,7 @@ export default function PersonalInvitationPanel({
             onSavePassword={(item) => void savePassword(item)}
             onDisablePassword={(item) => void disablePassword(item)}
             onPublishAll={publishAll}
-            onPublishSelected={(ids) => void publishSelected(ids)}
+            onPublishSelected={publishSelected}
             onCopyLink={copyLink}
           />
         </div>
