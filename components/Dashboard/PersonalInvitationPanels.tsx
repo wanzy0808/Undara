@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ContactRound,
@@ -92,6 +92,7 @@ export function PersonalInvitationCreatePanel({
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(40);
   const [draftLimit, setDraftLimit] = useState(40);
+  const nameInputRef = useRef<HTMLTextAreaElement>(null);
   const selectedGuest = availableGuests.find((guest) => guest.id === guestId);
   const matches = availableGuests.filter((guest) =>
     `${guest.name} ${guest.phone ?? ""}`
@@ -127,6 +128,15 @@ export function PersonalInvitationCreatePanel({
         }
       : {}),
   });
+
+  useEffect(() => {
+    const input = nameInputRef.current;
+    if (!input) return;
+    input.style.height = "auto";
+    const maxHeight = 112;
+    input.style.height = `${Math.min(Math.max(input.scrollHeight, 44), maxHeight)}px`;
+    input.style.overflowY = input.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [name]);
 
   return (
     <DashboardPanel
@@ -165,9 +175,10 @@ export function PersonalInvitationCreatePanel({
           <label className="block min-w-0 text-sm font-medium text-foreground">
             {d("Nama")}
             <textarea
+              ref={nameInputRef}
               value={name}
               maxLength={121000}
-              rows={2}
+              rows={1}
               onChange={(event) => setName(event.target.value)}
               placeholder={
                 salutation === "BAPAK_IBU"
@@ -178,7 +189,7 @@ export function PersonalInvitationCreatePanel({
               }
               required
               disabled={busy}
-              className="mt-1.5 block min-h-16 w-full resize-y rounded-[var(--undara-control-radius)] border border-input bg-transparent px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              className="mt-1.5 block min-h-11 max-h-28 w-full resize-none overflow-y-hidden rounded-[var(--undara-control-radius)] border border-input bg-transparent px-3 py-2 text-base capitalize outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
             />
           </label>
           <PersonalInvitationGuestFields
@@ -232,7 +243,7 @@ export function PersonalInvitationCreatePanel({
                 }
               >
                 <ContactRound className="size-4" />
-                {d("Pilih tamu tersimpan")}
+                {d("Cari dari Daftar Tamu")}
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -338,7 +349,7 @@ export function PersonalInvitationCreatePanel({
                     maxLength={120}
                     readOnly={Boolean(draft.guestId)}
                     disabled={Boolean(busyId)}
-                    className="min-h-11"
+                    className="min-h-11 capitalize"
                     aria-label={`${d("Nama tamu")} ${index + 1}`}
                     onChange={(event) =>
                       onEditDraft(draft.key, { name: event.target.value })
@@ -808,7 +819,7 @@ export function PersonalInvitationListPanel({
                             value={editName}
                             maxLength={120}
                             onChange={(event) => setEditName(event.target.value)}
-                            className="mt-1.5"
+                            className="mt-1.5 capitalize"
                           />
                         </label>
                         <label className="text-sm font-medium text-foreground">

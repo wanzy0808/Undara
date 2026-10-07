@@ -187,7 +187,9 @@ test("the short title selector previews each choice, rejects title-only names an
     const title = find(tree, fields.PersonalInvitationSalutationField);
     assert.equal(title.props.value, salutation); title.props.onChange(salutation); assert.equal(chosen, salutation);
     assert.ok(text(find(tree, "form")).includes(expected));
-    assert.equal(find(tree, "textarea").props.rows, 2);
+    assert.equal(find(tree, "textarea").props.rows, 1);
+    assert.match(find(tree, "textarea").props.className, /capitalize/);
+    assert.match(find(tree, "textarea").props.className, /resize-none/);
     assert.equal(nodes(tree).find((node) => node.type === Button && node.props.type === "submit").props.disabled, false);
   }
   const invalid = harness.render({ name: "Bapak" });
@@ -205,6 +207,7 @@ test("saved guest picker searches explicit IDs even for duplicate names and expo
   const guests = Array.from({ length: 43 }, (_, i) => ({ ...guest(`guest-${i}`), phone: `08123${i}` }));
   const harness = createHarness({ availableGuests: guests, setGuestId(id) { chosen.push(id); } });
   let tree = harness.render();
+  assert.ok(nodes(tree).some((node) => node.type === Button && text(node.props.children) === "Cari dari Daftar Tamu"));
   find(tree, dialogs.Dialog).props.onOpenChange(true);
   tree = harness.render();
   let rows = nodes(tree).filter((node) => node.type === Button && /^guest-/.test(node.key ?? ""));
@@ -545,7 +548,9 @@ test("queued names are editable/removable by row identity, preserve duplicate na
   assert.equal(nodes(tree).filter((node) => node.type === Input).length, 40);
   nodes(tree).find((node) => node.type === Button && text(node.props.children) === "Tampilkan lebih banyak").props.onClick();
   tree = harness.render(); assert.equal(nodes(tree).filter((node) => node.type === Input).length, 43);
-  nodes(tree).find((node) => node.type === Input && node.props["aria-label"] === "Nama tamu 42").props.onChange({ target: { value: "Bapak Budi" } });
+  const editableDraft = nodes(tree).find((node) => node.type === Input && node.props["aria-label"] === "Nama tamu 42");
+  assert.match(editableDraft.props.className, /capitalize/);
+  editableDraft.props.onChange({ target: { value: "Bapak Budi" } });
   const category = nodes(tree).filter((node) => node.type === fields.PersonalInvitationGuestFields)[42];
   category.props.onChange({ ...category.props.value, category: "VIP" });
   nodes(tree).filter((node) => node.type === Button && node.props["aria-label"]?.startsWith("Hapus:"))[41].props.onClick();

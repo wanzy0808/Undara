@@ -393,7 +393,7 @@ const english: Record<string, string> = {
   "Dari daftar tamu": "From guest list",
   "Pilih tamu": "Select guest",
   "Nama tamu": "Guest name",
-  "Pilih tamu tersimpan": "Choose a saved guest",
+  "Cari dari Daftar Tamu": "Search Guest List",
   "Cari nama tamu": "Search guest names",
   "Sapaan di amplop": "Envelope greeting",
   "Amplop tanpa nama": "Envelope without a name",
