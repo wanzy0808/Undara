@@ -1,5 +1,7 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
+
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, QrCode, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,9 +76,8 @@ export default function InvitationQrMenu({ onManageInvitations }: { onManageInvi
           </div>
         ) : (
           <>
-            <label className="block">
-              <span className="sr-only">{d("Undangan")}</span>
-              <span className="relative block">
+            <div className="relative">
+              <FloatingField label={d("Undangan")}>
                 <select
                   data-dc-native-chevron="true"
                   value={selectedId}
@@ -90,9 +91,9 @@ export default function InvitationQrMenu({ onManageInvitations }: { onManageInvi
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
-              </span>
-            </label>
+              </FloatingField>
+              <ChevronDown className="pointer-events-none absolute right-4 top-[calc(50%+4px)] size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
+            </div>
             {selected && <InvitationQrPreview key={selected.id} invitationId={selected.id} title={selected.title} />}
           </>
         )}

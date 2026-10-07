@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { TicketPercent, X } from "lucide-react";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
@@ -103,10 +104,9 @@ export default function ReferralCodePanel() {
           <X className="size-4" aria-hidden="true" />
         </DialogClose>
         <form onSubmit={apply} className="space-y-4" aria-busy={loading || busy}>
-          <label className="block text-sm font-medium" htmlFor="dashboard-referral-code">
-            {en ? "Referral Code" : "Kode Referral"}
+          <FloatingField label={en ? "Referral Code" : "Kode Referral"} className="block text-sm font-medium" htmlFor="dashboard-referral-code">
             <input ref={inputRef} id="dashboard-referral-code" name="referralCode" autoComplete="off" autoCapitalize="characters" spellCheck={false} required maxLength={32} readOnly={loading} disabled={busy} value={input} onChange={(event) => setInput(event.target.value.toUpperCase())} placeholder="MITRA-XXXXXXXX" className={`${controlStyles.input} mt-2 font-mono uppercase`} />
-          </label>
+          </FloatingField>
           {(loading || message) && <p role="status" aria-live="polite" className="text-sm text-foreground">{loading ? (en ? "Loading..." : "Memuat...") : message}</p>}
           <div className="flex flex-wrap justify-end gap-2">
             {applied && <Button type="button" disabled={busy || loading} onClick={remove}>{en ? "Remove" : "Hapus"}</Button>}

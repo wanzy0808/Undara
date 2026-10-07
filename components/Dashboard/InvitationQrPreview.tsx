@@ -1,5 +1,7 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
+
 import { useEffect, useState } from "react";
 import { ChevronDown, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,16 +58,15 @@ function InvitationQrGuestPicker({ invitationId, title }: InvitationQrPreviewPro
 
   return (
     <div className="space-y-4">
-      <label className="block">
-        <span className="sr-only">{d("Tamu")}</span>
-        <span className="relative block">
+      <div className="relative">
+        <FloatingField label={d("Tamu")}>
           <select data-dc-native-chevron="true" value={selectedId} onChange={(event) => setSelectedId(event.target.value)} className={`${controlStyles.input} appearance-none pr-10`}>
             <option value="">{d("Pilih tamu")}</option>
             {guests.map((guest) => <option key={guest.id} value={guest.id}>{guest.name}{guest.phone ? ` · ${guest.phone}` : ""}</option>)}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
-        </span>
-      </label>
+        </FloatingField>
+        <ChevronDown className="pointer-events-none absolute right-4 top-[calc(50%+4px)] size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
+      </div>
       {selected && <InvitationQrGuestCard invitationId={invitationId} title={title} guestId={selected.id} guestName={selected.name} />}
     </div>
   );

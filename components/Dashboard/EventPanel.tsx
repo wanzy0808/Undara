@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -393,8 +394,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
           <div className="mt-6 grid gap-x-10 gap-y-8 xl:grid-cols-2">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold">{d("Detail")}</h3>
-              <label className="mt-4 block">
-                <span className="mb-1.5 block text-xs font-semibold">{d("Jenis acara")}</span>
+              <FloatingField label={d("Jenis acara")} className="mt-4 block">
                 <select
                   value={form.eventCategory}
                   onChange={(event) => selectCategory(event.target.value)}
@@ -405,7 +405,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                     <option key={item.key} value={item.key}>{displayTitleCase(locale === "en" ? ({ WEDDING: "Wedding", SILVER_WEDDING: "Silver Wedding", GOLDEN_WEDDING: "Golden Wedding", BIRTHDAY: "Birthday", BABY_SHOWER: "Baby Shower", OTHER: "Other Event" } as Record<string, string>)[item.key] || item.label : item.label)}</option>
                   ))}
                 </select>
-              </label>
+              </FloatingField>
 
               {category && (
                 <div className="mt-4 space-y-4">
@@ -513,8 +513,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                   </div>
                 </div>
 
-                <label className="mt-4 block">
-                  <span className="mb-1.5 block text-xs font-semibold">{d("Zona waktu")}</span>
+                <FloatingField label={d("Zona waktu")} className="mt-4 block">
                   <select
                     value={form.timezone}
                     onChange={(event) => field("timezone", event.target.value)}
@@ -526,7 +525,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                       </option>
                     ))}
                   </select>
-                </label>
+                </FloatingField>
 
                 {(form.eventDate || form.ceremonyTime) && (
                   <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">

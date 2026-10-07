@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -182,8 +183,7 @@ export function PersonalInvitationCreatePanel({
               disabled={busy}
             />
           )}
-          <label className="block min-w-0 text-sm font-medium text-foreground">
-            {d("Nama")}
+          <FloatingField label={d("Nama")} className="block min-w-0 text-sm font-medium text-foreground">
             <textarea
               ref={nameInputRef}
               value={name}
@@ -201,14 +201,13 @@ export function PersonalInvitationCreatePanel({
               disabled={busy}
               className="mt-1.5 block min-h-11 max-h-28 w-full resize-none overflow-y-hidden rounded-[var(--undara-control-radius)] border border-input bg-transparent px-3 py-2 text-base capitalize outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
             />
-          </label>
+          </FloatingField>
           <PersonalInvitationGuestFields
             value={profile}
             onChange={setProfile}
             disabled={busy}
           />
-          <label className="block min-w-0 text-sm font-medium text-foreground">
-            {d("Jumlah orang")}
+          <FloatingField label={d("Jumlah orang")} className="block min-w-0 text-sm font-medium text-foreground">
             <Input
               type="number"
               min={guestId ? 1 : minimumPax}
@@ -219,7 +218,7 @@ export function PersonalInvitationCreatePanel({
               className="mt-1.5 min-h-11"
               onChange={(event) => setProfile({ ...profile, invitedPax: Number(event.target.value) })}
             />
-          </label>
+          </FloatingField>
           <div className="flex items-end">
             <Button type="submit" size="sm" disabled={!valid || busy}>
               <Plus className="size-4" />
@@ -275,16 +274,18 @@ export function PersonalInvitationCreatePanel({
                     {displayTitleCase(selectedEvent?.title ?? "")}
                   </DialogDescription>
                 </DialogHeader>
-                <Input
-                  type="search"
-                  value={query}
-                  aria-label={d("Cari nama tamu")}
-                  placeholder={d("Cari nama tamu")}
-                  onChange={(event) => {
-                    setQuery(event.target.value);
-                    setLimit(40);
-                  }}
-                />
+                <FloatingField label={d("Cari nama tamu")}>
+                  <Input
+                    type="search"
+                    value={query}
+                    aria-label={d("Cari nama tamu")}
+                    placeholder={d("Cari nama tamu")}
+                    onChange={(event) => {
+                      setQuery(event.target.value);
+                      setLimit(40);
+                    }}
+                  />
+                </FloatingField>
                 <div className="max-h-[45dvh] space-y-1 overflow-y-auto">
                   {matches.slice(0, limit).map((guest) => (
                     <Button
@@ -848,8 +849,7 @@ export function PersonalInvitationListPanel({
                   {editing && (
                     <div className="col-span-full mt-3 border-t border-primary/10 pt-3">
                       <div className="grid max-w-4xl gap-3 md:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_170px_auto] md:items-end">
-                        <label className="text-sm font-medium text-foreground">
-                          {d("Nama penerima")}
+                        <FloatingField label={d("Nama penerima")} className="text-sm font-medium text-foreground">
                           <Input
                             disabled={busy}
                             value={editName}
@@ -857,9 +857,8 @@ export function PersonalInvitationListPanel({
                             onChange={(event) => setEditName(event.target.value)}
                             className="mt-1.5 capitalize"
                           />
-                        </label>
-                        <label className="text-sm font-medium text-foreground">
-                          {d("Nomor WhatsApp (opsional)")}
+                        </FloatingField>
+                        <FloatingField label={d("Nomor WhatsApp (opsional)")} className="text-sm font-medium text-foreground">
                           <Input
                             disabled={busy}
                             type="tel"
@@ -868,7 +867,7 @@ export function PersonalInvitationListPanel({
                             onChange={(event) => setEditPhone(event.target.value)}
                             className="mt-1.5"
                           />
-                        </label>
+                        </FloatingField>
                         <PersonalInvitationGuestFields
                           value={editProfile}
                           onChange={setEditProfile}
@@ -1001,16 +1000,18 @@ export function PersonalInvitationListPanel({
 
                       {passwordOpen && (
                         <div className="mt-3 flex max-w-xl flex-col gap-2 sm:flex-row sm:items-center">
-                          <Input
-                            disabled={busy}
-                            type="password"
-                            value={password}
-                            onChange={(event) =>
-                              setPassword(event.target.value)
-                            }
-                            placeholder={d("Password baru minimal 6 karakter")}
-                            className="min-w-0 flex-1"
-                          />
+                          <FloatingField label={d("Password baru")} className="min-w-0 flex-1">
+                            <Input
+                              disabled={busy}
+                              type="password"
+                              value={password}
+                              onChange={(event) =>
+                                setPassword(event.target.value)
+                              }
+                              placeholder={d("Password baru minimal 6 karakter")}
+                              className="min-w-0 flex-1"
+                            />
+                          </FloatingField>
                           <Button
                             type="button"
                             size="sm"

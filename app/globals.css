@@ -741,6 +741,57 @@ aside nav > p { font-family: var(--font-undara-heading); }
   color: color-mix(in srgb, var(--foreground) 72%, transparent);
 }
 
+/* Floating labels opt in per field; the existing control still owns input behavior. */
+.undara-dashboard-surface { --undara-field-surface: var(--undara-dashboard-card); }
+.undara-floating-field {
+  --undara-field-fill: color-mix(in srgb, var(--foreground) 3.5%, var(--background));
+  --undara-field-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding-top: 0.5rem;
+  font-weight: 400;
+}
+.undara-floating-field > .undara-floating-control {
+  display: block;
+  min-height: 44px;
+  margin-top: 0;
+}
+.undara-floating-label {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.65rem;
+  z-index: 1;
+  padding-inline: 0.25rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-undara-sans);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  cursor: text;
+  transform-origin: left center;
+  transform: translateY(calc(1.375rem - 50%));
+  transition: transform 160ms var(--undara-field-ease), color 160ms ease;
+}
+.undara-floating-field:is([data-filled], :focus-within,
+  :has(> input:not(:placeholder-shown)), :has(> textarea:not(:placeholder-shown))) > .undara-floating-label {
+  transform: translateY(-50%) scale(0.86);
+  background: linear-gradient(to bottom, var(--undara-field-surface, var(--background)) 50%, var(--undara-field-fill) 50%);
+  color: var(--primary);
+}
+.undara-floating-field:focus-within { --undara-field-fill: var(--background); }
+.undara-floating-field:has(> :is(:disabled, [readonly])) {
+  --undara-field-fill: color-mix(in srgb, var(--foreground) 2%, var(--background));
+}
+.undara-floating-field:has(> :disabled) > .undara-floating-label { color: var(--muted-foreground); cursor: default; }
+.undara-floating-field:has(> [aria-invalid="true"]) > .undara-floating-label { color: var(--destructive); }
+.undara-floating-field:not(:focus-within) > .undara-floating-control::placeholder { opacity: 0; }
+.undara-floating-field[data-empty-select]:not(:focus-within) > select { color: transparent !important; }
+.undara-floating-field > select option { color: var(--foreground); }
+@media (prefers-reduced-motion: reduce) {
+  .undara-floating-label { transition: none; }
+}
+
 /* Data-form dropdowns: the browser-owned chevron can hug the right edge.
    Replace ONLY these form select arrows with a 15px Rose chevron inset 18px;
    nav menus and controls with their own external/compact arrows opt out.

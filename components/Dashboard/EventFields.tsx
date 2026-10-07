@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { useId, useRef, useState } from "react";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -111,8 +112,7 @@ function ChildOrderField({
         ))}
       </div>
       {position === "NUMBER" && (
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-semibold">{d("Anak Keberapa")}</span>
+        <FloatingField label={d("Anak Keberapa")} className="block">
           <Input
             type="number"
             min={1}
@@ -122,7 +122,7 @@ function ChildOrderField({
             onChange={(event) => onChange(event.target.value)}
             placeholder={d("Contoh: 2")}
           />
-        </label>
+        </FloatingField>
       )}
     </fieldset>
   );
@@ -150,15 +150,16 @@ export function EventDateField({
 
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-semibold">{label}</span>
-      <div className="relative flex gap-2">
-        <Input
-          inputMode="numeric"
-          maxLength={10}
-          value={value}
-          onChange={(event) => onChange(formatDateInput(event.target.value))}
-          placeholder="dd/mm/yyyy"
-        />
+      <div className="relative flex items-end gap-2">
+        <FloatingField label={label} className="min-w-0 flex-1">
+          <Input
+            inputMode="numeric"
+            maxLength={10}
+            value={value}
+            onChange={(event) => onChange(formatDateInput(event.target.value))}
+            placeholder="dd/mm/yyyy"
+          />
+        </FloatingField>
         <Button
           type="button"
           size="icon"
@@ -199,17 +200,18 @@ export function EventTimeField({
 
   return (
     <div className="relative">
-      <span className="mb-1.5 block text-xs font-semibold">{label}</span>
-      <div className="flex gap-2">
-        <Input
-          disabled={disabled}
-          inputMode="numeric"
-          maxLength={5}
-          value={value}
-          onChange={(event) => onChange(formatTimeInput(event.target.value))}
-          placeholder="00:00"
-          className="font-[family-name:var(--font-undara-mono)]"
-        />
+      <div className="flex items-end gap-2">
+        <FloatingField label={label} className="min-w-0 flex-1">
+          <Input
+            disabled={disabled}
+            inputMode="numeric"
+            maxLength={5}
+            value={value}
+            onChange={(event) => onChange(formatTimeInput(event.target.value))}
+            placeholder="00:00"
+            className="font-[family-name:var(--font-undara-mono)]"
+          />
+        </FloatingField>
         <Button
           type="button"
           size="icon"
@@ -274,14 +276,13 @@ export function EventField({
   placeholder?: string;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold">{label}</span>
+    <FloatingField label={label} className="block">
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
       />
-    </label>
+    </FloatingField>
   );
 }
 
@@ -295,14 +296,13 @@ export function EventTextArea({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold">{label}</span>
+    <FloatingField label={label} className="block">
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={3}
         className="w-full resize-y rounded-[10px] border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
       />
-    </label>
+    </FloatingField>
   );
 }

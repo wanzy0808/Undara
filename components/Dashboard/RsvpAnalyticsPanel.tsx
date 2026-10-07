@@ -1,5 +1,7 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
+
 import { useMemo, useState } from "react";
 import {
   ArrowDownUp,
@@ -250,26 +252,29 @@ export default function RsvpAnalyticsPanel({
         actions={<span className="text-sm font-semibold tabular-nums text-primary">{filtered.length} / {guests.length}</span>}
       >
         <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(12rem,1fr)_minmax(9rem,12rem)_auto_auto] sm:items-center">
-          <label className="relative block min-w-0">
-            <span className="sr-only">{d("Cari nama / telepon")}</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
+          <div className="relative min-w-0">
+            <FloatingField label={d("Cari nama / telepon")} className="[&_.undara-floating-label]:left-8">
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={d("Cari nama / telepon")}
               className="w-full min-w-0 pl-9"
             />
-          </label>
-          <select
-            value={sortKey}
-            onChange={(event) => setSortKey(event.target.value as SortKey)}
-            className="min-h-10 w-full min-w-0 border border-primary/25 bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
-            aria-label={d("Urutkan tamu")}
-          >
+            </FloatingField>
+            <Search className="pointer-events-none absolute left-3 top-[calc(50%+4px)] size-4 -translate-y-1/2 text-primary" aria-hidden="true" />
+          </div>
+          <FloatingField label={d("Urutkan tamu")}>
+            <select
+              value={sortKey}
+              onChange={(event) => setSortKey(event.target.value as SortKey)}
+              className="min-h-10 w-full min-w-0 border border-primary/25 bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
+              aria-label={d("Urutkan tamu")}
+            >
             {(Object.keys(sortLabel) as SortKey[]).map((key) => (
               <option key={key} value={key}>{displayTitleCase(d(sortLabel[key]))}</option>
             ))}
-          </select>
+            </select>
+          </FloatingField>
           <Button
             type="button"
             size="sm"

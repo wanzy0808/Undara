@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, CheckCircle2, KeyRound, ShieldCheck, UserRound } from "lucide-react";
@@ -165,20 +166,19 @@ export default function DashboardAccountPanel({
             <h2 className="text-xl font-semibold text-primary">{t("Informasi pribadi", "Personal information")}</h2>
             <form className="mt-6 space-y-5" onSubmit={saveProfile}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-foreground">
-                  <span className="mb-2 block">{t("Nama depan", "First name")}</span>
+                <FloatingField label={t("Nama depan", "First name")} className="block text-sm text-foreground">
                   <Input autoComplete="given-name" required maxLength={80} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                </label>
-                <label className="block text-sm text-foreground">
-                  <span className="mb-2 block">{t("Nama belakang", "Last name")}</span>
+                </FloatingField>
+                <FloatingField label={t("Nama belakang", "Last name")} className="block text-sm text-foreground">
                   <Input autoComplete="family-name" maxLength={80} value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                </label>
+                </FloatingField>
               </div>
-              <label className="block text-sm text-foreground">
-                <span className="mb-2 block">Email</span>
-                <Input value={email} readOnly aria-readonly="true" className="cursor-not-allowed opacity-75" />
+              <div className="text-sm text-foreground">
+                <FloatingField label="Email">
+                  <Input value={email} readOnly aria-readonly="true" className="cursor-not-allowed opacity-75" />
+                </FloatingField>
                 <span className="mt-2 block text-xs text-muted-foreground">{t("Email akun tidak dapat diubah di sini.", "Account email cannot be changed here.")}</span>
-              </label>
+              </div>
               <Button type="submit" disabled={busy !== ""} size="lg">
                 <CheckCircle2 className="size-4" />{busy === "profile" ? t("Menyimpan...", "Saving...") : t("Simpan perubahan", "Save changes")}
               </Button>
@@ -195,18 +195,15 @@ export default function DashboardAccountPanel({
             </div>
           </div>
           <form className="mt-7 max-w-xl space-y-5" onSubmit={savePassword}>
-            <label className="block text-sm text-foreground">
-              <span className="mb-2 block">{t("Password saat ini", "Current password")}</span>
+            <FloatingField label={t("Password saat ini", "Current password")} className="block text-sm text-foreground">
               <Input type="password" autoComplete="current-password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-            </label>
-            <label className="block text-sm text-foreground">
-              <span className="mb-2 block">{t("Password baru", "New password")}</span>
+            </FloatingField>
+            <FloatingField label={t("Password baru", "New password")} className="block text-sm text-foreground">
               <Input type="password" autoComplete="new-password" minLength={8} required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-            </label>
-            <label className="block text-sm text-foreground">
-              <span className="mb-2 block">{t("Konfirmasi password baru", "Confirm new password")}</span>
+            </FloatingField>
+            <FloatingField label={t("Konfirmasi password baru", "Confirm new password")} className="block text-sm text-foreground">
               <Input type="password" autoComplete="new-password" minLength={8} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-            </label>
+            </FloatingField>
             <Button type="submit" size="lg" disabled={busy !== ""}>
               <KeyRound className="size-4" />{busy === "password" ? t("Menyimpan...", "Saving...") : t("Ganti password", "Change password")}
             </Button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,19 +45,21 @@ export function WaBlastAddRecipients({
     >
       <div className="undara-dashboard-detail-card rounded-tr-[22px] border border-primary/20 bg-primary/[0.025] p-4">
         <p className="text-xs font-semibold text-foreground">{d("Dari daftar tamu")}</p>
-        <select
-          value={existingGuestId}
-          onChange={(event) => setExistingGuestId(event.target.value)}
-          className="mt-2 w-full px-3 text-sm"
-          disabled={busy || !canAddRecipients}
-        >
+        <FloatingField label={d("Pilih tamu")} className="mt-2">
+          <select
+            value={existingGuestId}
+            onChange={(event) => setExistingGuestId(event.target.value)}
+            className="mt-2 w-full px-3 text-sm"
+            disabled={busy || !canAddRecipients}
+          >
           <option value="">{displayTitleCase(d("Pilih tamu"))}</option>
           {availableGuests.map((guest) => (
             <option key={guest.id} value={guest.id}>
               {displayTitleCase(guest.name)} · {guest.phone}
             </option>
           ))}
-        </select>
+          </select>
+        </FloatingField>
         <Button
           type="button"
           size="sm"
@@ -72,18 +75,22 @@ export function WaBlastAddRecipients({
       <div className="undara-dashboard-detail-card rounded-tr-[22px] border border-border/70 bg-background p-3">
         <p className="text-xs font-semibold text-foreground">{d("Tamu belum ada")}</p>
         <div className="mt-2 space-y-2">
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={d("Nama tamu")}
-            disabled={busy || !canAddRecipients}
-          />
-          <Input
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            placeholder={d("Nomor WhatsApp")}
-            disabled={busy || !canAddRecipients}
-          />
+          <FloatingField label={d("Nama tamu")}>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={d("Nama tamu")}
+              disabled={busy || !canAddRecipients}
+            />
+          </FloatingField>
+          <FloatingField label={d("Nomor WhatsApp")}>
+            <Input
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder={d("Nomor WhatsApp")}
+              disabled={busy || !canAddRecipients}
+            />
+          </FloatingField>
           <Button
             type="button"
             size="sm"

@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,14 +44,13 @@ export function DashboardField({
   placeholder: string;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium">{label}</span>
+    <FloatingField label={label} className="block">
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="border-border bg-transparent"
       />
-    </label>
+    </FloatingField>
   );
 }
