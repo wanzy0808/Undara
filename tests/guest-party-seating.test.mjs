@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   seatingBlocksOverlap,
   seatingGuestAtSeat,
+  seatingGuestSeatLabel,
   seatingGuestSeats,
   seatingOccupiedSeatCount,
   seatingPartySize,
@@ -41,4 +42,13 @@ test("seat lookup treats every slot in one Guest party as occupied", () => {
   assert.equal(seatingGuestAtSeat(guests, "table-a", 3, 8, "couple"), null);
   assert.equal(seatingBlocksOverlap([2, 3], [3, 4]), true);
   assert.equal(seatingBlocksOverlap([2, 3], [4, 5]), false);
+});
+
+test("every party seat gets a capitalized member label, including a block wrapping through seat one", () => {
+  const guest = { id: "hendra", name: "hendra wijaya", tableId: "table-a", seatNumber: 7, invitedPax: 4 };
+  assert.deepEqual([7, 8, 1, 2].map((seat) => seatingGuestSeatLabel(guest, seat, 8)), ["Hendra Wijaya 1", "Hendra Wijaya 2", "Hendra Wijaya 3", "Hendra Wijaya 4"]);
+  assert.equal(seatingGuestSeatLabel(guest, 4, 8), "");
+  assert.equal(seatingGuestSeatLabel({ ...guest, invitedPax: 1 }, 7, 8), "Hendra Wijaya");
+  assert.equal(guest.name, "hendra wijaya");
+  assert.equal(guest.invitedPax, 4);
 });

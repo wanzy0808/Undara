@@ -1,7 +1,7 @@
 import BrandWordmark from "@/components/Brand/BrandWordmark";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { seatingCanvasColors } from "@/lib/seating/appearance";
-import { seatingGuestAtSeat, seatingGuestSeats, seatingPartySize } from "@/lib/seating/guest-seats";
+import { seatingGuestAtSeat, seatingGuestSeatLabel, seatingGuestSeats, seatingPartySize } from "@/lib/seating/guest-seats";
 import { SEATING_WIDTH, type SeatingPlan } from "@/lib/seating/plan";
 import { seatingPlanPageOffsets, seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingTable } from "./seating-chart-types";
@@ -54,16 +54,16 @@ export default function SeatingPlanPrint({ title, layout, tables, guests, locale
           const center = seatingTableCenter(table.id, index, tables.length, layout);
           return <g key={table.id} transform={`translate(${center.x} ${center.y})`}>
             {table.shape === "ROUND" ? <circle r={44} fill={colors.table} /> : <rect x={table.shape === "SQUARE" ? -36 : -48} y={table.shape === "SQUARE" ? -36 : -30} width={table.shape === "SQUARE" ? 72 : 96} height={table.shape === "SQUARE" ? 72 : 60} rx={8} fill={colors.table} />}
-            <text textAnchor="middle" dominantBaseline="middle" fontSize={13} fontWeight="bold" fill={colors.tableText}>{table.name}</text>
+            <text textAnchor="middle" dominantBaseline="middle" fontSize={13} fontWeight="bold" fill={colors.tableText}>{displayTitleCase(table.name)}</text>
             {Array.from({ length: table.capacity }, (_, seatIndex) => {
               const point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);
               const seat = seatIndex + 1;
               const guest = seatingGuestAtSeat(guests, table.id, seat, table.capacity);
-              const anchor = guest?.seatNumber === seat;
+              const label = guest ? seatingGuestSeatLabel(guest, seat, table.capacity) : "";
               return <g key={seatIndex} transform={`translate(${point.x} ${point.y})`}>
                 <circle r={SEATING_SEAT_RADIUS} fill={guest ? colors.seatOccupied : colors.seatEmpty} stroke={colors.seatStroke} strokeWidth={2} />
                 <text textAnchor="middle" dominantBaseline="middle" fontSize={10} fill={guest ? "#321B1B" : colors.seatStroke}>{seat}</text>
-                {guest && anchor && <text y={31} textAnchor="middle" fontSize={10} fill={colors.guestText}>{guest.name.length > 18 ? `${guest.name.slice(0, 17)}…` : guest.name}</text>}
+                {guest && <text y={31} textAnchor="middle" fontSize={10} fill={colors.guestText}>{label}</text>}
               </g>;
             })}
           </g>;
@@ -76,7 +76,7 @@ export default function SeatingPlanPrint({ title, layout, tables, guests, locale
           <tbody>{rows.map(({ guest, table }) => {
             const tableData = tables.find((item) => item.name === table);
             const seats = tableData ? seatingGuestSeats(guest, tableData.capacity) : [];
-            return <tr key={guest.id}><td>{table}</td><td>{seats.length ? seats.join(", ") : guest.seatNumber ?? "—"}</td><td>{displayTitleCase(guest.name)}{seatingPartySize(guest) > 1 ? ` · ${seatingPartySize(guest)} pax` : ""}</td></tr>;
+            return <tr key={guest.id}><td>{displayTitleCase(table)}</td><td>{seats.length ? seats.join(", ") : guest.seatNumber ?? "—"}</td><td>{displayTitleCase(guest.name)}{seatingPartySize(guest) > 1 ? ` · ${seatingPartySize(guest)} pax` : ""}</td></tr>;
           })}
             {unassigned.map((guest) => <tr key={guest.id}><td>{en ? "Unassigned" : "Belum ditempatkan"}</td><td>—</td><td>{displayTitleCase(guest.name)}</td></tr>)}
           </tbody></table>

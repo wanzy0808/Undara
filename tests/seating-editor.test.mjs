@@ -401,6 +401,7 @@ function canvasFixture(overrides = {}) {
     "react-konva": Object.fromEntries(["Arrow", "Circle", "Group", "Layer", "Rect", "Stage", "Text"].map((name) => [name, name])),
     "@/lib/seating/editor": editor, "@/lib/seating/appearance": appearance, "@/lib/seating/plan": plans,
     "@/lib/seating/guest-seats": guestSeats,
+    "@/lib/text/display-title-case": titles,
     "./seating-chart-geometry": geometry,
   }).default;
   const props = {
@@ -776,14 +777,29 @@ test("actual print SSR matches moved geometry/routes, includes the full roster a
   assert.match(html, /transform="translate\(420 310\)"/);
   assert.match(html, /points="100,200 260,210 330,330"/);
   assert.match(html, /marker-end="url\(#seating-route-tip-0\)"/);
-  assert.match(html, /<td>Meja keluarga<\/td><td>1<\/td><td>Arga<\/td>/);
-  assert.match(html, /<td>Meja keluarga<\/td><td>2<\/td><td>Naya<\/td>/);
+  assert.match(html, /<td>Meja Keluarga<\/td><td>1<\/td><td>Arga<\/td>/);
+  assert.match(html, /<td>Meja Keluarga<\/td><td>2<\/td><td>Naya<\/td>/);
   assert.match(html, /Tamu Manual/);
   assert.match(html, /Tamu Hadir/);
   assert.doesNotMatch(html, /SECRET-TICKET|guest-private-id|Tamu Tidak Hadir|Simpan denah|<button|<aside/);
   assert.match(html, /assets\/brand\/undara\/logo.webp/);
   assert.match(html, /A4 landscape/);
   assert.match(html, /fill="#FFF9F3"/);
+});
+
+test("actual canvas and print label every seat of a lowercase party without splitting its Guest identity", () => {
+  const guest = { id: "party", name: "hendra wijaya", tableId: table.id, seatNumber: 7, invitedPax: 4 };
+  const f = canvasFixture({ guests: [guest], tool: "move" });
+  const texts = elements(f.tree, (el) => el.type === "Text").map((el) => el.props.text);
+  for (const label of ["Hendra Wijaya 1", "Hendra Wijaya 2", "Hendra Wijaya 3", "Hendra Wijaya 4", "Meja Keluarga"]) assert.ok(texts.includes(label), label);
+  assert.equal(elements(f.tree, (el) => el.type === "Circle" && el.props.draggable).length, 1);
+  const html = printHtml({ guests: [guest] });
+  for (let member = 1; member <= 4; member++) assert.ok(html.includes(`>Hendra Wijaya ${member}</text>`));
+  assert.ok(html.includes("<td>7, 8, 1, 2</td><td>Hendra Wijaya · 4 pax</td>"));
+  const unassigned = chartFixture();
+  const roster = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "id" }, React.createElement(unassigned.Chart, { ...chartProps, guests: [{ ...guest, source: "MANUAL", tableId: null, seatNumber: null }] })));
+  assert.ok(roster.includes("Hendra Wijaya")); assert.ok(!roster.includes(">hendra wijaya<"));
+  assert.equal(guest.name, "hendra wijaya"); assert.equal(guest.id, "party"); assert.equal(guest.invitedPax, 4);
 });
 
 test("print labels support English and guest/event text is escaped by React", () => {

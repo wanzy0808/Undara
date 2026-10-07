@@ -6,7 +6,8 @@ import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { createSeatingPathGesture } from "@/lib/seating/editor";
 import { seatingCanvasColors } from "@/lib/seating/appearance";
-import { seatingGuestAtSeat, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
+import { seatingGuestAtSeat, seatingGuestSeatLabel, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
+import { displayTitleCase } from "@/lib/text/display-title-case";
 import { clampSeatingPoint, seatingPointFromClient, SEATING_TABLE_MARGIN, SEATING_WIDTH, type SeatingPlan, type SeatingPoint } from "@/lib/seating/plan";
 import { seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_STAGE_HEIGHT } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingSeatTarget, SeatingTable } from "./seating-chart-types";
@@ -159,7 +160,7 @@ export default function SeatingPlanCanvas({
                 {table.shape === "ROUND"
                   ? <Circle radius={44} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />
                   : <Rect x={table.shape === "SQUARE" ? -36 : -48} y={table.shape === "SQUARE" ? -36 : -30} width={table.shape === "SQUARE" ? 72 : 96} height={table.shape === "SQUARE" ? 72 : 60} cornerRadius={8} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />}
-                <Text x={-44} y={-10} width={88} height={30} align="center" text={table.name} fontSize={13} fontFamily="Roboto" fontStyle="bold" fill={colors.tableText} listening={false} />
+                <Text x={-44} y={-10} width={88} height={30} align="center" text={displayTitleCase(table.name)} fontSize={13} fontFamily="Roboto" fontStyle="bold" fill={colors.tableText} listening={false} />
                 {Array.from({ length: table.capacity }, (_, seatIndex) => {
                   const seat = seatIndex + 1, point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);
                   const guest = seatingGuestAtSeat(guests, table.id, seat, table.capacity);
@@ -178,7 +179,7 @@ export default function SeatingPlanCanvas({
                         else onGuestCancel?.();
                       }} />
                     <Text x={-12} y={-6} width={24} align="center" text={String(seat)} fontSize={10} fill={guest ? "#321B1B" : colors.seatStroke} listening={false} />
-                    {guest && anchor && <Text x={-42} y={20} width={84} height={30} align="center" text={guest.name} fontFamily="Roboto" fontSize={11} fill={colors.guestText} listening={false} />}
+                    {guest && <Text x={-50} y={20} width={100} align="center" text={seatingGuestSeatLabel(guest, seat, table.capacity)} wrap="word" fontFamily="Roboto" fontSize={11} fill={colors.guestText} listening={false} />}
                   </Group>;
                 })}
               </Group>

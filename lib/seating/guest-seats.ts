@@ -1,3 +1,5 @@
+import { displayTitleCase } from "../text/display-title-case";
+
 export type SeatingPartyGuest = {
   id: string;
   tableId?: string | null;
@@ -19,6 +21,14 @@ export function seatingSeatBlock(startSeat: number, partySize: number, capacity:
 export function seatingGuestSeats(guest: SeatingPartyGuest, capacity: number) {
   if (!guest.tableId || !guest.seatNumber) return [];
   return seatingSeatBlock(guest.seatNumber, seatingPartySize(guest), capacity);
+}
+
+/** Number members by their position in the shared party, including wrapped blocks. */
+export function seatingGuestSeatLabel(guest: SeatingPartyGuest & { name: string }, seat: number, capacity: number) {
+  const index = seatingGuestSeats(guest, capacity).indexOf(seat);
+  if (index < 0) return "";
+  const name = displayTitleCase(guest.name);
+  return seatingPartySize(guest) > 1 ? `${name} ${index + 1}` : name;
 }
 
 export function seatingGuestAtSeat<T extends SeatingPartyGuest>(

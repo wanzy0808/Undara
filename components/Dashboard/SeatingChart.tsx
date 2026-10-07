@@ -328,7 +328,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
           : {}),
       }));
 
-      setMessage(locale === "en" ? `${source.name} and ${target.guest.name} swapped positions.` : `Posisi ${source.name} dan ${target.guest.name} ditukar.`);
+      setMessage(locale === "en" ? `${displayTitleCase(source.name)} and ${displayTitleCase(target.guest.name)} swapped positions.` : `Posisi ${displayTitleCase(source.name)} dan ${displayTitleCase(target.guest.name)} ditukar.`);
       setSwapCandidate(null);
     } catch (error) {
       setMessage(
@@ -390,7 +390,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             }
         >
 
-          <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-center gap-3">
+          <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-end gap-3">
             <label className="inline-flex items-center gap-2 text-sm font-medium">
               <span>{d("Meja")}:</span>
               <Input
@@ -399,12 +399,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 max={Math.max(1, 100 - visibleTables.length)}
                 disabled={toolbarBusy || visibleTables.length >= 100}
                 value={tableCount}
-                className="min-h-11 w-20"
+                className="min-h-11 w-16 px-2"
                 onChange={(event) => setTableCount(Number(event.target.value))}
               />
             </label>
-            <div className="flex min-w-0 flex-1 basis-56 items-end gap-2">
-              <label className="inline-flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm font-medium">
+            <div className="flex min-w-0 max-w-full items-end gap-2">
+              <label className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium">
                 <span>{d("Kursi")}:</span>
                 <Input
                   type="number"
@@ -412,18 +412,18 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                   max={50}
                   disabled={toolbarBusy || visibleTables.length >= 100}
                   value={seatsPerTable}
-                  className="min-h-11 w-20 max-w-full"
+                  className="min-h-11 w-16 max-w-full px-2"
                   onChange={(event) => setSeatsPerTable(Number(event.target.value))}
                 />
               </label>
               <Button
                 type="submit"
                 size="sm"
-                className="w-28"
+                className="h-auto min-h-11 max-w-full shrink px-3 py-2 whitespace-normal"
                 disabled={toolbarBusy || visibleTables.length >= 100}
                 title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
               >
-                <span className="truncate">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
+                <span className="min-w-0 break-words">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
               </Button>
             </div>
           </form>
@@ -443,83 +443,59 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             }
         >
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-2">
-            <form onSubmit={addManualGuest} className="space-y-2">
-              <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-2">
-                <label className="block text-xs text-muted-foreground">
-                  {d("Sapaan")}
-                  <select
-                    value={manualSalutation}
-                    disabled={manualSaving}
-                    className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-                    onChange={(event) => {
-                      const next = event.target.value as PersonalSalutation;
-                      setManualSalutation(next);
-                      setManualPax((current) => Math.max(current, minimumInvitedPaxForSalutation(next)));
-                    }}
-                  >
-                    <option value="BAPAK">{d("Bapak")}</option>
-                    <option value="IBU">{d("Ibu")}</option>
-                    <option value="BAPAK_IBU">{d("Bapak & Ibu")}</option>
-                  </select>
-                </label>
-                <label className="block text-xs text-muted-foreground">
-                  {d("Nama")}
-                  <Input
-                    value={manualName}
-                    onChange={(event) => setManualName(event.target.value)}
-                    placeholder={d("Nama tamu manual")}
-                    className="mt-1 capitalize"
-                  />
-                </label>
-              </div>
-              <div className="grid grid-cols-[minmax(0,1fr)_92px] gap-2">
-                <label className="block text-xs text-muted-foreground">
-                  {d("Kategori tamu")}
-                  <select
-                    value={manualCategory}
-                    disabled={manualSaving}
-                    className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-                    onChange={(event) => setManualCategory(event.target.value)}
-                  >
-                    <option value="REGULAR">{d("Reguler")}</option>
-                    <option value="VIP">VIP</option>
-                    <option value="VVIP">VVIP</option>
-                  </select>
-                </label>
-                <label className="block text-xs text-muted-foreground">
-                  {d("Jumlah orang")}
-                  <Input
-                    type="number"
-                    min={minimumInvitedPaxForSalutation(manualSalutation)}
-                    max={MAX_GUEST_PARTY_SIZE}
-                    value={manualPax}
-                    disabled={manualSaving}
-                    className="mt-1"
-                    onChange={(event) => setManualPax(Number(event.target.value))}
-                  />
-                </label>
-              </div>
-              <Button
-                type="submit"
-                size="sm"
-                className="w-full"
-                disabled={manualSaving}
-                title={d("Tambah ke Daftar Tamu")}
-              >
+          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] items-start gap-4">
+            <form onSubmit={addManualGuest} className="flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
+              <label className="block w-40 max-w-full text-xs text-muted-foreground">
+                {d("Sapaan")}
+                <select value={manualSalutation} disabled={manualSaving}
+                  className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                  onChange={(event) => {
+                    const next = event.target.value as PersonalSalutation;
+                    setManualSalutation(next);
+                    setManualPax((current) => Math.max(current, minimumInvitedPaxForSalutation(next)));
+                  }}>
+                  <option value="BAPAK">{d("Bapak")}</option>
+                  <option value="IBU">{d("Ibu")}</option>
+                  <option value="BAPAK_IBU">{d("Bapak & Ibu")}</option>
+                </select>
+              </label>
+              <label className="block min-w-0 max-w-full text-xs text-muted-foreground"
+                style={{ width: Math.min(320, Math.max(192, manualName.length * 8 + 32)) }}>
+                {d("Nama")}
+                <Input value={manualName} onChange={(event) => setManualName(event.target.value)}
+                  placeholder={d("Nama tamu manual")} className="mt-1 capitalize" />
+              </label>
+              <label className="block w-36 max-w-full text-xs text-muted-foreground">
+                {d("Kategori tamu")}
+                <select value={manualCategory} disabled={manualSaving}
+                  className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                  onChange={(event) => setManualCategory(event.target.value)}>
+                  <option value="REGULAR">{d("Reguler")}</option>
+                  <option value="VIP">VIP</option>
+                  <option value="VVIP">VVIP</option>
+                </select>
+              </label>
+              <label className="block w-24 max-w-full text-xs text-muted-foreground">
+                {d("Jumlah orang")}
+                <Input type="number" min={minimumInvitedPaxForSalutation(manualSalutation)} max={MAX_GUEST_PARTY_SIZE}
+                  value={manualPax} disabled={manualSaving} className="mt-1 min-h-11"
+                  onChange={(event) => setManualPax(Number(event.target.value))} />
+              </label>
+              <Button type="submit" size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
+                disabled={manualSaving} title={d("Tambah ke Daftar Tamu")}>
                 <UserPlus className="h-4 w-4" />
-                {manualSaving ? d("Menambahkan tamu...") : d("Tambah ke Daftar Tamu")}
+                <span className="min-w-0 break-words">{manualSaving ? d("Menambahkan tamu...") : d("Tambah ke Daftar Tamu")}</span>
               </Button>
             </form>
 
             <div className="min-w-0">
-              <div className="grid grid-cols-2 gap-2">
-                <label className="block min-w-0 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-end gap-2">
+                <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
                   {d("Kategori tamu")}
                   <select
                     value={categoryFilter}
                     onChange={(event) => setCategoryFilter(event.target.value)}
-                    className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
                   >
                     <option value="">{displayTitleCase(d("Semua kategori"))}</option>
                     {categoryFilter && !categories.includes(categoryFilter) && (
@@ -530,12 +506,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     ))}
                   </select>
                 </label>
-                <label className="block min-w-0 text-xs text-muted-foreground">
+                <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
                   {d("Tag tamu")}
                   <select
                     value={tagFilter}
                     onChange={(event) => setTagFilter(event.target.value)}
-                    className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
                   >
                     <option value="">{displayTitleCase(d("Semua tag"))}</option>
                     {tagFilter && !tags.includes(tagFilter) && (
@@ -546,7 +522,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     ))}
                   </select>
                 </label>
-                <p role="status" className="col-span-2 text-xs text-muted-foreground">
+                <p role="status" className="w-full text-xs text-muted-foreground">
                   {locale === "en"
                     ? `Showing ${filteredUnassigned.length} of ${unassigned.length} unassigned guests.`
                     : `Menampilkan ${filteredUnassigned.length} dari ${unassigned.length} tamu belum ditempatkan.`}
@@ -554,7 +530,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 {hasRosterFilter && (
                   <Button
                     type="button"
-                    className="min-h-11"
+                    size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
                     onClick={() => { setCategoryFilter(""); setTagFilter(""); }}
                   >
                     {d("Reset filter")}
@@ -564,7 +540,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
               <div className="mt-3 max-h-40 space-y-2 overflow-y-auto pr-1">
                 {filteredUnassigned.length === 0 && (
-                  <DashboardEmptyState
+                  <DashboardEmptyState className="min-h-0! px-3! py-3!"
                     title={hasRosterFilter ? d("Tidak ada hasil") : d("Semua tamu sudah ditempatkan")}
                     description={
                       hasRosterFilter
@@ -586,7 +562,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     onDragEnd={(event) => { if (event.dataTransfer.dropEffect === "none") { setDraggedGuestId(null); setHoverTarget(null); } }}
                     className="undara-dashboard-detail-card cursor-grab rounded-tr-[22px] border border-primary/20 bg-primary/[0.035] px-4 py-3 text-sm transition hover:border-primary/40 hover:bg-primary/[0.08] active:cursor-grabbing"
                   >
-                    <div className="truncate font-medium text-foreground">{guest.name}</div>
+                    <div className="break-words font-medium text-foreground">{displayTitleCase(guest.name)}</div>
                     {(guest.category || Boolean(guest.tags?.length)) && (
                       <p className="mt-1 break-words text-xs text-muted-foreground">
                         {[guest.category, ...(guest.tags ?? [])].filter(Boolean).join(" · ")}
@@ -668,7 +644,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         {swapCandidate && (
           <div className="undara-dashboard-detail-card mt-3 rounded-tr-[22px] border border-primary/20 bg-primary/[0.045] p-4">
             <p className="text-xs font-medium leading-5 text-foreground">
-              {locale === "en" ? `Seat occupied by ${swapCandidate.target.guest?.name}. Swap with ${draggedGuest?.name}?` : `Kursi ditempati ${swapCandidate.target.guest?.name}. Tukar dengan ${draggedGuest?.name}?`}
+              {locale === "en" ? `Seat occupied by ${displayTitleCase(swapCandidate.target.guest?.name ?? "")}. Swap with ${displayTitleCase(draggedGuest?.name ?? "")}?` : `Kursi ditempati ${displayTitleCase(swapCandidate.target.guest?.name ?? "")}. Tukar dengan ${displayTitleCase(draggedGuest?.name ?? "")}?`}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button

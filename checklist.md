@@ -802,3 +802,11 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Editor/print share overlapping numbered pages for tall layouts; navigation preserves full-layout coordinates/Save/Print and canonical Guest party blocks, translates later-page guest/path gestures, and blocks paging during active drawing/saving/mutations. Focused actual chart/canvas/geometry/table-mutation/party fixtures: 64/64 PASS.
 - [x] Local validation: 801/801 full regression tests with zero failures/skips, TypeScript, changed-source/test ESLint (zero errors/warnings), production webpack build (73/73) and git diff whitespace check PASS. Exact-commit GitHub results are to be observed after publication; this entry records pre-push local evidence.
 - [ ] Signed-in desktop/tablet/phone QA: layout size, page buttons, guest drag with page hover, moved-table drop, freehand routes/Undo, add/clear, Light/Dark and ID/EN, full-plan Save → reopen on the target database, and full-plan browser A4/PDF/physical print.
+
+
+### Compact seating controls and numbered party names — 7 October 2026
+
+- [x] Compact wrapping table/guest form controls and native filters; complete button captions, bounded adaptive Name input, smaller empty roster and retained full-width/paged plan.
+- [x] Every occupied party seat displays a Title Case numbered member name on canvas/print, including blocks wrapping through seat 1; single-person guests retain the plain name. Roster/swap/table labels capitalize in display only; the canonical Guest/pax/block/assignment model stays unchanged.
+- [x] Final local full regression 803/803, focused seating/party fixtures 66/66, TypeScript, changed-source/test ESLint (zero errors/warnings) and production webpack build (73/73) PASS. Exact-commit GitHub workflows will be checked after publication; this records local pre-push evidence.
+- [ ] Signed-in desktop/tablet/phone QA in ID/EN and both themes: full normal/loading captions, short/long name/tag values, native dropdowns, adjacent/last-seat party placement/drag/swap, Save/reopen, A4/PDF and physical print. Screenshot/source/isolated fixture checks do not establish this runtime QA.
