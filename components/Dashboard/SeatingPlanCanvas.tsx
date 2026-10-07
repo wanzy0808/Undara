@@ -9,7 +9,7 @@ import { seatingCanvasColors } from "@/lib/seating/appearance";
 import { seatingGuestAtSeat, seatingGuestSeatLabel, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { clampSeatingPoint, seatingPointFromClient, SEATING_TABLE_MARGIN, SEATING_WIDTH, type SeatingPlan, type SeatingPoint } from "@/lib/seating/plan";
-import { seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_STAGE_HEIGHT } from "./seating-chart-geometry";
+import { seatingSeatPoint, seatingTableBounds, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_STAGE_HEIGHT, SEATING_TABLE_BODY_RADIUS } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingSeatTarget, SeatingTable } from "./seating-chart-types";
 
 const noPoints: number[] = [];
@@ -159,9 +159,9 @@ export default function SeatingPlanCanvas({
                 onDragStart={(event) => { if (event.target === event.currentTarget) onTableSelect(table.id); }}
                 onDragEnd={(event) => finishTableDrag(table.id, event)}>
                 {table.shape === "ROUND"
-                  ? <Circle radius={44} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />
-                  : <Rect x={table.shape === "SQUARE" ? -36 : -48} y={table.shape === "SQUARE" ? -36 : -30} width={table.shape === "SQUARE" ? 72 : 96} height={table.shape === "SQUARE" ? 72 : 60} cornerRadius={8} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />}
-                <Text x={-44} y={-10} width={88} height={30} align="center" text={displayTitleCase(table.name)} fontSize={13} fontFamily="Roboto" fontStyle="bold" fill={colors.tableText} listening={false} />
+                  ? <Circle radius={SEATING_TABLE_BODY_RADIUS} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />
+                  : <Rect {...seatingTableBounds(table.shape)} cornerRadius={8} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />}
+                <Text x={-SEATING_TABLE_BODY_RADIUS} y={-13} width={SEATING_TABLE_BODY_RADIUS * 2} height={32} align="center" text={displayTitleCase(table.name)} fontSize={13} fontFamily="Roboto" fontStyle="bold" fill={colors.tableText} listening={false} />
                 {Array.from({ length: table.capacity }, (_, seatIndex) => {
                   const seat = seatIndex + 1, point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);
                   const guest = seatingGuestAtSeat(guests, table.id, seat, table.capacity);

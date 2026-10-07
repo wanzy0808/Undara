@@ -4,6 +4,19 @@ import { useCallback } from "react";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 
 const english: Record<string, string> = {
+  "Aksi tamu": "Guest actions",
+  "Edit tamu": "Edit guest",
+  "Hapus tamu?": "Delete guest?",
+  "Tamu akan dihapus dari daftar dan kursinya dikosongkan.": "The guest will be removed from the list and their seats will be freed.",
+  "Tamu dihapus. Kursinya kembali tersedia.": "Guest deleted. Their seats are available again.",
+  "Data tamu gagal diperbarui.": "Guest details could not be updated.",
+  "Tamu gagal dihapus.": "The guest could not be deleted.",
+  "Data tamu tidak valid. Muat ulang dan coba lagi.": "Invalid guest details. Reload and try again.",
+  "Data tamu berubah. Muat ulang dan coba lagi.": "Guest details changed. Reload and try again.",
+  "Tamu ini sudah mempunyai undangan personal atau catatan check-in. Data bersama tidak dapat dihapus dari daftar biasa.": "This guest has a personal invitation or check-in record and cannot be deleted from the guest list.",
+  "Pengelolaan tamu membutuhkan paket Digital Invitation.": "Guest management requires a Digital Invitation package.",
+  "Tamu tidak ditemukan pada akun ini.": "Guest not found for this account.",
+  "Nama dan nomor ini sudah dipakai tamu lain pada acara yang sama.": "Another guest at this event already uses this name and number.",
   "Isi tamu": "Guests",
   "Halaman": "Page",
   "Halaman denah": "Plan pages",

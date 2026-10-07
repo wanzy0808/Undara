@@ -827,3 +827,13 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Focus canvas without scrolling when a valid drawing gesture starts so its existing Escape handler receives keyboard input; Escape also exits from the focused mode button before drawing. Preserve stroke cancellation/capture, route-limit exit and canonical guest drag behavior.
 - [x] Focused seating/party fixtures 70/70, full regression 807/807, TypeScript, changed-source/test ESLint (zero errors/warnings), production webpack build (73/73) and whitespace check PASS. Exact published-commit GitHub checks are observed after publication; this records local pre-push evidence.
 - [ ] Signed-in desktop/mobile ID/EN and both themes: draw a route, click Finish or press Escape, then drag tables/guest parties; Escape during an unfinished stroke must cancel only that stroke. Check focus/viewport stability, complete button captions and explicit Save/reopen on the target app.
+
+
+### Guest roster inside the canvas and guest actions — 7 October 2026
+
+- [x] Daftar Tamu is a plain sidebar inside the existing Denah panel next to the canvas; setup/entry stay above. Below 52rem of panel space, canvas precedes the list; category groups, details, filters and scrolling remain available.
+- [x] Every guest row has a six-dot accessible Edit/Delete menu using shared control styling; menu gestures cannot start native row drag, while eligible row/name drag still carries the same canonical Guest ID.
+- [x] Name/category edits preserve party/RSVP/assignment/check-in/token/profile; generated envelope addressees follow rename and custom addressees stay intact. Named Delete uses the shared API with event/owner and atomic personal/check-in protections; failure retains the guest and success frees the full party's seats/refreshes data.
+- [x] Modestly smaller table/seat/orbit geometry is shared by canvas/drop/print, with existing font sizes, saved centers, party capacity and full-plan paging/Save/Print preserved.
+- [x] Final local regression 820/820, standalone TypeScript, changed-source/test ESLint (zero diagnostics), production webpack build (73/73), generated 52rem container CSS and whitespace check PASS. Exact published-commit GitHub workflows are observed after publication; this records local pre-push evidence.
+- [ ] Signed-in target-app desktop/tablet/phone in ID/EN and both themes: menu pointer/keyboard/focus/Escape, scrolling and compact widths, row drag versus menu, edit → reload across shared workspaces, cancel/protected/ordinary Delete, event switch and network retry. Verify real database persistence, Save/reopen and browser A4/PDF/physical print; fixtures/build do not establish this runtime QA.

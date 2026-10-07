@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, Check, GripVertical, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
+import { ArrowLeftRight, Check, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { controlStyles } from "@/components/ui/control-styles";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
@@ -24,6 +26,7 @@ import { seatingPlanKey } from "@/lib/seating/editor";
 import { useSeatingPlan } from "./use-seating-plan";
 import SeatingPlanCanvas from "./SeatingPlanCanvas";
 import SeatingPlanPrint from "./SeatingPlanPrint";
+import SeatingGuestActions from "./SeatingGuestActions";
 import { printSeatingPlan } from "./seating-plan-print-browser";
 import type {
   SeatingChartProps,
@@ -47,6 +50,15 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [categoryFilter, setCategoryFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
   const [localGuests, setLocalGuests] = useState<SeatingGuest[]>([]);
+  const [removedGuestIds, setRemovedGuestIds] = useState<string[]>([]);
+  const [guestAction, setGuestAction] = useState<{ mode: "edit" | "delete"; guest: SeatingGuest } | null>(null);
+  const [guestEditName, setGuestEditName] = useState("");
+  const [guestEditCategory, setGuestEditCategory] = useState("REGULAR");
+  const [guestMutating, setGuestMutating] = useState(false);
+  const [guestError, setGuestError] = useState("");
+  const guestRequest = useRef<AbortController | null>(null);
+  const guestMutationBusy = useRef(false);
+  const menuPointerGuestId = useRef<string | null>(null);
   const [localTables, setLocalTables] = useState<SeatingTable[]>([]);
   const [removedTableIds, setRemovedTableIds] = useState<string[]>([]);
   const [guestOverrides, setGuestOverrides] = useState<
@@ -73,7 +85,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [printing, setPrinting] = useState(false);
   const printCleanup = useRef<(() => void) | null>(null);
   const printRequest = useRef<AbortController | null>(null);
-  useEffect(() => () => { tableRequest.current?.abort(); printRequest.current?.abort(); printCleanup.current?.(); }, []);
+  useEffect(() => () => { tableRequest.current?.abort(); guestRequest.current?.abort(); printRequest.current?.abort(); printCleanup.current?.(); }, []);
 
   const visibleTables = useMemo(() => {
     const known = new Set(tables.map((table) => table.id));
@@ -84,7 +96,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   }, [tables, localTables, removedTableIds]);
   const layout = useMemo(() => seatingPlanWithTables(plan.editor.plan, visibleTables), [plan.editor.plan, visibleTables]);
   const layoutDirty = seatingPlanKey(layout) !== plan.editor.savedKey || (plan.editor.revision === null && visibleTables.length > 0);
-  const layoutBusy = plan.loading || plan.saving || generating || Boolean(savingGuestId);
+  const layoutBusy = plan.loading || plan.saving || generating || guestMutating || Boolean(savingGuestId);
   const toolbarBusy = layoutBusy || drawing;
   const pageOffsets = seatingPlanPageOffsets(layout.height);
   const pageIndex = Math.min(pageSelection.invitationId === invitationId ? pageSelection.index : 0, pageOffsets.length - 1);
@@ -103,12 +115,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       ...localGuests.filter((guest) => !known.has(guest.id)),
     ];
 
-    return merged.map((guest) =>
+    return merged.filter((guest) => !removedGuestIds.includes(guest.id)).map((guest) =>
       guestOverrides[guest.id]
         ? { ...guest, ...guestOverrides[guest.id] }
         : guest,
     );
-  }, [guests, localGuests, guestOverrides]);
+  }, [guests, localGuests, guestOverrides, removedGuestIds]);
 
   const rosterGuests = visibleGuests.filter(
     (guest) => guest.tableId || guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING",
@@ -140,6 +152,67 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
     (sum, table) => sum + seatingOccupiedSeatCount(visibleGuests, table.id, table.capacity),
     0,
   );
+
+  function openGuestAction(mode: "edit" | "delete", guest: SeatingGuest) {
+    if (toolbarBusy || manualSaving || guestMutationBusy.current) return;
+    setGuestAction({ mode, guest });
+    setGuestEditName(guest.name);
+    setGuestEditCategory(guest.category || "REGULAR");
+    setGuestError("");
+    setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null);
+  }
+
+  async function saveGuestAction(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!guestAction || guestMutationBusy.current || toolbarBusy) return;
+    const { mode, guest } = guestAction;
+    const name = guestEditName.trim();
+    if (mode === "edit" && (!name || name.length > 120)) {
+      setGuestError(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
+      return;
+    }
+    guestMutationBusy.current = true;
+    const controller = new AbortController(); guestRequest.current = controller;
+    setGuestMutating(true); setGuestError(""); setMessage("");
+    try {
+      const response = await fetch(mode === "edit" ? "/api/guests/manage" : `/api/guests/manage?id=${encodeURIComponent(guest.id)}&invitationId=${encodeURIComponent(invitationId)}`, {
+        method: mode === "edit" ? "PATCH" : "DELETE", signal: controller.signal,
+        ...(mode === "edit" ? {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: guest.id, invitationId, name, ...(guestEditCategory !== (guest.category || "REGULAR") ? { category: guestEditCategory } : {}) }),
+        } : {}),
+      });
+      const data = await response.json().catch(() => null);
+      if (controller.signal.aborted) return;
+      if (!response.ok) throw new Error(data?.error || (mode === "edit" ? "Data tamu gagal diperbarui." : "Tamu gagal dihapus."));
+      if (data?.ok !== true || (mode === "edit" && (data.guest?.id !== guest.id || data.guest?.invitationId !== invitationId || typeof data.guest?.name !== "string" || !data.guest.name.trim() || data.guest.name.length > 120 || (data.guest.category != null && typeof data.guest.category !== "string") || (data.guest.personalAddressee != null && typeof data.guest.personalAddressee !== "string")))) {
+        throw new Error("Data tamu tidak valid. Muat ulang dan coba lagi.");
+      }
+      if (mode === "edit") {
+        const updated = data.guest as SeatingGuest;
+        setGuestOverrides((current) => ({ ...current, [guest.id]: {
+          ...current[guest.id], name: updated.name,
+          ...(updated.category !== undefined ? { category: updated.category } : {}),
+          ...(updated.personalAddressee !== undefined ? { personalAddressee: updated.personalAddressee } : {}),
+        } }));
+        setMessage(d("Data tamu diperbarui."));
+      } else {
+        setRemovedGuestIds((current) => [...current, guest.id]);
+        setLocalGuests((current) => current.filter((item) => item.id !== guest.id));
+        setGuestOverrides((current) => {
+          const next = { ...current }; delete next[guest.id]; return next;
+        });
+        setMessage(d("Tamu dihapus. Kursinya kembali tersedia."));
+      }
+      setGuestAction(null);
+      void onTablesChanged?.().catch(() => {});
+    } catch (error) {
+      if (!controller.signal.aborted) setGuestError(d(error instanceof Error ? error.message : "Data tamu gagal diperbarui."));
+    } finally {
+      if (guestRequest.current === controller) { guestRequest.current = null; guestMutationBusy.current = false; }
+      if (!controller.signal.aborted) setGuestMutating(false);
+    }
+  }
 
   async function generateTables(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -273,7 +346,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       await onAssigned(guestId, target.table.id, target.seat);
       setGuestOverrides((current) => ({
         ...current,
-        [guestId]: { tableId: target.table.id, seatNumber: target.seat },
+        [guestId]: { ...current[guestId], tableId: target.table.id, seatNumber: target.seat },
       }));
       setMessage(d("Penempatan tamu tersimpan."));
     } catch (error) {
@@ -320,6 +393,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         ...(sourceResult
           ? {
               [sourceResult.id]: {
+                ...current[sourceResult.id],
                 tableId: sourceResult.tableId,
                 seatNumber: sourceResult.seatNumber,
               },
@@ -328,6 +402,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         ...(targetResult
           ? {
               [targetResult.id]: {
+                ...current[targetResult.id],
                 tableId: targetResult.tableId,
                 seatNumber: targetResult.seatNumber,
               },
@@ -387,232 +462,108 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
   return (
     <div className="mt-5 min-w-0 space-y-4">
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_19rem]">
-        <div className="grid min-w-0 items-start gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))]">
-          <DashboardPanel
-              title={d("Struktur meja")}
-              actions={
-                <DashboardStatusBadge active={visibleTables.length > 0}>
-                  {visibleTables.length} {locale === "en" ? "tables" : "meja"}
-                </DashboardStatusBadge>
-              }
-          >
-
-            <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-end gap-3">
-              <label className="inline-flex items-center gap-2 text-sm font-medium">
-                <span>{d("Meja")}:</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={Math.max(1, 100 - visibleTables.length)}
-                  disabled={toolbarBusy || visibleTables.length >= 100}
-                  value={tableCount}
-                  className="min-h-11 w-16 px-2"
-                  onChange={(event) => setTableCount(Number(event.target.value))}
-                />
-              </label>
-              <div className="flex min-w-0 max-w-full items-end gap-2">
-                <label className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium">
-                  <span>{d("Kursi")}:</span>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={50}
-                    disabled={toolbarBusy || visibleTables.length >= 100}
-                    value={seatsPerTable}
-                    className="min-h-11 w-16 max-w-full px-2"
-                    onChange={(event) => setSeatsPerTable(Number(event.target.value))}
-                  />
-                </label>
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="h-auto min-h-11 max-w-full shrink px-3 py-2 whitespace-normal"
-                  disabled={toolbarBusy || visibleTables.length >= 100}
-                  title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
-                >
-                  <span className="min-w-0 break-words">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
-                </Button>
-              </div>
-            </form>
-
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <DashboardCompactStat label={d("Kursi")} value={String(totalSeats)} />
-              <DashboardCompactStat label={d("Terisi")} value={String(assignedCount)} />
-            </div>
-          </DashboardPanel>
-
-          <DashboardPanel title={d("Isi tamu")}>
-            <form onSubmit={addManualGuest} className="mt-4 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
-              <label className="block w-40 max-w-full text-xs text-muted-foreground">
-                {d("Sapaan")}
-                <select value={manualSalutation} disabled={manualSaving}
-                  className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-                  onChange={(event) => {
-                    const next = event.target.value as PersonalSalutation;
-                    setManualSalutation(next);
-                    setManualPax((current) => Math.max(current, minimumInvitedPaxForSalutation(next)));
-                  }}>
-                  <option value="BAPAK">{d("Bapak")}</option>
-                  <option value="IBU">{d("Ibu")}</option>
-                  <option value="BAPAK_IBU">{d("Bapak & Ibu")}</option>
-                </select>
-              </label>
-              <label className="block min-w-0 max-w-full text-xs text-muted-foreground"
-                style={{ width: Math.min(320, Math.max(192, manualName.length * 8 + 32)) }}>
-                {d("Nama")}
-                <Input value={manualName} onChange={(event) => setManualName(event.target.value)}
-                  placeholder={d("Nama tamu manual")} className="mt-1 capitalize" />
-              </label>
-              <label className="block w-36 max-w-full text-xs text-muted-foreground">
-                {d("Kategori tamu")}
-                <select value={manualCategory} disabled={manualSaving}
-                  className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-                  onChange={(event) => setManualCategory(event.target.value)}>
-                  <option value="REGULAR">{d("Reguler")}</option>
-                  <option value="VIP">VIP</option>
-                  <option value="VVIP">VVIP</option>
-                </select>
-              </label>
-              <label className="block w-24 max-w-full text-xs text-muted-foreground">
-                {d("Jumlah orang")}
-                <Input type="number" min={minimumInvitedPaxForSalutation(manualSalutation)} max={MAX_GUEST_PARTY_SIZE}
-                  value={manualPax} disabled={manualSaving} className="mt-1 min-h-11"
-                  onChange={(event) => setManualPax(Number(event.target.value))} />
-              </label>
-              <Button type="submit" size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
-                disabled={manualSaving} title={d("Tambah ke Daftar Tamu")}>
-                <UserPlus className="h-4 w-4" />
-                <span className="min-w-0 break-words">{manualSaving ? d("Menambahkan tamu...") : d("Tambah ke Daftar Tamu")}</span>
-              </Button>
-            </form>
-          </DashboardPanel>
-        </div>
-
-        <DashboardPanel className="min-w-0"
-            title={d("Daftar tamu")}
+      <div className="grid min-w-0 items-start gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))]">
+        <DashboardPanel
+            title={d("Struktur meja")}
             actions={
-              <DashboardStatusBadge active={rosterGuests.length > 0}>
-                {rosterGuests.length} {locale === "en" ? "guests" : "tamu"}
+              <DashboardStatusBadge active={visibleTables.length > 0}>
+                {visibleTables.length} {locale === "en" ? "tables" : "meja"}
               </DashboardStatusBadge>
             }
         >
-          <div className="mt-3 flex min-w-0 flex-wrap items-end gap-2">
-            <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
-              {d("Kategori tamu")}
-              <select
-                value={categoryFilter}
-                onChange={(event) => setCategoryFilter(event.target.value)}
-                className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-              >
-                <option value="">{displayTitleCase(d("Semua kategori"))}</option>
-                    {categoryFilter && !categories.includes(categoryFilter) && (
-                      <option value={categoryFilter}>{categoryFilter === "REGULAR" ? d("Reguler") : displayTitleCase(categoryFilter)}</option>
-                )}
-                {categories.map((category) => (
-                  <option key={category} value={category}>{category === "REGULAR" ? d("Reguler") : displayTitleCase(category)}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
-              {d("Tag tamu")}
-              <select
-                value={tagFilter}
-                onChange={(event) => setTagFilter(event.target.value)}
-                className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-              >
-                <option value="">{displayTitleCase(d("Semua tag"))}</option>
-                {tagFilter && !tags.includes(tagFilter) && (
-                  <option value={tagFilter}>{displayTitleCase(tagFilter)}</option>
-                )}
-                {tags.map((tag) => (
-                  <option key={tag} value={tag}>{displayTitleCase(tag)}</option>
-                ))}
-              </select>
-            </label>
-            <p role="status" className="w-full text-xs text-muted-foreground">
-              {locale === "en"
-                ? `Showing ${filteredRoster.length} of ${rosterGuests.length} guests · ${unassigned.length} unassigned.`
-                : `Menampilkan ${filteredRoster.length} dari ${rosterGuests.length} tamu · ${unassigned.length} belum ditempatkan.`}
-            </p>
-            {hasRosterFilter && (
-              <Button
-                type="button"
-                size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
-                onClick={() => { setCategoryFilter(""); setTagFilter(""); }}
-              >
-                {d("Reset filter")}
-              </Button>
-            )}
-          </div>
 
-          <div className="mt-3 max-h-72 space-y-4 overflow-y-auto pr-1">
-            {filteredRoster.length === 0 && (
-              <DashboardEmptyState className="min-h-0! px-3! py-3!"
-                title={hasRosterFilter ? d("Tidak ada hasil") : d("Belum ada tamu")}
-                description={
-                  hasRosterFilter
-                    ? d("Tidak ada tamu yang cocok dengan filter aktif.")
-                    : d("Tambahkan tamu atau tunggu konfirmasi RSVP Hadir.")
-                }
+          <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-end gap-3">
+            <label className="inline-flex items-center gap-2 text-sm font-medium">
+              <span>{d("Meja")}:</span>
+              <Input
+                type="number"
+                min={1}
+                max={Math.max(1, 100 - visibleTables.length)}
+                disabled={toolbarBusy || visibleTables.length >= 100}
+                value={tableCount}
+                className="min-h-11 w-16 px-2"
+                onChange={(event) => setTableCount(Number(event.target.value))}
               />
-            )}
-            {rosterGroups.map((group) => (
-              <section key={group.category} aria-label={group.category === "REGULAR" ? d("Reguler") : displayTitleCase(group.category)}>
-                <h3 className="mb-1 flex items-center justify-between gap-2 text-sm font-semibold text-primary">
-                  <span>{group.category === "REGULAR" ? d("Reguler") : displayTitleCase(group.category)}</span>
-                  <span className="font-[family-name:var(--font-undara-mono)] text-xs tabular-nums text-muted-foreground">{group.guests.length}</span>
-                </h3>
-                <ul className="divide-y divide-border/60">
-                  {group.guests.map((guest) => {
-                    const name = displayTitleCase(guest.name);
-                    const words = name.trim().split(/\s+/u);
-                    const initials = [Array.from(words[0])[0], words.length > 1 ? Array.from(words[words.length - 1])[0] : ""].join("");
-                    const assignedTable = visibleTables.find((table) => table.id === guest.tableId);
-                    const seats = assignedTable ? seatingGuestSeats(guest, assignedTable.capacity) : [];
-                    const pax = seatingPartySize(guest);
-                    const canDrag = !guest.tableId && !toolbarBusy && tool === "move";
-                    return (
-                      <li key={guest.id} data-guest-id={guest.id}
-                        draggable={canDrag}
-                        onDragStart={(event) => {
-                          if (!canDrag) { event.preventDefault(); return; }
-                          event.dataTransfer.setData("text/plain", guest.id);
-                          event.dataTransfer.effectAllowed = "move";
-                          setDraggedGuestId(guest.id);
-                          setSwapCandidate(null);
-                        }}
-                        onDragEnd={(event) => { if (event.dataTransfer.dropEffect === "none") { setDraggedGuestId(null); setHoverTarget(null); } }}
-                        className={`flex min-w-0 items-start gap-2.5 rounded-md px-1 py-2.5 text-sm ${canDrag ? "cursor-grab hover:bg-primary/[0.06] active:cursor-grabbing" : ""}`}
-                      >
-                        <span aria-hidden="true" className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="break-words font-medium leading-5 text-foreground">{name}</div>
-                          <p className="mt-0.5 break-words text-xs leading-5 text-muted-foreground">
-                            {pax} {locale === "en" ? (pax === 1 ? "person" : "people") : "orang"} · {guest.source === "MANUAL" ? d("Manual") : "RSVP"}
-                            {guest.source === "RSVP" && guest.rsvpStatus === "ATTENDING" ? ` · ${d("Hadir")}` : ""}
-                          </p>
-                          <p className={`break-words text-xs leading-5 ${guest.tableId ? "text-muted-foreground" : "text-primary"}`}>
-                            {assignedTable
-                              ? `${displayTitleCase(assignedTable.name)}${seats.length ? ` · ${d("Kursi")} ${seats.join(", ")}` : ""}`
-                              : guest.tableId ? d("Ditempatkan") : d("Belum ditempatkan")}
-                          </p>
-                          {Boolean(guest.tags?.length) && (
-                            <p className="break-words text-xs leading-5 text-muted-foreground">{guest.tags?.map(displayTitleCase).join(" · ")}</p>
-                          )}
-                        </div>
-                        {canDrag && <GripVertical aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ))}
+            </label>
+            <div className="flex min-w-0 max-w-full items-end gap-2">
+              <label className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium">
+                <span>{d("Kursi")}:</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={50}
+                  disabled={toolbarBusy || visibleTables.length >= 100}
+                  value={seatsPerTable}
+                  className="min-h-11 w-16 max-w-full px-2"
+                  onChange={(event) => setSeatsPerTable(Number(event.target.value))}
+                />
+              </label>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-auto min-h-11 max-w-full shrink px-3 py-2 whitespace-normal"
+                disabled={toolbarBusy || visibleTables.length >= 100}
+                title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
+              >
+                <span className="min-w-0 break-words">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
+              </Button>
+            </div>
+          </form>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <DashboardCompactStat label={d("Kursi")} value={String(totalSeats)} />
+            <DashboardCompactStat label={d("Terisi")} value={String(assignedCount)} />
           </div>
+        </DashboardPanel>
+
+        <DashboardPanel title={d("Isi tamu")}>
+          <form onSubmit={addManualGuest} className="mt-4 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
+            <label className="block w-40 max-w-full text-xs text-muted-foreground">
+              {d("Sapaan")}
+              <select value={manualSalutation} disabled={manualSaving}
+                className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                onChange={(event) => {
+                  const next = event.target.value as PersonalSalutation;
+                  setManualSalutation(next);
+                  setManualPax((current) => Math.max(current, minimumInvitedPaxForSalutation(next)));
+                }}>
+                <option value="BAPAK">{d("Bapak")}</option>
+                <option value="IBU">{d("Ibu")}</option>
+                <option value="BAPAK_IBU">{d("Bapak & Ibu")}</option>
+              </select>
+            </label>
+            <label className="block min-w-0 max-w-full text-xs text-muted-foreground"
+              style={{ width: Math.min(320, Math.max(192, manualName.length * 8 + 32)) }}>
+              {d("Nama")}
+              <Input value={manualName} onChange={(event) => setManualName(event.target.value)}
+                placeholder={d("Nama tamu manual")} className="mt-1 capitalize" />
+            </label>
+            <label className="block w-36 max-w-full text-xs text-muted-foreground">
+              {d("Kategori tamu")}
+              <select value={manualCategory} disabled={manualSaving}
+                className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                onChange={(event) => setManualCategory(event.target.value)}>
+                <option value="REGULAR">{d("Reguler")}</option>
+                <option value="VIP">VIP</option>
+                <option value="VVIP">VVIP</option>
+              </select>
+            </label>
+            <label className="block w-24 max-w-full text-xs text-muted-foreground">
+              {d("Jumlah orang")}
+              <Input type="number" min={minimumInvitedPaxForSalutation(manualSalutation)} max={MAX_GUEST_PARTY_SIZE}
+                value={manualPax} disabled={manualSaving} className="mt-1 min-h-11"
+                onChange={(event) => setManualPax(Number(event.target.value))} />
+            </label>
+            <Button type="submit" size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
+              disabled={manualSaving} title={d("Tambah ke Daftar Tamu")}>
+              <UserPlus className="h-4 w-4" />
+              <span className="min-w-0 break-words">{manualSaving ? d("Menambahkan tamu...") : d("Tambah ke Daftar Tamu")}</span>
+            </Button>
+          </form>
         </DashboardPanel>
       </div>
 
-      <DashboardPanel className="min-w-0"
+      <DashboardPanel className="@container min-w-0"
           title={d("Denah tempat duduk")}
           actions={
             <div className="flex gap-2">
@@ -665,21 +616,149 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             {index + 1}
           </Button>)}
         </nav>}
-        <SeatingPlanCanvas layout={layout} tables={visibleTables} guests={visibleGuests} tool={tool} dark={isDarkMode} busy={layoutBusy}
-          pageOffset={pageOffsets[pageIndex]}
-          draggedGuestId={draggedGuestId} hoverTarget={hoverTarget} selectedTableId={selectedTableId} onTableSelect={setSelectedTableId}
-          onTableMove={(id, point) => plan.dispatch({ type: "EDIT", plan: { ...layout, tables: { ...layout.tables, [id]: point } } })}
-          onPath={(points) => {
-            if (layout.paths.length >= SEATING_MAX_PATHS) { setMessage(d("Maksimal 20 jalur. Hapus jalur untuk menggambar lagi.")); return; }
-            plan.dispatch({ type: "EDIT", plan: { ...layout, paths: [...layout.paths, points] } });
-          }}
-          onDrawingChange={setDrawing}
-          onExitDraw={() => setTool("move")}
-          onGuestStart={(id) => { setDraggedGuestId(id); setSwapCandidate(null); }} onGuestHover={setHoverFromPoint} onGuestDrop={assignGuestAtPoint}
-          onGuestCancel={() => { setDraggedGuestId(null); setHoverTarget(null); }}
-          onUndo={() => plan.dispatch({ type: "UNDO" })} onRedo={() => plan.dispatch({ type: "REDO" })}
-          label={d("Denah: pilih meja, lalu gunakan tombol panah untuk menggeser.")} emptyLabel={d("Atur jumlah meja dan kursi untuk membuat denah.")}
-        />
+        <div className="grid min-w-0 items-start gap-4 @min-[52rem]:grid-cols-[minmax(0,1fr)_19rem]">
+          <div className="min-w-0">
+            <SeatingPlanCanvas layout={layout} tables={visibleTables} guests={visibleGuests} tool={tool} dark={isDarkMode} busy={layoutBusy}
+              pageOffset={pageOffsets[pageIndex]}
+              draggedGuestId={draggedGuestId} hoverTarget={hoverTarget} selectedTableId={selectedTableId} onTableSelect={setSelectedTableId}
+              onTableMove={(id, point) => plan.dispatch({ type: "EDIT", plan: { ...layout, tables: { ...layout.tables, [id]: point } } })}
+              onPath={(points) => {
+                if (layout.paths.length >= SEATING_MAX_PATHS) { setMessage(d("Maksimal 20 jalur. Hapus jalur untuk menggambar lagi.")); return; }
+                plan.dispatch({ type: "EDIT", plan: { ...layout, paths: [...layout.paths, points] } });
+              }}
+              onDrawingChange={setDrawing}
+              onExitDraw={() => setTool("move")}
+              onGuestStart={(id) => { setDraggedGuestId(id); setSwapCandidate(null); }} onGuestHover={setHoverFromPoint} onGuestDrop={assignGuestAtPoint}
+              onGuestCancel={() => { setDraggedGuestId(null); setHoverTarget(null); }}
+              onUndo={() => plan.dispatch({ type: "UNDO" })} onRedo={() => plan.dispatch({ type: "REDO" })}
+              label={d("Denah: pilih meja, lalu gunakan tombol panah untuk menggeser.")} emptyLabel={d("Atur jumlah meja dan kursi untuk membuat denah.")}
+            />
+          </div>
+          <aside aria-label={d("Daftar tamu")} className="min-w-0 border-t border-border pt-4 @min-[52rem]:border-t-0 @min-[52rem]:border-l @min-[52rem]:pt-0 @min-[52rem]:pl-4">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-lg font-semibold">{d("Daftar tamu")}</h3>
+              <DashboardStatusBadge active={rosterGuests.length > 0}>
+                {rosterGuests.length} {locale === "en" ? "guests" : "tamu"}
+              </DashboardStatusBadge>
+            </div>
+            <div className="mt-3 flex min-w-0 flex-wrap items-end gap-2">
+              <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
+                {d("Kategori tamu")}
+                <select
+                  value={categoryFilter}
+                  onChange={(event) => setCategoryFilter(event.target.value)}
+                  className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                >
+                  <option value="">{displayTitleCase(d("Semua kategori"))}</option>
+                  {categoryFilter && !categories.includes(categoryFilter) && (
+                    <option value={categoryFilter}>{categoryFilter === "REGULAR" ? d("Reguler") : displayTitleCase(categoryFilter)}</option>
+                  )}
+                  {categories.map((category) => (
+                    <option key={category} value={category}>{category === "REGULAR" ? d("Reguler") : displayTitleCase(category)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
+                {d("Tag tamu")}
+                <select
+                  value={tagFilter}
+                  onChange={(event) => setTagFilter(event.target.value)}
+                  className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                >
+                  <option value="">{displayTitleCase(d("Semua tag"))}</option>
+                  {tagFilter && !tags.includes(tagFilter) && (
+                    <option value={tagFilter}>{displayTitleCase(tagFilter)}</option>
+                  )}
+                  {tags.map((tag) => (
+                    <option key={tag} value={tag}>{displayTitleCase(tag)}</option>
+                  ))}
+                </select>
+              </label>
+              <p role="status" className="w-full text-xs text-muted-foreground">
+                {locale === "en"
+                  ? `Showing ${filteredRoster.length} of ${rosterGuests.length} guests · ${unassigned.length} unassigned.`
+                  : `Menampilkan ${filteredRoster.length} dari ${rosterGuests.length} tamu · ${unassigned.length} belum ditempatkan.`}
+              </p>
+              {hasRosterFilter && (
+                <Button
+                  type="button"
+                  size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
+                  onClick={() => { setCategoryFilter(""); setTagFilter(""); }}
+                >
+                  {d("Reset filter")}
+                </Button>
+              )}
+            </div>
+
+            <div className="mt-3 max-h-96 @min-[52rem]:max-h-[30rem] space-y-4 overflow-y-auto pr-1">
+              {filteredRoster.length === 0 && (
+                <DashboardEmptyState className="min-h-0! px-3! py-3!"
+                  title={hasRosterFilter ? d("Tidak ada hasil") : d("Belum ada tamu")}
+                  description={
+                    hasRosterFilter
+                      ? d("Tidak ada tamu yang cocok dengan filter aktif.")
+                      : d("Tambahkan tamu atau tunggu konfirmasi RSVP Hadir.")
+                  }
+                />
+              )}
+              {rosterGroups.map((group) => (
+                <section key={group.category} aria-label={group.category === "REGULAR" ? d("Reguler") : displayTitleCase(group.category)}>
+                  <h4 className="mb-1 flex items-center justify-between gap-2 text-sm font-semibold text-primary">
+                    <span>{group.category === "REGULAR" ? d("Reguler") : displayTitleCase(group.category)}</span>
+                    <span className="font-[family-name:var(--font-undara-mono)] text-xs tabular-nums text-muted-foreground">{group.guests.length}</span>
+                  </h4>
+                  <ul className="divide-y divide-border/60">
+                    {group.guests.map((guest) => {
+                      const name = displayTitleCase(guest.name);
+                      const words = name.trim().split(/\s+/u);
+                      const initials = [Array.from(words[0])[0], words.length > 1 ? Array.from(words[words.length - 1])[0] : ""].join("");
+                      const assignedTable = visibleTables.find((table) => table.id === guest.tableId);
+                      const seats = assignedTable ? seatingGuestSeats(guest, assignedTable.capacity) : [];
+                      const pax = seatingPartySize(guest);
+                      const canDrag = !guest.tableId && !toolbarBusy && tool === "move";
+                      return (
+                        <li key={guest.id} data-guest-id={guest.id}
+                          draggable={canDrag}
+                          onPointerDownCapture={(event) => {
+                            menuPointerGuestId.current = (event.target as HTMLElement | null)?.closest?.("button") ? guest.id : null;
+                          }}
+                          onDragStart={(event) => {
+                            if (!canDrag || menuPointerGuestId.current === guest.id || (event.target as HTMLElement | null)?.closest?.("button")) { event.preventDefault(); return; }
+                            event.dataTransfer.setData("text/plain", guest.id);
+                            event.dataTransfer.effectAllowed = "move";
+                            setDraggedGuestId(guest.id);
+                            setSwapCandidate(null);
+                          }}
+                          onDragEnd={(event) => { if (event.dataTransfer.dropEffect === "none") { setDraggedGuestId(null); setHoverTarget(null); } }}
+                          className={`flex min-w-0 items-start gap-2.5 rounded-md px-1 py-2.5 text-sm ${canDrag ? "cursor-grab hover:bg-primary/[0.06] active:cursor-grabbing" : ""}`}
+                        >
+                          <span aria-hidden="true" className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="break-words font-medium leading-5 text-foreground">{name}</div>
+                            <p className="mt-0.5 break-words text-xs leading-5 text-muted-foreground">
+                              {pax} {locale === "en" ? (pax === 1 ? "person" : "people") : "orang"} · {guest.source === "MANUAL" ? d("Manual") : "RSVP"}
+                              {guest.source === "RSVP" && guest.rsvpStatus === "ATTENDING" ? ` · ${d("Hadir")}` : ""}
+                            </p>
+                            <p className={`break-words text-xs leading-5 ${guest.tableId ? "text-muted-foreground" : "text-primary"}`}>
+                              {assignedTable
+                                ? `${displayTitleCase(assignedTable.name)}${seats.length ? ` · ${d("Kursi")} ${seats.join(", ")}` : ""}`
+                                : guest.tableId ? d("Ditempatkan") : d("Belum ditempatkan")}
+                            </p>
+                            {Boolean(guest.tags?.length) && (
+                              <p className="break-words text-xs leading-5 text-muted-foreground">{guest.tags?.map(displayTitleCase).join(" · ")}</p>
+                            )}
+                          </div>
+                          <SeatingGuestActions guest={guest} disabled={toolbarBusy || manualSaving}
+                            onEdit={(item) => openGuestAction("edit", item)} onDelete={(item) => openGuestAction("delete", item)} />
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          </aside>
+        </div>
         <div className="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground" role="status">
           <span>{plan.loading ? d("Memuat denah...") : plan.saving || savingGuestId ? d("Menyimpan...") : (plan.ready || plan.editor.past.length > 0) && layoutDirty ? d("Perubahan denah belum disimpan") : ""}</span>
           {plan.error && <div className="flex flex-wrap items-center gap-2 text-primary"><span>{d(plan.error)}</span><Button type="button" size="sm" variant="outline" disabled={toolbarBusy} onClick={() => void reloadLayout()}><RefreshCw className="h-4 w-4" />{d("Muat ulang denah")}</Button></div>}
@@ -723,6 +802,46 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             {message}
           </p>
         )}
+        <Dialog open={guestAction !== null} onOpenChange={(open) => { if (!open && !guestMutationBusy.current) setGuestAction(null); }}>
+          <DialogContent showCloseButton={!guestMutating} className="max-w-md">
+            {guestAction && <form data-guest-action={guestAction.mode} onSubmit={saveGuestAction} className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>{d(guestAction.mode === "edit" ? "Edit tamu" : "Hapus tamu?")}</DialogTitle>
+                <DialogDescription>
+                  {guestAction.mode === "edit" ? displayTitleCase(guestAction.guest.name) : d("Tamu akan dihapus dari daftar dan kursinya dikosongkan.")}
+                </DialogDescription>
+              </DialogHeader>
+              {guestAction.mode === "edit" ? <div className="flex min-w-0 flex-wrap items-end gap-3">
+                <label className="block min-w-0 max-w-full text-sm"
+                  style={{ width: Math.min(320, Math.max(192, guestEditName.length * 8 + 32)) }}>
+                  {d("Nama")}
+                  <Input autoFocus value={guestEditName} disabled={guestMutating} maxLength={120} required
+                    className="mt-1 min-h-11 capitalize" onChange={(event) => setGuestEditName(event.target.value)} />
+                </label>
+                <label className="block w-36 max-w-full text-sm">
+                  {d("Kategori tamu")}
+                  <select value={guestEditCategory} disabled={guestMutating}
+                    className={cn(controlStyles.input, "mt-1 min-h-11 px-3 py-2")}
+                    onChange={(event) => setGuestEditCategory(event.target.value)}>
+                    <option value="REGULAR">{d("Reguler")}</option>
+                    <option value="VIP">VIP</option>
+                    <option value="VVIP">VVIP</option>
+                    {!primaryCategories.includes(guestEditCategory) && <option value={guestEditCategory}>{displayTitleCase(guestEditCategory)}</option>}
+                  </select>
+                </label>
+              </div> : <p className="break-words text-sm font-medium">{displayTitleCase(guestAction.guest.name)}</p>}
+              {guestError && <p role="alert" className="text-sm text-destructive">{guestError}</p>}
+              <DialogFooter className="flex-row flex-wrap">
+                <Button type="button" variant="outline" disabled={guestMutating}
+                  className="h-auto min-h-11 max-w-full py-2 whitespace-normal" onClick={() => setGuestAction(null)}>{d("Batal")}</Button>
+                <Button type="submit" variant={guestAction.mode === "delete" ? "destructive" : "default"} disabled={guestMutating}
+                  className="h-auto min-h-11 max-w-full py-2 whitespace-normal">
+                  {guestMutating ? d(guestAction.mode === "delete" ? "Menghapus..." : "Menyimpan...") : d(guestAction.mode === "delete" ? "Hapus" : "Simpan")}
+                </Button>
+              </DialogFooter>
+            </form>}
+          </DialogContent>
+        </Dialog>
       </DashboardPanel>
     </div>
   );

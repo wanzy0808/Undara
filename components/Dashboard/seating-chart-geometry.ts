@@ -9,10 +9,17 @@ import { seatingGuestAtSeat } from "@/lib/seating/guest-seats";
 
 export const SEATING_STAGE_WIDTH = 1100;
 export const SEATING_STAGE_HEIGHT = 620;
-export const SEATING_TABLE_RADIUS = 72;
-export const SEATING_SEAT_RADIUS = 16;
+export const SEATING_TABLE_RADIUS = 64;
+export const SEATING_TABLE_BODY_RADIUS = 38;
+export const SEATING_SEAT_RADIUS = 14;
 export const SEATING_TABLE_GAP_X = 250;
 export const SEATING_TABLE_GAP_Y = 205;
+
+export function seatingTableBounds(shape: string) {
+  return shape === "SQUARE"
+    ? { x: -32, y: -32, width: 64, height: 64 }
+    : { x: -42, y: -26, width: 84, height: 52 };
+}
 
 /** Shared editor/print windows overlap so edge tables remain readable. */
 export function seatingPlanPageOffsets(height: number) {

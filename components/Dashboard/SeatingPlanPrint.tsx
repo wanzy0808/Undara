@@ -3,7 +3,7 @@ import { displayTitleCase } from "@/lib/text/display-title-case";
 import { seatingCanvasColors } from "@/lib/seating/appearance";
 import { seatingGuestAtSeat, seatingGuestSeatLabel, seatingGuestSeats, seatingPartySize } from "@/lib/seating/guest-seats";
 import { SEATING_WIDTH, type SeatingPlan } from "@/lib/seating/plan";
-import { seatingPlanPageOffsets, seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS } from "./seating-chart-geometry";
+import { seatingPlanPageOffsets, seatingSeatPoint, seatingTableBounds, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_TABLE_BODY_RADIUS } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingTable } from "./seating-chart-types";
 
 export const seatingPrintCss = `
@@ -53,7 +53,7 @@ export default function SeatingPlanPrint({ title, layout, tables, guests, locale
         {tables.map((table, index) => {
           const center = seatingTableCenter(table.id, index, tables.length, layout);
           return <g key={table.id} transform={`translate(${center.x} ${center.y})`}>
-            {table.shape === "ROUND" ? <circle r={44} fill={colors.table} /> : <rect x={table.shape === "SQUARE" ? -36 : -48} y={table.shape === "SQUARE" ? -36 : -30} width={table.shape === "SQUARE" ? 72 : 96} height={table.shape === "SQUARE" ? 72 : 60} rx={8} fill={colors.table} />}
+            {table.shape === "ROUND" ? <circle r={SEATING_TABLE_BODY_RADIUS} fill={colors.table} /> : <rect {...seatingTableBounds(table.shape)} rx={8} fill={colors.table} />}
             <text textAnchor="middle" dominantBaseline="middle" fontSize={13} fontWeight="bold" fill={colors.tableText}>{displayTitleCase(table.name)}</text>
             {Array.from({ length: table.capacity }, (_, seatIndex) => {
               const point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);

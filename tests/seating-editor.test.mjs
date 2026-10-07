@@ -20,6 +20,9 @@ import * as manualParty from "../lib/guests/manual-party.ts";
 import * as guestSeats from "../lib/seating/guest-seats.ts";
 import * as titles from "../lib/text/display-title-case.ts";
 import PrintModule, { seatingPrintOffsets } from "../components/Dashboard/SeatingPlanPrint.tsx";
+import ActionsModule from "../components/Dashboard/SeatingGuestActions.tsx";
+import { controlStyles } from "../components/ui/control-styles.ts";
+import * as utils from "../lib/utils.ts";
 import { loadSource } from "./helpers/package-access.mjs";
 
 const layout = () => ({ height: 620, tables: { "table-a": { x: 420, y: 310 } }, paths: [[100, 200, 260, 210, 330, 330]] });
@@ -506,16 +509,19 @@ test("dropping an assigned guest outside the visible page cancels rather than se
 });
 
 const Print = PrintModule.default ?? PrintModule;
+const GuestActions = ActionsModule.default ?? ActionsModule;
 function chartFixture(overrides = {}, interactive = false) {
   const calls = [];
   let canvasProps;
   const cells = [];
   let index = 0;
+  let mounted = false, writes = 0;
+  const cleanups = [];
   const state = { ...editor.emptySeatingEditor(), plan: layout(), revision, savedKey: editor.seatingPlanKey(layout()), past: [plans.emptySeatingPlan()] };
   const plan = { editor: state, loading: false, saving: false, ready: true, error: "", dispatch: (action) => { calls.push(action); if (interactive) plan.editor = editor.seatingEditorReducer(plan.editor, action); }, save: async (value) => { calls.push(value); return true; }, reload: async () => {}, clear: async () => true, ...overrides };
   const hooks = interactive ? {
-    useEffect() {}, useMemo: (fn) => fn(),
-    useState(initial) { const key = index++; if (!(key in cells)) cells[key] = initial; return [cells[key], (value) => { cells[key] = typeof value === "function" ? value(cells[key]) : value; }]; },
+    useEffect(effect) { if (!mounted) { const cleanup = effect(); if (cleanup) cleanups.push(cleanup); } }, useMemo: (fn) => fn(),
+    useState(initial) { const key = index++; if (!(key in cells)) cells[key] = initial; return [cells[key], (value) => { writes++; cells[key] = typeof value === "function" ? value(cells[key]) : value; }]; },
     useRef(value) { const key = index++; if (!(key in cells)) cells[key] = { current: value }; return cells[key]; },
   } : { useEffect() {}, useState: (initial) => [initial, () => {}], useRef: (value) => ({ current: value }), useMemo: (fn) => fn() };
   const Chart = loadSource("components/Dashboard/SeatingChart.tsx", {
@@ -523,6 +529,7 @@ function chartFixture(overrides = {}, interactive = false) {
     react: hooks,
     "lucide-react": icons, "@/components/Theme/ThemeProvider": { useTheme: () => ({ isDarkMode: false }) },
     "@/components/ui/button": { Button }, "@/components/ui/input": { Input },
+    "@/components/ui/control-styles": { controlStyles }, "@/lib/utils": utils,
     "@/components/ui/dialog": dialogs,
     "@/components/Dashboard/useDashboardI18n": { useDashboardI18n: interactive ? () => ({ d: (text) => text, locale: "id" }) : useDashboardI18n }, "@/lib/text/display-title-case": titles,
     "@/components/Dashboard/DashboardPrimitives": primitives, "@/lib/guests/filters": filters,
@@ -531,8 +538,9 @@ function chartFixture(overrides = {}, interactive = false) {
     "./use-seating-plan": { useSeatingPlan: () => plan },
     "./SeatingPlanCanvas": { __esModule: true, default: (props) => { canvasProps = props; return React.createElement("div", { "aria-label": "Denah" }); } },
     "./SeatingPlanPrint": { __esModule: true, default: Print }, "./seating-plan-print-browser": { printSeatingPlan: async () => () => {} },
+    "./SeatingGuestActions": { __esModule: true, default: GuestActions },
   }).default;
-  return { Chart, calls, plan, canvas: () => canvasProps, render: (props) => { index = 0; return Chart(props); } };
+  return { Chart, calls, plan, canvas: () => canvasProps, unmount: () => cleanups.forEach((cleanup) => cleanup()), writes: () => writes, render: (props) => { index = 0; const tree = Chart(props); mounted = true; return tree; } };
 }
 
 test("localized chart keeps local editing/print available after a failed load while Save stays blocked", () => {
@@ -578,7 +586,7 @@ test("real chart table edits and canonical guest assignments work independently 
 const labelOf = (node) => typeof node === "string" || typeof node === "number" ? String(node) : React.Children.toArray(node?.props?.children).map(labelOf).join("");
 const chartCanvas = (tree) => elements(tree, (el) => Boolean(el.props?.onTableMove && el.props?.onDrawingChange))[0].props;
 
-test("setup and guest entry sit above the full-width canvas with short table/seat labels", () => {
+test("setup and guest entry sit above a shared canvas panel with the guest list inside it", () => {
   for (const locale of ["id", "en"]) {
     const f = chartFixture();
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(f.Chart, { invitationId: "event-a", tables: [table], guests: [], onAssigned: async () => {} })));
@@ -590,13 +598,19 @@ test("setup and guest entry sit above the full-width canvas with short table/sea
   const f = chartFixture({}, true), tree = f.render({ invitationId: "event-a", tables: [table], guests: [], onAssigned: async () => {} });
   const sections = React.Children.toArray(tree.props.children);
   assert.equal(sections.length, 2);
-  assert.ok(sections[0].props.className.includes("lg:grid-cols"));
-  assert.deepEqual(elements(sections[0], (el) => el.type === primitives.DashboardPanel).map((el) => el.props.title), ["Struktur meja", "Isi tamu", "Daftar tamu"]);
+  assert.ok(sections[0].props.className.includes("auto-fit"));
+  assert.deepEqual(elements(sections[0], (el) => el.type === primitives.DashboardPanel).map((el) => el.props.title), ["Struktur meja", "Isi tamu"]);
   const topPanels = React.Children.toArray(sections[0].props.children);
-  assert.equal(topPanels[1].props.title, "Daftar tamu");
-  assert.equal(elements(topPanels[1], (el) => el.type === "form").length, 0);
-  assert.equal(elements(topPanels[0], (el) => el.type === "form").length, 2);
+  assert.equal(elements(topPanels[0], (el) => el.type === "form").length, 1);
+  assert.equal(elements(topPanels[1], (el) => el.type === "form").length, 1);
   assert.equal(sections[1].props.title, "Denah tempat duduk");
+  const aside = elements(sections[1], (el) => el.type === "aside" && el.props["aria-label"] === "Daftar tamu")[0];
+  assert.ok(aside);
+  assert.equal(elements(aside, (el) => el.type === primitives.DashboardPanel).length, 0);
+  assert.ok(sections[1].props.className.includes("@container"));
+  const boardRow = elements(sections[1], (el) => el.props.className?.includes("@min-[52rem]:grid-cols-[minmax(0,1fr)_19rem]"))[0];
+  assert.ok(chartCanvas(React.Children.toArray(boardRow.props.children)[0]));
+  assert.equal(React.Children.toArray(boardRow.props.children)[1].props["aria-label"], "Daftar tamu");
   assert.equal(chartCanvas(tree).pageOffset, 0);
 });
 
@@ -644,6 +658,177 @@ const rosterProps = {
 };
 const rosterRows = (tree) => elements(tree, (el) => el.type === "li" && Boolean(el.props["data-guest-id"]));
 const rosterSelect = (tree, optionText) => elements(tree, (el) => el.type === "select" && labelOf(el).includes(optionText))[0];
+const guestActions = (tree, id) => elements(tree, (el) => el.type === GuestActions && el.props.guest.id === id)[0];
+const guestForm = (tree) => elements(tree, (el) => el.type === "form" && el.props["data-guest-action"])[0];
+
+test("six-dot guest menu keeps keyboard semantics, dispatches the exact guest and never starts row drag", () => {
+  const calls = [], guest = rosterProps.guests[2];
+  const Actions = loadSource("components/Dashboard/SeatingGuestActions.tsx", {
+    "react/jsx-runtime": jsxRuntime, "@base-ui/react/menu": { Menu: Object.fromEntries(["Root", "Trigger", "Portal", "Positioner", "Popup", "Item"].map((name) => [name, name])) },
+    "lucide-react": icons, "@/components/ui/button": { Button }, "@/components/ui/control-styles": { controlStyles }, "@/lib/utils": utils,
+    "./useDashboardI18n": { useDashboardI18n: () => ({ d: (text) => text }) }, "@/lib/text/display-title-case": titles,
+  }).default;
+  for (const disabled of [false, true]) {
+    const tree = Actions({ guest, disabled, onEdit: (value) => calls.push(["edit", value]), onDelete: (value) => calls.push(["delete", value]) });
+    const trigger = elements(tree, (el) => el.type === "Trigger")[0];
+    assert.equal(trigger.props.draggable, false); assert.equal(trigger.props.disabled, disabled);
+    assert.equal(trigger.props["aria-label"], "Aksi tamu: Hendra Wijaya");
+    assert.ok(trigger.props.render.props.className.includes("min-h-11"));
+    let stopped = 0;
+    trigger.props.onDragStart({ preventDefault() { stopped++; }, stopPropagation() { stopped++; } });
+    assert.equal(stopped, 2);
+    const items = elements(tree, (el) => el.type === "Item");
+    assert.deepEqual(items.map(labelOf), ["Edit", "Hapus"]);
+    items.forEach((item) => item.props.onClick());
+  }
+  assert.deepEqual(calls, [["edit", guest], ["delete", guest]]);
+  for (const locale of ["id", "en"]) {
+    const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(GuestActions, { guest, disabled: false, onEdit() {}, onDelete() {} })));
+    assert.ok(html.includes(`aria-label="${locale === "en" ? "Guest actions" : "Aksi tamu"}: Hendra Wijaya"`));
+    assert.match(html, /aria-haspopup="menu"/);
+  }
+  const f = chartFixture({}, true), tree = f.render(rosterProps);
+  assert.equal(elements(tree, (el) => el.type === GuestActions).length, rosterRows(tree).length);
+  let prevented = false;
+  rosterRows(tree)[0].props.onDragStart({ target: { closest: () => ({}) }, preventDefault() { prevented = true; }, dataTransfer: { setData() { assert.fail("menu drag must not transfer a guest"); } } });
+  assert.equal(prevented, true); assert.equal(chartCanvas(f.render(rosterProps)).draggedGuestId, null);
+  const row = rosterRows(tree)[0];
+  row.props.onPointerDownCapture({ target: { closest: () => ({}) } });
+  prevented = false;
+  row.props.onDragStart({ target: { closest: () => null }, preventDefault() { prevented = true; }, dataTransfer: { setData() { assert.fail("ancestor-retargeted menu drag must not transfer a guest"); } } });
+  assert.equal(prevented, true);
+  row.props.onPointerDownCapture({ target: { closest: () => null } });
+  const transferred = [];
+  row.props.onDragStart({ dataTransfer: { setData: (...args) => transferred.push(args) } });
+  assert.deepEqual(transferred, [["text/plain", row.props["data-guest-id"]]]);
+});
+
+test("edit saves name/category on the canonical assigned party and updates roster, canvas and print", async (t) => {
+  const guest = rosterProps.guests[2], requests = [];
+  let refreshed = 0;
+  const props = { ...chartProps, guests: [guest], onTablesChanged: async () => { refreshed++; } }, f = chartFixture({}, true);
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    const body = JSON.parse(options.body); requests.push({ url, options, body });
+    return Response.json({ ok: true, guest: { ...guest, name: body.name, category: body.category, invitationId: props.invitationId } });
+  });
+  let tree = f.render(props);
+  guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+  let form = guestForm(tree);
+  elements(form, (el) => el.type === Input)[0].props.onChange({ target: { value: "  hendra baru  " } });
+  elements(form, (el) => el.type === "select")[0].props.onChange({ target: { value: "VVIP" } });
+  tree = f.render(props); form = guestForm(tree);
+  await form.props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+  assert.equal(guestForm(tree), undefined);
+  assert.equal(requests[0].url, "/api/guests/manage"); assert.equal(requests[0].options.method, "PATCH");
+  assert.deepEqual(requests[0].body, { id: guest.id, invitationId: "event-a", name: "hendra baru", category: "VVIP" });
+  const updated = chartCanvas(tree).guests[0];
+  assert.deepEqual(updated, { ...guest, name: "hendra baru", category: "VVIP" });
+  assert.ok(labelOf(rosterRows(tree)[0]).includes("Hendra Baru")); assert.ok(labelOf(rosterRows(tree)[0]).includes("Kursi 8, 1, 2"));
+  assert.equal(elements(tree, (el) => el.type === "section" && el.props["aria-label"])[0].props["aria-label"], "VVIP");
+  const print = renderToStaticMarkup(React.createElement(Print, { title: "Acara", layout: layout(), tables: [table], guests: [updated], locale: "id" }));
+  for (const label of ["Hendra Baru 1", "Hendra Baru 2", "Hendra Baru 3"]) assert.ok(print.includes(label));
+  assert.equal(refreshed, 1); assert.deepEqual(f.plan.editor.plan, layout()); assert.equal(guest.name, "hendra wijaya");
+  const refreshedGuest = { ...guest, plusOnes: 1, invitedPax: 2, seatNumber: 5 };
+  assert.deepEqual(chartCanvas(f.render({ ...props, guests: [refreshedGuest] })).guests[0], { ...refreshedGuest, name: "hendra baru", category: "VVIP" });
+});
+
+test("name-only edits retain a legacy or missing category and local rename survives later assignment", async (t) => {
+  const bodies = [];
+  t.mock.method(globalThis, "fetch", async (_url, options) => {
+    const body = JSON.parse(options.body); bodies.push(body);
+    return Response.json({ ok: true, guest: { id: body.id, invitationId: body.invitationId, name: body.name } });
+  });
+  for (const guest of [rosterProps.guests[0], rosterProps.guests[4]]) {
+    const props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true);
+    let tree = f.render(props); guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    elements(guestForm(tree), (el) => el.type === Input)[0].props.onChange({ target: { value: "nama baru" } });
+    await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+    assert.equal(Object.hasOwn(bodies.at(-1), "category"), false);
+    assert.equal(chartCanvas(tree).guests[0].category, guest.category);
+    await chartCanvas(tree).onGuestDrop(guest.id, geometry.seatingSeatPoint(layout().tables[table.id], 5, table.capacity));
+    const assigned = chartCanvas(f.render(props)).guests[0];
+    assert.equal(assigned.name, "nama baru"); assert.equal(assigned.tableId, table.id); assert.equal(assigned.seatNumber, 6);
+  }
+});
+
+test("failed or mismatched edit responses retain draft fields and the original shared party", async (t) => {
+  const guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] };
+  for (const result of [Response.json({ error: "temporary failure" }, { status: 500 }), Response.json({ ok: true, guest: { ...guest, invitationId: "other-event", name: "wrong" } }), Response.json({ ok: true, guest: { ...guest, id: "other-guest", invitationId: "event-a" } }), Response.json({ ok: true, guest: { ...guest, invitationId: "event-a", category: [] } })]) {
+    t.mock.method(globalThis, "fetch", async () => result);
+    const f = chartFixture({}, true); let tree = f.render(props);
+    guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    elements(guestForm(tree), (el) => el.type === Input)[0].props.onChange({ target: { value: "retry name" } });
+    await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+    assert.equal(elements(guestForm(tree), (el) => el.type === Input)[0].props.value, "retry name");
+    assert.equal(elements(guestForm(tree), (el) => el.props.role === "alert").length, 1);
+    assert.deepEqual(chartCanvas(tree).guests, [guest]); assert.equal(chartCanvas(tree).busy, false);
+  }
+});
+
+test("delete needs named confirmation, preserves a protected guest on failure and frees the whole party after success", async (t) => {
+  const guest = rosterProps.guests[2], calls = [], props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true);
+  let failing = true;
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    calls.push({ url, options }); return failing ? Response.json({ error: "Tamu ini sudah mempunyai undangan personal atau catatan check-in. Data bersama tidak dapat dihapus dari daftar biasa." }, { status: 409 }) : Response.json({ ok: true });
+  });
+  let tree = f.render(props); guestActions(tree, guest.id).props.onDelete(guest); tree = f.render(props);
+  assert.ok(labelOf(guestForm(tree)).includes("Hendra Wijaya")); assert.equal(calls.length, 0);
+  chartButton(guestForm(tree), "Batal").props.onClick(); tree = f.render(props);
+  assert.equal(guestForm(tree), undefined); assert.equal(calls.length, 0);
+  guestActions(tree, guest.id).props.onDelete(guest);
+  await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+  assert.equal(rosterRows(tree).length, 1); assert.deepEqual(chartCanvas(tree).guests, [guest]);
+  assert.ok(labelOf(guestForm(tree)).includes("catatan check-in"));
+  failing = false; await guestForm(tree).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+  assert.equal(guestForm(tree), undefined); assert.equal(rosterRows(tree).length, 0); assert.deepEqual(chartCanvas(tree).guests, []);
+  assert.equal(calls[0].url, `/api/guests/manage?id=${guest.id}&invitationId=event-a`); assert.equal(calls[0].options.method, "DELETE");
+  assert.equal(elements(tree, (el) => el.type === primitives.DashboardCompactStat && el.props.label === "Terisi")[0].props.value, "0");
+  const printed = renderToStaticMarkup(React.createElement(Print, { title: "Acara", layout: layout(), tables: [table], guests: chartCanvas(tree).guests, locale: "id" }));
+  assert.ok(!printed.includes("Hendra Wijaya")); assert.deepEqual(f.plan.editor.plan, layout());
+});
+
+test("guest mutations block same-frame duplicate submits, lock canvas controls and ignore aborted late responses", async (t) => {
+  for (const mode of ["edit", "delete"]) {
+    const pending = deferred(), calls = [], guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true);
+    t.mock.method(globalThis, "fetch", (url, options) => { calls.push({ url, options }); return pending.promise; });
+    let tree = f.render(props); guestActions(tree, guest.id).props[mode === "edit" ? "onEdit" : "onDelete"](guest);
+    const form = guestForm(f.render(props)), saving = form.props.onSubmit({ preventDefault() {} });
+    await form.props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+    assert.equal(calls.length, 1); assert.equal(chartCanvas(tree).busy, true); assert.equal(guestActions(tree, guest.id).props.disabled, true);
+    assert.equal(chartButton(tree, "Tambah meja").props.disabled, true); assert.equal(chartButton(guestForm(tree), "Batal").props.disabled, true);
+    f.unmount(); const writes = f.writes(); assert.equal(calls[0].options.signal.aborted, true);
+    pending.resolve(Response.json({ ok: true, guest: { ...guest, invitationId: "event-a", name: "late name" } })); await saving;
+    assert.equal(f.writes(), writes); assert.deepEqual(chartCanvas(f.render(props)).guests, [guest]);
+  }
+});
+
+test("smaller shared table and seat shapes match canvas, print and usable seat drop targets", () => {
+  const guest = { id: "guest-a", name: "naya", tableId: table.id, seatNumber: 1 }, plan = layout();
+  const f = canvasFixture({ tool: "move" });
+  const center = elements(f.tree, (el) => el.type === "Group" && el.props.x === 420)[0];
+  assert.ok(elements(center, (el) => el.type === "Circle" && el.props.radius === geometry.SEATING_TABLE_BODY_RADIUS).length);
+  assert.ok(elements(center, (el) => el.type === "Circle" && el.props.radius === geometry.SEATING_SEAT_RADIUS).length);
+  const print = Print({ title: "Acara", layout: plan, tables: [table], guests: [guest], locale: "id" });
+  assert.equal(elements(print, (el) => el.type === "circle" && el.props.r === geometry.SEATING_TABLE_BODY_RADIUS).length, 1);
+  assert.equal(elements(print, (el) => el.type === "circle" && el.props.r === geometry.SEATING_SEAT_RADIUS).length, table.capacity);
+  assert.equal(elements(center, (el) => el.type === "Text" && el.props.text === "1")[0].props.fontSize, 10);
+  for (let i = 0; i < table.capacity; i++) {
+    const seat = geometry.seatingSeatPoint(plan.tables[table.id], i, table.capacity);
+    assert.ok(Math.abs(Math.hypot(seat.x - 420, seat.y - 310) - 64) < 0.001);
+    assert.equal(geometry.findSeatingSeatTarget(seat, [table], [guest], null, plan).seat, i + 1);
+  }
+  const seat = geometry.seatingSeatPoint(plan.tables[table.id], 0, table.capacity);
+  assert.equal(geometry.findSeatingSeatTarget({ ...seat, y: seat.y - 30 }, [table], [guest], null, plan).seat, 1);
+  for (const shape of ["SQUARE", "RECTANGLE"]) {
+    const shaped = { ...table, shape }, bounds = geometry.seatingTableBounds(shape);
+    const canvas = canvasFixture({ tables: [shaped] }).tree;
+    const rect = elements(canvas, (el) => el.type === "Rect" && el.props.width === bounds.width && el.props.height === bounds.height)[0];
+    assert.ok(rect);
+    const svg = Print({ title: "Acara", layout: plan, tables: [shaped], guests: [], locale: "id" });
+    assert.equal(elements(svg, (el) => el.type === "rect" && el.props.width === bounds.width && el.props.height === bounds.height).length, 1);
+  }
+  assert.deepEqual(plan.tables[table.id], { x: 420, y: 310 });
+});
 
 test("actual member roster groups eligible and assigned guests, preserves legacy categories and shows whole party seats", () => {
   const original = structuredClone(rosterProps.guests), f = chartFixture({}, true);
@@ -939,8 +1124,8 @@ test("long plans print as overlapping readable pages and preserve all three tabl
   for (let i = 1; i < offsets.length; i++) assert.ok(offsets[i] - offsets[i - 1] <= 400);
   const html = printHtml({ layout: { ...layout(), height }, tables: [table, { ...table, id: "b", shape: "SQUARE" }, { ...table, id: "c", shape: "RECTANGLE" }] });
   assert.equal((html.match(/class="seating-print-map"/g) || []).length, offsets.length);
-  assert.match(html, /width="72" height="72"/);
-  assert.match(html, /width="96" height="60"/);
+  assert.match(html, /width="64" height="64"/);
+  assert.match(html, /width="84" height="52"/);
   assert.match(html, /Halaman 1\//);
 });
 

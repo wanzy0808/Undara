@@ -6,6 +6,7 @@ import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { findGuestsByContact } from "@/lib/guests/identity";
 import { parsePersonalGuestFields } from "@/lib/guests/personal-profile";
+import { buildPersonalGuestAddressee, getPersonalGuestSalutation } from "@/lib/guests/personal-envelope";
 
 // Resolve the event FROM the guest being edited, never from the account's first
 // event. Personal Invitation, RSVP, WA Blast and seating share this Guest.id.
@@ -28,6 +29,9 @@ export async function PATCH(request: Request) {
     if (!id) return NextResponse.json({ error: "ID tamu wajib diisi." }, { status: 400 });
     const guest = await ownedGuest(user.id, id);
     if (!guest) return NextResponse.json({ error: "Tamu tidak ditemukan pada akun ini." }, { status: 404 });
+    if (body.invitationId !== undefined && body.invitationId !== guest.invitationId) {
+      return NextResponse.json({ error: "Tamu tidak ditemukan pada acara ini." }, { status: 404 });
+    }
     if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment))) {
       return NextResponse.json({ error: "Pengelolaan tamu membutuhkan paket Digital Invitation." }, { status: 402 });
     }
@@ -48,6 +52,10 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Nama tamu wajib diisi (maksimal 120 karakter)." }, { status: 400 });
       }
       data.name = name;
+      const salutation = getPersonalGuestSalutation({ name: guest.name, personalAddressee: guest.personalAddressee });
+      if (salutation && profile.personalAddressee === undefined) {
+        data.personalAddressee = buildPersonalGuestAddressee(name, salutation);
+      }
     }
     if (body.phone !== undefined) {
       const phone = String(body.phone).trim();
@@ -120,7 +128,7 @@ export async function PATCH(request: Request) {
     const updated = await prisma.guest.update({
       where: { id: guest.id },
       data,
-      select: { id: true, invitationId: true, name: true, phone: true, category: true, tags: true, invitedPax: true, rsvpStatus: true, plusOnes: true, tableId: true },
+      select: { id: true, invitationId: true, name: true, phone: true, category: true, tags: true, invitedPax: true, rsvpStatus: true, plusOnes: true, tableId: true, seatNumber: true, source: true, personalAddressee: true },
     });
     return NextResponse.json({ ok: true, guest: updated });
   } catch (error) {
@@ -136,10 +144,14 @@ export async function DELETE(request: Request) {
     if (!isTrustedMutationOrigin(request)) {
       return NextResponse.json({ error: "Origin permintaan tidak valid." }, { status: 403 });
     }
-    const id = String(new URL(request.url).searchParams.get("id") ?? "").trim();
+    const query = new URL(request.url).searchParams;
+    const id = String(query.get("id") ?? "").trim();
     if (!id) return NextResponse.json({ error: "ID tamu wajib diisi." }, { status: 400 });
     const guest = await ownedGuest(user.id, id);
     if (!guest) return NextResponse.json({ error: "Tamu tidak ditemukan pada akun ini." }, { status: 404 });
+    if (query.has("invitationId") && query.get("invitationId") !== guest.invitationId) {
+      return NextResponse.json({ error: "Tamu tidak ditemukan pada acara ini." }, { status: 404 });
+    }
     if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment))) {
       return NextResponse.json({ error: "Pengelolaan tamu membutuhkan paket Digital Invitation." }, { status: 402 });
     }
@@ -148,7 +160,12 @@ export async function DELETE(request: Request) {
         error: "Tamu ini sudah mempunyai undangan personal atau catatan check-in. Data bersama tidak dapat dihapus dari daftar biasa.",
       }, { status: 409 });
     }
-    await prisma.guest.delete({ where: { id: guest.id } });
+    const removed = await prisma.guest.deleteMany({
+      where: { id: guest.id, invitationId: guest.invitationId, invitation: { ownerId: user.id }, personalToken: null, checkedIn: false },
+    });
+    if (removed.count !== 1) {
+      return NextResponse.json({ error: "Data tamu berubah. Muat ulang dan coba lagi." }, { status: 409 });
+    }
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/guests/manage failed", error);
