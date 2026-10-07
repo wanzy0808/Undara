@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getPackageEntitlements, hasPaidDigitalInvitation } from "@/lib/packages/access";
-import { getOwnerPackageGrant } from "@/lib/packages/owner-grants";
+import { getOwnerGrantedDigitalInvitationIds, getOwnerPackageGrant } from "@/lib/packages/owner-grants";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -43,12 +43,7 @@ export async function GET() {
     ]);
 
   const paidEntitlements = getPackageEntitlements(latestPayment);
-  const ownerGrantedInvitationIds = new Set(
-    invitations
-      .filter((item) => !hasPaidDigitalInvitation(item.payment))
-      .slice(0, ownerGrant.digitalCredits)
-      .map((item) => item.id),
-  );
+  const ownerGrantedInvitationIds = await getOwnerGrantedDigitalInvitationIds(user.id);
   const hasDigitalInvitation = ownerGrant.digitalCredits > 0 || paidEntitlements.hasDigitalInvitation;
   const hasGuestbook = ownerGrant.guestbook || paidEntitlements.hasGuestbook;
   const entitlements = {
