@@ -57,3 +57,19 @@ export const dashboardTabMeta: Record<
   placement: { eyebrow: "Tamu", title: "Pengaturan Meja" },
   usher: { eyebrow: "Hari-H", title: "Usher App" },
 };
+
+
+export function dashboardTabFromSearch(search: string): DashboardTab {
+  const requested = new URLSearchParams(search).get("tab");
+  return requested && Object.prototype.hasOwnProperty.call(dashboardTabMeta, requested)
+    ? requested as DashboardTab
+    : "overview";
+}
+
+export function dashboardHrefForTab(tab: DashboardTab, currentSearch = "") {
+  const params = new URLSearchParams(currentSearch);
+  if (tab === "overview") params.delete("tab");
+  else params.set("tab", tab);
+  const query = params.toString();
+  return `/dashboard${query ? `?${query}` : ""}`;
+}
