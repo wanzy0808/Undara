@@ -18,7 +18,7 @@ export function loadSource(path, modules, { env = {}, errors = [] } = {}) {
 
 // Keep the production payment/grant parsers and server entitlement helper;
 // replace only the database boundary with the user's latest audit metadata.
-export function loadPackageAccess({ grants = {}, grantError } = {}) {
+export function loadPackageAccess({ grants = {}, grantError, invitations = {} } = {}) {
   const queries = [];
   const prisma = {
     auditLog: { findFirst: async (query) => {
@@ -26,6 +26,10 @@ export function loadPackageAccess({ grants = {}, grantError } = {}) {
       if (grantError) throw grantError;
       const metadata = grants[query.where.entityId];
       return metadata === undefined ? null : { metadata };
+    } },
+    invitation: { findMany: async (query) => {
+      const ownerId = query.where.ownerId;
+      return invitations[ownerId] ?? [{ id: "invitation-a", payment: null }];
     } },
     payment: { findFirst: async () => {
       throw new Error("Digital Invitation must not inherit another event's payment");
