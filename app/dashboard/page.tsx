@@ -408,9 +408,9 @@ export default function DashboardPage() {
 
                   <div className="min-w-0">
                     <div className="flex min-w-0 items-center gap-2">
-                      <p className="undara-dashboard-header-title truncate text-base font-semibold text-foreground sm:text-lg">
+                      <h1 className="undara-dashboard-header-title truncate text-base font-semibold text-foreground sm:text-lg">
                         {d(meta.title)}
-                      </p>
+                      </h1>
                       {scopedHeaderEvent && (
                         <span className="hidden max-w-56 truncate border-l border-border pl-2 text-[13px] text-muted-foreground xl:inline">
                           {scopedHeaderEvent.title}

@@ -223,8 +223,8 @@ export function DashboardEmptyState({
   );
 }
 
-/** The Beranda introduction, shared by every operational workspace. */
-export function DashboardPageHeader({ eyebrow, title, description, actions, children }: {
+/** Secondary controls below the single canonical Dashboard title in the sticky header. */
+export function DashboardPageHeader({ eyebrow, description, actions, children }: {
   eyebrow?: string;
   title: ReactNode;
   description?: string;
@@ -235,9 +235,8 @@ export function DashboardPageHeader({ eyebrow, title, description, actions, chil
     <div className="mb-6 flex flex-col gap-4 border-b border-primary/20 pb-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         {eyebrow && <p className="font-[family-name:var(--font-undara-mono)] text-xs uppercase tracking-[0.1em] text-primary">{eyebrow}</p>}
-        <h1 className="break-words font-[family-name:var(--font-undara-heading)] text-2xl font-semibold leading-tight text-primary sm:text-3xl">{title}</h1>
-        {description && <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>}
-        {children && <div className="mt-3">{children}</div>}
+        {description && <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>}
+        {children && <div>{children}</div>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </div>

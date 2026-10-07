@@ -394,7 +394,7 @@ Scope khusus `eventCategory = WEDDING`; jangan mengubah form acara umum atau men
 
 ### 6.0 Mainframe dashboard (pembaruan 23 September 2026)
 
-Customer `/dashboard` menggunakan **satu mainframe responsif dengan outline brand** yang membingkai sidebar, header, dan konten operasional seperti komposisi landing, tanpa menyalin Pintu, atmosphere woodland, pemutar musik, atau animasi marketing. Sidebar dan konten Light putih, Dark hitam; Primary brand token digunakan pada teks/ikon aksen, outline, hover, dan menu aktif sesuai semantic token dashboard. Brand `BrandWordmark` tampil sekali di sidebar; header menampilkan judul halaman, kontrol tema/bahasa, dan menu pengguna. Frame memiliki tinggi terbatas mengikuti viewport; hanya area konten `dc-dashboard-scroll` yang dapat menggulir, sedangkan sidebar, header, dan drawer mobile tetap berada di dalam frame. Ketentuan ini menggantikan deskripsi header/body yang menggulir bebas atau membentang di luar frame.
+Customer `/dashboard` menggunakan **satu mainframe responsif dengan outline brand** yang membingkai sidebar, header, dan konten operasional seperti komposisi landing, tanpa menyalin Pintu, atmosphere woodland, pemutar musik, atau animasi marketing. Sidebar dan konten Light putih, Dark hitam; Primary brand token digunakan pada teks/ikon aksen, outline, hover, dan menu aktif sesuai semantic token dashboard. Brand `BrandWordmark` tampil sekali di sidebar; **header sticky adalah satu-satunya judul halaman visual untuk seluruh tab Dashboard** (mengikuti Undangan Personal), lalu kontrol/aksi/filter workspace berada di konten tanpa mengulang judul yang sama. Header juga memuat kontrol tema/bahasa dan menu pengguna. Frame memiliki tinggi terbatas mengikuti viewport; hanya area konten `dc-dashboard-scroll` yang dapat menggulir, sedangkan sidebar, header, dan drawer mobile tetap berada di dalam frame. Ketentuan ini menggantikan deskripsi header/body yang menggulir bebas atau membentang di luar frame.
 
 **Hierarki final:** hanya panel section besar dan peer-level Beranda yang memiliki frame/garis aksen brand `0,3 cm` di sisi kiri, tiga sudut siku dan hanya sudut kanan atas membulat. Satu `DashboardPanel` memuat judul, aksi, dan isinya; `DashboardMetricGrid` mengelompokkan angka dalam satu frame besar. Baris detail acara, undangan, tamu, RSVP, WA Blast, dan statistik di dalamnya **tidak** diberi frame mini/garis tebal terpisah; gunakan pemisah tipis dan penanda hover/selected hanya bila ada interaksi. Form akun yang berdiri sendiri boleh memakai satu panel besar; input, tombol, badge, modal, denah interaktif, dan mainframe luar memiliki geometri masing-masing. Data nyata dan navigasi mobile harus tetap berfungsi.
 
@@ -3274,3 +3274,12 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Affected files / commit:** `components/Dashboard/{PersonalInvitationPanels,useDashboardI18n}.tsx`, `tests/personal-invitation-workflow.test.mjs`, and `prd.md`; commit `refactor(personal): compact auto-growing guest name input`.
 
 **Validation status:** Source regression and production build are verified in GitHub CI after publication; signed-in browser behavior remains a visual QA item.
+
+
+### 2026-10-07 — Single Dashboard page title
+
+**Owner request / implementation:** Seluruh tab Customer Dashboard mengikuti pola Undangan Personal: judul halaman visual hanya muncul sekali di sticky Dashboard header. `DashboardPageHeader` tetap mempertahankan posisi aksi, filter acara, description dan divider yang sudah ada tetapi tidak lagi merender judul kedua; Profil Saya juga menghapus judul lokal duplikat sambil mempertahankan tombol Profil/Keamanan. Sticky header menjadi heading kanonik tanpa mengubah sidebar, panel, metrics, action, form, data flow, entitlement atau halaman non-Dashboard.
+
+**Affected files / commit:** `app/dashboard/page.tsx`, `components/Dashboard/{DashboardPrimitives,DashboardAccountPanel}.tsx`, regression test, dan `prd.md`; commit `fix(dashboard): keep one page title per workspace`.
+
+**Validation status:** Source regression dan production build diverifikasi melalui GitHub CI setelah publikasi; visual signed-in browser tetap QA tampilan.
