@@ -23,6 +23,7 @@ import FeatureGate from "@/components/Dashboard/FeatureGate";
 import InvitationWorkspacePanel from "@/components/Dashboard/InvitationWorkspacePanel";
 import EventPanelEditor from "@/components/Dashboard/EventPanel";
 import { isSelectableTemplate, readTemplateSelection, rememberTemplateSelection } from "@/lib/templates/template-intent";
+import { displayTitleCase } from "@/lib/text/display-title-case";
 import WhatsAppBlastPanel from "@/components/Dashboard/WhatsAppBlastPanel";
 import PersonalInvitationPanel from "@/components/Dashboard/PersonalInvitationPanel";
 import { Button } from "@/components/ui/button";
@@ -354,8 +355,7 @@ export default function DashboardPage() {
   }
 
   const meta = dashboardTabMeta[tab];
-  const scopedHeaderEvent =
-    tab === "rsvp" ? rsvpEvent : tab === "placement" ? placementEvent : null;
+  const scopedHeaderEvent = tab === "rsvp" ? rsvpEvent : null;
 
   return (
     <div
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                       </h1>
                       {scopedHeaderEvent && (
                         <span className="hidden max-w-56 truncate border-l border-border pl-2 text-[13px] text-muted-foreground xl:inline">
-                          {scopedHeaderEvent.title}
+                          {displayTitleCase(scopedHeaderEvent.title)}
                         </span>
                       )}
                     </div>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
+import { displayTitleCase } from "@/lib/text/display-title-case";
 import InvitationQrPreview from "@/components/Dashboard/InvitationQrPreview";
 import {
   DashboardEmptyState,
@@ -186,7 +187,7 @@ export default function InvitationWorkspacePanel({ onCreateSequence }: Props) {
         ) : (
           <div className="grid gap-3">
             {invitations.map((invitation) => {
-              const title = invitation.title.trim() || d("Acara tanpa judul");
+              const title = displayTitleCase(invitation.title.trim() || d("Acara tanpa judul"));
               const hasDesign = Boolean(invitation.templateKey?.trim());
               const studioHref = `/dashboard/editor?type=${invitation.type}&invitationId=${encodeURIComponent(invitation.id)}`;
               const purchaseHref = `/packages?package=INVITATION_BASIC&invitationId=${encodeURIComponent(invitation.id)}`;
@@ -280,7 +281,7 @@ export default function InvitationWorkspacePanel({ onCreateSequence }: Props) {
                   {guest.name}
                 </span>
                 <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                  {guest.invitation?.title || d("Acara tanpa judul")}
+                  {displayTitleCase(guest.invitation?.title || d("Acara tanpa judul"))}
                 </span>
               </div>
               <span className="shrink-0 font-[family-name:var(--font-undara-mono)] text-[11px] uppercase tracking-[0.08em] text-muted-foreground">

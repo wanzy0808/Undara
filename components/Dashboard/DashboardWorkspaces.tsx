@@ -38,6 +38,7 @@ import type {
 import ReferralCodePanel from "@/components/Dashboard/ReferralCodePanel";
 import InvitationQrMenu from "@/components/Dashboard/InvitationQrMenu";
 import { parseInvitationRsvpConfig } from "@/lib/templates/rsvp-config";
+import { displayTitleCase } from "@/lib/text/display-title-case";
 
 function formatEventDate(value: string, locale: "id" | "en" = "id") {
   const date = new Date(value);
@@ -127,7 +128,7 @@ export function WorkspaceOverview({
                 <article key={event.id} className="flex min-w-0 flex-col gap-3 px-2 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <p className="dc-ui-name break-words text-base font-semibold leading-snug text-foreground">
-                      {event.title || d("Acara tanpa judul")}
+                      {displayTitleCase(event.title || d("Acara tanpa judul"))}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {formatEventDate(event.eventDate, locale)}

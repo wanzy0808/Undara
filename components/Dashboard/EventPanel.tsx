@@ -241,7 +241,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
       return;
     }
 
-    const label = invitation.title?.trim() || d("Acara baru");
+    const label = displayTitleCase(invitation.title?.trim() || d("Acara baru"));
     const confirmed = window.confirm(
       locale === "en"
         ? `Delete “${label}”?\n\nThe event, invitation design, guest list, and related unpublished data will also be deleted.`
@@ -324,7 +324,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                   <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <h3 className="break-words text-base font-semibold text-foreground">
-                        {draft ? d("Acara baru") : event.title || d("Acara tanpa judul")}
+                        {displayTitleCase(draft ? d("Acara baru") : event.title || d("Acara tanpa judul"))}
                       </h3>
                       <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                         <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 shrink-0 text-primary" aria-hidden="true" />{event.eventDate ? isoDateToDisplay(event.eventDate) : "—"}</span>
