@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
+import { ArrowLeftRight, GripVertical, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import type { PersonalSalutation } from "@/lib/guests/personal-envelope";
 import { MAX_GUEST_PARTY_SIZE, minimumInvitedPaxForSalutation } from "@/lib/guests/manual-party";
-import { seatingOccupiedSeatCount } from "@/lib/seating/guest-seats";
+import { seatingGuestSeats, seatingOccupiedSeatCount, seatingPartySize } from "@/lib/seating/guest-seats";
 import {
   DashboardCompactStat,
   DashboardEmptyState,
@@ -110,23 +110,30 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
     );
   }, [guests, localGuests, guestOverrides]);
 
-  const unassigned = visibleGuests.filter(
-    (guest) =>
-      !guest.tableId &&
-      (guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING"),
+  const rosterGuests = visibleGuests.filter(
+    (guest) => guest.tableId || guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING",
   );
+  const unassigned = rosterGuests.filter((guest) => !guest.tableId);
   const draggedGuest = draggedGuestId
     ? (visibleGuests.find((guest) => guest.id === draggedGuestId) ?? null)
     : null;
   const categories = Array.from(
-    new Set(visibleGuests.flatMap((guest) => guest.category ? [guest.category] : [])),
+    new Set(rosterGuests.map((guest) => guest.category || "REGULAR")),
   ).sort((a, b) => a.localeCompare(b, "id"));
   const tags = Array.from(
-    new Set(visibleGuests.flatMap((guest) => guest.tags ?? [])),
+    new Set(rosterGuests.flatMap((guest) => guest.tags ?? [])),
   ).sort((a, b) => a.localeCompare(b, "id"));
-  const filteredUnassigned = unassigned.filter((guest) =>
-    matchesGuestLabels(guest, categoryFilter, tagFilter),
+  const filteredRoster = rosterGuests.filter((guest) =>
+    matchesGuestLabels({ ...guest, category: guest.category || "REGULAR" }, categoryFilter, tagFilter),
   );
+  const primaryCategories = ["REGULAR", "VIP", "VVIP"];
+  const rosterGroups = [...primaryCategories, ...categories.filter((category) => !primaryCategories.includes(category))]
+    .map((category) => ({
+      category,
+      guests: filteredRoster.filter((guest) => (guest.category || "REGULAR") === category)
+        .sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: "base", numeric: true })),
+    }))
+    .filter((group) => group.guests.length > 0);
   const hasRosterFilter = Boolean(categoryFilter || tagFilter);
   const totalSeats = visibleTables.reduce((sum, table) => sum + table.capacity, 0);
   const assignedCount = visibleTables.reduce(
@@ -380,71 +387,63 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
   return (
     <div className="mt-5 min-w-0 space-y-4">
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(240px,0.7fr)_minmax(0,1.3fr)]">
-        <DashboardPanel
-            title={d("Struktur meja")}
-            actions={
-              <DashboardStatusBadge active={visibleTables.length > 0}>
-                {visibleTables.length} {locale === "en" ? "tables" : "meja"}
-              </DashboardStatusBadge>
-            }
-        >
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_19rem]">
+        <div className="grid min-w-0 items-start gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))]">
+          <DashboardPanel
+              title={d("Struktur meja")}
+              actions={
+                <DashboardStatusBadge active={visibleTables.length > 0}>
+                  {visibleTables.length} {locale === "en" ? "tables" : "meja"}
+                </DashboardStatusBadge>
+              }
+          >
 
-          <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-end gap-3">
-            <label className="inline-flex items-center gap-2 text-sm font-medium">
-              <span>{d("Meja")}:</span>
-              <Input
-                type="number"
-                min={1}
-                max={Math.max(1, 100 - visibleTables.length)}
-                disabled={toolbarBusy || visibleTables.length >= 100}
-                value={tableCount}
-                className="min-h-11 w-16 px-2"
-                onChange={(event) => setTableCount(Number(event.target.value))}
-              />
-            </label>
-            <div className="flex min-w-0 max-w-full items-end gap-2">
-              <label className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium">
-                <span>{d("Kursi")}:</span>
+            <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-end gap-3">
+              <label className="inline-flex items-center gap-2 text-sm font-medium">
+                <span>{d("Meja")}:</span>
                 <Input
                   type="number"
                   min={1}
-                  max={50}
+                  max={Math.max(1, 100 - visibleTables.length)}
                   disabled={toolbarBusy || visibleTables.length >= 100}
-                  value={seatsPerTable}
-                  className="min-h-11 w-16 max-w-full px-2"
-                  onChange={(event) => setSeatsPerTable(Number(event.target.value))}
+                  value={tableCount}
+                  className="min-h-11 w-16 px-2"
+                  onChange={(event) => setTableCount(Number(event.target.value))}
                 />
               </label>
-              <Button
-                type="submit"
-                size="sm"
-                className="h-auto min-h-11 max-w-full shrink px-3 py-2 whitespace-normal"
-                disabled={toolbarBusy || visibleTables.length >= 100}
-                title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
-              >
-                <span className="min-w-0 break-words">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
-              </Button>
+              <div className="flex min-w-0 max-w-full items-end gap-2">
+                <label className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium">
+                  <span>{d("Kursi")}:</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={50}
+                    disabled={toolbarBusy || visibleTables.length >= 100}
+                    value={seatsPerTable}
+                    className="min-h-11 w-16 max-w-full px-2"
+                    onChange={(event) => setSeatsPerTable(Number(event.target.value))}
+                  />
+                </label>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="h-auto min-h-11 max-w-full shrink px-3 py-2 whitespace-normal"
+                  disabled={toolbarBusy || visibleTables.length >= 100}
+                  title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
+                >
+                  <span className="min-w-0 break-words">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
+                </Button>
+              </div>
+            </form>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <DashboardCompactStat label={d("Kursi")} value={String(totalSeats)} />
+              <DashboardCompactStat label={d("Terisi")} value={String(assignedCount)} />
             </div>
-          </form>
+          </DashboardPanel>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <DashboardCompactStat label={d("Kursi")} value={String(totalSeats)} />
-            <DashboardCompactStat label={d("Terisi")} value={String(assignedCount)} />
-          </div>
-        </DashboardPanel>
-
-        <DashboardPanel
-            title={d("Isi tamu")}
-            actions={
-              <DashboardStatusBadge active={unassigned.length > 0}>
-                {unassigned.length} {locale === "en" ? "guests" : "tamu"}
-              </DashboardStatusBadge>
-            }
-        >
-
-          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] items-start gap-4">
-            <form onSubmit={addManualGuest} className="flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
+          <DashboardPanel title={d("Isi tamu")}>
+            <form onSubmit={addManualGuest} className="mt-4 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
               <label className="block w-40 max-w-full text-xs text-muted-foreground">
                 {d("Sapaan")}
                 <select value={manualSalutation} disabled={manualSaving}
@@ -487,95 +486,128 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 <span className="min-w-0 break-words">{manualSaving ? d("Menambahkan tamu...") : d("Tambah ke Daftar Tamu")}</span>
               </Button>
             </form>
+          </DashboardPanel>
+        </div>
 
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-end gap-2">
-                <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
-                  {d("Kategori tamu")}
-                  <select
-                    value={categoryFilter}
-                    onChange={(event) => setCategoryFilter(event.target.value)}
-                    className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-                  >
-                    <option value="">{displayTitleCase(d("Semua kategori"))}</option>
+        <DashboardPanel className="min-w-0"
+            title={d("Daftar tamu")}
+            actions={
+              <DashboardStatusBadge active={rosterGuests.length > 0}>
+                {rosterGuests.length} {locale === "en" ? "guests" : "tamu"}
+              </DashboardStatusBadge>
+            }
+        >
+          <div className="mt-3 flex min-w-0 flex-wrap items-end gap-2">
+            <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
+              {d("Kategori tamu")}
+              <select
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+                className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+              >
+                <option value="">{displayTitleCase(d("Semua kategori"))}</option>
                     {categoryFilter && !categories.includes(categoryFilter) && (
-                      <option value={categoryFilter}>{displayTitleCase(categoryFilter)}</option>
-                    )}
-                    {categories.map((category) => (
-                      <option key={category} value={category}>{displayTitleCase(category)}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
-                  {d("Tag tamu")}
-                  <select
-                    value={tagFilter}
-                    onChange={(event) => setTagFilter(event.target.value)}
-                    className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
-                  >
-                    <option value="">{displayTitleCase(d("Semua tag"))}</option>
-                    {tagFilter && !tags.includes(tagFilter) && (
-                      <option value={tagFilter}>{displayTitleCase(tagFilter)}</option>
-                    )}
-                    {tags.map((tag) => (
-                      <option key={tag} value={tag}>{displayTitleCase(tag)}</option>
-                    ))}
-                  </select>
-                </label>
-                <p role="status" className="w-full text-xs text-muted-foreground">
-                  {locale === "en"
-                    ? `Showing ${filteredUnassigned.length} of ${unassigned.length} unassigned guests.`
-                    : `Menampilkan ${filteredUnassigned.length} dari ${unassigned.length} tamu belum ditempatkan.`}
-                </p>
-                {hasRosterFilter && (
-                  <Button
-                    type="button"
-                    size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
-                    onClick={() => { setCategoryFilter(""); setTagFilter(""); }}
-                  >
-                    {d("Reset filter")}
-                  </Button>
+                      <option value={categoryFilter}>{categoryFilter === "REGULAR" ? d("Reguler") : displayTitleCase(categoryFilter)}</option>
                 )}
-              </div>
-
-              <div className="mt-3 max-h-40 space-y-2 overflow-y-auto pr-1">
-                {filteredUnassigned.length === 0 && (
-                  <DashboardEmptyState className="min-h-0! px-3! py-3!"
-                    title={hasRosterFilter ? d("Tidak ada hasil") : d("Semua tamu sudah ditempatkan")}
-                    description={
-                      hasRosterFilter
-                        ? d("Tidak ada tamu belum ditempatkan yang cocok dengan filter aktif.")
-                        : d("Tamu yang belum memiliki meja akan muncul di sini.")
-                    }
-                  />
-                )}
-                {filteredUnassigned.map((guest) => (
-                  <div
-                    key={guest.id}
-                    draggable={!toolbarBusy && tool === "move"}
-                    onDragStart={(event) => {
-                      event.dataTransfer.setData("text/plain", guest.id);
-                      event.dataTransfer.effectAllowed = "move";
-                      setDraggedGuestId(guest.id);
-                      setSwapCandidate(null);
-                    }}
-                    onDragEnd={(event) => { if (event.dataTransfer.dropEffect === "none") { setDraggedGuestId(null); setHoverTarget(null); } }}
-                    className="undara-dashboard-detail-card cursor-grab rounded-tr-[22px] border border-primary/20 bg-primary/[0.035] px-4 py-3 text-sm transition hover:border-primary/40 hover:bg-primary/[0.08] active:cursor-grabbing"
-                  >
-                    <div className="break-words font-medium text-foreground">{displayTitleCase(guest.name)}</div>
-                    {(guest.category || Boolean(guest.tags?.length)) && (
-                      <p className="mt-1 break-words text-xs text-muted-foreground">
-                        {[guest.category, ...(guest.tags ?? [])].filter(Boolean).join(" · ")}
-                      </p>
-                    )}
-                    <div className="mt-1 font-[family-name:var(--font-undara-mono)] text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-                      {guest.invitedPax ? `${guest.invitedPax} ${d("orang diundang")} · ` : ""}
-                      {guest.source === "RSVP" ? `RSVP · ${d("Hadir")}` : d("Manual")}
-                    </div>
-                  </div>
+                {categories.map((category) => (
+                  <option key={category} value={category}>{category === "REGULAR" ? d("Reguler") : displayTitleCase(category)}</option>
                 ))}
-              </div>
-            </div>
+              </select>
+            </label>
+            <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
+              {d("Tag tamu")}
+              <select
+                value={tagFilter}
+                onChange={(event) => setTagFilter(event.target.value)}
+                className="mt-1 min-h-11 w-auto max-w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+              >
+                <option value="">{displayTitleCase(d("Semua tag"))}</option>
+                {tagFilter && !tags.includes(tagFilter) && (
+                  <option value={tagFilter}>{displayTitleCase(tagFilter)}</option>
+                )}
+                {tags.map((tag) => (
+                  <option key={tag} value={tag}>{displayTitleCase(tag)}</option>
+                ))}
+              </select>
+            </label>
+            <p role="status" className="w-full text-xs text-muted-foreground">
+              {locale === "en"
+                ? `Showing ${filteredRoster.length} of ${rosterGuests.length} guests · ${unassigned.length} unassigned.`
+                : `Menampilkan ${filteredRoster.length} dari ${rosterGuests.length} tamu · ${unassigned.length} belum ditempatkan.`}
+            </p>
+            {hasRosterFilter && (
+              <Button
+                type="button"
+                size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
+                onClick={() => { setCategoryFilter(""); setTagFilter(""); }}
+              >
+                {d("Reset filter")}
+              </Button>
+            )}
+          </div>
+
+          <div className="mt-3 max-h-72 space-y-4 overflow-y-auto pr-1">
+            {filteredRoster.length === 0 && (
+              <DashboardEmptyState className="min-h-0! px-3! py-3!"
+                title={hasRosterFilter ? d("Tidak ada hasil") : d("Belum ada tamu")}
+                description={
+                  hasRosterFilter
+                    ? d("Tidak ada tamu yang cocok dengan filter aktif.")
+                    : d("Tambahkan tamu atau tunggu konfirmasi RSVP Hadir.")
+                }
+              />
+            )}
+            {rosterGroups.map((group) => (
+              <section key={group.category} aria-label={group.category === "REGULAR" ? d("Reguler") : displayTitleCase(group.category)}>
+                <h3 className="mb-1 flex items-center justify-between gap-2 text-sm font-semibold text-primary">
+                  <span>{group.category === "REGULAR" ? d("Reguler") : displayTitleCase(group.category)}</span>
+                  <span className="font-[family-name:var(--font-undara-mono)] text-xs tabular-nums text-muted-foreground">{group.guests.length}</span>
+                </h3>
+                <ul className="divide-y divide-border/60">
+                  {group.guests.map((guest) => {
+                    const name = displayTitleCase(guest.name);
+                    const words = name.trim().split(/\s+/u);
+                    const initials = [Array.from(words[0])[0], words.length > 1 ? Array.from(words[words.length - 1])[0] : ""].join("");
+                    const assignedTable = visibleTables.find((table) => table.id === guest.tableId);
+                    const seats = assignedTable ? seatingGuestSeats(guest, assignedTable.capacity) : [];
+                    const pax = seatingPartySize(guest);
+                    const canDrag = !guest.tableId && !toolbarBusy && tool === "move";
+                    return (
+                      <li key={guest.id} data-guest-id={guest.id}
+                        draggable={canDrag}
+                        onDragStart={(event) => {
+                          if (!canDrag) { event.preventDefault(); return; }
+                          event.dataTransfer.setData("text/plain", guest.id);
+                          event.dataTransfer.effectAllowed = "move";
+                          setDraggedGuestId(guest.id);
+                          setSwapCandidate(null);
+                        }}
+                        onDragEnd={(event) => { if (event.dataTransfer.dropEffect === "none") { setDraggedGuestId(null); setHoverTarget(null); } }}
+                        className={`flex min-w-0 items-start gap-2.5 rounded-md px-1 py-2.5 text-sm ${canDrag ? "cursor-grab hover:bg-primary/[0.06] active:cursor-grabbing" : ""}`}
+                      >
+                        <span aria-hidden="true" className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="break-words font-medium leading-5 text-foreground">{name}</div>
+                          <p className="mt-0.5 break-words text-xs leading-5 text-muted-foreground">
+                            {pax} {locale === "en" ? (pax === 1 ? "person" : "people") : "orang"} · {guest.source === "MANUAL" ? d("Manual") : "RSVP"}
+                            {guest.source === "RSVP" && guest.rsvpStatus === "ATTENDING" ? ` · ${d("Hadir")}` : ""}
+                          </p>
+                          <p className={`break-words text-xs leading-5 ${guest.tableId ? "text-muted-foreground" : "text-primary"}`}>
+                            {assignedTable
+                              ? `${displayTitleCase(assignedTable.name)}${seats.length ? ` · ${d("Kursi")} ${seats.join(", ")}` : ""}`
+                              : guest.tableId ? d("Ditempatkan") : d("Belum ditempatkan")}
+                          </p>
+                          {Boolean(guest.tags?.length) && (
+                            <p className="break-words text-xs leading-5 text-muted-foreground">{guest.tags?.map(displayTitleCase).join(" · ")}</p>
+                          )}
+                        </div>
+                        {canDrag && <GripVertical aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
           </div>
         </DashboardPanel>
       </div>

@@ -810,3 +810,12 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Every occupied party seat displays a Title Case numbered member name on canvas/print, including blocks wrapping through seat 1; single-person guests retain the plain name. Roster/swap/table labels capitalize in display only; the canonical Guest/pax/block/assignment model stays unchanged.
 - [x] Final local full regression 803/803, focused seating/party fixtures 66/66, TypeScript, changed-source/test ESLint (zero errors/warnings) and production webpack build (73/73) PASS. Exact-commit GitHub workflows will be checked after publication; this records local pre-push evidence.
 - [ ] Signed-in desktop/tablet/phone QA in ID/EN and both themes: full normal/loading captions, short/long name/tag values, native dropdowns, adjacent/last-seat party placement/drag/swap, Save/reopen, A4/PDF and physical print. Screenshot/source/isolated fixture checks do not establish this runtime QA.
+
+
+### Compact control rule and separate grouped guest roster — 7 October 2026
+
+- [x] Durable compact-width rule in AGENTS/canonical §6: content-appropriate fields/actions, complete labels/captions, responsive wrapping and shared readable/touch controls.
+- [x] Separate guest-entry panel and right-hand member-style list above the full-width canvas; Reguler/VIP/VVIP grouping, retained legacy categories, initials/Title Case names, party size/source/tags and placement/full party-seat details.
+- [x] Eligible unassigned guests remain draggable by canonical Guest ID; assigned guests remain visible. Category/tag/reset/no-results filtering includes displayed Regular fallback and assigned rows without rewriting stored data or fabricating companion Guests.
+- [x] Local validation: focused seating/party fixtures 70/70, full regression 807/807, TypeScript, changed-source/test ESLint (zero errors/warnings), production webpack build (73/73) and whitespace check PASS. Exact published-commit GitHub checks are observed after publication; this records local pre-push evidence.
+- [ ] Signed-in desktop/tablet/phone in ID/EN and both themes: compact panel widths, long names/tags/native select values, roster scrolling/group readability, party drag into seats, assignment updates and event switching. Verify real Save/reopen, browser A4/PDF and physical print on the target app; isolated tests/build are not that runtime QA.

@@ -573,7 +573,7 @@ test("real chart table edits and canonical guest assignments work independently 
   assert.deepEqual(assigned, [["guest-manual", table.id, 1]]);
 });
 
-const labelOf = (node) => typeof node === "string" ? node : React.Children.toArray(node?.props?.children).map(labelOf).join("");
+const labelOf = (node) => typeof node === "string" || typeof node === "number" ? String(node) : React.Children.toArray(node?.props?.children).map(labelOf).join("");
 const chartCanvas = (tree) => elements(tree, (el) => Boolean(el.props?.onTableMove && el.props?.onDrawingChange))[0].props;
 
 test("setup and guest entry sit above the full-width canvas with short table/seat labels", () => {
@@ -589,7 +589,11 @@ test("setup and guest entry sit above the full-width canvas with short table/sea
   const sections = React.Children.toArray(tree.props.children);
   assert.equal(sections.length, 2);
   assert.ok(sections[0].props.className.includes("lg:grid-cols"));
-  assert.deepEqual(elements(sections[0], (el) => el.type === primitives.DashboardPanel).map((el) => el.props.title), ["Struktur meja", "Isi tamu"]);
+  assert.deepEqual(elements(sections[0], (el) => el.type === primitives.DashboardPanel).map((el) => el.props.title), ["Struktur meja", "Isi tamu", "Daftar tamu"]);
+  const topPanels = React.Children.toArray(sections[0].props.children);
+  assert.equal(topPanels[1].props.title, "Daftar tamu");
+  assert.equal(elements(topPanels[1], (el) => el.type === "form").length, 0);
+  assert.equal(elements(topPanels[0], (el) => el.type === "form").length, 2);
   assert.equal(sections[1].props.title, "Denah tempat duduk");
   assert.equal(chartCanvas(tree).pageOffset, 0);
 });
@@ -622,6 +626,111 @@ test("page navigation and drag-to-page preserve the full plan, while Save still 
 });
 const chartButton = (tree, label) => elements(tree, (el) => el.type === Button && labelOf(el) === label)[0];
 const chartProps = { invitationId: "event-a", tables: [table], guests: [{ id: "guest-a", name: "Naya", source: "MANUAL", tableId: table.id, seatNumber: 2 }], onAssigned: async () => {} };
+
+const rosterProps = {
+  ...chartProps,
+  guests: [
+    { id: "regular-null", name: "zaki", source: "MANUAL", category: null, invitedPax: 1 },
+    { id: "regular-party", name: "andi & rina", source: "MANUAL", category: "REGULAR", invitedPax: 2, tags: ["keluarga"] },
+    { id: "vip-party", name: "hendra wijaya", source: "MANUAL", category: "VIP", invitedPax: 3, tableId: table.id, seatNumber: 8, tags: ["keluarga"] },
+    { id: "vvip-attending", name: "naya", source: "RSVP", rsvpStatus: "ATTENDING", category: "VVIP", invitedPax: 1 },
+    { id: "legacy-category", name: "budi", source: "MANUAL", category: "keluarga" },
+    { id: "declined", name: "tidak hadir", source: "RSVP", rsvpStatus: "DECLINED", category: "VIP" },
+    { id: "pending", name: "belum menjawab", source: "RSVP", rsvpStatus: "PENDING", category: "VVIP" },
+    { id: "assigned-declined", name: "sudah ditempatkan", source: "RSVP", rsvpStatus: "DECLINED", category: "VIP", tableId: table.id, seatNumber: 4 },
+  ],
+};
+const rosterRows = (tree) => elements(tree, (el) => el.type === "li" && Boolean(el.props["data-guest-id"]));
+const rosterSelect = (tree, optionText) => elements(tree, (el) => el.type === "select" && labelOf(el).includes(optionText))[0];
+
+test("actual member roster groups eligible and assigned guests, preserves legacy categories and shows whole party seats", () => {
+  const original = structuredClone(rosterProps.guests), f = chartFixture({}, true);
+  const tree = f.render(rosterProps);
+  const groups = elements(tree, (el) => el.type === "section" && el.props["aria-label"]);
+  assert.deepEqual(groups.map((group) => group.props["aria-label"]), ["Reguler", "VIP", "VVIP", "Keluarga"]);
+  assert.deepEqual(rosterRows(groups[0]).map((row) => row.props["data-guest-id"]), ["regular-party", "regular-null"]);
+  assert.equal(rosterRows(tree).length, 6);
+  assert.equal(rosterRows(tree).filter((row) => row.props.draggable).length, 4);
+  assert.ok(!rosterRows(tree).some((row) => ["pending", "declined"].includes(row.props["data-guest-id"])));
+  const placed = rosterRows(tree).find((row) => row.props["data-guest-id"] === "vip-party");
+  assert.equal(placed.props.draggable, false);
+  assert.ok(labelOf(placed).includes("Hendra Wijaya"));
+  assert.ok(labelOf(placed).includes("3 orang · Manual"));
+  assert.ok(labelOf(placed).includes("Meja Keluarga · Kursi 8, 1, 2"));
+  assert.ok(labelOf(rosterRows(tree).find((row) => row.props["data-guest-id"] === "regular-party")).includes("Belum ditempatkan"));
+  assert.ok(labelOf(rosterRows(tree).find((row) => row.props["data-guest-id"] === "vvip-attending")).includes("RSVP · Hadir"));
+  assert.deepEqual(rosterProps.guests, original);
+});
+
+test("member roster category/tag filters include unlabelled Regular and assigned guests, and Reset restores the complete roster", () => {
+  const f = chartFixture({}, true);
+  let tree = f.render(rosterProps);
+  rosterSelect(tree, "Semua Kategori").props.onChange({ target: { value: "REGULAR" } });
+  tree = f.render(rosterProps);
+  assert.deepEqual(rosterRows(tree).map((row) => row.props["data-guest-id"]), ["regular-party", "regular-null"]);
+  rosterSelect(tree, "Semua Tag").props.onChange({ target: { value: "keluarga" } });
+  tree = f.render(rosterProps);
+  assert.deepEqual(rosterRows(tree).map((row) => row.props["data-guest-id"]), ["regular-party"]);
+  rosterSelect(tree, "Semua Kategori").props.onChange({ target: { value: "VIP" } });
+  tree = f.render(rosterProps);
+  assert.deepEqual(rosterRows(tree).map((row) => row.props["data-guest-id"]), ["vip-party"]);
+  assert.ok(labelOf(elements(tree, (el) => el.props.role === "status")[0]).includes("1 dari 6 tamu"));
+  rosterSelect(tree, "Semua Tag").props.onChange({ target: { value: "tag-lama" } });
+  tree = f.render(rosterProps);
+  assert.equal(rosterRows(tree).length, 0);
+  assert.equal(elements(tree, (el) => el.type === primitives.DashboardEmptyState)[0].props.title, "Tidak ada hasil");
+  assert.ok(labelOf(rosterSelect(tree, "Semua Tag")).includes("Tag-Lama"));
+  chartButton(tree, "Reset filter").props.onClick();
+  tree = f.render(rosterProps);
+  assert.equal(rosterRows(tree).length, 6);
+  assert.equal(chartButton(tree, "Reset filter"), undefined);
+});
+
+test("member row drags the canonical party ID, updates placement after assignment and blocks drag while drawing or busy", async () => {
+  const assigned = [], f = chartFixture({}, true);
+  const props = { ...chartProps, guests: [rosterProps.guests[1]], onAssigned: async (...args) => assigned.push(args) };
+  const data = [], transfer = { setData: (...args) => data.push(args), dropEffect: "none" };
+  let tree = f.render(props);
+  rosterRows(tree)[0].props.onDragStart({ dataTransfer: transfer });
+  assert.deepEqual(data, [["text/plain", "regular-party"]]); assert.equal(transfer.effectAllowed, "move");
+  tree = f.render(props); assert.equal(chartCanvas(tree).draggedGuestId, "regular-party");
+  rosterRows(tree)[0].props.onDragEnd({ dataTransfer: transfer });
+  tree = f.render(props); assert.equal(chartCanvas(tree).draggedGuestId, null);
+  chartButton(tree, "Gambar jalur").props.onClick(); tree = f.render(props);
+  let prevented = 0;
+  assert.equal(rosterRows(tree)[0].props.draggable, false);
+  rosterRows(tree)[0].props.onDragStart({ preventDefault() { prevented++; }, dataTransfer: transfer });
+  assert.equal(prevented, 1); assert.equal(data.length, 1);
+  chartButton(tree, "Gambar jalur").props.onClick(); tree = f.render(props);
+  rosterRows(tree)[0].props.onDragStart({ dataTransfer: transfer });
+  tree = f.render(props);
+  await chartCanvas(tree).onGuestDrop("regular-party", geometry.seatingSeatPoint(layout().tables[table.id], 5, table.capacity));
+  tree = f.render(props);
+  assert.deepEqual(assigned, [["regular-party", table.id, 6]]);
+  assert.equal(rosterRows(tree).length, 1); assert.equal(rosterRows(tree)[0].props.draggable, false);
+  assert.ok(labelOf(rosterRows(tree)[0]).includes("Meja Keluarga · Kursi 6, 7"));
+  assert.equal(chartCanvas(tree).guests.length, 1); assert.equal(chartCanvas(tree).guests[0].invitedPax, 2);
+  const pending = chartFixture({ loading: true }, true);
+  const row = rosterRows(pending.render(props))[0];
+  assert.equal(row.props.draggable, false);
+  row.props.onDragStart({ preventDefault() { prevented++; }, dataTransfer: transfer });
+  assert.equal(prevented, 2); assert.equal(data.length, 2);
+});
+
+test("member roster renders translated group, placement and empty states in both languages", () => {
+  for (const locale of ["id", "en"]) {
+    const f = chartFixture();
+    const render = (props) => renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(f.Chart, props)));
+    const html = render(rosterProps);
+    for (const text of locale === "en" ? ["Guest list", "Regular", "3 people", "1 person", "Seats 8, 1, 2", "Unassigned"] : ["Daftar tamu", "Reguler", "3 orang", "Kursi 8, 1, 2", "Belum ditempatkan"]) assert.ok(html.includes(text), text);
+    const placed = render({ ...chartProps, guests: [rosterProps.guests[2]] });
+    assert.ok(placed.includes("Hendra Wijaya"));
+    assert.ok(!placed.includes(locale === "en" ? "No guests yet" : "Belum ada tamu"));
+    const empty = render({ ...chartProps, guests: [] });
+    assert.ok(empty.includes(locale === "en" ? "No guests yet" : "Belum ada tamu"));
+    assert.ok(empty.includes(locale === "en" ? "Add a guest or wait for an attending RSVP." : "Tambahkan tamu atau tunggu konfirmasi RSVP Hadir."));
+  }
+});
 
 test("actual chart toggles Draw back to direct table dragging, including Escape and the route limit", () => {
   const f = chartFixture({}, true);
