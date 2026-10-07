@@ -387,6 +387,7 @@ function canvasFixture(overrides = {}) {
     react: { useRef: (value) => ({ current: index < refs.length ? refs[index++] : (index++, value) }), useState: () => [1100, () => {}], useEffect: () => {}, useCallback: (fn) => fn },
     "react-konva": Object.fromEntries(["Arrow", "Circle", "Group", "Layer", "Rect", "Stage", "Text"].map((name) => [name, name])),
     "@/lib/seating/editor": editor, "@/lib/seating/appearance": appearance, "@/lib/seating/plan": plans,
+    "@/lib/seating/guest-seats": guestSeats,
     "./seating-chart-geometry": geometry,
   }).default;
   const props = {

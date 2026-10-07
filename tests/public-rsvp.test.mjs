@@ -5,6 +5,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import QRCode from "qrcode";
 import { createGuestQrToken, verifyGuestQrToken } from "../lib/usher/qr.ts";
 import { confirmedRsvpPax, rsvpCsvCell } from "../lib/guests/rsvp.ts";
+import * as envelope from "../lib/guests/personal-envelope.ts";
+import * as manualParty from "../lib/guests/manual-party.ts";
+import * as guestSeats from "../lib/seating/guest-seats.ts";
 import * as configHelpers from "../lib/templates/rsvp-config.ts";
 import { buildRsvpTicketQrUrl } from "../components/InvitationStudio/rsvp-helpers.ts";
 import { InvitationLanguageProvider } from "../components/PublicInvitation/InvitationLanguage.tsx";
@@ -74,6 +77,9 @@ function fixture({ invitation = event(), guests = [], grants, allowed = true } =
     "@/lib/auth": { getCurrentUser: async () => ({ id: "owner-a" }) },
     "@/lib/security/request-origin": { isTrustedMutationOrigin: () => true },
     "@/lib/guests/personal-profile": { parsePersonalGuestFields() { throw new Error("Unexpected guest mutation"); } },
+    "@/lib/guests/personal-envelope": envelope,
+    "@/lib/guests/manual-party": manualParty,
+    "@/lib/seating/guest-seats": guestSeats,
     "@/lib/packages/server-access": access.access,
     "@/lib/usher/qr": { createGuestQrToken, verifyGuestQrToken },
     "@/lib/guests/identity": identity,

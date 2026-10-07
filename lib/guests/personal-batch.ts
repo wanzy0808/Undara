@@ -92,7 +92,7 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
       if (row.guestId && !categories.includes(row.category) && row.category !== guest?.category) {
         throw new PersonalBatchError("Kategori tamu tidak valid.");
       }
-      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category || (guest.personalAddressee ?? undefined) !== row.personalAddressee || guest.invitedPax !== row.invitedPax || guest.recipientType !== row.recipientType)) {
+      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category || (guest.personalAddressee ?? undefined) !== row.personalAddressee || (row.invitedPax !== undefined && guest.invitedPax !== row.invitedPax) || (row.recipientType !== undefined && guest.recipientType !== row.recipientType))) {
         throw new PersonalBatchError("Tamu ini sudah disimpan. Muat ulang daftar sebelum mengubahnya.", 409);
       }
     }

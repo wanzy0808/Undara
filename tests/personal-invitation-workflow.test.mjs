@@ -203,7 +203,7 @@ test("the short title selector previews each choice, rejects title-only names an
     ["BAPAK_IBU", "Andi & Rina", "Kepada Yth : Bapak Andi dan Ibu Rina"],
     ["BAPAK_IBU", "Andi", "Kepada Yth : Bapak & Ibu Andi"],
   ]) {
-    const tree = harness.render({ salutation, name });
+    const tree = harness.render({ salutation, name, profile: { ...fields.emptyGuestInvitationForm, invitedPax: salutation === "BAPAK_IBU" ? 2 : 1 } });
     const title = find(tree, fields.PersonalInvitationSalutationField);
     assert.equal(title.props.value, salutation); title.props.onChange(salutation); assert.equal(chosen, salutation);
     assert.ok(text(find(tree, "form")).includes(expected));
@@ -569,9 +569,9 @@ test("queued names are editable/removable by row identity, preserve duplicate na
   const drafts = Array.from({ length: 43 }, (_, i) => ({ key: `draft-${i}`, name: "Bapak Andi", category: "REGULAR" }));
   const harness = createHarness({ drafts, onEditDraft: (...args) => edits.push(args), onRemoveDraft: (key) => removed.push(key) });
   let tree = harness.render();
-  assert.equal(nodes(tree).filter((node) => node.type === Input).length, 40);
+  assert.equal(nodes(tree).filter((node) => node.type === Input && node.props["aria-label"]?.startsWith("Nama tamu ")).length, 40);
   nodes(tree).find((node) => node.type === Button && text(node.props.children) === "Tampilkan lebih banyak").props.onClick();
-  tree = harness.render(); assert.equal(nodes(tree).filter((node) => node.type === Input).length, 43);
+  tree = harness.render(); assert.equal(nodes(tree).filter((node) => node.type === Input && node.props["aria-label"]?.startsWith("Nama tamu ")).length, 43);
   const editableDraft = nodes(tree).find((node) => node.type === Input && node.props["aria-label"] === "Nama tamu 42");
   assert.match(editableDraft.props.className, /capitalize/);
   editableDraft.props.onChange({ target: { value: "Bapak Budi" } });
@@ -594,6 +594,7 @@ function savedListHarness(overrides = {}) {
     "@/components/Dashboard/useDashboardI18n": i18n,
     "@/lib/text/display-title-case": titles,
     "@/lib/guests/personal-envelope": envelope,
+    "@/lib/guests/manual-party": manualParty,
     "@/components/Dashboard/DashboardPrimitives": primitives,
     "@/components/Dashboard/PersonalInvitationGuestFields": fields,
     "@/components/Dashboard/personal-invitation-helpers": helpers,
