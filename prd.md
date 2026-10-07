@@ -1593,6 +1593,7 @@ Marketing minimum menjelaskan:
 - 1 event = 1 digital invitation = 1 saved template/design;
 - event dapat dibuat tanpa limit 3;
 - payment event-scoped;
+- **Hak Owner Undangan Digital (7 Oktober 2026):** Rp150.000 selalu berarti **1 hak untuk 1 event/undangan**. Owner dapat memberi beberapa hak kepada user yang sama sebagai kuota integer, bukan toggle akses akun tanpa batas. Contoh: 3 hak Owner mengaktifkan maksimal 3 undangan yang belum mempunyai payment Digital Invitation sendiri. Undangan yang sudah berstatus PAID tidak memakan kuota Owner; hak manual tidak diubah menjadi Payment PAID, tidak dihitung sebagai penjualan, dan tetap dapat dikurangi/dicabut Owner. Grant boolean lama dibaca kompatibel sebagai 1 hak. Seluruh publish, QR, RSVP, media, guest management, seating, WA Blast prerequisite, dan public renderer wajib memeriksa entitlement terhadap `Invitation.id` terkait.
 - payment diperlukan pada Publish;
 - RSVP + guest management termasuk Digital Invitation sesuai feature set;
 - WA Blast adalah add-on terpisah.
