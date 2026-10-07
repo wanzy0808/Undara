@@ -34,7 +34,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       !invitation ||
       !invitation.eventConfigured ||
       !invitation.isPublished ||
-      !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment))
+      !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment, invitation.id))
     ) {
       return NextResponse.json({ error: "Undangan tidak ditemukan." }, { status: 404 });
     }
