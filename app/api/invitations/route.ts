@@ -5,7 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 import { hasPaidDigitalInvitation } from "@/lib/packages/access";
-import { getOwnerPackageGrant } from "@/lib/packages/owner-grants";
+import { getOwnerGrantedDigitalInvitationIds } from "@/lib/packages/owner-grants";
+import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { assertInvitationMusicAsset, MissingMusicAssetError } from "@/lib/invitations/music-selection";
 import { canContinueInvitationTemplate, isInvitationTemplateCompatible } from "@/lib/templates/catalog";
 import {
@@ -79,8 +80,6 @@ function databaseFailure(error: unknown, fallback: string) {
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Belum login." }, { status: 401 });
-  const ownerGrant = await getOwnerPackageGrant(user.id);
-
   try {
     const url = new URL(request.url);
     if (url.searchParams.get("all") === "1") {
@@ -90,10 +89,11 @@ export async function GET(request: Request) {
         orderBy: { createdAt: "asc" },
       });
 
+      const ownerGrantedIds = await getOwnerGrantedDigitalInvitationIds(user.id);
       return NextResponse.json({
         invitations: invitations.map((invitation) => ({
           ...sanitizeInvitation(invitation),
-          accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment),
+          accessPaid: ownerGrantedIds.has(invitation.id) || hasPaidDigitalInvitation(invitation.payment),
         })),
         unlimited: true,
       });
@@ -111,7 +111,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         invitation: {
           ...sanitizeInvitation(invitation),
-          accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment),
+          accessPaid: await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id),
         },
       });
     }
@@ -120,7 +120,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       invitation: {
         ...sanitizeInvitation(invitation),
-        accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment),
+        accessPaid: await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id),
       },
     });
   } catch (error) {
@@ -135,8 +135,6 @@ export async function POST(request: Request) {
   if (!isTrustedMutationOrigin(request)) {
     return NextResponse.json({ error: "Origin permintaan tidak valid." }, { status: 403 });
   }
-  const ownerGrant = await getOwnerPackageGrant(user.id);
-
   try {
     const body = await request.json().catch(() => null);
     const reusableDraft = await findReusableDraft(user.id);
@@ -263,7 +261,7 @@ export async function POST(request: Request) {
         {
           invitation: {
             ...sanitizeInvitation(invitation),
-            accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment),
+            accessPaid: await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id),
           },
           unlimited: true,
           reused: Boolean(reusableDraft),
@@ -276,7 +274,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         invitation: {
           ...sanitizeInvitation(reusableDraft),
-          accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(reusableDraft.payment),
+          accessPaid: await hasAccountDigitalInvitation(user.id, reusableDraft.payment, reusableDraft.id),
         },
         unlimited: true,
         reused: true,
@@ -319,8 +317,6 @@ export async function PUT(request: Request) {
   if (!isTrustedMutationOrigin(request)) {
     return NextResponse.json({ error: "Origin permintaan tidak valid." }, { status: 403 });
   }
-  const ownerGrant = await getOwnerPackageGrant(user.id);
-
   try {
     const body = await request.json();
     const fallbackType = normalizeType(body.type);
@@ -396,8 +392,13 @@ export async function PUT(request: Request) {
     const requestedTitle = String(body.title ?? invitation.title).trim();
     const title = buildEventTitle(eventCategory, groomName, brideName, requestedTitle);
     const wantsPublish = body.isPublished === undefined ? invitation.isPublished : Boolean(body.isPublished);
-    const canPublish = ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment);
     const eventConfigured = body.eventConfigured === true ? Boolean(title) : invitation.eventConfigured;
+    const canPublish = await hasAccountDigitalInvitation(
+      user.id,
+      invitation.payment,
+      invitation.id,
+      eventConfigured,
+    );
     assertTemplateCategory(templateKey, eventCategory, invitation, wantsPublish);
 
     if (body.eventConfigured === true) {
@@ -518,12 +519,13 @@ export async function PUT(request: Request) {
       });
     });
 
+    const accessPaid = await hasAccountDigitalInvitation(user.id, updated.payment, updated.id);
     return NextResponse.json({
       invitation: {
         ...sanitizeInvitation(updated),
-        accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(updated.payment),
+        accessPaid,
       },
-      accessPaid: ownerGrant.digital || hasPaidDigitalInvitation(updated.payment),
+      accessPaid,
     });
   } catch (error) {
     if (error instanceof IncompatibleTemplateError) return NextResponse.json({ error: error.message }, { status: 400 });
