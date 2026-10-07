@@ -82,6 +82,8 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [tool, setTool] = useState<"move" | "draw">("move");
   const [drawing, setDrawing] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState("");
+  const [selectedGuestId, setSelectedGuestId] = useState("");
+  const rosterContainer = useRef<HTMLElement | null>(null);
   const [pageSelection, setPageSelection] = useState({ invitationId, index: 0 });
   const [printing, setPrinting] = useState(false);
   const printCleanup = useRef<(() => void) | null>(null);
@@ -124,9 +126,11 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   }, [guests, localGuests, guestOverrides, removedGuestIds]);
 
   const rosterGuests = visibleGuests.filter(
-    (guest) => guest.tableId || guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING",
+    (guest) => (!guest.tableId || !guest.seatNumber) && (guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING"),
   );
-  const unassigned = rosterGuests.filter((guest) => !guest.tableId);
+  const selectedGuest = visibleGuests.find((guest) => guest.id === selectedGuestId && guest.tableId) ?? null;
+  const selectedGuestTable = selectedGuest ? visibleTables.find((table) => table.id === selectedGuest.tableId) : null;
+  const allGuestsPlaced = visibleGuests.some((guest) => guest.tableId) && rosterGuests.length === 0;
   const draggedGuest = draggedGuestId
     ? (visibleGuests.find((guest) => guest.id === draggedGuestId) ?? null)
     : null;
@@ -343,7 +347,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   }
 
   async function assignGuestAtPoint(guestId: string, point: SeatingPoint) {
-    if (layoutBusy || drawing) return;
+    if (layoutBusy || drawing || guestMutationBusy.current) return;
     const target = targetAtPoint(point);
     setHoverTarget(null);
 
@@ -358,6 +362,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       return;
     }
 
+    guestMutationBusy.current = true;
     setSavingGuestId(guestId);
     setMessage("");
     try {
@@ -374,19 +379,60 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
           : d("Penempatan tamu gagal disimpan."),
       );
     } finally {
+      guestMutationBusy.current = false;
       setSavingGuestId(null);
       setDraggedGuestId(null);
     }
   }
 
+  async function releaseGuest(guestId: string) {
+    const guest = visibleGuests.find((item) => item.id === guestId && item.tableId);
+    if (!guest || toolbarBusy || guestMutationBusy.current || tool !== "move") return;
+    guestMutationBusy.current = true;
+    const controller = new AbortController(); guestRequest.current = controller;
+    setSavingGuestId(guest.id); setMessage(""); setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null);
+    try {
+      const response = await fetch(`/api/guests/${encodeURIComponent(guest.id)}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, cache: "no-store", signal: controller.signal,
+        body: JSON.stringify({ tableId: null, seatNumber: null }),
+      });
+      const data = await response.json().catch(() => null);
+      if (controller.signal.aborted) return;
+      if (!response.ok) throw new Error(data?.error || "Tamu belum dapat dilepas dari meja. Coba lagi.");
+      if (data?.guest?.id !== guest.id || data.guest.invitationId !== invitationId || data.guest.tableId !== null || data.guest.seatNumber !== null) {
+        throw new Error("Data tamu tidak valid. Muat ulang dan coba lagi.");
+      }
+      setGuestOverrides((current) => ({ ...current, [guest.id]: { ...current[guest.id], tableId: null, seatNumber: null } }));
+      setSelectedGuestId("");
+      setMessage(d("Tamu dilepas dari meja."));
+      void onTablesChanged?.().catch(() => {});
+    } catch (error) {
+      if (!controller.signal.aborted) setMessage(d(error instanceof Error ? error.message : "Tamu belum dapat dilepas dari meja. Coba lagi."));
+    } finally {
+      if (guestRequest.current === controller) { guestRequest.current = null; guestMutationBusy.current = false; }
+      if (!controller.signal.aborted) setSavingGuestId(null);
+    }
+  }
+
+  function returnGuestToRoster(guestId: string, clientPoint: SeatingPoint) {
+    if (toolbarBusy || tool !== "move" || guestMutationBusy.current) return false;
+    const bounds = rosterContainer.current?.getBoundingClientRect();
+    if (!bounds || !Number.isFinite(clientPoint.x) || !Number.isFinite(clientPoint.y)
+      || clientPoint.x < bounds.left || clientPoint.x > bounds.right || clientPoint.y < bounds.top || clientPoint.y > bounds.bottom) return false;
+    if (!visibleGuests.some((guest) => guest.id === guestId && guest.tableId && guest.seatNumber)) return false;
+    void releaseGuest(guestId);
+    return true;
+  }
+
   async function confirmSwap() {
-    if (!swapCandidate) return;
+    if (!swapCandidate || guestMutationBusy.current) return;
     const { guestId, target } = swapCandidate;
     if (!target.guest) return;
 
     const source = visibleGuests.find((guest) => guest.id === guestId);
     if (!source) return;
 
+    guestMutationBusy.current = true;
     setSavingGuestId(guestId);
     setMessage("");
     try {
@@ -435,6 +481,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         error instanceof Error ? error.message : d("Tukar posisi gagal disimpan."),
       );
     } finally {
+      guestMutationBusy.current = false;
       setSavingGuestId(null);
       setDraggedGuestId(null);
       setHoverTarget(null);
@@ -639,7 +686,8 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
           <div className="min-w-0">
             <SeatingPlanCanvas layout={layout} tables={visibleTables} guests={visibleGuests} tool={tool} dark={isDarkMode} busy={layoutBusy}
               pageOffset={pageOffsets[pageIndex]}
-              draggedGuestId={draggedGuestId} hoverTarget={hoverTarget} selectedTableId={selectedTableId} onTableSelect={setSelectedTableId}
+              draggedGuestId={draggedGuestId} hoverTarget={hoverTarget} selectedTableId={selectedTableId}
+              onTableSelect={(id) => { setSelectedTableId(id); setSelectedGuestId(""); }} onGuestSelect={setSelectedGuestId}
               onTableMove={(id, point) => plan.dispatch({ type: "EDIT", plan: { ...layout, tables: { ...layout.tables, [id]: point } } })}
               onPath={(points) => {
                 if (layout.paths.length >= SEATING_MAX_PATHS) { setMessage(d("Maksimal 20 jalur. Hapus jalur untuk menggambar lagi.")); return; }
@@ -647,19 +695,42 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
               }}
               onDrawingChange={setDrawing}
               onExitDraw={() => setTool("move")}
-              onGuestStart={(id) => { setDraggedGuestId(id); setSwapCandidate(null); }} onGuestHover={setHoverFromPoint} onGuestDrop={assignGuestAtPoint}
+              onGuestStart={(id) => { setDraggedGuestId(id); setSelectedGuestId(id); setSwapCandidate(null); }} onGuestHover={setHoverFromPoint} onGuestDrop={assignGuestAtPoint}
+              onGuestReturn={returnGuestToRoster}
               onGuestCancel={() => { setDraggedGuestId(null); setHoverTarget(null); }}
               onUndo={() => plan.dispatch({ type: "UNDO" })} onRedo={() => plan.dispatch({ type: "REDO" })}
               label={d("Denah: pilih meja, lalu gunakan tombol panah untuk menggeser.")} emptyLabel={d("Atur jumlah meja dan kursi untuk membuat denah.")}
             />
+            {selectedGuest && <div data-seated-guest={selectedGuest.id} className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+              <div className="min-w-0 mr-auto">
+                <p className="break-words text-sm font-medium">{displayTitleCase(selectedGuest.name)}</p>
+                <p className="break-words text-xs text-muted-foreground">
+                  {seatingPartySize(selectedGuest)} {locale === "en" ? (seatingPartySize(selectedGuest) === 1 ? "person" : "people") : "orang"}
+                  {selectedGuestTable ? ` · ${displayTitleCase(selectedGuestTable.name)} · ${d("Kursi")} ${seatingGuestSeats(selectedGuest, selectedGuestTable.capacity).join(", ")}` : ""}
+                </p>
+              </div>
+              <SeatingGuestActions guest={selectedGuest} disabled={toolbarBusy || manualSaving}
+                onEdit={(item) => openGuestAction("edit", item)} onDelete={(item) => openGuestAction("delete", item)} />
+              <Button type="button" size="sm" variant="outline" disabled={toolbarBusy || tool !== "move"}
+                className="h-auto min-h-11 max-w-full py-2 whitespace-normal" onClick={() => void releaseGuest(selectedGuest.id)}>
+                {savingGuestId === selectedGuest.id ? d("Menyimpan...") : d("Lepas dari meja")}
+              </Button>
+            </div>}
           </div>
-          <aside aria-label={d("Daftar tamu")} className="min-w-0 border-t border-border pt-4 @min-[52rem]:border-t-0 @min-[52rem]:border-l @min-[52rem]:pt-0 @min-[52rem]:pl-4">
+          <aside ref={rosterContainer} aria-label={d("Daftar tamu")}
+            className={cn("min-w-0 border-t border-border pt-4 @min-[52rem]:border-t-0 @min-[52rem]:border-l @min-[52rem]:pt-0 @min-[52rem]:pl-4", draggedGuest?.tableId && draggedGuest.seatNumber && "bg-primary/5 outline outline-1 outline-primary/30")}
+            onDragOver={(event) => { if (draggedGuest?.tableId && draggedGuest.seatNumber && !toolbarBusy && tool === "move") { event.preventDefault(); event.dataTransfer.dropEffect = "move"; } }}
+            onDrop={(event) => {
+              if (!draggedGuest?.tableId || !draggedGuest.seatNumber || toolbarBusy || tool !== "move") return;
+              event.preventDefault(); void releaseGuest(draggedGuest.id);
+            }}>
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-lg font-semibold">{d("Daftar tamu")}</h3>
               <DashboardStatusBadge active={rosterGuests.length > 0}>
                 {rosterGuests.length} {locale === "en" ? "guests" : "tamu"}
               </DashboardStatusBadge>
             </div>
+            {draggedGuest?.tableId && Boolean(draggedGuest.seatNumber) && <p className="mt-2 text-xs text-primary">{d("Lepaskan untuk kembali ke daftar")}</p>}
             <div className="mt-3 flex min-w-0 flex-wrap items-end gap-2">
               <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
                 {d("Kategori tamu")}
@@ -695,8 +766,8 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
               </label>}
               <p role="status" className="w-full text-xs text-muted-foreground">
                 {locale === "en"
-                  ? `Showing ${filteredRoster.length} of ${rosterGuests.length} guests · ${unassigned.length} unassigned.`
-                  : `Menampilkan ${filteredRoster.length} dari ${rosterGuests.length} tamu · ${unassigned.length} belum ditempatkan.`}
+                  ? `Showing ${filteredRoster.length} of ${rosterGuests.length} unassigned guests.`
+                  : `Menampilkan ${filteredRoster.length} dari ${rosterGuests.length} tamu belum ditempatkan.`}
               </p>
               {hasRosterFilter && (
                 <Button
@@ -712,11 +783,11 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             <div className="mt-3 max-h-96 @min-[52rem]:max-h-[30rem] space-y-4 overflow-y-auto pr-1">
               {filteredRoster.length === 0 && (
                 <DashboardEmptyState className="min-h-0! px-3! py-3!"
-                  title={hasRosterFilter ? d("Tidak ada hasil") : d("Belum ada tamu")}
+                  title={hasRosterFilter ? d("Tidak ada hasil") : allGuestsPlaced ? d("Semua tamu sudah ditempatkan") : d("Belum ada tamu")}
                   description={
                     hasRosterFilter
                       ? d("Tidak ada tamu yang cocok dengan filter aktif.")
-                      : d("Tambahkan tamu atau tunggu konfirmasi RSVP Hadir.")
+                      : allGuestsPlaced ? undefined : d("Tambahkan tamu atau tunggu konfirmasi RSVP Hadir.")
                   }
                 />
               )}
@@ -734,7 +805,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                       const assignedTable = visibleTables.find((table) => table.id === guest.tableId);
                       const seats = assignedTable ? seatingGuestSeats(guest, assignedTable.capacity) : [];
                       const pax = seatingPartySize(guest);
-                      const canDrag = !guest.tableId && !toolbarBusy && tool === "move";
+                      const canDrag = (!guest.tableId || !guest.seatNumber) && !toolbarBusy && tool === "move";
                       return (
                         <li key={guest.id} data-guest-id={guest.id}
                           draggable={canDrag}

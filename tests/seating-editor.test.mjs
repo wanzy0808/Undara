@@ -509,6 +509,32 @@ test("dropping an assigned guest outside the visible page cancels rather than se
   assert.equal(cancelled, 1); assert.deepEqual(f.calls.guests, []);
 });
 
+test("canvas returns a whole seated party to the DOM roster using mouse/touch client coordinates", () => {
+  for (const evt of [{ clientX: 950, clientY: 280 }, { changedTouches: [{ clientX: 950, clientY: 280 }] }]) {
+    const returned = [], positions = [], f = canvasFixture({ tool: "move", pageOffset: 400,
+      layout: { ...layout(), height: 1240 },
+      onGuestReturn: (id, point) => { returned.push([id, point]); return true; },
+    });
+    const circle = elements(f.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+    const node = { getStage: () => ({ getRelativePointerPosition: () => ({ x: 1500, y: 800 }) }), position: (point) => positions.push(point) };
+    circle.props.onDragEnd({ target: node, evt });
+    assert.deepEqual(returned, [["guest-a", { x: 950, y: 280 }]]);
+    assert.deepEqual(positions, [{ x: 0, y: 0 }]); assert.deepEqual(f.calls.guests, []);
+  }
+});
+
+test("canvas seat click/tap selects its canonical guest and Escape dismisses the selected actions", () => {
+  const selected = [], f = canvasFixture({ tool: "move", onGuestSelect: (id) => selected.push(id) });
+  const circle = elements(f.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+  for (const action of ["onClick", "onTap"]) {
+    const event = {}; circle.props[action](event); assert.equal(event.cancelBubble, true);
+  }
+  assert.deepEqual(selected, ["guest-a", "guest-a"]);
+  f.tree.props.onKeyDown({ key: "Escape" }); assert.deepEqual(selected, ["guest-a", "guest-a", ""]);
+  const busy = canvasFixture({ tool: "move", busy: true, onGuestSelect: () => assert.fail("busy seat must not select") });
+  elements(busy.tree, (el) => el.type === "Circle")[1].props.onClick({});
+});
+
 const Print = PrintModule.default ?? PrintModule;
 const GuestActions = ActionsModule.default ?? ActionsModule;
 function chartFixture(overrides = {}, interactive = false) {
@@ -664,6 +690,111 @@ const rosterRows = (tree) => elements(tree, (el) => el.type === "li" && Boolean(
 const rosterSelect = (tree, optionText) => elements(tree, (el) => el.type === "select" && labelOf(el).includes(optionText))[0];
 const guestActions = (tree, id) => elements(tree, (el) => el.type === GuestActions && el.props.guest.id === id)[0];
 const guestForm = (tree) => elements(tree, (el) => el.type === "form" && el.props["data-guest-action"])[0];
+const selectedGuestRow = (tree) => elements(tree, (el) => Boolean(el.props["data-seated-guest"]))[0];
+function beginGuestAction(f, props, guest, mode = "edit") {
+  let tree = f.render(props);
+  if (guest.tableId) { chartCanvas(tree).onGuestSelect(guest.id); tree = f.render(props); }
+  guestActions(tree, guest.id).props[mode === "edit" ? "onEdit" : "onDelete"](guest);
+  return f.render(props);
+}
+
+test("roster membership waits for successful placement, retains failed attempts and never drops the canonical party", async () => {
+  const guest = rosterProps.guests[1], f = chartFixture({}, true), pending = deferred();
+  let result = pending.promise;
+  const props = { ...chartProps, guests: [guest], onAssigned: () => result };
+  let tree = f.render(props);
+  const target = geometry.seatingSeatPoint(layout().tables[table.id], 5, table.capacity);
+  const saving = chartCanvas(tree).onGuestDrop(guest.id, target); tree = f.render(props);
+  assert.equal(rosterRows(tree).length, 1); assert.equal(chartCanvas(tree).busy, true);
+  pending.reject(Error("Meja penuh")); await saving; tree = f.render(props);
+  assert.equal(rosterRows(tree).length, 1); assert.deepEqual(chartCanvas(tree).guests, [guest]);
+  result = Promise.resolve(); await chartCanvas(tree).onGuestDrop(guest.id, target); tree = f.render(props);
+  assert.equal(rosterRows(tree).length, 0); assert.equal(chartCanvas(tree).guests.length, 1);
+  assert.deepEqual(chartCanvas(tree).guests[0], { ...guest, tableId: table.id, seatNumber: 6 });
+  const print = renderToStaticMarkup(React.createElement(Print, { title: "Acara", layout: layout(), tables: [table], guests: chartCanvas(tree).guests, locale: "id" }));
+  assert.ok(print.includes("Andi &amp; Rina 1")); assert.ok(print.includes("Andi &amp; Rina 2"));
+});
+
+test("selected guest release saves first, returns the complete party to the right list and permits re-assignment", async (t) => {
+  const guest = rosterProps.guests[2], pending = deferred(), requests = [], assignments = [];
+  let refreshed = 0;
+  const props = { ...chartProps, guests: [guest], onTablesChanged: async () => { refreshed++; }, onAssigned: async (...args) => assignments.push(args) };
+  const f = chartFixture({}, true);
+  t.mock.method(globalThis, "fetch", (url, options) => { requests.push({ url, options }); return pending.promise; });
+  let tree = f.render(props); chartCanvas(tree).onGuestSelect(guest.id); tree = f.render(props);
+  assert.equal(rosterRows(tree).length, 0); assert.ok(selectedGuestRow(tree));
+  chartButton(tree, "Lepas dari meja").props.onClick(); tree = f.render(props);
+  assert.equal(rosterRows(tree).length, 0); assert.deepEqual(chartCanvas(tree).guests, [guest]);
+  assert.equal(chartCanvas(tree).busy, true); assert.equal(chartButton(tree, "Menyimpan...").props.disabled, true);
+  assert.equal(requests[0].url, `/api/guests/${guest.id}`); assert.equal(requests[0].options.method, "PATCH");
+  assert.deepEqual(JSON.parse(requests[0].options.body), { tableId: null, seatNumber: null });
+  pending.resolve(Response.json({ guest: { ...guest, invitationId: "event-a", tableId: null, seatNumber: null } }));
+  await flush(); tree = f.render(props);
+  const released = { ...guest, tableId: null, seatNumber: null };
+  assert.deepEqual(chartCanvas(tree).guests, [released]); assert.equal(rosterRows(tree).length, 1);
+  assert.equal(rosterRows(tree)[0].props["data-guest-id"], guest.id); assert.equal(rosterRows(tree)[0].props.draggable, true);
+  assert.ok(labelOf(rosterRows(tree)[0]).includes("3 orang")); assert.equal(selectedGuestRow(tree), undefined);
+  assert.equal(elements(tree, (el) => el.type === primitives.DashboardCompactStat && el.props.label === "Terisi")[0].props.value, "0");
+  assert.equal(refreshed, 1); assert.deepEqual(f.plan.editor.plan, layout());
+  await chartCanvas(tree).onGuestDrop(guest.id, geometry.seatingSeatPoint(layout().tables[table.id], 4, table.capacity)); tree = f.render(props);
+  assert.deepEqual(assignments, [[guest.id, table.id, 5]]); assert.equal(rosterRows(tree).length, 0);
+  assert.equal(chartCanvas(tree).guests[0].invitedPax, 3); assert.equal(chartCanvas(tree).guests[0].seatNumber, 5);
+});
+
+test("failed or malformed releases preserve seats and selected actions for retry", async (t) => {
+  const guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] };
+  for (const result of [
+    Response.json({ error: "offline" }, { status: 503 }),
+    Response.json({ guest: { ...guest, invitationId: "event-a" } }),
+    Response.json({ guest: { ...guest, invitationId: "other", tableId: null, seatNumber: null } }),
+    Response.json({ guest: { ...guest, id: "other", invitationId: "event-a", tableId: null, seatNumber: null } }),
+    Response.json({ guest: { ...guest, invitationId: "event-a", tableId: null, seatNumber: 8 } }),
+  ]) {
+    const f = chartFixture({}, true); t.mock.method(globalThis, "fetch", async () => result);
+    let tree = f.render(props); chartCanvas(tree).onGuestSelect(guest.id); tree = f.render(props);
+    chartButton(tree, "Lepas dari meja").props.onClick(); await flush(); tree = f.render(props);
+    assert.deepEqual(chartCanvas(tree).guests, [guest]); assert.equal(rosterRows(tree).length, 0);
+    assert.ok(selectedGuestRow(tree)); assert.equal(chartButton(tree, "Lepas dari meja").props.disabled, false);
+    assert.equal(elements(tree, (el) => el.type === primitives.DashboardCompactStat && el.props.label === "Terisi")[0].props.value, "3");
+  }
+});
+
+test("release blocks same-frame duplicates and ignores aborted late replies", async (t) => {
+  const guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true), pending = deferred(), calls = [];
+  t.mock.method(globalThis, "fetch", (_url, options) => { calls.push(options); return pending.promise; });
+  let tree = f.render(props); chartCanvas(tree).onGuestSelect(guest.id); tree = f.render(props);
+  const button = chartButton(tree, "Lepas dari meja"); button.props.onClick(); button.props.onClick();
+  assert.equal(calls.length, 1); f.unmount(); const writes = f.writes();
+  assert.equal(calls[0].signal.aborted, true);
+  pending.resolve(Response.json({ guest: { ...guest, invitationId: "event-a", tableId: null, seatNumber: null } })); await flush();
+  assert.equal(f.writes(), writes); assert.deepEqual(chartCanvas(f.render(props)).guests, [guest]);
+});
+
+test("Konva return checks the actual right-list bounds and current guest before any release", async (t) => {
+  const guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true), requests = [];
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    requests.push({ url, options }); return Response.json({ guest: { ...guest, invitationId: "event-a", tableId: null, seatNumber: null } });
+  });
+  let tree = f.render(props);
+  const aside = elements(tree, (el) => el.type === "aside")[0];
+  aside.props.ref.current = { getBoundingClientRect: () => ({ left: 900, right: 1200, top: 200, bottom: 850 }) };
+  assert.equal(chartCanvas(tree).onGuestReturn(guest.id, { x: 500, y: 500 }), false);
+  assert.equal(chartCanvas(tree).onGuestReturn("unknown", { x: 950, y: 500 }), false);
+  assert.equal(chartCanvas(tree).onGuestReturn(guest.id, { x: NaN, y: 500 }), false);
+  assert.equal(requests.length, 0);
+  assert.equal(chartCanvas(tree).onGuestReturn(guest.id, { x: 950, y: 500 }), true); await flush(); tree = f.render(props);
+  assert.equal(requests.length, 1); assert.equal(rosterRows(tree)[0].props["data-guest-id"], guest.id);
+  assert.equal(chartCanvas(tree).guests[0].tableId, null);
+});
+
+test("legacy table reservations without a seat anchor remain in the right list and can be placed", async () => {
+  const guest = { ...rosterProps.guests[2], seatNumber: null }, assigned = [], props = { ...chartProps, guests: [guest], onAssigned: async (...args) => assigned.push(args) };
+  const f = chartFixture({}, true); let tree = f.render(props);
+  assert.equal(rosterRows(tree).length, 1); assert.equal(rosterRows(tree)[0].props.draggable, true);
+  await chartCanvas(tree).onGuestDrop(guest.id, geometry.seatingSeatPoint(layout().tables[table.id], 4, table.capacity)); tree = f.render(props);
+  assert.deepEqual(assigned, [[guest.id, table.id, 5]]); assert.equal(rosterRows(tree).length, 0);
+});
+
 
 test("six-dot guest menu keeps keyboard semantics, dispatches the exact guest and never starts row drag", () => {
   const calls = [], guest = rosterProps.guests[2];
@@ -716,7 +847,7 @@ test("edit saves name/category on the canonical assigned party and updates roste
     return Response.json({ ok: true, guest: { ...guest, name: body.name, category: body.category, invitationId: props.invitationId } });
   });
   let tree = f.render(props);
-  guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+  tree = beginGuestAction(f, props, guest);
   let form = guestForm(tree);
   elements(form, (el) => el.type === Input)[0].props.onChange({ target: { value: "  hendra baru  " } });
   elements(form, (el) => el.type === "select")[0].props.onChange({ target: { value: "VVIP" } });
@@ -727,8 +858,8 @@ test("edit saves name/category on the canonical assigned party and updates roste
   assert.deepEqual(requests[0].body, { id: guest.id, invitationId: "event-a", name: "hendra baru", category: "VVIP" });
   const updated = chartCanvas(tree).guests[0];
   assert.deepEqual(updated, { ...guest, name: "hendra baru", category: "VVIP" });
-  assert.ok(labelOf(rosterRows(tree)[0]).includes("Hendra Baru")); assert.ok(labelOf(rosterRows(tree)[0]).includes("Kursi 8, 1, 2"));
-  assert.equal(elements(tree, (el) => el.type === "section" && el.props["aria-label"])[0].props["aria-label"], "VVIP");
+  assert.equal(rosterRows(tree).length, 0); assert.ok(labelOf(selectedGuestRow(tree)).includes("Hendra Baru")); assert.ok(labelOf(selectedGuestRow(tree)).includes("Kursi 8, 1, 2"));
+  assert.equal(guestActions(tree, guest.id).props.guest.category, "VVIP");
   const print = renderToStaticMarkup(React.createElement(Print, { title: "Acara", layout: layout(), tables: [table], guests: [updated], locale: "id" }));
   for (const label of ["Hendra Baru 1", "Hendra Baru 2", "Hendra Baru 3"]) assert.ok(print.includes(label));
   assert.equal(refreshed, 1); assert.deepEqual(f.plan.editor.plan, layout()); assert.equal(guest.name, "hendra wijaya");
@@ -744,7 +875,7 @@ test("name-only edits retain a legacy or missing category and local rename survi
   });
   for (const guest of [rosterProps.guests[0], rosterProps.guests[4]]) {
     const props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true);
-    let tree = f.render(props); guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    let tree = f.render(props); tree = beginGuestAction(f, props, guest);
     elements(guestForm(tree), (el) => el.type === Input)[0].props.onChange({ target: { value: "nama baru" } });
     await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
     assert.equal(Object.hasOwn(bodies.at(-1), "category"), false);
@@ -760,7 +891,7 @@ test("failed or mismatched edit responses retain draft fields and the original s
   for (const result of [Response.json({ error: "temporary failure" }, { status: 500 }), Response.json({ ok: true, guest: { ...guest, invitationId: "other-event", name: "wrong" } }), Response.json({ ok: true, guest: { ...guest, id: "other-guest", invitationId: "event-a" } }), Response.json({ ok: true, guest: { ...guest, invitationId: "event-a", category: [] } })]) {
     t.mock.method(globalThis, "fetch", async () => result);
     const f = chartFixture({}, true); let tree = f.render(props);
-    guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    tree = beginGuestAction(f, props, guest);
     elements(guestForm(tree), (el) => el.type === Input)[0].props.onChange({ target: { value: "retry name" } });
     await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
     assert.equal(elements(guestForm(tree), (el) => el.type === Input)[0].props.value, "retry name");
@@ -780,7 +911,7 @@ test("party edits grow and shrink the whole canonical block, occupancy and numbe
   let tree = f.render(props);
   for (const pax of [5, 2]) {
     const current = chartCanvas(tree).guests[0];
-    guestActions(tree, current.id).props.onEdit(current); tree = f.render(props);
+    tree = beginGuestAction(f, props, current);
     const input = elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0];
     assert.equal(input.props.value, guestSeats.seatingPartySize(current));
     assert.equal(input.props.min, 1); assert.equal(input.props.max, 30); assert.equal(input.props.step, 1);
@@ -791,7 +922,7 @@ test("party edits grow and shrink the whole canonical block, occupancy and numbe
     const changed = chartCanvas(tree).guests;
     assert.deepEqual(changed, [{ ...original, invitedPax: pax }]);
     assert.equal(elements(tree, (el) => el.type === primitives.DashboardCompactStat && el.props.label === "Terisi")[0].props.value, String(pax));
-    assert.ok(labelOf(rosterRows(tree)[0]).includes(`${pax} orang`));
+    assert.ok(labelOf(selectedGuestRow(tree)).includes(`${pax} orang`)); assert.equal(rosterRows(tree).length, 0);
     const printed = renderToStaticMarkup(React.createElement(Print, { title: "Acara", layout: layout(), tables: [table], guests: changed, locale: "id" }));
     for (let i = 1; i <= pax; i++) assert.ok(printed.includes(`Hendra Wijaya ${i}`));
     assert.ok(!printed.includes(`Hendra Wijaya ${pax + 1}`));
@@ -809,7 +940,7 @@ test("party editing rejects invalid counts and respects the generated Bapak & Ib
     [{ ...rosterProps.guests[2], personalAddressee: envelope.buildPersonalGuestAddressee(rosterProps.guests[2].name, "BAPAK_IBU") }, "1", /minimal 2/],
   ]) {
     const f = chartFixture({}, true), props = { ...chartProps, guests: [guest] };
-    let tree = f.render(props); guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    let tree = f.render(props); tree = beginGuestAction(f, props, guest);
     const input = elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0];
     assert.equal(input.props.min, guest.personalAddressee ? 2 : 1);
     input.props.onChange({ target: { value: count } });
@@ -829,7 +960,7 @@ test("failed or wrong quota responses keep the original block and edited count f
     Response.json({ ok: true, guest: { ...guest, invitedPax: 4, invitationId: "event-a" } }),
   ]) {
     const f = chartFixture({}, true); t.mock.method(globalThis, "fetch", async () => result);
-    let tree = f.render(props); guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    let tree = f.render(props); tree = beginGuestAction(f, props, guest);
     elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0].props.onChange({ target: { value: "5" } });
     await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
     assert.equal(elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0].props.value, 5);
@@ -857,13 +988,13 @@ test("delete needs named confirmation, preserves a protected guest on failure an
   t.mock.method(globalThis, "fetch", async (url, options) => {
     calls.push({ url, options }); return failing ? Response.json({ error: "Tamu ini sudah mempunyai undangan personal atau catatan check-in. Data bersama tidak dapat dihapus dari daftar biasa." }, { status: 409 }) : Response.json({ ok: true });
   });
-  let tree = f.render(props); guestActions(tree, guest.id).props.onDelete(guest); tree = f.render(props);
+  let tree = f.render(props); tree = beginGuestAction(f, props, guest, "delete");
   assert.ok(labelOf(guestForm(tree)).includes("Hendra Wijaya")); assert.equal(calls.length, 0);
   chartButton(guestForm(tree), "Batal").props.onClick(); tree = f.render(props);
   assert.equal(guestForm(tree), undefined); assert.equal(calls.length, 0);
   guestActions(tree, guest.id).props.onDelete(guest);
   await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
-  assert.equal(rosterRows(tree).length, 1); assert.deepEqual(chartCanvas(tree).guests, [guest]);
+  assert.equal(rosterRows(tree).length, 0); assert.ok(selectedGuestRow(tree)); assert.deepEqual(chartCanvas(tree).guests, [guest]);
   assert.ok(labelOf(guestForm(tree)).includes("catatan check-in"));
   failing = false; await guestForm(tree).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
   assert.equal(guestForm(tree), undefined); assert.equal(rosterRows(tree).length, 0); assert.deepEqual(chartCanvas(tree).guests, []);
@@ -877,7 +1008,7 @@ test("guest mutations block same-frame duplicate submits, lock canvas controls a
   for (const mode of ["edit", "delete"]) {
     const pending = deferred(), calls = [], guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true);
     t.mock.method(globalThis, "fetch", (url, options) => { calls.push({ url, options }); return pending.promise; });
-    let tree = f.render(props); guestActions(tree, guest.id).props[mode === "edit" ? "onEdit" : "onDelete"](guest);
+    let tree = beginGuestAction(f, props, guest, mode);
     const form = guestForm(f.render(props)), saving = form.props.onSubmit({ preventDefault() {} });
     await form.props.onSubmit({ preventDefault() {} }); tree = f.render(props);
     assert.equal(calls.length, 1); assert.equal(chartCanvas(tree).busy, true); assert.equal(guestActions(tree, guest.id).props.disabled, true);
@@ -917,26 +1048,23 @@ test("smaller shared table and seat shapes match canvas, print and usable seat d
   assert.deepEqual(plan.tables[table.id], { x: 420, y: 310 });
 });
 
-test("actual member roster groups eligible and assigned guests, preserves legacy categories and shows whole party seats", () => {
+test("member roster lists only eligible unassigned guests and keeps assigned parties in canvas data", () => {
   const original = structuredClone(rosterProps.guests), f = chartFixture({}, true);
   const tree = f.render(rosterProps);
   const groups = elements(tree, (el) => el.type === "section" && el.props["aria-label"]);
-  assert.deepEqual(groups.map((group) => group.props["aria-label"]), ["Reguler", "VIP", "VVIP", "Keluarga"]);
+  assert.deepEqual(groups.map((group) => group.props["aria-label"]), ["Reguler", "VVIP", "Keluarga"]);
   assert.deepEqual(rosterRows(groups[0]).map((row) => row.props["data-guest-id"]), ["regular-party", "regular-null"]);
-  assert.equal(rosterRows(tree).length, 6);
+  assert.equal(rosterRows(tree).length, 4);
   assert.equal(rosterRows(tree).filter((row) => row.props.draggable).length, 4);
   assert.ok(!rosterRows(tree).some((row) => ["pending", "declined"].includes(row.props["data-guest-id"])));
-  const placed = rosterRows(tree).find((row) => row.props["data-guest-id"] === "vip-party");
-  assert.equal(placed.props.draggable, false);
-  assert.ok(labelOf(placed).includes("Hendra Wijaya"));
-  assert.ok(labelOf(placed).includes("3 orang · Manual"));
-  assert.ok(labelOf(placed).includes("Meja Keluarga · Kursi 8, 1, 2"));
+  assert.ok(!rosterRows(tree).some((row) => ["vip-party", "assigned-declined"].includes(row.props["data-guest-id"])));
+  assert.deepEqual(chartCanvas(tree).guests, original);
   assert.ok(labelOf(rosterRows(tree).find((row) => row.props["data-guest-id"] === "regular-party")).includes("Belum ditempatkan"));
   assert.ok(labelOf(rosterRows(tree).find((row) => row.props["data-guest-id"] === "vvip-attending")).includes("RSVP · Hadir"));
   assert.deepEqual(rosterProps.guests, original);
 });
 
-test("member roster category/tag filters include unlabelled Regular and assigned guests, and Reset restores the complete roster", () => {
+test("member roster filters count only unassigned guests and keep an empty active category resettable", () => {
   const f = chartFixture({}, true);
   let tree = f.render(rosterProps);
   rosterSelect(tree, "Semua Kategori").props.onChange({ target: { value: "REGULAR" } });
@@ -947,8 +1075,8 @@ test("member roster category/tag filters include unlabelled Regular and assigned
   assert.deepEqual(rosterRows(tree).map((row) => row.props["data-guest-id"]), ["regular-party"]);
   rosterSelect(tree, "Semua Kategori").props.onChange({ target: { value: "VIP" } });
   tree = f.render(rosterProps);
-  assert.deepEqual(rosterRows(tree).map((row) => row.props["data-guest-id"]), ["vip-party"]);
-  assert.ok(labelOf(elements(tree, (el) => el.props.role === "status")[0]).includes("1 dari 6 tamu"));
+  assert.deepEqual(rosterRows(tree).map((row) => row.props["data-guest-id"]), []);
+  assert.ok(labelOf(elements(tree, (el) => el.props.role === "status")[0]).includes("0 dari 4 tamu belum ditempatkan"));
   rosterSelect(tree, "Semua Tag").props.onChange({ target: { value: "tag-lama" } });
   tree = f.render(rosterProps);
   assert.equal(rosterRows(tree).length, 0);
@@ -956,7 +1084,7 @@ test("member roster category/tag filters include unlabelled Regular and assigned
   assert.ok(labelOf(rosterSelect(tree, "Semua Tag")).includes("Tag-Lama"));
   chartButton(tree, "Reset filter").props.onClick();
   tree = f.render(rosterProps);
-  assert.equal(rosterRows(tree).length, 6);
+  assert.equal(rosterRows(tree).length, 4);
   assert.equal(chartButton(tree, "Reset filter"), undefined);
 });
 
@@ -981,8 +1109,8 @@ test("member row drags the canonical party ID, updates placement after assignmen
   await chartCanvas(tree).onGuestDrop("regular-party", geometry.seatingSeatPoint(layout().tables[table.id], 5, table.capacity));
   tree = f.render(props);
   assert.deepEqual(assigned, [["regular-party", table.id, 6]]);
-  assert.equal(rosterRows(tree).length, 1); assert.equal(rosterRows(tree)[0].props.draggable, false);
-  assert.ok(labelOf(rosterRows(tree)[0]).includes("Meja Keluarga · Kursi 6, 7"));
+  assert.equal(rosterRows(tree).length, 0);
+  assert.equal(elements(tree, (el) => el.type === primitives.DashboardEmptyState)[0].props.title, "Semua tamu sudah ditempatkan");
   assert.equal(chartCanvas(tree).guests.length, 1); assert.equal(chartCanvas(tree).guests[0].invitedPax, 2);
   const pending = chartFixture({ loading: true }, true);
   const row = rosterRows(pending.render(props))[0];
@@ -996,9 +1124,9 @@ test("member roster renders translated group, placement and empty states in both
     const f = chartFixture();
     const render = (props) => renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(f.Chart, props)));
     const html = render(rosterProps);
-    for (const text of locale === "en" ? ["Guest list", "Regular", "3 people", "1 person", "Seats 8, 1, 2", "Unassigned"] : ["Daftar tamu", "Reguler", "3 orang", "Kursi 8, 1, 2", "Belum ditempatkan"]) assert.ok(html.includes(text), text);
+    for (const text of locale === "en" ? ["Guest list", "Regular", "2 people", "1 person", "Unassigned"] : ["Daftar tamu", "Reguler", "2 orang", "Belum ditempatkan"]) assert.ok(html.includes(text), text);
     const placed = render({ ...chartProps, guests: [rosterProps.guests[2]] });
-    assert.ok(placed.includes("Hendra Wijaya"));
+    assert.ok(placed.includes(locale === "en" ? "All guests are assigned" : "Semua tamu sudah ditempatkan"));
     assert.ok(!placed.includes(locale === "en" ? "No guests yet" : "Belum ada tamu"));
     const empty = render({ ...chartProps, guests: [] });
     assert.ok(empty.includes(locale === "en" ? "No guests yet" : "Belum ada tamu"));

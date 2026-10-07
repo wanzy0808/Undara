@@ -52,7 +52,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!tableId && seatNumber !== null) {
       return NextResponse.json({ error: "Nomor kursi harus memiliki meja." }, { status: 400 });
     }
-    if (!isSeatingEligibleGuest(guest)) {
+    if (tableId && !isSeatingEligibleGuest(guest)) {
       return NextResponse.json({ error: "Tamu RSVP yang belum berstatus ATTENDING tidak dapat ditempatkan di denah." }, { status: 409 });
     }
 
@@ -62,7 +62,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (!event.length) throw new PlacementError("Tamu tidak ditemukan.", 404);
       const currentGuest = await tx.guest.findFirst({ where: { id: guest.id, invitationId }, select: { id: true, invitedPax: true, source: true, rsvpStatus: true } });
       if (!currentGuest) throw new PlacementError("Tamu tidak ditemukan.", 404);
-      if (!isSeatingEligibleGuest(currentGuest)) throw new PlacementError("Tamu RSVP yang belum berstatus ATTENDING tidak dapat ditempatkan di denah.", 409);
+      if (tableId && !isSeatingEligibleGuest(currentGuest)) throw new PlacementError("Tamu RSVP yang belum berstatus ATTENDING tidak dapat ditempatkan di denah.", 409);
       if (!tableId) {
         return tx.guest.update({
           where: { id: guest.id },

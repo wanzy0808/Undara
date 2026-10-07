@@ -15,7 +15,7 @@ import type { SeatingGuest, SeatingSeatTarget, SeatingTable } from "./seating-ch
 const noPoints: number[] = [];
 export default function SeatingPlanCanvas({
   layout, tables, guests, tool, dark, busy, draggedGuestId, hoverTarget, selectedTableId,
-  onTableSelect, onTableMove, onPath, onDrawingChange, onExitDraw, onGuestStart, onGuestHover, onGuestDrop, onGuestCancel, onUndo, onRedo, label, emptyLabel, pageOffset = 0,
+  onTableSelect, onTableMove, onPath, onDrawingChange, onExitDraw, onGuestStart, onGuestHover, onGuestDrop, onGuestReturn, onGuestSelect, onGuestCancel, onUndo, onRedo, label, emptyLabel, pageOffset = 0,
 }: {
   layout: SeatingPlan; tables: SeatingTable[]; guests: SeatingGuest[]; tool: "move" | "draw";
   dark: boolean; busy: boolean; draggedGuestId: string | null; hoverTarget: SeatingSeatTarget | null; selectedTableId: string;
@@ -24,6 +24,9 @@ export default function SeatingPlanCanvas({
   onExitDraw: () => void;
   onGuestDrop: (id: string, point: SeatingPoint) => Promise<void>; onUndo: () => void; onRedo: () => void;
   onGuestCancel?: () => void;
+  onGuestSelect?: (id: string) => void;
+  /** Client coordinates allow dropping a Konva guest onto the DOM roster. */
+  onGuestReturn?: (id: string, clientPoint: SeatingPoint) => boolean;
   label: string; emptyLabel: string; pageOffset?: number;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -73,6 +76,12 @@ export default function SeatingPlanCanvas({
     const point = node.getStage()?.getRelativePointerPosition();
     if (!point || point.x < 0 || point.x > SEATING_WIDTH || point.y < 0 || point.y > height) return null;
     return { x: point.x, y: point.y + offset };
+  }
+  function guestClientPoint(event: KonvaEventObject<DragEvent>) {
+    const native = event.evt as unknown as { clientX?: number; clientY?: number; changedTouches?: ArrayLike<{ clientX: number; clientY: number }> } | undefined;
+    const pointer = native?.changedTouches?.[0] ?? native;
+    return typeof pointer?.clientX === "number" && typeof pointer.clientY === "number"
+      ? { x: pointer.clientX, y: pointer.clientY } : null;
   }
   function startPath(event: React.PointerEvent<HTMLDivElement>) {
     if (busy) return;
@@ -126,7 +135,7 @@ export default function SeatingPlanCanvas({
         const point = pointAt(event); if (point) void onGuestDrop(draggedGuestId, point);
       }}
       onKeyDown={(event) => {
-        if (event.key === "Escape") { cancelPath(); onExitDraw(); return; }
+        if (event.key === "Escape") { cancelPath(); onExitDraw(); onGuestSelect?.(""); return; }
         if (busy) return;
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
           event.preventDefault(); cancelPath(); if (event.shiftKey) onRedo(); else onUndo(); return;
@@ -170,12 +179,16 @@ export default function SeatingPlanCanvas({
                   return <Group key={seat} x={point.x} y={point.y}>
                     <Circle radius={highlighted ? SEATING_SEAT_RADIUS + 5 : SEATING_SEAT_RADIUS} fill={guest ? colors.seatOccupied : colors.seatEmpty}
                       stroke={colors.seatStroke} strokeWidth={highlighted ? 5 : 2} draggable={Boolean(guest && anchor) && tool === "move" && !busy}
+                      onClick={(event) => { if (guest && tool === "move" && !busy) { event.cancelBubble = true; onTableSelect(table.id); onGuestSelect?.(guest.id); } }}
+                      onTap={(event) => { if (guest && tool === "move" && !busy) { event.cancelBubble = true; onTableSelect(table.id); onGuestSelect?.(guest.id); } }}
                       onDragStart={(event) => { event.cancelBubble = true; if (guest && anchor) onGuestStart(guest.id); }}
                       onDragMove={(event) => { event.cancelBubble = true; const point = guestPointAt(event.target); if (point) onGuestHover(point); }}
                       onDragEnd={(event) => {
                         event.cancelBubble = true;
                         const point = guestPointAt(event.target);
+                        const clientPoint = guestClientPoint(event);
                         event.target.position({ x: 0, y: 0 });
+                        if (guest && anchor && clientPoint && onGuestReturn?.(guest.id, clientPoint)) return;
                         if (guest && anchor && point) void onGuestDrop(guest.id, point);
                         else onGuestCancel?.();
                       }} />

@@ -198,6 +198,29 @@ test("assignment reads a resized party after the shared event lock rather than i
   assert.equal(f.records()[0].tableId, null); assert.equal(f.calls.writes.length, 0);
 });
 
+test("unassignment releases the whole party while preserving RSVP, check-in, personal link and profile", async () => {
+  for (const source of ["MANUAL", "RSVP"]) {
+    const guest = baseGuest({ source, checkedIn: true, rsvpStatus: "NOT_ATTENDING", plusOnes: 2 }), f = fixture({ guests: [guest] });
+    const response = await f.assign(guest.id, null, null);
+    assert.equal(response.status, 200); assert.deepEqual(f.records(), [{ ...guest, tableId: null, seatNumber: null }]);
+    assert.deepEqual(f.calls.writes[0].data, { tableId: null, seatNumber: null });
+    assert.equal(f.calls.transactions[0].locks.length, 1);
+    if (source === "RSVP") assert.equal((await f.assign(guest.id, "table-a", 1)).status, 409);
+  }
+});
+
+test("unassignment keeps ownership/event and entitlement guards at the write boundary", async () => {
+  for (const [options, status] of [
+    [{ access: false }, 402],
+    [{ afterOuterLookup: (_records, event) => { event.ownerId = "other-owner"; } }, 404],
+    [{ guests: [baseGuest({ invitationId: "event-b" })] }, 404],
+  ]) {
+    const f = fixture(options), before = f.records();
+    assert.equal((await f.assign("guest-a", null, null)).status, status);
+    assert.deepEqual(f.records(), before); assert.equal(f.calls.writes.length, 0);
+  }
+});
+
 test("resize and competing placement serialize at the event and cannot claim the same adjacent seats", async () => {
   const f = fixture({ guests: [baseGuest({ seatNumber: 1 }), baseGuest({ id: "guest-b", tableId: null, seatNumber: null })] });
   const [resized, placed] = await Promise.all([f.resize(4), f.assign("guest-b", "table-a", 3)]);

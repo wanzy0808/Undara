@@ -5,6 +5,10 @@ import { useLanguage } from "@/components/I18n/LanguageProvider";
 
 const english: Record<string, string> = {
   "Aksi tamu": "Guest actions",
+  "Lepas dari meja": "Remove from table",
+  "Tamu dilepas dari meja.": "Guest removed from the table.",
+  "Tamu belum dapat dilepas dari meja. Coba lagi.": "The guest could not be removed from the table. Try again.",
+  "Lepaskan untuk kembali ke daftar": "Drop to return to the list",
   "Edit tamu": "Edit guest",
   "Hapus tamu?": "Delete guest?",
   "Tamu akan dihapus dari daftar dan kursinya dikosongkan.": "The guest will be removed from the list and their seats will be freed.",
