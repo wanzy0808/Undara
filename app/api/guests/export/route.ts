@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   if (!invitation) {
     return NextResponse.json({ error: "Acara tidak ditemukan." }, { status: 404 });
   }
-  if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) {
+  if (!(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))) {
     return NextResponse.json({ error: "Export tamu membutuhkan paket Digital Invitation." }, { status: 402 });
   }
 
