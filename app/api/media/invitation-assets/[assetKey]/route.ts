@@ -164,7 +164,7 @@ async function serve(
     if (
       !invitation.eventConfigured ||
       !invitation.isPublished ||
-      !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment))
+      !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment, invitation.id))
     ) {
       return notFound();
     }
