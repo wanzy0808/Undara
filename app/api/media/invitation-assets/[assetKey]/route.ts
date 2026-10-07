@@ -122,6 +122,7 @@ async function serve(
       url: true,
       invitation: {
         select: {
+          id: true,
           ownerId: true,
           slug: true,
           eventConfigured: true,
