@@ -3,7 +3,7 @@ import { displayTitleCase } from "@/lib/text/display-title-case";
 import { seatingCanvasColors } from "@/lib/seating/appearance";
 import { seatingGuestAtSeat, seatingGuestSeats, seatingPartySize } from "@/lib/seating/guest-seats";
 import { SEATING_WIDTH, type SeatingPlan } from "@/lib/seating/plan";
-import { seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS } from "./seating-chart-geometry";
+import { seatingPlanPageOffsets, seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingTable } from "./seating-chart-types";
 
 export const seatingPrintCss = `
@@ -30,11 +30,7 @@ export const seatingPrintCss = `
   @media print { body { print-color-adjust:exact; -webkit-print-color-adjust:exact; } }
 `;
 
-/** Overlap neighboring pages so tables near a page edge remain readable. */
-export function seatingPrintOffsets(height: number) {
-  const last = Math.max(0, height - 620), count = Math.ceil(last / 400) + 1;
-  return Array.from({ length: count }, (_, index) => count === 1 ? 0 : Math.round(last * index / (count - 1)));
-}
+export { seatingPlanPageOffsets as seatingPrintOffsets } from "./seating-chart-geometry";
 
 export default function SeatingPlanPrint({ title, layout, tables, guests, locale }: {
   title: string; layout: SeatingPlan; tables: SeatingTable[]; guests: SeatingGuest[]; locale: string;
@@ -44,7 +40,7 @@ export default function SeatingPlanPrint({ title, layout, tables, guests, locale
     .sort((a, b) => (a.seatNumber ?? 0) - (b.seatNumber ?? 0)).map((guest) => ({ guest, table: table.name })));
   const unassigned = guests.filter((guest) => !guest.tableId && (guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING"));
   const assignedSeats = rows.reduce((sum, { guest }) => sum + seatingPartySize(guest), 0);
-  const offsets = seatingPrintOffsets(layout.height);
+  const offsets = seatingPlanPageOffsets(layout.height);
   return (
     <main>
       <style>{seatingPrintCss}</style>

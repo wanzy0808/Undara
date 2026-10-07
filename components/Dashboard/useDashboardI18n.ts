@@ -4,6 +4,9 @@ import { useCallback } from "react";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 
 const english: Record<string, string> = {
+  "Isi tamu": "Guests",
+  "Halaman": "Page",
+  "Halaman denah": "Plan pages",
   "Buat tautan personal": "Create personal links",
   "Sapaan": "Title",
   "Bapak": "Mr",

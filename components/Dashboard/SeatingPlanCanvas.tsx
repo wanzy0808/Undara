@@ -8,13 +8,13 @@ import { createSeatingPathGesture } from "@/lib/seating/editor";
 import { seatingCanvasColors } from "@/lib/seating/appearance";
 import { seatingGuestAtSeat, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
 import { clampSeatingPoint, seatingPointFromClient, SEATING_TABLE_MARGIN, SEATING_WIDTH, type SeatingPlan, type SeatingPoint } from "@/lib/seating/plan";
-import { seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS } from "./seating-chart-geometry";
+import { seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_STAGE_HEIGHT } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingSeatTarget, SeatingTable } from "./seating-chart-types";
 
 const noPoints: number[] = [];
 export default function SeatingPlanCanvas({
   layout, tables, guests, tool, dark, busy, draggedGuestId, hoverTarget, selectedTableId,
-  onTableSelect, onTableMove, onPath, onDrawingChange, onExitDraw, onGuestStart, onGuestHover, onGuestDrop, onUndo, onRedo, label, emptyLabel,
+  onTableSelect, onTableMove, onPath, onDrawingChange, onExitDraw, onGuestStart, onGuestHover, onGuestDrop, onGuestCancel, onUndo, onRedo, label, emptyLabel, pageOffset = 0,
 }: {
   layout: SeatingPlan; tables: SeatingTable[]; guests: SeatingGuest[]; tool: "move" | "draw";
   dark: boolean; busy: boolean; draggedGuestId: string | null; hoverTarget: SeatingSeatTarget | null; selectedTableId: string;
@@ -22,7 +22,8 @@ export default function SeatingPlanCanvas({
   onDrawingChange: (drawing: boolean) => void; onGuestStart: (id: string) => void; onGuestHover: (point: SeatingPoint) => void;
   onExitDraw: () => void;
   onGuestDrop: (id: string, point: SeatingPoint) => Promise<void>; onUndo: () => void; onRedo: () => void;
-  label: string; emptyLabel: string;
+  onGuestCancel?: () => void;
+  label: string; emptyLabel: string; pageOffset?: number;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const stage = useRef<Konva.Stage>(null);
@@ -31,12 +32,14 @@ export default function SeatingPlanCanvas({
   const [width, setWidth] = useState(1100);
   const colors = seatingCanvasColors(dark);
   const scale = width / SEATING_WIDTH;
+  const height = Math.min(SEATING_STAGE_HEIGHT, layout.height);
+  const offset = Math.max(0, Math.min(pageOffset, layout.height - height));
   const draggedGuest = draggedGuestId ? guests.find((guest) => guest.id === draggedGuestId) ?? null : null;
 
   useEffect(() => {
     const node = container.current;
     if (!node) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(800, Math.min(1100, entry.contentRect.width))));
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(800, entry.contentRect.width)));
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
@@ -51,6 +54,10 @@ export default function SeatingPlanCanvas({
     }
   }, [onDrawingChange]);
   useEffect(() => {
+    cancelPath();
+    container.current?.scrollTo({ top: 0 });
+  }, [offset, cancelPath]);
+  useEffect(() => {
     const activeGesture = gesture.current;
     window.addEventListener("blur", cancelPath);
     return () => { window.removeEventListener("blur", cancelPath); activeGesture.cancel(); };
@@ -58,7 +65,13 @@ export default function SeatingPlanCanvas({
 
   function pointAt(event: { clientX: number; clientY: number }) {
     const bounds = stage.current?.container().getBoundingClientRect();
-    return bounds ? seatingPointFromClient({ x: event.clientX, y: event.clientY }, bounds, layout.height) : null;
+    const point = bounds ? seatingPointFromClient({ x: event.clientX, y: event.clientY }, bounds, height) : null;
+    return point ? { x: point.x, y: point.y + offset } : null;
+  }
+  function guestPointAt(node: Konva.Node) {
+    const point = node.getStage()?.getRelativePointerPosition();
+    if (!point || point.x < 0 || point.x > SEATING_WIDTH || point.y < 0 || point.y > height) return null;
+    return { x: point.x, y: point.y + offset };
   }
   function startPath(event: React.PointerEvent<HTMLDivElement>) {
     if (busy) return;
@@ -125,12 +138,12 @@ export default function SeatingPlanCanvas({
         onTableMove(selectedTableId, clampSeatingPoint({ x: center.x + offset[0] * step, y: center.y + offset[1] * step }, layout.height, SEATING_TABLE_MARGIN));
       }}
     >
-      <Stage ref={stage} width={width} height={layout.height * scale} scaleX={scale} scaleY={scale}>
-        <Layer>
+      <Stage ref={stage} width={width} height={height * scale} scaleX={scale} scaleY={scale}>
+        <Layer y={-offset}>
           <Rect width={SEATING_WIDTH} height={layout.height} fill={colors.background} listening={false} />
           {layout.paths.map((points, index) => <Arrow key={index} points={points} stroke={colors.table} fill={colors.table} strokeWidth={4} dash={[10, 7]} pointerLength={12} pointerWidth={10} lineCap="round" lineJoin="round" listening={false} />)}
         </Layer>
-        <Layer>
+        <Layer y={-offset}>
           {tables.map((table, index) => {
             const center = seatingTableCenter(table.id, index, tables.length, layout);
             const highlightedSeats = new Set(
@@ -156,12 +169,13 @@ export default function SeatingPlanCanvas({
                     <Circle radius={highlighted ? SEATING_SEAT_RADIUS + 5 : SEATING_SEAT_RADIUS} fill={guest ? colors.seatOccupied : colors.seatEmpty}
                       stroke={colors.seatStroke} strokeWidth={highlighted ? 5 : 2} draggable={Boolean(guest && anchor) && tool === "move" && !busy}
                       onDragStart={(event) => { event.cancelBubble = true; if (guest && anchor) onGuestStart(guest.id); }}
-                      onDragMove={(event) => { event.cancelBubble = true; const point = event.target.getStage()?.getRelativePointerPosition(); if (point) onGuestHover(point); }}
+                      onDragMove={(event) => { event.cancelBubble = true; const point = guestPointAt(event.target); if (point) onGuestHover(point); }}
                       onDragEnd={(event) => {
                         event.cancelBubble = true;
-                        const point = event.target.getStage()?.getRelativePointerPosition();
+                        const point = guestPointAt(event.target);
                         event.target.position({ x: 0, y: 0 });
                         if (guest && anchor && point) void onGuestDrop(guest.id, point);
+                        else onGuestCancel?.();
                       }} />
                     <Text x={-12} y={-6} width={24} align="center" text={String(seat)} fontSize={10} fill={guest ? "#321B1B" : colors.seatStroke} listening={false} />
                     {guest && anchor && <Text x={-42} y={20} width={84} height={30} align="center" text={guest.name} fontFamily="Roboto" fontSize={11} fill={colors.guestText} listening={false} />}
@@ -172,7 +186,7 @@ export default function SeatingPlanCanvas({
           })}
           {!tables.length && <Text x={80} y={280} width={940} align="center" text={emptyLabel} fontSize={15} fill={colors.mutedText} listening={false} />}
         </Layer>
-        <Layer listening={false}><Arrow ref={preview} points={noPoints} visible={false} stroke={colors.table} fill={colors.table} strokeWidth={4} dash={[10, 7]} pointerLength={12} pointerWidth={10} lineCap="round" lineJoin="round" /></Layer>
+        <Layer y={-offset} listening={false}><Arrow ref={preview} points={noPoints} visible={false} stroke={colors.table} fill={colors.table} strokeWidth={4} dash={[10, 7]} pointerLength={12} pointerWidth={10} lineCap="round" lineJoin="round" /></Layer>
       </Stage>
     </div>
   );

@@ -14,6 +14,19 @@ export const SEATING_SEAT_RADIUS = 16;
 export const SEATING_TABLE_GAP_X = 250;
 export const SEATING_TABLE_GAP_Y = 205;
 
+/** Shared editor/print windows overlap so edge tables remain readable. */
+export function seatingPlanPageOffsets(height: number) {
+  const last = Math.max(0, height - SEATING_STAGE_HEIGHT);
+  const count = Math.ceil(last / 400) + 1;
+  return Array.from({ length: count }, (_, index) => count === 1 ? 0 : Math.round(last * index / (count - 1)));
+}
+
+export function seatingPlanPageAtY(y: number, height: number) {
+  const offsets = seatingPlanPageOffsets(height);
+  return offsets.reduce((best, offset, index) =>
+    Math.abs(y - offset - SEATING_STAGE_HEIGHT / 2) < Math.abs(y - offsets[best] - SEATING_STAGE_HEIGHT / 2) ? index : best, 0);
+}
+
 export function seatingTablePoint(
   index: number,
   total: number,

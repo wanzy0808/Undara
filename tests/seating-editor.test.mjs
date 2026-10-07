@@ -56,6 +56,19 @@ test("table additions keep prior positions/routes and use vacant spaces rather t
   assert.equal(Object.keys(maximum.tables).length, 100); assert.ok(plans.parseSeatingPlan(maximum));
 });
 
+test("editor pages overlap, cover the complete plan and keep every full table reachable", () => {
+  for (const count of [0, 1, 12, 20, 100]) {
+    const height = plans.seatingCanvasHeight(count), offsets = geometry.seatingPlanPageOffsets(height);
+    assert.equal(offsets[0], 0); assert.equal(offsets.at(-1) + 620, height);
+    for (let i = 1; i < offsets.length; i++) assert.ok(offsets[i] > offsets[i - 1] && offsets[i] - offsets[i - 1] <= 400);
+    for (let y = 110; y <= height - 110; y += 10) {
+      assert.ok(offsets.some((offset) => y - 110 >= offset && y + 110 <= offset + 620), `unreachable table at ${y}`);
+      const selected = geometry.seatingPlanPageAtY(y, height);
+      assert.ok(selected >= 0 && selected < offsets.length);
+    }
+  }
+});
+
 test("moved tables drive the real seat drop geometry, including occupied seats and self drops", () => {
   const plan = layout(), guests = [{ id: "guest-a", tableId: table.id, seatNumber: 1 }];
   const seat = geometry.seatingSeatPoint(plan.tables[table.id], 0, table.capacity);
@@ -458,6 +471,37 @@ test("actual canvas native guest drop and keyboard moves use the same logical bo
   assert.deepEqual(calls.tables.at(-1), ["redo"]);
 });
 
+test("later canvas pages translate paths and both guest drag modes into the original saved coordinates", () => {
+  const tall = { ...layout(), height: 1240, tables: { [table.id]: { x: 420, y: 810 } } };
+  const drawing = canvasFixture({ layout: tall, pageOffset: 400 });
+  assert.equal(elements(drawing.tree, (el) => el.type === "Stage")[0].props.height, 620);
+  assert.ok(elements(drawing.tree, (el) => el.type === "Layer").every((el) => el.props.y === -400));
+  drawing.tree.props.onPointerDown(drawing.pointer(1)); drawing.tree.props.onPointerMove(drawing.pointer(1, 400, 160)); drawing.tree.props.onPointerUp(drawing.pointer(1, 500, 210));
+  assert.deepEqual(drawing.calls.paths, [[440, 710, 740, 820, 940, 920]]);
+
+  const moving = canvasFixture({ layout: tall, pageOffset: 400, tool: "move" });
+  moving.tree.props.onDrop({ ...moving.pointer(1), dataTransfer: {} });
+  const circle = elements(moving.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+  const node = { getStage: () => ({ getRelativePointerPosition: () => ({ x: 740, y: 420 }) }), position() {} };
+  circle.props.onDragEnd({ target: node });
+  assert.deepEqual(moving.calls.guests, [["drop", "guest-a", { x: 440, y: 710 }], ["drop", "guest-a", { x: 740, y: 820 }]]);
+  const group = elements(moving.tree, (el) => el.type === "Group" && el.props.x === 420)[0];
+  const tableNode = { x: () => 520, y: () => 900, position() {} };
+  group.props.onDragEnd({ target: tableNode, currentTarget: tableNode });
+  assert.deepEqual(moving.calls.tables, [["move", table.id, { x: 520, y: 900 }]]);
+  moving.tree.props.onKeyDown({ key: "ArrowDown", preventDefault() {} });
+  assert.deepEqual(moving.calls.tables.at(-1), ["move", table.id, { x: 420, y: 820 }]);
+});
+
+test("dropping an assigned guest outside the visible page cancels rather than seating it on a hidden page", () => {
+  let cancelled = 0;
+  const f = canvasFixture({ layout: { ...layout(), height: 1240 }, pageOffset: 400, tool: "move", onGuestCancel: () => cancelled++ });
+  const circle = elements(f.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+  const node = { getStage: () => ({ getRelativePointerPosition: () => ({ x: 440, y: -30 }) }), position() {} };
+  circle.props.onDragEnd({ target: node });
+  assert.equal(cancelled, 1); assert.deepEqual(f.calls.guests, []);
+});
+
 const Print = PrintModule.default ?? PrintModule;
 function chartFixture(overrides = {}, interactive = false) {
   const calls = [];
@@ -530,6 +574,51 @@ test("real chart table edits and canonical guest assignments work independently 
 
 const labelOf = (node) => typeof node === "string" ? node : React.Children.toArray(node?.props?.children).map(labelOf).join("");
 const chartCanvas = (tree) => elements(tree, (el) => Boolean(el.props?.onTableMove && el.props?.onDrawingChange))[0].props;
+
+test("setup and guest entry sit above the full-width canvas with short table/seat labels", () => {
+  for (const locale of ["id", "en"]) {
+    const f = chartFixture();
+    const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(f.Chart, { invitationId: "event-a", tables: [table], guests: [], onAssigned: async () => {} })));
+    assert.ok(html.includes(locale === "en" ? "Tables:</span>" : "Meja:</span>"));
+    assert.ok(html.includes(locale === "en" ? "Seats:</span>" : "Kursi:</span>"));
+    assert.doesNotMatch(html, /Meja ditambahkan|Bangku per meja|Tables to add|Chairs per table/);
+    assert.doesNotMatch(html, /aria-label="(?:Halaman denah|Plan pages)"/);
+  }
+  const f = chartFixture({}, true), tree = f.render({ invitationId: "event-a", tables: [table], guests: [], onAssigned: async () => {} });
+  const sections = React.Children.toArray(tree.props.children);
+  assert.equal(sections.length, 2);
+  assert.ok(sections[0].props.className.includes("lg:grid-cols"));
+  assert.deepEqual(elements(sections[0], (el) => el.type === primitives.DashboardPanel).map((el) => el.props.title), ["Struktur meja", "Isi tamu"]);
+  assert.equal(sections[1].props.title, "Denah tempat duduk");
+  assert.equal(chartCanvas(tree).pageOffset, 0);
+});
+
+test("page navigation and drag-to-page preserve the full plan, while Save still includes hidden tables/routes", async () => {
+  const tall = { ...layout(), height: 1600, tables: { ...layout().tables, "table-b": { x: 700, y: 1310 } } };
+  const f = chartFixture({ editor: { ...editor.emptySeatingEditor(), plan: tall } }, true), assigned = [];
+  const props = { invitationId: "event-a", tables: [table, { ...table, id: "table-b" }], guests: [{ id: "guest-manual", name: "Naya", source: "MANUAL", tableId: null, invitedPax: 2 }], onAssigned: async (...args) => assigned.push(args) };
+  let tree = f.render(props);
+  const pages = (tree) => elements(tree, (el) => el.type === Button && /^Halaman \d+$/.test(el.props["aria-label"] ?? ""));
+  assert.ok(pages(tree).length > 1); assert.equal(pages(tree)[0].props["aria-current"], "page");
+  pages(tree)[1].props.onClick(); tree = f.render(props);
+  assert.equal(chartCanvas(tree).pageOffset, geometry.seatingPlanPageOffsets(tall.height)[1]);
+  assert.deepEqual(f.calls, []); assert.equal(chartCanvas(tree).tables.length, 2);
+  chartCanvas(tree).onDrawingChange(true); tree = f.render(props);
+  assert.ok(pages(tree).every((el) => el.props.disabled));
+  pages(tree)[0].props.onClick(); assert.equal(chartCanvas(f.render(props)).pageOffset, geometry.seatingPlanPageOffsets(tall.height)[1]);
+  chartCanvas(f.render(props)).onDrawingChange(false); tree = f.render(props);
+  chartCanvas(tree).onGuestStart("guest-manual"); tree = f.render(props);
+  pages(tree).at(-1).props.onDragEnter(); tree = f.render(props);
+  assert.equal(chartCanvas(tree).pageOffset, geometry.seatingPlanPageOffsets(tall.height).at(-1));
+  assert.equal(chartCanvas(tree).draggedGuestId, "guest-manual");
+  await chartCanvas(tree).onGuestDrop("guest-manual", geometry.seatingSeatPoint(tall.tables["table-b"], 0, table.capacity));
+  assert.deepEqual(assigned, [["guest-manual", "table-b", 1]]);
+  tree = f.render(props); chartButton(tree, "Simpan denah").props.onClick(); await flush();
+  assert.deepEqual(f.calls.at(-1), tall);
+  f.plan.editor = { ...editor.emptySeatingEditor(), plan: layout() };
+  tree = f.render({ ...props, tables: [table], guests: [] });
+  assert.equal(chartCanvas(tree).pageOffset, 0); assert.equal(pages(tree).length, 0);
+});
 const chartButton = (tree, label) => elements(tree, (el) => el.type === Button && labelOf(el) === label)[0];
 const chartProps = { invitationId: "event-a", tables: [table], guests: [{ id: "guest-a", name: "Naya", source: "MANUAL", tableId: table.id, seatNumber: 2 }], onAssigned: async () => {} };
 
