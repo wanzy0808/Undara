@@ -3,7 +3,12 @@ import test from "node:test";
 import * as paidAccess from "../lib/packages/access.ts";
 import { loadSource } from "./helpers/package-access.mjs";
 
-function fixture(metadata) {
+function fixture(metadata, invitationRows = [
+  { id: "paid-first", payment: { packageKey: "INVITATION_BASIC", status: "PAID" } },
+  { id: "owner-a", payment: null },
+  { id: "owner-b", payment: null },
+  { id: "owner-c", payment: null },
+]) {
   const writes = [];
   const prisma = {
     auditLog: {
@@ -15,12 +20,7 @@ function fixture(metadata) {
       create: async (query) => { writes.push(query); return query.data; },
     },
     invitation: {
-      findMany: async () => [
-        { id: "paid-first", payment: { packageKey: "INVITATION_BASIC", status: "PAID" } },
-        { id: "owner-a", payment: null },
-        { id: "owner-b", payment: null },
-        { id: "owner-c", payment: null },
-      ],
+      findMany: async () => invitationRows,
     },
     payment: { findFirst: async () => null },
   };
@@ -53,6 +53,16 @@ test("two Owner Rp150k rights activate exactly two otherwise-unpaid invitations"
     ),
     true,
   );
+});
+
+test("an already assigned Owner right stays on the same invitation when another draft becomes eligible later", async () => {
+  const invitations = [{ id: "event-b", payment: null }];
+  const f = fixture({ digital: true, digitalCredits: 1, guestbook: false }, invitations);
+  assert.equal(await f.access.hasAccountDigitalInvitation("user-a", null, "event-b"), true);
+
+  invitations.unshift({ id: "event-a", payment: null });
+  assert.equal(await f.access.hasAccountDigitalInvitation("user-a", null, "event-b"), true);
+  assert.equal(await f.access.hasAccountDigitalInvitation("user-a", null, "event-a"), false);
 });
 
 test("legacy boolean Owner grant migrates logically to one invitation right", async () => {
