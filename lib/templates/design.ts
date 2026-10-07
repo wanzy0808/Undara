@@ -30,6 +30,8 @@ export const invitationPalettes = {
   silverReverie: { name: "Silver Reverie", bg: "#eef1f2", surface: "#fbfaf7", ink: "#263a48", accent: "#536b7a", soft: "#b5c4cd" },
   goldenKeepsake: { name: "Golden Keepsake", bg: "#f4e7ce", surface: "#fffaf0", ink: "#51341c", accent: "#8c5e1a", soft: "#d7b67b" },
   confetti: { name: "Confetti Club", bg: "#fff6e5", surface: "#fffcf5", ink: "#222c51", accent: "#2445ae", soft: "#f77959" },
+  tamanDoa: { name: "Taman Doa", bg: "#f7f1e4", surface: "#eef1e5", ink: "#284332", accent: "#315c45", soft: "#d9cfb4" },
+  redThread: { name: "Red Thread", bg: "#7c242d", surface: "#fff3da", ink: "#fff3da", accent: "#d8af69", soft: "#b84f4a" },
 } as const;
 
 export const invitationFonts = {

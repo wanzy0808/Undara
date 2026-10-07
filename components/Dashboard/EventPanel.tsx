@@ -428,7 +428,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                 >
                   <option value="">{displayTitleCase(d("Pilih jenis acara"))}</option>
                   {eventCategoryOptions.map((item) => (
-                    <option key={item.key} value={item.key}>{displayTitleCase(locale === "en" ? ({ WEDDING: "Wedding", SILVER_WEDDING: "Silver Wedding", GOLDEN_WEDDING: "Golden Wedding", BIRTHDAY: "Birthday", BABY_SHOWER: "Baby Shower", OTHER: "Other Event" } as Record<string, string>)[item.key] || item.label : item.label)}</option>
+                    <option key={item.key} value={item.key}>{displayTitleCase(locale === "en" ? ({ WEDDING: "Wedding", SILVER_WEDDING: "Silver Wedding", GOLDEN_WEDDING: "Golden Wedding", BIRTHDAY: "Birthday", BABY_SHOWER: "Baby Shower", KHITANAN: "Khitan Celebration", SANGJIT: "Sangjit", OTHER: "Other Event" } as Record<string, string>)[item.key] || item.label : item.label)}</option>
                   ))}
                 </select>
               </FloatingField>
@@ -483,7 +483,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
 
                   {category.nameMode === "single" && (
                     <EventField
-                      label={form.eventCategory === "BIRTHDAY" ? d("Nama yang berulang tahun") : d("Nama keluarga / calon bayi")}
+                      label={form.eventCategory === "BIRTHDAY" ? d("Nama yang berulang tahun") : form.eventCategory === "KHITANAN" ? d("Nama anak") : d("Nama keluarga / calon bayi")}
                       value={form.groomName}
                       onChange={(value) => field("groomName", value)}
                       placeholder={d("Nama")}

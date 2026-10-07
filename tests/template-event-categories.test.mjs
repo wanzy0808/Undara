@@ -104,7 +104,7 @@ function gatewayFixture({ events = [], selected, designer, user = { id: "user-a"
 const choice = (id, eventCategory) => ({ id, title: id, type: "WEDDING", eventCategory });
 const localCatalog = catalog.invitationTemplates.map((item) => ({ ...item, source: "built-in", ready: true }));
 
-test("each categorized theme appears in exactly one of the six event categories", () => {
+test("each categorized theme appears in exactly one of the supported event categories", () => {
   for (const theme of localCatalog) {
     assert.equal(theme.eventCategories.length, 1);
     for (const { key } of categories.eventCategoryOptions) {
@@ -186,9 +186,9 @@ for (const category of ["WEDDING", "BIRTHDAY"]) {
   });
 }
 
-for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "OTHER"]) {
+for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "KHITANAN", "SANGJIT", "OTHER"]) {
   test(`${category} does not borrow Wedding/Birthday defaults or catalog cards`, () => {
-    const expected = { SILVER_WEDDING: "silver-reverie", GOLDEN_WEDDING: "golden-keepsake", BABY_SHOWER: "little-cloud", OTHER: "gathering" }[category];
+    const expected = { SILVER_WEDDING: "silver-reverie", GOLDEN_WEDDING: "golden-keepsake", BABY_SHOWER: "little-cloud", KHITANAN: "taman-doa", SANGJIT: "red-thread", OTHER: "gathering" }[category];
     if (expected) {
       assert.deepEqual(catalog.templatesForEvent(localCatalog, category).map((item) => item.key), [expected]);
       assert.equal(catalog.defaultInvitationTemplateForEvent(category).key, expected);
@@ -397,7 +397,7 @@ test("explicitly assigned blank custom designs stay usable for all categories wi
   }
 });
 
-for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "OTHER"]) {
+for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "KHITANAN", "SANGJIT", "OTHER"]) {
   test(`${category} accepts only its own new theme through Save/Publish, gateway and handoff`, async () => {
     const theme = catalog.defaultInvitationTemplateForEvent(category);
     const ownKey = design.makeDesignKey(theme.key, theme.preset.palette, theme.preset.font);
@@ -497,3 +497,27 @@ test("a partial design save projects the latest session schedule read under the 
   assert.equal(f.calls.updates[0].ceremonyTime, "18:00");
   assert.equal(f.calls.updates[0].receptionTime, "END");
 });
+
+for (const [category, primary, secondary, title] of [["KHITANAN", "Aksa", "", "Khitanan Aksa"], ["SANGJIT", "Leon", "Mei", "Sangjit Leon & Mei"]]) {
+  test(`${category} creation validates its identity and keeps the generic schedule`, async () => {
+    const body = { eventCategory: category, groomName: primary, brideName: secondary, eventDate: "2027-07-18", ceremonyTime: "10:00", receptionTime: "END", venue: "Rumah Keluarga" };
+    const valid = saveFixture();
+    assert.equal((await valid.create(body)).status, 201);
+    const stored = valid.calls.creates[0];
+    assert.equal(stored.eventCategory, category);
+    assert.equal(stored.title, title);
+    assert.equal(stored.groomName, primary);
+    assert.equal(stored.brideName, secondary);
+    assert.equal(stored.ceremonyTime, "10:00");
+    assert.equal(stored.receptionTime, "END");
+    assert.equal(stored.weddingSessions ?? null, null);
+    for (const missing of category === "SANGJIT" ? [{ groomName: "" }, { brideName: "" }] : [{ groomName: "" }]) {
+      const invalid = saveFixture();
+      assert.equal((await invalid.create({ ...body, ...missing })).status, 400);
+      assert.deepEqual(invalid.calls.creates, []);
+    }
+    const weddingOnly = saveFixture();
+    assert.equal((await weddingOnly.create({ ...body, weddingSessions })).status, 400);
+    assert.deepEqual(weddingOnly.calls.creates, []);
+  });
+}

@@ -25,6 +25,8 @@ Jenis event yang didukung minimal:
 - `GOLDEN_WEDDING` — Golden Wedding;
 - `BIRTHDAY` — Ulang Tahun;
 - `BABY_SHOWER` — Baby Shower;
+- `KHITANAN` — Khitanan;
+- `SANGJIT` — Sangjit;
 - `OTHER` — Event Lainnya.
 
 Platform harus dapat berkembang ke engagement, anniversary, corporate/private event, gathering, dan event lain tanpa memaksa data couple/wedding.
@@ -270,6 +272,8 @@ Dynamic name fields:
 - Silver/Golden Wedding → nama pasangan 1 + pasangan 2;
 - Birthday → satu nama utama;
 - Baby Shower → nama keluarga/calon bayi;
+- Khitanan → satu nama anak;
+- Sangjit → nama pasangan 1 + pasangan 2, dengan jadwal acara umum (tanpa menginfer prosesi/resepsi WEDDING);
 - Event Lainnya → custom event title.
 
 Untuk `WEDDING`:
@@ -287,7 +291,11 @@ Title predefined category dapat digenerate dari category + identity, misalnya:
 - `Pernikahan Rio & Lyvia`;
 - `Silver Wedding Budi & Ani`;
 - `Ulang Tahun Olivia`;
-- `Baby Shower Keluarga Wijaya`.
+- `Baby Shower Keluarga Wijaya`;
+- `Khitanan Aksa`;
+- `Sangjit Leon & Mei`.
+
+Khitanan dan Sangjit mempunyai kategori/template terpisah. Gunakan field nama dan jadwal existing; tidak membuat model tamu, pipeline foto, RSVP, QR, atau pembayaran kedua. Foto opsional pada Identity/Gallery; sampul kedua tema berbasis ilustrasi. Tema tetap lengkap dengan 15 kontrol Studio dan perlindungan mode contoh.
 
 ### 5.4 Required fields before configured
 
@@ -744,9 +752,9 @@ Menu Musik di Studio menampilkan **Koleksi Undara** dari satu registry audio ber
 
 URL musik warisan yang telah tersimpan tetap dibaca dan dapat didengarkan demi kompatibilitas, tetapi pembuatan aset/audio baru hanya dari URL tanpa binary tidak diperbolehkan sesuai batas upload §7.2.1b. Jangan pasang musik undangan pada halaman Dashboard, landing, guestbook, atau undangan belum terbit. Asset dan lisensi lagu yang digunakan untuk distribusi publik harus dipastikan sesuai hak penggunaan oleh pengelola sebelum rilis komersial.
 
-### 7.2.3b Katalog tema bawaan: tiga belas dengan foto, enam tanpa foto (6 October 2026)
+### 7.2.3b Katalog tema bawaan: lima belas dengan foto, enam tanpa foto (7 October 2026)
 
-Setiap template READY harus punya komposisi nyata yang dapat dibedakan secara visual sebelum dan setelah membuka amplop, bukan hanya pergantian palette, font, stock photo dan border radius pada satu layout. Manifest tunggal `lib/templates/catalog.ts` menyatakan `usesPhotos: boolean`, `photoSlots`, nama dan preset. Katalog bawaan yang diverifikasi dari `lib/templates/catalog.ts` pada 6 October 2026 memiliki **19 template, 13 dengan foto opsional dan 6 tanpa foto**. Silver Reverie/Golden Keepsake, Little Cloud dan Gathering melengkapi masing-masing kategori anniversary, Baby Shower dan Event Lainnya tanpa mencampur Wedding/Birthday; Blank Canvas tetap starter terpisah. Jumlah aktual dan daftar key diperiksa terhadap registry, bukan disalin dari riwayat versi lama:
+Setiap template READY harus punya komposisi nyata yang dapat dibedakan secara visual sebelum dan setelah membuka amplop, bukan hanya pergantian palette, font, stock photo dan border radius pada satu layout. Manifest tunggal `lib/templates/catalog.ts` menyatakan `usesPhotos: boolean`, `photoSlots`, nama dan preset. Katalog bawaan yang diverifikasi dari `lib/templates/catalog.ts` pada 7 October 2026 memiliki **21 template, 15 dengan foto opsional dan 6 tanpa foto**. Taman Doa khusus Khitanan dan Red Thread khusus Sangjit, masing-masing dengan sampul ilustratif dan foto opsional pada Identity/Gallery. Silver Reverie/Golden Keepsake, Little Cloud dan Gathering melengkapi masing-masing kategori anniversary, Baby Shower dan Event Lainnya tanpa mencampur Wedding/Birthday; Blank Canvas tetap starter terpisah. Jumlah aktual dan daftar key diperiksa terhadap registry, bukan disalin dari riwayat versi lama:
 
 | Mode | Stable key | Identitas visual, bukan sekadar warna |
 | --- | --- | --- |
@@ -769,6 +777,8 @@ Setiap template READY harus punya komposisi nyata yang dapat dibedakan secara vi
 | Foto | `golden-keepsake` | Golden Wedding: folio hangat, gatefold, kipas kertas emas dengan blade individual, portrait oval, dan album stack |
 | Foto | `little-cloud` | Baby Shower: paper moon mobile, awan berlapis, amplop scallop, identity keluarga dengan foto opsional, dan album carousel |
 | Foto | `gathering` | Event Lainnya: poster tipografi bold, pita lipatan kertas, roset pleated, foto opsional, dan album masonry |
+| Foto | `taman-doa` | Khitanan: amplop berlipat dengan surat melengkung, taman kertas hijau/ivory, layang-layang, identitas anak, dan album carousel |
+| Foto | `red-thread` | Sangjit: folio gatefold merah/emas, simpul dua loop, cloud scroll, tipografi pasangan asimetris, dan album stack |
 
 Untuk setiap theme, amplop digital tetap punya lipatan/flap dan aksi "Buka Undangan" riil; visual envelope, Cover dan section decoration mengikuti identitas theme berbeda. Foto preview berbasis aset `public/` yang sudah ada, tanpa mengambil URL Unsplash. Tanpa-foto bukan sekadar menyembunyikan tag `img`: tutup, Hero, Identity, Gallery/Media dan dekorasi mengutamakan tipografi, ornamen/ilustrasi dan data event, tidak merender media customer walaupun sebelumnya pernah mengupload foto untuk theme lain. Studio tidak memunculkan input slot/upload untuk theme tanpa foto (koleksi event tetap tersimpan dan muncul bila customer beralih kembali ke theme foto). Gallery/media tanpa foto tetap section semantik ke-6 tetapi menjadi surface story/illustration tanpa menciptakan foto/memori personal palsu. Image-preview-only designer submissions tidak otomatis dipaksa masuk hitungan 6/5 dan tidak selectable hingga renderer asli tersedia.
 
@@ -3456,3 +3466,14 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Affected files / commit:** `prisma/schema.prisma`, migration `20261007130000_wedding_sessions`, tracked generated Prisma client, `lib/events/wedding-{sessions,session-mutation}.ts`, shared guest/Usher helpers, existing event/guest/personal/RSVP/QR/Usher APIs and personal pages, Dashboard/Studio/public/Usher components, native system-content markers, regression fixtures, `studio.md`, `README.md`, `checklist.md` and canonical §5.7/§9 above. Commit: `feat(wedding): add same-day sessions and guest-scoped admission` (this implementation commit).
 
 **Validation status:** Final local regression **894/894 PASS** (35 new regression cases; zero failures/skips), standalone TypeScript PASS, Prisma generate/validate PASS, production Next.js webpack build PASS with **73/73** generated pages, and `git diff --check` PASS. Changed-source/test ESLint findings match the untouched main checkout exactly (**10 existing errors + 14 warnings** across the wider feature surface); no new diagnostics are introduced and lint is not reported as a blanket PASS. No target database migration, physical scanner/concurrent PostgreSQL integration or browser visual/E2E PASS is claimed. Existing Chromium availability/download limitation remains; Desktop/mobile Light/Dark/ID/EN, signed-in Save/reload/public/password flow and real QR scans are runtime QA. Repository design orchestrator and upstream Taste/Impeccable form guidance informed the compact semantic controls; Impeccable’s context launcher was unavailable and is not claimed to have run. Source model changes do not establish production deployment.
+
+
+### 2026-10-07 — Khitanan and Sangjit categories with two dedicated invitation themes
+
+**Request / rationale:** Owner requested Khitanan and Sangjit invitations. They now have separate exact-match event categories instead of being forced into Wedding/Other: `KHITANAN` requires one child name; `SANGJIT` two partner names. Both use the existing general-event date/time/timezone/location and invitation aggregate. No schema migration or customer-data rewrite is introduced.
+
+**Implementation / area:** `lib/events/catalog.ts`, Dashboard category/name labels and ID/EN copy; the shared template registry adds `taman-doa` (Taman Doa, ivory/green arch garden and paper kite) and `red-thread` (Red Thread, crimson/gold gatefold with cloud scroll and a two-loop knot). Dedicated lazy `FamilyCelebrationScene.tsx`/`FamilyCelebrationArtwork.tsx` and scoped CSS extend the Universal engine across envelope, Cover and all content sections. Identity/Gallery accept optional real event photos through existing slots; covers are illustrated with no stock-photo fallback. Theme-specific narrative, section headings, gallery modes, bundled music, native paint/transform/hide and animation OFF remain in the existing shared contracts. Isolated preview fixtures and vector cover images contain demonstration data only. Public, personal and Studio use the same renderer; Save/Publish/gateway/custom handoff keep exact-category, auth, entitlement and preview-write protections. Catalog now has **21 built-ins across 8 event categories**. Asset direction and limitations: `public/templates/family-celebrations.md`. Active PRD, README, AGENTS, template.md, studio.md and checklist are aligned. Commit title: `feat(templates): add khitanan and sangjit invitation themes`.
+
+**Bounded design / motion review:** Generated standalone cover references were inspected for palette, hierarchy, spacing and composition before implementing code-native geometry. Both vector previews were rendered and inspected; the garden's green inner arch was added as an independent paint target. Covers retain document flow, readable wrapping and complete geometry. Functional sections receive scoped typography/surfaces/form/gallery treatment. Opening reuses one finite shared gesture/audio transition; fold/tie animations use transform/opacity with existing ease-out, and keyboard/Reduced Motion/OFF opens immediately. Gold on cream uses readable foregrounds and a currentColor focus outline. Exact pixel equivalence to concept imagery is not claimed.
+
+**Observed validation:** **916/916 tests PASS** (22 additional cases), including new category/creation/name validation, Wedding-session rejection, Save/first Publish/gateway/handoff isolation, preview fixture switching, real escaped names/recipient line, single opening control, bilingual family-authored copy preservation, native color/hide, contrast, motion OFF and selected music. Standalone TypeScript and final production `next build --webpack` **PASS** (**73/73** pages). Feature-only ESLint run **PASS**; final changed-code diagnostics match untouched HEAD exactly (**1 existing error, 3 warnings**, no new findings). `git diff --check` **PASS**. Source/SSR, vector preview inspection and build are observed; signed-in browser/device QA for responsive layout, opening/crop/native editing/Undo/Save/reload/public RSVP/Wishes/Gift/Maps/QR is **pending** because no browser runtime is available. No production deployment or database/E2E validation is claimed. Exact-commit GitHub CI will be observed after publication.

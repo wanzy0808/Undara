@@ -10,6 +10,40 @@ type OccasionPresentation = {
 
 /** Presentation only. Event compatibility remains exclusively in catalog.ts. */
 export const occasionPresentations = {
+  "taman-doa": {
+    gallery: "carousel",
+    surfaceSections: ["greeting", "dateTime", "gallery", "location", "gift"],
+    headings: {
+      greeting: ["Dengan syukur dan doa", "With gratitude and prayers"],
+      identity: ["Untuk putra kami", "For our son"],
+      event: ["Hari penuh syukur", "A day of gratitude"],
+      dateTime: ["Simpan harinya", "Save the day"],
+      gallery: ["Kenangan si kecil", "Childhood memories"],
+      countdown: ["Menanti kebersamaan", "Counting down to togetherness"],
+      location: ["Tempat berbagi bahagia", "Where we share our joy"],
+      rsvp: ["Hadir bersama kami?", "Will you join us?"],
+      wishes: ["Doa untuk langkahnya", "Wishes for his journey"],
+      gift: ["Tanda kasih", "A loving gift"],
+      closing: ["Terima kasih atas doanya", "Thank you for your prayers"],
+    },
+  },
+  "red-thread": {
+    gallery: "stack",
+    surfaceSections: ["greeting", "dateTime", "rsvp", "wishes", "gift"],
+    headings: {
+      greeting: ["Dua keluarga, satu cerita", "Two families, one story"],
+      identity: ["Yang merangkai ikatan", "The couple"],
+      event: ["Hari pertemuan keluarga", "A family celebration"],
+      dateTime: ["Waktu untuk berkumpul", "Time to gather"],
+      gallery: ["Kenangan dalam bingkai", "Framed memories"],
+      countdown: ["Menuju hari istimewa", "Until our special day"],
+      location: ["Tempat kita berkumpul", "Where we gather"],
+      rsvp: ["Mari berbagi bahagia", "Share our joy"],
+      wishes: ["Harapan untuk kami", "Wishes for us"],
+      gift: ["Tanda kasih", "A loving gift"],
+      closing: ["Ikatan yang kita rayakan", "Celebrating our bond"],
+    },
+  },
   "little-cloud": {
     gallery: "carousel",
     surfaceSections: ["greeting", "identity", "gallery", "rsvp", "gift"],

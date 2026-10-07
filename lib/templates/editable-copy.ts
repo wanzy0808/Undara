@@ -25,6 +25,18 @@ export function availableEditableCopyFields(templateKey: string, isWedding = tru
 }
 
 export function invitationCopyDefaults(templateKey: string, eventDescription?: string | null): EditableInvitationCopy {
+  if (templateKey === "taman-doa") return {
+    greeting: eventDescription?.trim() || "Dengan penuh rasa syukur, kami mengundang Anda untuk hadir pada syukuran khitanan putra kami.",
+    attendanceRequest: "Mari berbagi kebahagiaan dan doa bersama keluarga kami. Kehadiran Anda akan membuat hari ini semakin berarti.",
+    prayerWish: "Semoga putra kami tumbuh sehat, berhati baik, dan selalu dikelilingi kasih serta doa yang baik.",
+    closing: "Terima kasih atas kehadiran dan doa Anda. Semoga kebersamaan ini menjadi kenangan yang hangat bagi kita semua.",
+  };
+  if (templateKey === "red-thread") return {
+    greeting: eventDescription?.trim() || "Dua keluarga bertemu untuk merangkai ikatan yang penuh makna. Dengan hangat, kami mengundang Anda ke acara sangjit kami.",
+    attendanceRequest: "Kehadiran Anda akan melengkapi kebahagiaan kedua keluarga pada hari istimewa ini.",
+    prayerWish: "Semoga ikatan ini membawa kasih, keharmonisan, dan kebersamaan yang terus bertumbuh.",
+    closing: "Terima kasih telah menjadi bagian dari pertemuan kedua keluarga kami. Sampai bertemu di hari yang penuh kebahagiaan.",
+  };
   if (templateKey === "little-cloud") return {
     greeting: eventDescription?.trim() || "Kami sedang menanti cerita kecil yang akan membawa banyak bahagia. Kami ingin berbagi rasa syukur ini bersama Anda.",
     attendanceRequest: "Datanglah untuk berbagi doa, cerita, dan kebersamaan sebelum kami menyambut si kecil.",

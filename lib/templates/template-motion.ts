@@ -65,6 +65,8 @@ const confettiClubPhotos: PhotoMotionMap = {
 };
 
 const photoDefaults: Record<string, PhotoMotionMap> = {
+  "taman-doa": { gallery: { animation: "fade", animationDuration: .5, animationStagger: .04 } },
+  "red-thread": { gallery: { animation: "fade", animationDuration: .5, animationStagger: .04 } },
   "little-cloud": { gallery: { animation: "fade", animationDuration: .5, animationStagger: .04 } },
   "gathering": { cover: { animation: "rise", animationDuration: .5 }, gallery: { animation: "rise", animationDuration: .5, animationStagger: .04 } },
   "silver-reverie": { cover: { animation: "fade", animationDuration: .5 }, gallery: { animation: "rise", animationDuration: .55, animationStagger: .04 } },
@@ -899,6 +901,8 @@ const confettiClubNative: Record<string, TemplateNativeMotion> = {
 };
 
 const nativeDefaults: Record<string, Record<string, TemplateNativeMotion>> = {
+  "taman-doa": { "object:cover:garden-art": { animation: "rise", animationDuration: .6 } },
+  "red-thread": { "object:cover:ceremonial-knot-art": { animation: "soft-scale", animationDuration: .6 } },
   "little-cloud": { "heading:cover": { animation: "fade", animationDuration: .55 }, "object:cover:moon-mobile-art": { animation: "rise", animationDuration: .6 } },
   gathering: { "heading:cover": { animation: "rise", animationDuration: .55 }, "object:cover:rosette-art": { animation: "soft-scale", animationDuration: .6 } },
   "silver-reverie": { "heading:cover": { animation: "rise", animationDuration: .6 }, "object:cover:silver-loops-art": { animation: "fade", animationDuration: .6 } },

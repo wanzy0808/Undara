@@ -72,6 +72,7 @@ const ConfettiClubSectionArt = dynamic(() => import("@/components/PublicInvitati
 const BotanicalIvoryGallery = dynamic(() => import("@/components/PublicInvitation/BotanicalIvoryGallery"));
 const BotanicalSectionArt = dynamic(() => import("@/components/PublicInvitation/BotanicalIvoryArtwork").then((module) => module.BotanicalSectionArt));
 const BotanicalIdentity = dynamic(() => import("@/components/PublicInvitation/BotanicalIvoryArtwork").then((module) => module.BotanicalIdentity));
+const FamilyCelebrationSectionArt = dynamic(() => import("@/components/PublicInvitation/FamilyCelebrationArtwork").then((module) => module.FamilyCelebrationSectionArt));
 const ModernMaroonSectionArt = dynamic(() => import("@/components/PublicInvitation/ModernMaroonArtwork"));
 const GardenLightSectionArt = dynamic(() => import("@/components/PublicInvitation/GardenLightArtwork").then((module) => module.GardenLightSectionArt));
 const GardenLightGallery = dynamic(() => import("@/components/PublicInvitation/GardenLightGallery"));
@@ -578,7 +579,7 @@ export default function UniversalInvitationTemplate({
       <section data-invitation-section={keyName} data-premium-timeline={sectionHasPremiumTimeline ? "true" : undefined} className={`relative overflow-hidden px-6 sm:px-9 ${occasion ? "ot-section" : confetti ? "cc-section" : zen ? "zen-section" : pencil ? "pr-section" : serein ? "serein-section" : botanical ? "bi-section" : blossom ? "eb-section" : garden ? "gl-section" : midnight ? "mr-section" : classic ? "cp-section" : golden ? "gd-section" : celestial ? "ci-section" : velvet ? "vh-section" : paper ? "pcb-section" : modern ? `mm-section mm-${keyName}` : "py-16"} ${occasion || confetti || left || pencil || serein || botanical || blossom || garden || midnight || classic || golden || paper || modern ? "text-left" : "text-center"}`}
         style={{ ...(confetti ? { "--cc-section-heading": readableInk(sectionStyle?.background || (index % 2 ? palette.surface : palette.bg), palette.accent) } as CSSProperties : {}), backgroundColor: backdrop, color, backgroundImage: zen ? "radial-gradient(circle at 10% 40%,rgba(112,100,81,.055),transparent 42%)" : undefined, ...invitationSectionStyleCss(sectionStyle) }}
       >
-        {occasion && (key === "little-cloud" || key === "gathering" ? <CelebrationSectionArt theme={key} section={keyName} /> : <AnniversarySectionArt theme={key} section={keyName} />)}
+        {occasion && (key === "taman-doa" || key === "red-thread" ? <FamilyCelebrationSectionArt theme={key} section={keyName} /> : key === "little-cloud" || key === "gathering" ? <CelebrationSectionArt theme={key} section={keyName} /> : <AnniversarySectionArt theme={key} section={keyName} />)}
         {confetti && <ConfettiClubSectionArt section={keyName} />}
         {botanical && <BotanicalSectionArt section={keyName} />}
         {blossom && <BlossomSectionArt section={keyName} />}
@@ -707,7 +708,7 @@ export default function UniversalInvitationTemplate({
           ), 1)}
 
           {section("identity", occasion ? (
-            <div data-studio-native-object="object:identity:hosts-group" className={`ot-identity ${key === "silver-reverie" ? "sv-identity" : key === "little-cloud" ? "lc-identity" : key === "gathering" ? "gt-identity" : "gk-identity"}`}>
+            <div data-studio-native-object="object:identity:hosts-group" className={`ot-identity ${key === "taman-doa" ? "td-identity" : key === "red-thread" ? "rt-identity" : key === "silver-reverie" ? "sv-identity" : key === "little-cloud" ? "lc-identity" : key === "gathering" ? "gt-identity" : "gk-identity"}`}>
               {media.cover && <div data-studio-native-object="object:identity:photo-frame" className="ot-identity-photo">
                 <div data-invitation-photo-slot="cover" className="relative h-full overflow-hidden">
                   <img src={media.cover} alt={tr("Foto") + " " + names} loading="lazy" decoding="async" style={photoCropStyle(media.assignment, "cover")} />
