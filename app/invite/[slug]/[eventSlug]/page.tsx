@@ -37,7 +37,7 @@ export default async function EventInvitationPage({
   if (
     !invitation.templateKey.trim() ||
     !invitation.isPublished ||
-    !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment))
+    !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment, invitation.id))
   ) {
     return <InvitationLockedState />;
   }
