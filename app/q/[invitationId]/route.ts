@@ -33,7 +33,7 @@ export async function GET(
       !invitation.eventConfigured ||
       !invitation.templateKey.trim() ||
       !invitation.isPublished ||
-      !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment))
+      !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment, invitationId))
     ) {
       return new Response("Undangan belum tersedia.", {
         status: 404,
