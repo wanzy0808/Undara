@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     if (!guest) {
       return NextResponse.json({ error: "Tamu tidak terdaftar pada acara ini." }, { status: 404, headers: IMAGE_HEADERS });
     }
-    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment, guest.invitation.id))) {
       return NextResponse.json({ error: "QR tamu membutuhkan paket Undangan Digital." }, { status: 402, headers: IMAGE_HEADERS });
     }
 
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     if (!guest || guest.invitation.ownerId !== user.id) {
       return NextResponse.json({ error: "Tamu tidak terdaftar pada acara ini." }, { status: 404 });
     }
-    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment, guest.invitation.id))) {
       return NextResponse.json({ error: "QR tamu membutuhkan paket Undangan Digital." }, { status: 402 });
     }
 
