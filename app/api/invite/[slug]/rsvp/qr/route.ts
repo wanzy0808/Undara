@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       include: { invitation: { include: { payment: true } } },
     });
     if (!guest || !guest.invitation.isPublished || !guest.invitation.eventConfigured
-      || !(await hasAccountDigitalInvitation(guest.invitation.ownerId, guest.invitation.payment))) {
+      || !(await hasAccountDigitalInvitation(guest.invitation.ownerId, guest.invitation.payment, guest.invitation.id))) {
       return NextResponse.json({ error: "QR tidak tersedia." }, { status: 404, headers });
     }
     const png = await QRCode.toBuffer(token, { type: "png", width: 840, margin: 4, errorCorrectionLevel: "M" });
