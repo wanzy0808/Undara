@@ -19,15 +19,24 @@ async function requireOwner() {
 function purchasedAccess(orders: Array<{ packageKey: string; status: string }>) {
   const paid = orders.filter((order) => order.status === "PAID");
   const guestbook = paid.some((order) => guestbookKeys.has(order.packageKey));
-  const digital = guestbook || paid.some((order) => digitalKeys.has(order.packageKey));
-  return { digital, guestbook };
+  const digitalCount = paid.filter((order) => digitalKeys.has(order.packageKey)).length;
+  return { digital: digitalCount > 0, digitalCount, guestbook };
 }
 
 function normalizeAccess(value: unknown): ManualPackageAccess {
-  if (!value || typeof value !== "object") return { digital: false, guestbook: false };
-  const input = value as { digital?: unknown; guestbook?: unknown };
+  if (!value || typeof value !== "object") {
+    return { digital: false, digitalCredits: 0, guestbook: false };
+  }
+  const input = value as { digital?: unknown; digitalCredits?: unknown; guestbook?: unknown };
   const guestbook = input.guestbook === true;
-  return { digital: guestbook || input.digital === true, guestbook };
+  const numericCredits = Number(input.digitalCredits);
+  const digitalCredits = Number.isInteger(numericCredits) && numericCredits >= 0
+    ? Math.min(numericCredits, 100)
+    : input.digital === true
+      ? 1
+      : 0;
+  const effectiveCredits = Math.max(digitalCredits, guestbook ? 1 : 0);
+  return { digital: effectiveCredits > 0, digitalCredits: effectiveCredits, guestbook };
 }
 
 export async function GET() {
@@ -67,8 +76,10 @@ export async function GET() {
         digital: purchased.digital || granted.digital,
         guestbook: purchased.guestbook || granted.guestbook,
         purchasedDigital: purchased.digital,
+        purchasedDigitalCount: purchased.digitalCount,
         purchasedGuestbook: purchased.guestbook,
         grantedDigital: granted.digital,
+        grantedDigitalCredits: granted.digitalCredits,
         grantedGuestbook: granted.guestbook,
       },
     };
