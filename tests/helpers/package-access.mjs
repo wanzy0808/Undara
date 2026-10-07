@@ -35,7 +35,10 @@ export function loadPackageAccess({ grants = {}, grantError, invitations = {} } 
       throw new Error("Digital Invitation must not inherit another event's payment");
     } },
   };
-  const ownerGrants = loadSource("lib/packages/owner-grants.ts", { "@/lib/prisma": { prisma } });
+  const ownerGrants = loadSource("lib/packages/owner-grants.ts", {
+    "@/lib/prisma": { prisma },
+    "@/lib/packages/access": paidAccess,
+  });
   const access = loadSource("lib/packages/server-access.ts", {
     "@/lib/prisma": { prisma },
     "@/lib/packages/access": paidAccess,
