@@ -38,7 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!guest || guest.invitation.ownerId !== user.id) {
       return NextResponse.json({ error: "Tamu tidak ditemukan." }, { status: 404 });
     }
-    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment, guest.invitation.id))) {
       return NextResponse.json({ error: "Pengelolaan tempat duduk membutuhkan paket Digital Invitation." }, { status: 402 });
     }
 
