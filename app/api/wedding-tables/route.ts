@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     const invitation = await ownedInvitation(user.id, invitationId);
     if (!invitation) return NextResponse.json({ error: "Acara tidak ditemukan." }, { status: 404 });
-    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))) {
       return NextResponse.json({ error: "Penempatan Tamu membutuhkan paket Digital Invitation." }, { status: 402 });
     }
 
