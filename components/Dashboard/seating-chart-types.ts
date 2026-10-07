@@ -1,10 +1,13 @@
 import type { GuestLabels } from "@/lib/guests/filters";
+import type { WeddingSession, WeddingSessionId } from "@/lib/events/wedding-sessions";
 
 export type SeatingGuest = GuestLabels & {
   id: string;
   name: string;
   personalAddressee?: string | null;
   invitedPax?: number;
+  invitedSessions?: WeddingSessionId[];
+  checkedIn?: boolean;
   tableId?: string | null;
   seatNumber?: number | null;
   rsvpStatus?: string;
@@ -21,6 +24,7 @@ export type SeatingTable = {
 export type SeatingChartProps = {
   invitationId: string;
   title?: string;
+  weddingSessions?: WeddingSession[];
   guests: SeatingGuest[];
   tables: SeatingTable[];
   accent?: string;

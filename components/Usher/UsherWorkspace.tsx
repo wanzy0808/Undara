@@ -6,6 +6,9 @@ import { Gift, LogOut, QrCode, Search, Sparkles, X } from "lucide-react";
 import BrandWordmark from "@/components/Brand/BrandWordmark";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/Theme/ThemeToggle";
+import { FloatingField } from "@/components/ui/floating-field";
+import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
+import { weddingSessionLabel, weddingSessionsFor, type WeddingSession, type WeddingSessionId } from "@/lib/events/wedding-sessions";
 import { DashboardPageHeader } from "@/components/Dashboard/DashboardPrimitives";
 import { usherTabs } from "@/components/Usher/config";
 import {
@@ -19,8 +22,12 @@ import type { IssuedGuestQr, UsherGuest, UsherTab } from "@/components/Usher/typ
 import { parseUsherQrToken, usherQrImageUrl } from "@/components/Usher/utils";
 
 export default function UsherWorkspace({ invitationId, eventTitle }: { invitationId: string; eventTitle: string }) {
+  const { locale } = useDashboardI18n();
+  const language = locale === "en" ? "EN" : "ID";
   const [tab, setTab] = useState<UsherTab>("checkin");
   const [guests, setGuests] = useState<UsherGuest[]>([]);
+  const [sessions, setSessions] = useState<WeddingSession[]>([]);
+  const [session, setSession] = useState<WeddingSessionId | "">("");
   const [search, setSearch] = useState("");
   const [scanInput, setScanInput] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -34,6 +41,7 @@ export default function UsherWorkspace({ invitationId, eventTitle }: { invitatio
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimerRef = useRef<number | null>(null);
+  const checkinBusy = useRef(false);
 
   const loadGuests = useCallback(async () => {
     try {
@@ -41,7 +49,9 @@ export default function UsherWorkspace({ invitationId, eventTitle }: { invitatio
       const data = await response.json();
       if (response.ok) {
         setGuests(data.guests ?? []);
-        setMessage("");
+        const active = weddingSessionsFor(data.invitation ?? {});
+        setSessions(active);
+        setSession((current) => active.some((item) => item.id === current) ? current : active[0]?.id ?? "");
       } else {
         setMessage(data.error ?? "Data tamu belum dapat dimuat.");
       }
@@ -68,14 +78,15 @@ export default function UsherWorkspace({ invitationId, eventTitle }: { invitatio
 
   const checkInWithQr = useCallback(async (rawValue: string) => {
     const token = parseUsherQrToken(rawValue);
-    if (!token || checkingIn) return;
+    if (!token || checkinBusy.current) return;
+    checkinBusy.current = true;
     setCheckingIn(true);
     setMessage("Memverifikasi QR tamu...");
     try {
       const response = await fetch("/api/usher/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, invitationId }),
+        body: JSON.stringify({ token, invitationId, ...(session ? { session } : {}) }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -90,9 +101,10 @@ export default function UsherWorkspace({ invitationId, eventTitle }: { invitatio
     } catch {
       setMessage("Check-in gagal diproses.");
     } finally {
+      checkinBusy.current = false;
       setCheckingIn(false);
     }
-  }, [checkingIn, stopScanner, invitationId]);
+  }, [stopScanner, invitationId, session]);
 
   const startScanner = useCallback(async () => {
     setScannerError("");
@@ -127,6 +139,15 @@ export default function UsherWorkspace({ invitationId, eventTitle }: { invitatio
 
   useEffect(() => () => stopScanner(), [stopScanner]);
 
+  function changeSession(value: WeddingSessionId) {
+    stopScanner();
+    setSession(value);
+    setSelectedGuest(null);
+    setIssuedQr(null);
+    setMessage("");
+    setScanInput("");
+  }
+
   const issueGuestQr = async (guest: UsherGuest) => {
     setIssuingQr(true);
     setMessage("");
@@ -149,17 +170,23 @@ export default function UsherWorkspace({ invitationId, eventTitle }: { invitatio
     }
   };
 
+  const sessionGuests = useMemo(() => sessions.length ? guests
+    .filter((guest) => guest.invitedSessions?.includes(session))
+    .map((guest) => ({ ...guest, checkedIn: Boolean(guest.sessionCheckIns?.some((entry) => entry.session === session)),
+      rsvpStatus: guest.rsvpStatus === "ATTENDING" && !guest.rsvpEvents?.includes(session) ? "NOT_ATTENDING" : guest.rsvpStatus,
+    })) : guests, [guests, sessions, session]);
+
   const filteredGuests = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return guests;
-    return guests.filter((guest) => guest.name.toLowerCase().includes(query) || guest.phone?.toLowerCase().includes(query));
-  }, [guests, search]);
+    if (!query) return sessionGuests;
+    return sessionGuests.filter((guest) => guest.name.toLowerCase().includes(query) || guest.phone?.toLowerCase().includes(query));
+  }, [sessionGuests, search]);
 
-  const checkedIn = guests.filter((guest) => guest.checkedIn);
-  const attending = guests.filter((guest) => guest.rsvpStatus === "ATTENDING");
-  const notAttending = guests.filter((guest) => guest.rsvpStatus === "NOT_ATTENDING");
-  const pending = guests.filter((guest) => guest.rsvpStatus === "PENDING" || guest.rsvpStatus === "TENTATIVE");
-  const attendancePercent = guests.length ? Math.round((checkedIn.length / guests.length) * 100) : 0;
+  const checkedIn = sessionGuests.filter((guest) => guest.checkedIn);
+  const attending = sessionGuests.filter((guest) => guest.rsvpStatus === "ATTENDING");
+  const notAttending = sessionGuests.filter((guest) => guest.rsvpStatus === "NOT_ATTENDING");
+  const pending = sessionGuests.filter((guest) => guest.rsvpStatus === "PENDING" || guest.rsvpStatus === "TENTATIVE");
+  const attendancePercent = sessionGuests.length ? Math.round((checkedIn.length / sessionGuests.length) * 100) : 0;
 
   return (
     <div className="undara-usher min-h-screen bg-background font-[family-name:var(--font-undara-sans)] text-foreground">
@@ -193,24 +220,32 @@ export default function UsherWorkspace({ invitationId, eventTitle }: { invitatio
 
         <main className="min-w-0 flex-1 py-6">
           <div className="undara-dashboard-page">
+            {sessions.length > 0 && <div className="mb-5 flex flex-wrap items-center gap-3">
+              <FloatingField label={language === "EN" ? "Active session" : "Sesi aktif"} className="w-full max-w-sm">
+                <select value={session} onChange={(event) => changeSession(event.target.value as WeddingSessionId)} disabled={checkingIn || sessions.length === 1} className="min-h-11 w-full rounded-[var(--undara-control-radius)] border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50">
+                  {sessions.map((item) => <option key={item.id} value={item.id}>{weddingSessionLabel(item, language)}</option>)}
+                </select>
+              </FloatingField>
+              <p className="text-xs text-muted-foreground">{language === "EN" ? "Guests, RSVP, and check-in follow the selected session." : "Daftar tamu, RSVP, dan check-in mengikuti sesi yang dipilih."}</p>
+            </div>}
             <div className="mb-6 flex gap-2 overflow-x-auto md:hidden">
               {usherTabs.map((item) => <Button key={item.id} onClick={() => setTab(item.id)} aria-current={tab === item.id ? "page" : undefined} className={`shrink-0 ${tab === item.id ? "" : "border-border bg-background text-foreground shadow-none"}`}>{item.label}</Button>)}
             </div>
 
-            {tab === "checkin" && <CheckinPanel scannerOpen={scannerOpen} scannerError={scannerError} videoRef={videoRef} scanInput={scanInput} setScanInput={setScanInput} startScanner={startScanner} stopScanner={stopScanner} checkInWithQr={checkInWithQr} checkingIn={checkingIn} checkedIn={checkedIn} guests={guests} attendancePercent={attendancePercent} selectedGuest={selectedGuest} />}
+            {tab === "checkin" && <CheckinPanel scannerOpen={scannerOpen} scannerError={scannerError} videoRef={videoRef} scanInput={scanInput} setScanInput={setScanInput} startScanner={startScanner} stopScanner={stopScanner} checkInWithQr={checkInWithQr} checkingIn={checkingIn} checkedIn={checkedIn} guests={sessionGuests} attendancePercent={attendancePercent} selectedGuest={selectedGuest} />}
 
             {tab === "guests" && <section className="space-y-6">
               <DashboardPageHeader eyebrow="Guest directory" title="Daftar Tamu Diundang" description="Semua nama di sini berasal dari daftar tamu acara. Status RSVP tidak menentukan boleh tidaknya masuk; tamu tetap harus memiliki QR resmi." />
-              <div className="grid gap-4 sm:grid-cols-4"><UsherStat label="Total diundang" value={guests.length} /><UsherStat label="Sudah RSVP hadir" value={attending.length} /><UsherStat label="Belum konfirmasi" value={pending.length} /><UsherStat label="Tidak hadir" value={notAttending.length} /></div>
+              <div className="grid gap-4 sm:grid-cols-4"><UsherStat label="Total diundang" value={sessionGuests.length} /><UsherStat label="Sudah RSVP hadir" value={attending.length} /><UsherStat label="Belum konfirmasi" value={pending.length} /><UsherStat label="Tidak hadir" value={notAttending.length} /></div>
               <div className="rounded-2xl border border-border bg-background p-5">
                 <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama atau nomor WhatsApp..." className="w-full rounded-xl border border-border bg-background py-3 pl-10 pr-3 text-xs outline-none focus:border-primary" /></div>
                 <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead><tr className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground"><th className="px-3 py-3">Nama tamu</th><th className="px-3 py-3">WhatsApp</th><th className="px-3 py-3">RSVP</th><th className="px-3 py-3">Plus one</th><th className="px-3 py-3">Check-in</th><th className="px-3 py-3 text-right">Aksi</th></tr></thead><tbody>{filteredGuests.map((guest) => <tr key={guest.id} className="border-b border-border/70 last:border-0"><td className="px-3 py-4 font-medium">{guest.name}</td><td className="px-3 py-4 text-muted-foreground">{guest.phone || "—"}</td><td className="px-3 py-4"><RsvpBadge status={guest.rsvpStatus} /></td><td className="px-3 py-4">{guest.plusOnes}</td><td className="px-3 py-4">{guest.checkedIn ? <span className="text-emerald-700 dark:text-emerald-300">Sudah masuk</span> : <span className="text-muted-foreground">Belum masuk</span>}</td><td className="px-3 py-4 text-right"><Button onClick={() => issueGuestQr(guest)} disabled={issuingQr} className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white disabled:opacity-50">Buat QR</Button></td></tr>)}</tbody></table></div>
               </div>
             </section>}
 
-            {tab === "attendance" && <section className="space-y-6"><DashboardPageHeader eyebrow="Live monitor" title="Realtime Attendance" description="Data diperbarui otomatis setiap 5 detik." /><div className="grid gap-4 sm:grid-cols-3"><UsherStat label="Sudah masuk" value={checkedIn.length} /><UsherStat label="Menunggu" value={guests.length - checkedIn.length} /><UsherStat label="Total RSVP hadir" value={attending.length} /></div><GuestTable guests={checkedIn} empty="Belum ada tamu yang check-in." /></section>}
+            {tab === "attendance" && <section className="space-y-6"><DashboardPageHeader eyebrow="Live monitor" title="Realtime Attendance" description="Data diperbarui otomatis setiap 5 detik." /><div className="grid gap-4 sm:grid-cols-3"><UsherStat label="Sudah masuk" value={checkedIn.length} /><UsherStat label="Menunggu" value={sessionGuests.length - checkedIn.length} /><UsherStat label="Total RSVP hadir" value={attending.length} /></div><GuestTable guests={checkedIn} empty="Belum ada tamu yang check-in." /></section>}
 
-            {tab === "rsvp" && <section className="space-y-6"><DashboardPageHeader eyebrow="Smart RSVP" title="Daftar RSVP" description="Pantau siapa yang hadir, belum menjawab, dan tidak hadir. Untuk masuk venue tetap diperlukan QR." /><div className="grid gap-4 sm:grid-cols-3"><UsherStat label="Total diundang" value={guests.length} /><UsherStat label="Konfirmasi hadir" value={attending.length} /><UsherStat label="Belum konfirmasi" value={pending.length} /></div><GuestTable guests={attending} empty="Belum ada RSVP hadir." /></section>}
+            {tab === "rsvp" && <section className="space-y-6"><DashboardPageHeader eyebrow="Smart RSVP" title="Daftar RSVP" description="Pantau siapa yang hadir, belum menjawab, dan tidak hadir. Untuk masuk venue tetap diperlukan QR." /><div className="grid gap-4 sm:grid-cols-3"><UsherStat label="Total diundang" value={sessionGuests.length} /><UsherStat label="Konfirmasi hadir" value={attending.length} /><UsherStat label="Belum konfirmasi" value={pending.length} /></div><GuestTable guests={attending} empty="Belum ada RSVP hadir." /></section>}
 
             {tab === "greeting" && <FeaturePanel icon={Sparkles} title="Guest Greeting" description={selectedGuest ? `Tamu terakhir: ${selectedGuest.name}.` : "Tampilkan nama tamu setelah QR berhasil diverifikasi untuk sambutan personal."} />}
             {tab === "gift" && <FeaturePanel icon={Gift} title="Gift Corner" description="Catat pengambilan souvenir per tamu, jumlah yang diambil, dan sisa stok secara realtime." />}

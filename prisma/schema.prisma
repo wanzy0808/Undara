@@ -145,6 +145,7 @@ model Invitation {
   eventConfigured    Boolean           @default(false)
   ceremonyTime       String?
   receptionTime      String?
+  weddingSessions    Json?
   description        String?           @db.Text
   weddingHashtag     String?
   dressCode          String?
@@ -304,6 +305,7 @@ model Guest {
   personalAddressee         String?
   recipientType             String        @default("INDIVIDUAL")
   invitedPax                Int           @default(1)
+  invitedSessions           String[]      @default([])
   personalGreeting          String?       @db.Text
   personalEnvelopeEnabled   Boolean       @default(true)
   personalLanguage          String        @default("ID")
@@ -328,6 +330,7 @@ model Guest {
   invitation                Invitation    @relation(fields: [invitationId], references: [id], onDelete: Cascade)
   table                     WeddingTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
   checkedInBy               User?         @relation("GuestCheckInActor", fields: [checkedInById], references: [id], onDelete: SetNull)
+  sessionCheckIns            GuestSessionCheckIn[]
 
   @@index([invitationId, rsvpStatus])
   @@index([invitationId, category])
@@ -335,6 +338,17 @@ model Guest {
   @@index([invitationId, waBlastSelected])
   @@index([invitationId, personalPublished])
   @@unique([tableId, seatNumber])
+}
+
+model GuestSessionCheckIn {
+  id            String   @id @default(cuid())
+  guestId       String
+  session       String
+  checkedInAt   DateTime @default(now())
+  checkedInById String
+  guest         Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@unique([guestId, session])
 }
 
 // Public wishes belong to an invitation, not to the canonical RSVP/guest roster.

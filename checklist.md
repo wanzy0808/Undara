@@ -484,6 +484,10 @@ Create Customer A and Customer B with separate events.
 
 # 13. P1 — Guest management, seating & Usher
 
+- [x] Sesi pernikahan satu tanggal (§5.7): source model/migrasi, validasi event dan Guest scope, Personal Invitation single/batch, filtering server untuk publik/preview, RSVP/kalender dan check-in per sesi terhubung. Legacy start/end tidak diinfer menjadi dua sesi; tanggal berbeda wajib event/paket terpisah. Bukti regresi/build ada di Appendix A batch 7 Oktober 2026.
+- [ ] Terapkan migrasi `20261007130000_wedding_sessions` pada database target setelah backup, regenerasi client dan restart app. Verifikasi satu sesi/dua sesi, scope Prosesi/Resepsi/Keduanya, ganti tanggal/aktivasi sebelum Publish, reload desain/tamu, password, undangan umum/personal, kalender dan scan ulang/bersamaan per sesi pada PostgreSQL nyata.
+- [ ] QA visual sesi di desktop/mobile Light/Dark/ID/EN, navigasi keyboard/fokus label, error/retry form, pilihan Usher dan QR perangkat nyata. Tes handler/SSR tidak menggantikan QA browser/perangkat.
+
 - [ ] Explicit event selector/scope is always visible where multiple events are possible.
 - [ ] Guest CRUD is server-authoritative and event-scoped.
 - [ ] Seating mutations are server-authoritative.

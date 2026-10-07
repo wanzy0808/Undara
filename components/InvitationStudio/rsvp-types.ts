@@ -1,3 +1,4 @@
+import type { WeddingSession } from "@/lib/events/wedding-sessions";
 import type { InvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 
 export type PersonalRsvpGuest = {
@@ -27,6 +28,8 @@ export type RsvpFormProps = {
   description?: string | null;
   eventCategory?: string | null;
   rsvpConfig?: InvitationRsvpConfig;
+  weddingSessions?: WeddingSession[];
+  timezone?: string;
 };
 
 export type RsvpFormState = {

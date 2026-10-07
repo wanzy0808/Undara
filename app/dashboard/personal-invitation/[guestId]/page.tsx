@@ -1,3 +1,4 @@
+import { invitationForWeddingGuest, WeddingSessionError } from "@/lib/events/wedding-sessions";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -28,9 +29,14 @@ export default async function PersonalInvitationPreviewPage({
   if (!guest) notFound();
 
   const invitation = guest.invitation;
+  let scopedInvitation;
+  try { scopedInvitation = invitationForWeddingGuest(invitation, guest.invitedSessions); }
+  catch (error) { if (error instanceof WeddingSessionError) notFound(); throw error; }
+
   const content = (
     <PublicInvitationRenderer
-      invitation={invitation}
+      preview
+      invitation={scopedInvitation}
       personalGuest={{
         id: guest.id,
         name: guest.name,

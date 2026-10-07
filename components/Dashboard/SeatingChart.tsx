@@ -29,6 +29,8 @@ import SeatingPlanCanvas from "./SeatingPlanCanvas";
 import SeatingPlanPrint from "./SeatingPlanPrint";
 import SeatingGuestActions from "./SeatingGuestActions";
 import { printSeatingPlan } from "./seating-plan-print-browser";
+import { WeddingGuestScopeField } from "./WeddingSessionFields";
+import { parseInvitedSessions, type WeddingSessionId } from "@/lib/events/wedding-sessions";
 import type {
   SeatingChartProps,
   SeatingGuest,
@@ -37,7 +39,7 @@ import type {
   SeatingTable,
 } from "@/components/Dashboard/seating-chart-types";
 
-export default function SeatingChart({ invitationId, title = "", guests, tables, onAssigned, onTablesChanged }: SeatingChartProps) {
+export default function SeatingChart({ invitationId, title = "", weddingSessions = [], guests, tables, onAssigned, onTablesChanged }: SeatingChartProps) {
   const { d, locale } = useDashboardI18n();
   const { isDarkMode } = useTheme();
   const [draggedGuestId, setDraggedGuestId] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [manualSalutation, setManualSalutation] = useState<PersonalSalutation>("BAPAK");
   const [manualPax, setManualPax] = useState(1);
   const [manualCategory, setManualCategory] = useState("REGULAR");
+  const [manualSessions, setManualSessions] = useState<WeddingSessionId[]>([]);
   const [manualSaving, setManualSaving] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
@@ -56,6 +59,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [guestEditName, setGuestEditName] = useState("");
   const [guestEditCategory, setGuestEditCategory] = useState("REGULAR");
   const [guestEditPax, setGuestEditPax] = useState(1);
+  const [guestEditSessions, setGuestEditSessions] = useState<WeddingSessionId[]>([]);
   const [guestMutating, setGuestMutating] = useState(false);
   const [guestError, setGuestError] = useState("");
   const guestRequest = useRef<AbortController | null>(null);
@@ -167,6 +171,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
     setGuestEditName(guest.name);
     setGuestEditCategory(guest.category || "REGULAR");
     setGuestEditPax(seatingPartySize(guest));
+    setGuestEditSessions(guest.invitedSessions ?? []);
     setGuestError("");
     setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null);
   }
@@ -189,6 +194,11 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       return;
     }
     const resizing = mode === "edit" && guestEditPax !== seatingPartySize(guest);
+    let invitedSessions: WeddingSessionId[] | undefined;
+    if (mode === "edit" && weddingSessions.length && !guest.checkedIn) {
+      try { invitedSessions = parseInvitedSessions(weddingSessions.length === 1 ? [weddingSessions[0].id] : guestEditSessions, weddingSessions); }
+      catch (error) { setGuestError(error instanceof Error ? error.message : d("Data tamu tidak valid.")); return; }
+    }
     guestMutationBusy.current = true;
     const controller = new AbortController(); guestRequest.current = controller;
     setGuestMutating(true); setGuestError(""); setMessage("");
@@ -197,7 +207,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         method: mode === "edit" ? "PATCH" : "DELETE", signal: controller.signal,
         ...(mode === "edit" ? {
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: guest.id, invitationId, name, ...(guestEditCategory !== (guest.category || "REGULAR") ? { category: guestEditCategory } : {}), ...(resizing ? { invitedPax: guestEditPax } : {}) }),
+          body: JSON.stringify({ id: guest.id, invitationId, name, ...(invitedSessions ? { invitedSessions } : {}), ...(guestEditCategory !== (guest.category || "REGULAR") ? { category: guestEditCategory } : {}), ...(resizing ? { invitedPax: guestEditPax } : {}) }),
         } : {}),
       });
       const data = await response.json().catch(() => null);
@@ -214,6 +224,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         setGuestOverrides((current) => ({ ...current, [guest.id]: {
           ...current[guest.id], name: updated.name,
           ...(updated.category !== undefined ? { category: updated.category } : {}),
+          ...(updated.invitedSessions !== undefined ? { invitedSessions: updated.invitedSessions } : {}),
           ...(updated.personalAddressee !== undefined ? { personalAddressee: updated.personalAddressee } : {}),
           ...(resizing ? { invitedPax: updated.invitedPax } : {}),
         } }));
@@ -313,10 +324,11 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
     setManualSaving(true);
     setMessage("");
     try {
+      const invitedSessions = parseInvitedSessions(weddingSessions.length === 1 ? [weddingSessions[0].id] : manualSessions, weddingSessions);
       const response = await fetch("/api/guests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invitationId, name, salutation: manualSalutation, invitedPax: manualPax, category: manualCategory }),
+        body: JSON.stringify({ invitationId, name, salutation: manualSalutation, invitedPax: manualPax, category: manualCategory, ...(weddingSessions.length ? { invitedSessions } : {}) }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) {
@@ -327,6 +339,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       setManualSalutation("BAPAK");
       setManualPax(1);
       setManualCategory("REGULAR");
+      setManualSessions([]);
       setMessage(d("Tamu ditambahkan ke Daftar Tamu."));
     } catch (error) {
       setMessage(
@@ -607,6 +620,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 value={manualPax} disabled={manualSaving} className="mt-1 min-h-11"
                 onChange={(event) => setManualPax(Number(event.target.value))} />
             </FloatingField>
+            <WeddingGuestScopeField sessions={weddingSessions} value={manualSessions} onChange={setManualSessions} disabled={manualSaving} />
             <Button type="submit" size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
               disabled={manualSaving} title={d("Tambah ke Daftar Tamu")}>
               <UserPlus className="h-4 w-4" />
@@ -902,6 +916,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     value={guestEditPax} disabled={guestMutating} className="mt-1 min-h-11"
                     onChange={(event) => setGuestEditPax(Number(event.target.value))} />
                 </FloatingField>
+                <WeddingGuestScopeField sessions={weddingSessions} value={guestEditSessions} onChange={setGuestEditSessions} disabled={guestMutating || guestAction.guest.checkedIn} />
               </div> : <p className="break-words text-sm font-medium">{displayTitleCase(guestAction.guest.name)}</p>}
               {guestError && <p role="alert" className="text-sm text-destructive">{guestError}</p>}
               <DialogFooter className="flex-row flex-wrap">

@@ -1,3 +1,4 @@
+import { weddingSessionsFor, parseInvitedSessions } from "@/lib/events/wedding-sessions";
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { getCurrentUser } from "@/lib/auth";
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
   try {
     const invitation = await prisma.invitation.findFirst({
       where: { id: invitationId, ownerId: user.id },
-      select: { id: true, title: true, payment: { select: { packageKey: true, status: true } } },
+      select: { id: true, title: true, eventCategory: true, weddingSessions: true, payment: { select: { packageKey: true, status: true } } },
     });
     if (!invitation) {
       return NextResponse.json({ error: "Undangan tidak ditemukan." }, { status: 404, headers: PRIVATE_HEADERS });
@@ -49,11 +50,12 @@ export async function GET(request: Request) {
 
     const guest = await prisma.guest.findFirst({
       where: { id: guestId, invitationId: invitation.id },
-      select: { id: true, name: true },
+      select: { id: true, name: true, invitedSessions: true },
     });
     if (!guest) {
       return NextResponse.json({ error: "Tamu tidak ditemukan pada acara ini." }, { status: 404, headers: PRIVATE_HEADERS });
     }
+    if (weddingSessionsFor(invitation).length) parseInvitedSessions(guest.invitedSessions, weddingSessionsFor(invitation));
     const qrBytes = await QRCode.toBuffer(createGuestQrToken(guest.id), {
       type: "png",
       width: 640,

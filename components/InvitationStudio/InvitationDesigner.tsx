@@ -1,5 +1,7 @@
 "use client";
 
+import { weddingRsvpConfig, weddingSessionsFor } from "@/lib/events/wedding-sessions";
+
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import {
   ImagePlus,
@@ -2045,7 +2047,8 @@ export default function InvitationDesigner({ mode = "invitation", allowBlankCanv
             <ContentPanel
               invitationLanguage={invitationLanguage}
               sections={design.sections}
-              rsvpConfig={design.rsvpConfig}
+              rsvpConfig={weddingRsvpConfig(invitation ?? {}, design.rsvpConfig)}
+              weddingSessions={weddingSessionsFor(invitation ?? {})}
               eventCategory={invitation?.eventCategory ?? ""}
               templateKey={design.template}
               eventDescription={invitation?.description}

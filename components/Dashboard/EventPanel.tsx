@@ -1,5 +1,8 @@
 "use client";
 
+import { WeddingSessionFields, WeddingGuestScopeField, emptyWeddingSession } from "./WeddingSessionFields";
+import { parseWeddingSessions, weddingSessionProjection, type WeddingSessionId } from "@/lib/events/wedding-sessions";
+
 import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -62,6 +65,8 @@ import {
 
 export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProps) {
   const { d, locale } = useDashboardI18n();
+  const [scopeConflicts, setScopeConflicts] = useState<{ id: string; name: string; invitedSessions: string[] }[]>([]);
+  const [scopeChoices, setScopeChoices] = useState<Record<string, WeddingSessionId[]>>({});
   const [events, setEvents] = useState<EventPanelInvitation[]>([]);
   const [activeId, setActiveId] = useState("");
   const [editorMode, setEditorMode] = useState<EventEditorMode>("closed");
@@ -78,6 +83,8 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
       return;
     }
     setActiveId(invitation.id);
+    setScopeConflicts([]);
+    setScopeChoices({});
     setForm(eventInvitationToForm(invitation));
     setEditorMode(invitation.eventConfigured ? "edit" : "new");
     setNotice("");
@@ -86,6 +93,8 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
   function closeEditor() {
     setActiveId("");
     setForm(EMPTY_EVENT_FORM);
+    setScopeConflicts([]);
+    setScopeChoices({});
     setEditorMode("closed");
     setNotice("");
   }
@@ -129,6 +138,8 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
     if (saving || deletingId) return;
     setActiveId("");
     setForm(EMPTY_EVENT_FORM);
+    setScopeConflicts([]);
+    setScopeChoices({});
     setEditorMode("new");
     setNotice("");
   }
@@ -139,6 +150,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
     setForm((current) => ({
       ...current,
       eventCategory: value,
+      weddingSessions: value === "WEDDING" ? current.weddingSessions ?? (editorMode === "new" ? [emptyWeddingSession("ceremony")] : null) : null,
       customTitle: value === "OTHER" ? current.customTitle : "",
       brideName: mode === "couple" ? current.brideName : "",
       groomName: mode === "optional" ? "" : current.groomName,
@@ -170,17 +182,23 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
     }
     const eventDateIso = displayDateToIso(form.eventDate);
     if (!eventDateIso) return setNotice(d("Tanggal harus menggunakan format dd/mm/yyyy yang valid."));
-    if (!isValidTime24(form.ceremonyTime)) {
+    let sessionDetails = {};
+    try { sessionDetails = weddingSessionProjection(parseWeddingSessions(form.weddingSessions, form.eventCategory) ?? []); }
+    catch (error) { return setNotice(error instanceof Error ? error.message : d("Data acara belum dapat disimpan.")); }
+    if (scopeConflicts.length && form.weddingSessions?.length !== 1 && scopeConflicts.some((guest) => scopeChoices[guest.id] === undefined || (form.weddingSessions && !scopeChoices[guest.id].length))) {
+      return setNotice(locale === "en" ? "Review each guest’s invited sessions before saving." : "Periksa sesi undangan setiap tamu sebelum menyimpan.");
+    }
+    if (!form.weddingSessions && !isValidTime24(form.ceremonyTime)) {
       return setNotice(d("Waktu mulai harus menggunakan format HH:mm."));
     }
     if (
-      form.receptionTime &&
+      !form.weddingSessions && form.receptionTime &&
       form.receptionTime !== END_TIME_SENTINEL &&
       !isValidTime24(form.receptionTime)
     ) {
       return setNotice(d("Waktu selesai harus menggunakan format HH:mm atau opsi - end."));
     }
-    if (!form.venue.trim()) return setNotice(d("Nama tempat wajib diisi."));
+    if (!form.weddingSessions && !form.venue.trim()) return setNotice(d("Nama tempat wajib diisi."));
 
     setSaving(true);
     setNotice(d("Menyimpan..."));
@@ -219,12 +237,20 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
           description: form.description,
           eventNotes: form.eventNotes,
           eventConfigured: true,
+          weddingSessions: form.weddingSessions,
+          ...sessionDetails,
+          ...(scopeConflicts.length ? { weddingGuestScopes: scopeConflicts.map((guest) => ({ id: guest.id, invitedSessions: form.weddingSessions?.length === 1 ? [form.weddingSessions[0].id] : scopeChoices[guest.id] ?? [] })) } : {}),
         }),
       });
       const data = await response.json().catch(() => null);
+      if (Array.isArray(data?.guestsRequiringScope)) {
+        setScopeConflicts(data.guestsRequiringScope);
+      }
       if (!response.ok || !data?.invitation?.id) {
         throw new Error(data?.error || d("Data acara belum dapat disimpan."));
       }
+      setScopeConflicts([]);
+      setScopeChoices({});
       await load(String(data.invitation.id));
       setNotice(d("Tersimpan."));
       onSaved(editorMode === "new" ? { id: String(data.invitation.id), type: data.invitation.type === "ADAT_AKAD" ? "ADAT_AKAD" : "WEDDING" } : undefined);
@@ -488,7 +514,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                 <h3 className="text-sm font-semibold">{d("Waktu & tempat")}</h3>
                 <div className="mt-4 grid gap-4 md:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
                   <EventDateField label={d("Tanggal")} value={form.eventDate} onChange={(value) => field("eventDate", value)} />
-                  <EventTimeField label={`${d("Mulai")} (${timezone.label})`} value={form.ceremonyTime} onChange={(value) => field("ceremonyTime", value)} />
+                  {!form.weddingSessions && <><EventTimeField label={`${d("Mulai")} (${timezone.label})`} value={form.ceremonyTime} onChange={(value) => field("ceremonyTime", value)} />
                   <div>
                     <EventTimeField
                       label={`${d("Selesai")} (${timezone.label})`}
@@ -511,6 +537,7 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                       <span>{d("Tampilkan “- end” di undangan")}</span>
                     </label>
                   </div>
+                  </>}
                 </div>
 
                 <FloatingField label={d("Zona waktu")} className="mt-4 block">
@@ -527,18 +554,26 @@ export default function EventPanel({ onSaved, selectedTemplate }: EventPanelProp
                   </select>
                 </FloatingField>
 
-                {(form.eventDate || form.ceremonyTime) && (
+                {form.eventCategory === "WEDDING" && <WeddingSessionFields value={form.weddingSessions} onChange={(weddingSessions) => setForm((current) => ({ ...current, weddingSessions }))} disabled={saving} timezone={timezone.label} />}
+                {scopeConflicts.length > 0 && <fieldset className="mt-5 space-y-3" disabled={saving}>
+                  <legend className="text-sm font-semibold">{locale === "en" ? "Review guest sessions" : "Periksa sesi tamu"}</legend>
+                  {scopeConflicts.map((guest) => <div key={guest.id} className="grid gap-2 sm:grid-cols-2 sm:items-center">
+                    <p className="break-words text-sm">{displayTitleCase(guest.name)}</p>
+                    {form.weddingSessions ? <WeddingGuestScopeField sessions={form.weddingSessions} value={scopeChoices[guest.id]} onChange={(value) => setScopeChoices((current) => ({ ...current, [guest.id]: value }))} disabled={saving} /> : <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={scopeChoices[guest.id] !== undefined} onChange={(event) => setScopeChoices((current) => { const next = { ...current }; if (event.target.checked) next[guest.id] = []; else delete next[guest.id]; return next; })} />{locale === "en" ? "Use the event schedule" : "Gunakan jadwal acara"}</label>}
+                  </div>)}
+                </fieldset>}
+                {(!form.weddingSessions && (form.eventDate || form.ceremonyTime)) && (
                   <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" />{form.eventDate ? formatEventDateLabel(form.eventDate, locale) : d("Tanggal")}</span>
                     <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4 text-primary" />{form.ceremonyTime || "--:--"}{form.receptionTime === END_TIME_SENTINEL ? " - end" : form.receptionTime ? `–${form.receptionTime}` : ""} {timezone.label}</span>
                   </div>
                 )}
 
-                <div className="mt-4 space-y-4">
+                {!form.weddingSessions && <div className="mt-4 space-y-4">
                   <EventField label={d("Nama tempat")} value={form.venue} onChange={(value) => field("venue", value)} />
                   <EventField label={d("Alamat")} value={form.address} onChange={(value) => field("address", value)} />
                   <EventField label={d("Google Maps")} value={form.mapUrl} onChange={(value) => field("mapUrl", value)} />
-                </div>
+                </div>}
               </div>
             )}
           </div>

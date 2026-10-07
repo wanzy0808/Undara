@@ -154,6 +154,7 @@ export type InvitationCountAggregateOutputType = {
   eventConfigured: number
   ceremonyTime: number
   receptionTime: number
+  weddingSessions: number
   description: number
   weddingHashtag: number
   dressCode: number
@@ -302,6 +303,7 @@ export type InvitationCountAggregateInputType = {
   eventConfigured?: true
   ceremonyTime?: true
   receptionTime?: true
+  weddingSessions?: true
   description?: true
   weddingHashtag?: true
   dressCode?: true
@@ -433,6 +435,7 @@ export type InvitationGroupByOutputType = {
   eventConfigured: boolean
   ceremonyTime: string | null
   receptionTime: string | null
+  weddingSessions: runtime.JsonValue | null
   description: string | null
   weddingHashtag: string | null
   dressCode: string | null
@@ -500,6 +503,7 @@ export type InvitationWhereInput = {
   eventConfigured?: Prisma.BoolFilter<"Invitation"> | boolean
   ceremonyTime?: Prisma.StringNullableFilter<"Invitation"> | string | null
   receptionTime?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  weddingSessions?: Prisma.JsonNullableFilter<"Invitation">
   description?: Prisma.StringNullableFilter<"Invitation"> | string | null
   weddingHashtag?: Prisma.StringNullableFilter<"Invitation"> | string | null
   dressCode?: Prisma.StringNullableFilter<"Invitation"> | string | null
@@ -554,6 +558,7 @@ export type InvitationOrderByWithRelationInput = {
   eventConfigured?: Prisma.SortOrder
   ceremonyTime?: Prisma.SortOrderInput | Prisma.SortOrder
   receptionTime?: Prisma.SortOrderInput | Prisma.SortOrder
+  weddingSessions?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   weddingHashtag?: Prisma.SortOrderInput | Prisma.SortOrder
   dressCode?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -611,6 +616,7 @@ export type InvitationWhereUniqueInput = Prisma.AtLeast<{
   eventConfigured?: Prisma.BoolFilter<"Invitation"> | boolean
   ceremonyTime?: Prisma.StringNullableFilter<"Invitation"> | string | null
   receptionTime?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  weddingSessions?: Prisma.JsonNullableFilter<"Invitation">
   description?: Prisma.StringNullableFilter<"Invitation"> | string | null
   weddingHashtag?: Prisma.StringNullableFilter<"Invitation"> | string | null
   dressCode?: Prisma.StringNullableFilter<"Invitation"> | string | null
@@ -665,6 +671,7 @@ export type InvitationOrderByWithAggregationInput = {
   eventConfigured?: Prisma.SortOrder
   ceremonyTime?: Prisma.SortOrderInput | Prisma.SortOrder
   receptionTime?: Prisma.SortOrderInput | Prisma.SortOrder
+  weddingSessions?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   weddingHashtag?: Prisma.SortOrderInput | Prisma.SortOrder
   dressCode?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -717,6 +724,7 @@ export type InvitationScalarWhereWithAggregatesInput = {
   eventConfigured?: Prisma.BoolWithAggregatesFilter<"Invitation"> | boolean
   ceremonyTime?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
   receptionTime?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
+  weddingSessions?: Prisma.JsonNullableWithAggregatesFilter<"Invitation">
   description?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
   weddingHashtag?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
   dressCode?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
@@ -760,6 +768,7 @@ export type InvitationCreateInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -814,6 +823,7 @@ export type InvitationUncheckedCreateInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -866,6 +876,7 @@ export type InvitationUpdateInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -920,6 +931,7 @@ export type InvitationUncheckedUpdateInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -973,6 +985,7 @@ export type InvitationCreateManyInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -1016,6 +1029,7 @@ export type InvitationUpdateManyMutationInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1060,6 +1074,7 @@ export type InvitationUncheckedUpdateManyInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1114,6 +1129,7 @@ export type InvitationCountOrderByAggregateInput = {
   eventConfigured?: Prisma.SortOrder
   ceremonyTime?: Prisma.SortOrder
   receptionTime?: Prisma.SortOrder
+  weddingSessions?: Prisma.SortOrder
   description?: Prisma.SortOrder
   weddingHashtag?: Prisma.SortOrder
   dressCode?: Prisma.SortOrder
@@ -1463,6 +1479,7 @@ export type InvitationCreateWithoutOwnerInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -1515,6 +1532,7 @@ export type InvitationUncheckedCreateWithoutOwnerInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -1597,6 +1615,7 @@ export type InvitationScalarWhereInput = {
   eventConfigured?: Prisma.BoolFilter<"Invitation"> | boolean
   ceremonyTime?: Prisma.StringNullableFilter<"Invitation"> | string | null
   receptionTime?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  weddingSessions?: Prisma.JsonNullableFilter<"Invitation">
   description?: Prisma.StringNullableFilter<"Invitation"> | string | null
   weddingHashtag?: Prisma.StringNullableFilter<"Invitation"> | string | null
   dressCode?: Prisma.StringNullableFilter<"Invitation"> | string | null
@@ -1640,6 +1659,7 @@ export type InvitationCreateWithoutAssetsInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -1693,6 +1713,7 @@ export type InvitationUncheckedCreateWithoutAssetsInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -1760,6 +1781,7 @@ export type InvitationUpdateWithoutAssetsInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1813,6 +1835,7 @@ export type InvitationUncheckedUpdateWithoutAssetsInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1864,6 +1887,7 @@ export type InvitationCreateWithoutPaymentInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -1917,6 +1941,7 @@ export type InvitationUncheckedCreateWithoutPaymentInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -1984,6 +2009,7 @@ export type InvitationUpdateWithoutPaymentInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2037,6 +2063,7 @@ export type InvitationUncheckedUpdateWithoutPaymentInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2088,6 +2115,7 @@ export type InvitationCreateWithoutOrdersInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2141,6 +2169,7 @@ export type InvitationUncheckedCreateWithoutOrdersInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2208,6 +2237,7 @@ export type InvitationUpdateWithoutOrdersInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2261,6 +2291,7 @@ export type InvitationUncheckedUpdateWithoutOrdersInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2312,6 +2343,7 @@ export type InvitationCreateWithoutCustomDesignerTemplatesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2365,6 +2397,7 @@ export type InvitationUncheckedCreateWithoutCustomDesignerTemplatesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2432,6 +2465,7 @@ export type InvitationUpdateWithoutCustomDesignerTemplatesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2485,6 +2519,7 @@ export type InvitationUncheckedUpdateWithoutCustomDesignerTemplatesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2536,6 +2571,7 @@ export type InvitationCreateWithoutSeatingPlanInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2589,6 +2625,7 @@ export type InvitationUncheckedCreateWithoutSeatingPlanInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2656,6 +2693,7 @@ export type InvitationUpdateWithoutSeatingPlanInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2709,6 +2747,7 @@ export type InvitationUncheckedUpdateWithoutSeatingPlanInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2760,6 +2799,7 @@ export type InvitationCreateWithoutTablesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2813,6 +2853,7 @@ export type InvitationUncheckedCreateWithoutTablesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -2880,6 +2921,7 @@ export type InvitationUpdateWithoutTablesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2933,6 +2975,7 @@ export type InvitationUncheckedUpdateWithoutTablesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2984,6 +3027,7 @@ export type InvitationCreateWithoutGuestsInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -3037,6 +3081,7 @@ export type InvitationUncheckedCreateWithoutGuestsInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -3104,6 +3149,7 @@ export type InvitationUpdateWithoutGuestsInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3157,6 +3203,7 @@ export type InvitationUncheckedUpdateWithoutGuestsInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3208,6 +3255,7 @@ export type InvitationCreateWithoutGuestWishesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -3261,6 +3309,7 @@ export type InvitationUncheckedCreateWithoutGuestWishesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -3328,6 +3377,7 @@ export type InvitationUpdateWithoutGuestWishesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3381,6 +3431,7 @@ export type InvitationUncheckedUpdateWithoutGuestWishesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3432,6 +3483,7 @@ export type InvitationCreateWithoutWaBlastTemplatesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -3485,6 +3537,7 @@ export type InvitationUncheckedCreateWithoutWaBlastTemplatesInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -3552,6 +3605,7 @@ export type InvitationUpdateWithoutWaBlastTemplatesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3605,6 +3659,7 @@ export type InvitationUncheckedUpdateWithoutWaBlastTemplatesInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3656,6 +3711,7 @@ export type InvitationCreateManyOwnerInput = {
   eventConfigured?: boolean
   ceremonyTime?: string | null
   receptionTime?: string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: string | null
   weddingHashtag?: string | null
   dressCode?: string | null
@@ -3699,6 +3755,7 @@ export type InvitationUpdateWithoutOwnerInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3751,6 +3808,7 @@ export type InvitationUncheckedUpdateWithoutOwnerInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3803,6 +3861,7 @@ export type InvitationUncheckedUpdateManyWithoutOwnerInput = {
   eventConfigured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ceremonyTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receptionTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weddingSessions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weddingHashtag?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dressCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3932,6 +3991,7 @@ export type InvitationSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   eventConfigured?: boolean
   ceremonyTime?: boolean
   receptionTime?: boolean
+  weddingSessions?: boolean
   description?: boolean
   weddingHashtag?: boolean
   dressCode?: boolean
@@ -3987,6 +4047,7 @@ export type InvitationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   eventConfigured?: boolean
   ceremonyTime?: boolean
   receptionTime?: boolean
+  weddingSessions?: boolean
   description?: boolean
   weddingHashtag?: boolean
   dressCode?: boolean
@@ -4032,6 +4093,7 @@ export type InvitationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   eventConfigured?: boolean
   ceremonyTime?: boolean
   receptionTime?: boolean
+  weddingSessions?: boolean
   description?: boolean
   weddingHashtag?: boolean
   dressCode?: boolean
@@ -4077,6 +4139,7 @@ export type InvitationSelectScalar = {
   eventConfigured?: boolean
   ceremonyTime?: boolean
   receptionTime?: boolean
+  weddingSessions?: boolean
   description?: boolean
   weddingHashtag?: boolean
   dressCode?: boolean
@@ -4095,7 +4158,7 @@ export type InvitationSelectScalar = {
   updatedAt?: boolean
 }
 
-export type InvitationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ownerId" | "slug" | "type" | "title" | "eventCategory" | "templateKey" | "groomName" | "brideName" | "groomFatherName" | "groomMotherName" | "groomChildOrder" | "groomChildPosition" | "brideFatherName" | "brideMotherName" | "brideChildOrder" | "brideChildPosition" | "venue" | "address" | "mapUrl" | "timezone" | "eventDate" | "eventConfigured" | "ceremonyTime" | "receptionTime" | "description" | "weddingHashtag" | "dressCode" | "liveStreamUrl" | "eventNotes" | "giftBankName" | "giftAccountName" | "giftAccountNumber" | "musicUrl" | "isPublished" | "passwordProtected" | "passwordHash" | "viewCount" | "waBlastQuota" | "createdAt" | "updatedAt", ExtArgs["result"]["invitation"]>
+export type InvitationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ownerId" | "slug" | "type" | "title" | "eventCategory" | "templateKey" | "groomName" | "brideName" | "groomFatherName" | "groomMotherName" | "groomChildOrder" | "groomChildPosition" | "brideFatherName" | "brideMotherName" | "brideChildOrder" | "brideChildPosition" | "venue" | "address" | "mapUrl" | "timezone" | "eventDate" | "eventConfigured" | "ceremonyTime" | "receptionTime" | "weddingSessions" | "description" | "weddingHashtag" | "dressCode" | "liveStreamUrl" | "eventNotes" | "giftBankName" | "giftAccountName" | "giftAccountNumber" | "musicUrl" | "isPublished" | "passwordProtected" | "passwordHash" | "viewCount" | "waBlastQuota" | "createdAt" | "updatedAt", ExtArgs["result"]["invitation"]>
 export type InvitationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   payment?: boolean | Prisma.Invitation$paymentArgs<ExtArgs>
@@ -4156,6 +4219,7 @@ export type $InvitationPayload<ExtArgs extends runtime.Types.Extensions.Internal
     eventConfigured: boolean
     ceremonyTime: string | null
     receptionTime: string | null
+    weddingSessions: runtime.JsonValue | null
     description: string | null
     weddingHashtag: string | null
     dressCode: string | null
@@ -4630,6 +4694,7 @@ export interface InvitationFieldRefs {
   readonly eventConfigured: Prisma.FieldRef<"Invitation", 'Boolean'>
   readonly ceremonyTime: Prisma.FieldRef<"Invitation", 'String'>
   readonly receptionTime: Prisma.FieldRef<"Invitation", 'String'>
+  readonly weddingSessions: Prisma.FieldRef<"Invitation", 'Json'>
   readonly description: Prisma.FieldRef<"Invitation", 'String'>
   readonly weddingHashtag: Prisma.FieldRef<"Invitation", 'String'>
   readonly dressCode: Prisma.FieldRef<"Invitation", 'String'>

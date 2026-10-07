@@ -1,3 +1,5 @@
+import { weddingSessionsFor, WeddingSessionError } from "@/lib/events/wedding-sessions";
+import { checkInWeddingSession } from "@/lib/usher/wedding-check-in";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -74,6 +76,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Usher App belum aktif untuk acara tamu ini." }, { status: 402 });
     }
 
+    if (weddingSessionsFor(guest.invitation).length) return NextResponse.json(await checkInWeddingSession(user.id, guest.invitationId, guest.id, body.session));
     const updatedCount = await prisma.guest.updateMany({
       where: { id: guest.id, invitationId: guest.invitationId, checkedIn: false },
       data: { checkedIn: true, checkedInAt: new Date(), checkedInById: user.id },
@@ -97,6 +100,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ guest: checkedIn });
   } catch (error) {
+    if (error instanceof WeddingSessionError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("POST /api/usher failed", error);
     return NextResponse.json({ error: "Check-in gagal." }, { status: 500 });
   }

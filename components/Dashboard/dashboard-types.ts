@@ -41,6 +41,8 @@ export type DashboardEvent = EventScopeOption & {
   type: "WEDDING" | "ADAT_AKAD";
   slug: string;
   templateKey?: string;
+  eventCategory?: string;
+  weddingSessions?: unknown;
   eventConfigured: boolean;
   accessPaid: boolean;
   createdAt: string;
@@ -63,6 +65,7 @@ export type DashboardGuest = {
   personalAddressee?: string | null;
   recipientType?: "INDIVIDUAL" | "COUPLE" | "FAMILY" | "GROUP";
   invitedPax?: number;
+  invitedSessions?: ("ceremony" | "reception")[];
   personalGreeting?: string | null;
   personalSharedAt?: string | null;
   source?: "RSVP" | "MANUAL";

@@ -1,3 +1,4 @@
+import { parseWeddingSessions } from "@/lib/events/wedding-sessions";
 import { isEventCategory } from "@/lib/events/catalog";
 import type {
   EventForm,
@@ -5,6 +6,7 @@ import type {
 } from "@/components/Dashboard/event-panel-types";
 
 export const EMPTY_EVENT_FORM: EventForm = {
+  weddingSessions: null,
   eventCategory: "",
   customTitle: "",
   groomName: "",
@@ -104,6 +106,7 @@ export function eventInvitationToForm(
 
   return {
     eventCategory: blankDraft ? "" : category,
+    weddingSessions: parseWeddingSessions(invitation.weddingSessions, category),
     customTitle:
       !blankDraft && category === "OTHER" ? invitation.title || "" : "",
     groomName: invitation.groomName || "",

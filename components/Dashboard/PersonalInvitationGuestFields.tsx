@@ -9,6 +9,7 @@ import { PERSONAL_SALUTATIONS, type PersonalSalutation } from "@/lib/guests/pers
 export type GuestInvitationForm = {
   recipientType: "INDIVIDUAL" | "COUPLE" | "FAMILY" | "GROUP";
   invitedPax: number;
+  invitedSessions: ("ceremony" | "reception")[];
   category: string;
   groupText: string;
   personalAddressee: string;
@@ -20,6 +21,7 @@ export type GuestInvitationForm = {
 export const emptyGuestInvitationForm: GuestInvitationForm = {
   recipientType: "INDIVIDUAL",
   invitedPax: 1,
+  invitedSessions: [],
   category: "REGULAR",
   groupText: "",
   personalAddressee: "",
@@ -32,6 +34,7 @@ export function guestInvitationFormFrom(guest: PersonalInvitationGuest): GuestIn
   return {
     recipientType: guest.recipientType ?? "INDIVIDUAL",
     invitedPax: guest.invitedPax ?? 1,
+    invitedSessions: guest.invitedSessions ?? [],
     category: guest.category || "REGULAR",
     groupText: (guest.tags ?? []).join(", "),
     personalAddressee: guest.personalAddressee || "",
@@ -46,6 +49,7 @@ export function guestInvitationProfilePayload(value: GuestInvitationForm) {
   return {
     recipientType: value.recipientType,
     invitedPax: value.invitedPax,
+    invitedSessions: value.invitedSessions,
     category: value.category,
     tags: Array.from(new Set(value.groupText.split(",").map((item) => item.trim()).filter(Boolean))),
     personalAddressee: value.personalAddressee.trim(),

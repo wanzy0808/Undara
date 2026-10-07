@@ -410,6 +410,7 @@ export const ModelName = {
   SeatingPlan: 'SeatingPlan',
   WeddingTable: 'WeddingTable',
   Guest: 'Guest',
+  GuestSessionCheckIn: 'GuestSessionCheckIn',
   GuestWish: 'GuestWish',
   AuditLog: 'AuditLog',
   WaBlastTemplate: 'WaBlastTemplate'
@@ -428,7 +429,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "emailVerificationToken" | "accountActionToken" | "invitation" | "invitationAsset" | "payment" | "paymentOrder" | "designerAsset" | "designerTemplate" | "seatingPlan" | "weddingTable" | "guest" | "guestWish" | "auditLog" | "waBlastTemplate"
+    modelProps: "user" | "session" | "emailVerificationToken" | "accountActionToken" | "invitation" | "invitationAsset" | "payment" | "paymentOrder" | "designerAsset" | "designerTemplate" | "seatingPlan" | "weddingTable" | "guest" | "guestSessionCheckIn" | "guestWish" | "auditLog" | "waBlastTemplate"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1394,6 +1395,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    GuestSessionCheckIn: {
+      payload: Prisma.$GuestSessionCheckInPayload<ExtArgs>
+      fields: Prisma.GuestSessionCheckInFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GuestSessionCheckInFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GuestSessionCheckInFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>
+        }
+        findFirst: {
+          args: Prisma.GuestSessionCheckInFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GuestSessionCheckInFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>
+        }
+        findMany: {
+          args: Prisma.GuestSessionCheckInFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>[]
+        }
+        create: {
+          args: Prisma.GuestSessionCheckInCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>
+        }
+        createMany: {
+          args: Prisma.GuestSessionCheckInCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GuestSessionCheckInCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>[]
+        }
+        delete: {
+          args: Prisma.GuestSessionCheckInDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>
+        }
+        update: {
+          args: Prisma.GuestSessionCheckInUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>
+        }
+        deleteMany: {
+          args: Prisma.GuestSessionCheckInDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GuestSessionCheckInUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GuestSessionCheckInUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>[]
+        }
+        upsert: {
+          args: Prisma.GuestSessionCheckInUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuestSessionCheckInPayload>
+        }
+        aggregate: {
+          args: Prisma.GuestSessionCheckInAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGuestSessionCheckIn>
+        }
+        groupBy: {
+          args: Prisma.GuestSessionCheckInGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GuestSessionCheckInGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GuestSessionCheckInCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GuestSessionCheckInCountAggregateOutputType> | number
+        }
+      }
+    }
     GuestWish: {
       payload: Prisma.$GuestWishPayload<ExtArgs>
       fields: Prisma.GuestWishFieldRefs
@@ -1732,6 +1807,7 @@ export const InvitationScalarFieldEnum = {
   eventConfigured: 'eventConfigured',
   ceremonyTime: 'ceremonyTime',
   receptionTime: 'receptionTime',
+  weddingSessions: 'weddingSessions',
   description: 'description',
   weddingHashtag: 'weddingHashtag',
   dressCode: 'dressCode',
@@ -1876,6 +1952,7 @@ export const GuestScalarFieldEnum = {
   personalAddressee: 'personalAddressee',
   recipientType: 'recipientType',
   invitedPax: 'invitedPax',
+  invitedSessions: 'invitedSessions',
   personalGreeting: 'personalGreeting',
   personalEnvelopeEnabled: 'personalEnvelopeEnabled',
   personalLanguage: 'personalLanguage',
@@ -1900,6 +1977,17 @@ export const GuestScalarFieldEnum = {
 } as const
 
 export type GuestScalarFieldEnum = (typeof GuestScalarFieldEnum)[keyof typeof GuestScalarFieldEnum]
+
+
+export const GuestSessionCheckInScalarFieldEnum = {
+  id: 'id',
+  guestId: 'guestId',
+  session: 'session',
+  checkedInAt: 'checkedInAt',
+  checkedInById: 'checkedInById'
+} as const
+
+export type GuestSessionCheckInScalarFieldEnum = (typeof GuestSessionCheckInScalarFieldEnum)[keyof typeof GuestSessionCheckInScalarFieldEnum]
 
 
 export const GuestWishScalarFieldEnum = {
@@ -2346,6 +2434,7 @@ export type GlobalOmitConfig = {
   seatingPlan?: Prisma.SeatingPlanOmit
   weddingTable?: Prisma.WeddingTableOmit
   guest?: Prisma.GuestOmit
+  guestSessionCheckIn?: Prisma.GuestSessionCheckInOmit
   guestWish?: Prisma.GuestWishOmit
   auditLog?: Prisma.AuditLogOmit
   waBlastTemplate?: Prisma.WaBlastTemplateOmit

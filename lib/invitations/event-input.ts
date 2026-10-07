@@ -44,6 +44,8 @@ export const EVENT_DETAIL_MUTATION_FIELDS = [
   "description",
   "eventNotes",
   "eventConfigured",
+  "weddingSessions",
+  "weddingGuestScopes",
 ] as const;
 
 export function hasEventDetailMutation(body: Record<string, unknown>) {

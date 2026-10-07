@@ -1,5 +1,7 @@
 "use client";
 
+import { weddingSessionsFor } from "@/lib/events/wedding-sessions";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -35,6 +37,8 @@ type Invitation = {
   title: string;
   venue: string;
   templateKey: string;
+  eventCategory?: string;
+  weddingSessions?: unknown;
   eventConfigured: boolean;
   isPublished: boolean;
   viewCount: number;
@@ -244,6 +248,7 @@ export default function InvitationWorkspacePanel({ onCreateSequence }: Props) {
                       ) : null}
                     </div>
                   </div>
+                  {weddingSessionsFor(invitation).length === 2 && <p className="mt-3 text-xs text-muted-foreground">{locale === "en" ? "The public link shows both sessions. Use Personal Invitation for guests invited to one session." : "Tautan publik menampilkan kedua sesi. Gunakan Undangan Personal untuk tamu yang diundang ke satu sesi."}</p>}
                   {invitation.accessPaid && qrOpenId === invitation.id && (
                     <div
                       id={"invitation-qr-" + invitation.id}

@@ -1,3 +1,4 @@
+import { weddingSessionsFor, parseInvitedSessions } from "@/lib/events/wedding-sessions";
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { getCurrentUser } from "@/lib/auth";
@@ -39,6 +40,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "QR tamu membutuhkan paket Undangan Digital." }, { status: 402, headers: IMAGE_HEADERS });
     }
 
+    if (weddingSessionsFor(guest.invitation).length) parseInvitedSessions(guest.invitedSessions, weddingSessionsFor(guest.invitation));
     const png = await QRCode.toBuffer(token, { type: "png", width: 640, margin: 4, errorCorrectionLevel: "M" });
     return new Response(new Uint8Array(png), {
       headers: {
@@ -76,6 +78,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "QR tamu membutuhkan paket Undangan Digital." }, { status: 402 });
     }
 
+    if (weddingSessionsFor(guest.invitation).length) parseInvitedSessions(guest.invitedSessions, weddingSessionsFor(guest.invitation));
     const token = createGuestQrToken(guest.id);
     return NextResponse.json({
       guest: {

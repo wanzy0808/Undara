@@ -32,15 +32,19 @@ const event = (overrides = {}) => ({
   payment: { packageKey: "INVITATION_BASIC", status: "PAID" }, ...overrides,
 });
 
-function saveFixture({ invitation = event(), current, user = { id: "user-a", firstName: "Una", role: "USER" }, digital = false } = {}) {
-  const calls = { updates: [], locks: 0, transactions: 0 };
+function saveFixture({ invitation = event(), current, user = { id: "user-a", firstName: "Una", role: "USER" }, digital = false, guests = [] } = {}) {
+  const calls = { updates: [], creates: [], guestUpdates: [], locks: 0, transactions: 0 };
   const prisma = {
     invitation: {
-      findFirst: async ({ where }) => invitation?.id === where.id && invitation.ownerId === where.ownerId ? invitation : null,
+      findFirst: async ({ where }) => invitation?.ownerId === where.ownerId && (invitation.id === where.id || (where.eventConfigured === false && invitation.eventConfigured === false)) ? invitation : null,
+      findUnique: async () => null,
+      count: async () => 1,
+      create: async ({ data }) => { calls.creates.push(data); return { id: "event-new", assets: [], payment: null, ...data }; },
       findUniqueOrThrow: async () => current ?? invitation,
       update: async ({ data }) => { calls.updates.push(data); return { ...invitation, ...data }; },
     },
     invitationAsset: { findFirst: async () => null },
+    guest: { findMany: async () => guests, update: async ({ where, data }) => { calls.guestUpdates.push({ where, data }); return { ...guests.find((guest) => guest.id === where.id), ...data }; } },
     $queryRaw: async () => { calls.locks += 1; return []; },
     $transaction: async (callback) => { calls.transactions += 1; return callback(prisma); },
   };
@@ -70,6 +74,7 @@ function saveFixture({ invitation = event(), current, user = { id: "user-a", fir
   });
   return {
     calls,
+    create: (body) => route.POST(new Request("https://example.test/api/invitations", { method: "POST", headers: { "content-type": "application/json", origin: "https://example.test" }, body: JSON.stringify({ eventConfigured: true, ...body }) })),
     save: (body, origin = "https://example.test") => route.PUT(new Request("https://example.test/api/invitations", {
       method: "PUT", headers: { "content-type": "application/json", origin },
       body: JSON.stringify({ id: "event-a", ...body }),
@@ -412,3 +417,83 @@ for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "OTHE
     }
   });
 }
+
+const weddingSessions = [
+  { id: "ceremony", kind: "BLESSING", label: "", start: "09:00", end: null, venue: "Kapel", address: null, mapUrl: null },
+  { id: "reception", kind: null, label: "", start: "18:00", end: "END", venue: "Gedung Malam", address: "Jalan Resepsi", mapUrl: "https://maps.example.test/reception" },
+];
+
+test("event save persists independent session times and locations while compatibility fields project the first session", async () => {
+  const f = saveFixture();
+  const response = await f.save({ weddingSessions });
+  assert.equal(response.status, 200);
+  assert.deepEqual(f.calls.updates[0].weddingSessions, weddingSessions);
+  assert.equal(f.calls.updates[0].ceremonyTime, "09:00");
+  assert.equal(f.calls.updates[0].receptionTime, null);
+  assert.equal(f.calls.updates[0].venue, "Kapel");
+  assert.equal(f.calls.updates[0].address, null);
+  assert.equal(f.calls.updates[0].mapUrl, null);
+});
+
+test("event session creation rejects second dates and non-wedding configurations without writes", async () => {
+  const f = saveFixture();
+  assert.equal((await f.save({ weddingSessions: [{ ...weddingSessions[1], date: "2027-01-06" }] })).status, 400);
+  const birthday = saveFixture({ invitation: event({ eventCategory: "BIRTHDAY", brideName: "" }) });
+  assert.equal((await birthday.save({ weddingSessions })).status, 400);
+  assert.deepEqual(f.calls.updates, []);
+  assert.deepEqual(birthday.calls.updates, []);
+});
+
+test("enabling sessions requires explicit guest scopes, and save blocks a foreign guest assignment", async () => {
+  const guests = [{ id: "guest-a", name: "Naya", invitedSessions: [], checkedIn: false, rsvpEvents: [] }];
+  const f = saveFixture({ guests });
+  const blocked = await f.save({ weddingSessions });
+  assert.equal(blocked.status, 409);
+  assert.equal((await blocked.json()).guestsRequiringScope[0].id, "guest-a");
+  assert.deepEqual(f.calls.updates, []);
+  assert.equal((await f.save({ weddingSessions, weddingGuestScopes: [{ id: "foreign", invitedSessions: ["reception"] }] })).status, 400);
+  const accepted = await f.save({ weddingSessions, weddingGuestScopes: [{ id: "guest-a", invitedSessions: ["reception"] }] });
+  assert.equal(accepted.status, 200);
+  assert.deepEqual(f.calls.guestUpdates[0].data.invitedSessions, ["reception"]);
+});
+
+test("publication reviews existing scopes and a published event keeps both its date and session configuration locked", async () => {
+  const f = saveFixture({ invitation: event({ weddingSessions, templateKey: weddingKey }), guests: [{ id: "guest-a", name: "Naya", invitedSessions: [], checkedIn: false, rsvpEvents: [] }] });
+  assert.equal((await f.save({ isPublished: true })).status, 409);
+  assert.deepEqual(f.calls.updates, []);
+  const published = saveFixture({ invitation: event({ weddingSessions, templateKey: weddingKey, isPublished: true }) });
+  assert.equal((await published.save({ weddingSessions: [weddingSessions[1]] })).status, 409);
+  assert.equal((await published.save({ eventDate: "2027-01-06" })).status, 409);
+  assert.deepEqual(published.calls.updates, []);
+});
+
+
+test("new wedding creation supports reception-only and does not retain legacy map or end fallbacks", async () => {
+  const f = saveFixture();
+  const response = await f.create({ eventCategory: "WEDDING", groomName: "Una", brideName: "Dara", eventDate: "2027-01-05", weddingSessions: [{ ...weddingSessions[1], address: null, mapUrl: null, end: null }], address: "stale address", mapUrl: "https://maps.example.test/old", receptionTime: "22:00" });
+  assert.equal(response.status, 201);
+  assert.equal(f.calls.creates[0].ceremonyTime, "18:00");
+  assert.equal(f.calls.creates[0].receptionTime, null);
+  assert.equal(f.calls.creates[0].address, null);
+  assert.equal(f.calls.creates[0].mapUrl, null);
+  assert.equal(f.calls.creates[0].weddingSessions.length, 1);
+});
+
+test("reusing a draft cannot enable sessions around existing guests without explicit scope review", async () => {
+  const invitation = event({ eventConfigured: false, eventCategory: "OTHER", templateKey: "", title: "" });
+  const f = saveFixture({ invitation, guests: [{ id: "guest-a", name: "Naya", invitedSessions: [], checkedIn: false, rsvpEvents: [] }] });
+  const body = { eventCategory: "WEDDING", groomName: "Una", brideName: "Dara", eventDate: "2027-01-05", weddingSessions };
+  assert.equal((await f.create(body)).status, 409);
+  assert.deepEqual(f.calls.updates, []);
+  assert.equal((await f.create({ ...body, weddingGuestScopes: [{ id: "guest-a", invitedSessions: ["reception"] }] })).status, 200);
+  assert.deepEqual(f.calls.guestUpdates[0].data.invitedSessions, ["reception"]);
+});
+
+test("a partial design save projects the latest session schedule read under the event lock", async () => {
+  const current = event({ weddingSessions: [weddingSessions[1]], venue: "Gedung Malam" });
+  const f = saveFixture({ invitation: event({ weddingSessions }), current });
+  assert.equal((await f.save({ description: "Salam" })).status, 200);
+  assert.equal(f.calls.updates[0].venue, "Gedung Malam");
+  assert.equal(f.calls.updates[0].ceremonyTime, "18:00");
+  assert.equal(f.calls.updates[0].receptionTime, "END");
+});

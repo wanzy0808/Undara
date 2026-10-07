@@ -5,6 +5,9 @@ export type UsherGuest = {
   rsvpStatus: string;
   plusOnes: number;
   checkedIn: boolean;
+  invitedSessions?: string[];
+  rsvpEvents?: string[];
+  sessionCheckIns?: { session: string; checkedInAt: string }[];
   updatedAt?: string;
 };
 

@@ -40,6 +40,7 @@ import InvitationQrMenu from "@/components/Dashboard/InvitationQrMenu";
 import { parseInvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 import { seatingPartySize } from "@/lib/seating/guest-seats";
 import { displayTitleCase } from "@/lib/text/display-title-case";
+import { weddingRsvpConfig, weddingSessionsFor, type WeddingSession } from "@/lib/events/wedding-sessions";
 
 function formatEventDate(value: string, locale: "id" | "en" = "id") {
   const date = new Date(value);
@@ -273,7 +274,8 @@ export function RsvpWorkspace({
               key={selectedEvent.id}
               guests={guests}
               slug={selectedEvent.slug}
-              rsvpConfig={parseInvitationRsvpConfig(selectedEvent.templateKey ?? "")}
+              rsvpConfig={weddingRsvpConfig(selectedEvent, parseInvitationRsvpConfig(selectedEvent.templateKey ?? ""))}
+              weddingSessions={weddingSessionsFor(selectedEvent)}
               accent={accent}
               embedded
               onRefresh={onRefresh}
@@ -325,6 +327,7 @@ export function PlacementWorkspace({
             <PlacementPanel
               invitationId={selectedId}
               title={selectedEvent.title}
+              weddingSessions={weddingSessionsFor(selectedEvent)}
               guests={guests}
               tables={tables}
               accent={accent}
@@ -340,6 +343,7 @@ export function PlacementWorkspace({
 function PlacementPanel({
   invitationId,
   title,
+  weddingSessions,
   guests,
   tables,
   accent,
@@ -347,6 +351,7 @@ function PlacementPanel({
 }: {
   invitationId: string;
   title: string;
+  weddingSessions: WeddingSession[];
   guests: DashboardGuest[];
   tables: DashboardTable[];
   accent: string;
@@ -395,6 +400,7 @@ function PlacementPanel({
           key={invitationId}
           invitationId={invitationId}
           title={title}
+          weddingSessions={weddingSessions}
           guests={guests}
           tables={tables}
           accent={accent}

@@ -38,6 +38,8 @@ Komponen fungsional tetap milik engine Undara:
 - **Identitas, Detail Acara, Tanggal, Maps, Countdown:** gaya visual bisa berubah; nilai nama/keluarga, jadwal, venue, tautan lokasi dan hitung waktu tetap berasal dari data acara yang benar.
 - **Foto/Galeri:** layout, mask, crop/fokus dan animasi dapat diatur; foto tetap milik koleksi event dan aturan kepemilikannya.
 - **RSVP:** desain label, input, tombol dan urutan presentasi yang aman dapat diubah; pilihan kehadiran, field wajib, validasi, kapasitas/sesi, QR, endpoint, penyimpanan dan otorisasi tidak boleh diganti/dihilangkan.
+
+Untuk wedding bersesi (§5.7 PRD), jadwal/label/lokasi berasal dari Rangkaian Acara, sedangkan hak sesi berasal dari Guest. Pilihan acara RSVP mengikuti sumber tersebut; switch sesi di Studio hanya menampilkan status terkunci. Teks tiap sesi mempunyai native target sendiri untuk styling yang diizinkan, dengan content tetap terkunci pada data event. Pratinjau personal menerima jadwal yang sudah disaring server dan tidak mengirim RSVP; tidak boleh membawa data sesi lain ke props lalu menyembunyikannya secara visual.
 - **Ucapan Tamu:** gaya form/daftar boleh diubah; penyimpanan, moderasi/validasi, batas pengiriman dan hubungan `Invitation.id` tetap memakai layanan bersama.
 - **Hadiah/E-Angpao:** tampilan kartu/tombol boleh berubah; rekening berasal dari data pemilik dan aksi salin benar-benar berfungsi.
 - **Musik:** gaya player dapat diubah; sumber audio, pemutaran/jeda, izin browser dan toggle global tetap dipegang engine.

@@ -1,3 +1,4 @@
+import { parseInvitedSessions, editableGuestWeddingScope, weddingSessionsFor } from "@/lib/events/wedding-sessions";
 import { createHash, randomBytes } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +14,7 @@ export class PersonalBatchError extends Error {
   constructor(message: string, public status = 400) { super(message); }
 }
 
-type Recipient = { key: string; name: string; category: string; guestId: string; personalAddressee?: string; invitedPax?: number; recipientType?: RecipientType };
+type Recipient = { key: string; name: string; category: string; guestId: string; personalAddressee?: string; invitedPax?: number; recipientType?: RecipientType; invitedSessions?: unknown };
 
 function parseRecipients(value: unknown): Recipient[] {
   if (!Array.isArray(value) || !value.length || value.length > MAX_BATCH) {
@@ -55,7 +56,7 @@ function parseRecipients(value: unknown): Recipient[] {
     const identity = `${guestId ? "guest" : "new"}:${key}`;
     if (keys.has(identity)) throw new PersonalBatchError("Tamu yang sama dipilih lebih dari sekali.");
     keys.add(identity);
-    return { key, name, category, guestId, personalAddressee, invitedPax, recipientType };
+    return { key, name, category, guestId, personalAddressee, invitedPax, recipientType, invitedSessions: item.invitedSessions };
   });
 }
 
@@ -77,7 +78,8 @@ function recipientToken(ownerId: string, invitationId: string, key: string) {
 export async function createPersonalBatch(ownerId: string, invitationId: string, value: unknown, published: unknown) {
   const recipients = parseRecipients(value);
   if (published !== undefined && typeof published !== "boolean") throw new PersonalBatchError("Status publikasi tidak valid.");
-  return mutateBatch(ownerId, invitationId, published === true, async (tx) => {
+  return mutateBatch(ownerId, invitationId, published === true, async (tx, invitation) => {
+    const sessions = weddingSessionsFor(invitation);
     const guestIds = recipients.filter((row) => row.guestId).map((row) => row.guestId);
     const saved = await tx.guest.findMany({ where: { invitationId, id: { in: guestIds } } });
     if (saved.length !== guestIds.length) throw new PersonalBatchError("Tamu tidak ditemukan pada acara ini.", 404);
@@ -89,10 +91,11 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
     // Validate every row before writing any. Throwing also rolls back DB failures.
     for (const row of recipients) {
       const guest = row.guestId ? savedById.get(row.guestId) : priorByToken.get(recipientToken(ownerId, invitationId, row.key));
+      parseInvitedSessions(row.invitedSessions, sessions, guest?.invitedSessions);
       if (row.guestId && !categories.includes(row.category) && row.category !== guest?.category) {
         throw new PersonalBatchError("Kategori tamu tidak valid.");
       }
-      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category || (guest.personalAddressee ?? undefined) !== row.personalAddressee || (row.invitedPax !== undefined && guest.invitedPax !== row.invitedPax) || (row.recipientType !== undefined && guest.recipientType !== row.recipientType))) {
+      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category || (guest.personalAddressee ?? undefined) !== row.personalAddressee || (row.invitedPax !== undefined && guest.invitedPax !== row.invitedPax) || (row.recipientType !== undefined && guest.recipientType !== row.recipientType) || (row.invitedSessions !== undefined && JSON.stringify(guest.invitedSessions) !== JSON.stringify(parseInvitedSessions(row.invitedSessions, sessions))))) {
         throw new PersonalBatchError("Tamu ini sudah disimpan. Muat ulang daftar sebelum mengubahnya.", 409);
       }
     }
@@ -101,12 +104,14 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
     for (const row of recipients) {
       const token = row.guestId ? savedById.get(row.guestId)!.personalToken || randomBytes(18).toString("hex") : recipientToken(ownerId, invitationId, row.key);
       const existing = row.guestId ? savedById.get(row.guestId) : priorByToken.get(token);
+      const invitedSessions = existing ? editableGuestWeddingScope(row.invitedSessions, sessions, existing) : parseInvitedSessions(row.invitedSessions, sessions);
       const guest = existing
         ? await tx.guest.update({ where: { id: existing.id }, data: {
+          ...(sessions.length || row.invitedSessions !== undefined ? { invitedSessions } : {}),
           ...(row.guestId ? { category: row.category, personalToken: token } : {}),
           ...(published === true ? { personalPublished: true } : {}),
         } })
-        : await tx.guest.create({ data: { invitationId, name: row.name, category: row.category,
+        : await tx.guest.create({ data: { invitationId, name: row.name, category: row.category, invitedSessions,
           ...(row.personalAddressee ? { personalAddressee: row.personalAddressee } : {}),
           ...(row.invitedPax ? { invitedPax: row.invitedPax } : {}),
           ...(row.recipientType ? { recipientType: row.recipientType } : {}),
@@ -121,9 +126,10 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
 
 export async function publishPersonalBatch(ownerId: string, invitationId: string, value: unknown) {
   const ids = parsePersonalBatchIds(value);
-  return mutateBatch(ownerId, invitationId, true, async (tx) => {
+  return mutateBatch(ownerId, invitationId, true, async (tx, invitation) => {
     const where = { invitationId, id: { in: ids }, personalToken: { not: null } };
-    const guests = await tx.guest.findMany({ where, select: { id: true } });
+    const guests = await tx.guest.findMany({ where, select: { id: true, invitedSessions: true } });
+    for (const guest of guests) parseInvitedSessions(guest.invitedSessions, weddingSessionsFor(invitation));
     if (guests.length !== ids.length) throw new PersonalBatchError("Undangan personal tidak ditemukan pada acara ini.", 404);
     const result = await tx.guest.updateMany({ where, data: { personalPublished: true } });
     if (result.count !== ids.length) throw new PersonalBatchError("Daftar tamu berubah. Muat ulang dan coba lagi.", 409);
@@ -131,7 +137,7 @@ export async function publishPersonalBatch(ownerId: string, invitationId: string
   });
 }
 
-async function mutateBatch<T>(ownerId: string, invitationId: string, publish: boolean, write: (tx: Prisma.TransactionClient) => Promise<T>) {
+async function mutateBatch<T>(ownerId: string, invitationId: string, publish: boolean, write: (tx: Prisma.TransactionClient, invitation: { eventCategory: string; weddingSessions?: unknown }) => Promise<T>) {
   return prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Invitation" WHERE "id" = ${invitationId} AND "ownerId" = ${ownerId} FOR UPDATE`;
     if (!locked.length) throw new PersonalBatchError("Acara tidak ditemukan.", 404);
@@ -139,7 +145,7 @@ async function mutateBatch<T>(ownerId: string, invitationId: string, publish: bo
     if (!invitation) throw new PersonalBatchError("Acara tidak ditemukan.", 404);
     if (!invitation.templateKey.trim()) throw new PersonalBatchError("Simpan desain di Edit undangan terlebih dahulu.", 409);
     if (publish && !invitation.isPublished) throw new PersonalBatchError("Terbitkan undangan acara sebelum membagikan undangan personal.", 409);
-    if (publish && !(await hasAccountDigitalInvitation(ownerId, invitation.payment))) throw new PersonalBatchError("Aktifkan akses Undangan Digital sebelum publish.", 403);
-    return write(tx);
+    if (publish && !(await hasAccountDigitalInvitation(ownerId, invitation.payment, invitation.id))) throw new PersonalBatchError("Aktifkan akses Undangan Digital sebelum publish.", 403);
+    return write(tx, invitation);
   }, { maxWait: 5000, timeout: 20000 });
 }

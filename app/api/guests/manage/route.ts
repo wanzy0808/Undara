@@ -8,6 +8,7 @@ import { findGuestsByContact } from "@/lib/guests/identity";
 import { parsePersonalGuestFields } from "@/lib/guests/personal-profile";
 import { buildPersonalGuestAddressee, getPersonalGuestSalutation } from "@/lib/guests/personal-envelope";
 import { GuestPartyUpdateError, managedGuestSelect, resizeManagedGuestParty } from "@/lib/guests/party-update";
+import { WeddingSessionError } from "@/lib/events/wedding-sessions";
 
 // Resolve the event FROM the guest being edited, never from the account's first
 // event. Personal Invitation, RSVP, WA Blast and seating share this Guest.id.
@@ -126,8 +127,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Tamu sudah check-in. Status RSVP tidak dapat diganti." }, { status: 409 });
     }
 
-    const updated = profile.invitedPax !== undefined
-      ? await resizeManagedGuestParty(user.id, guest.invitationId, guest.id, profile.invitedPax, data)
+    const updated = profile.invitedPax !== undefined || profile.invitedSessions !== undefined
+      ? await resizeManagedGuestParty(user.id, guest.invitationId, guest.id, profile.invitedPax ?? guest.invitedPax, data)
       : await prisma.guest.update({
         where: { id: guest.id },
         data,
@@ -135,6 +136,7 @@ export async function PATCH(request: Request) {
       });
     return NextResponse.json({ ok: true, guest: updated });
   } catch (error) {
+    if (error instanceof WeddingSessionError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (error instanceof GuestPartyUpdateError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("PATCH /api/guests/manage failed", error);
     return NextResponse.json({ error: "Data tamu gagal diperbarui." }, { status: 500 });

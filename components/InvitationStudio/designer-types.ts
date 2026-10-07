@@ -33,6 +33,7 @@ export type InvitationDesignerInvitation = {
   mapUrl?: string | null;
   timezone: string;
   eventDate: string;
+  weddingSessions?: unknown;
   ceremonyTime: string | null;
   receptionTime: string | null;
   description: string | null;
