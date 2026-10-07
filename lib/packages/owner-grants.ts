@@ -47,12 +47,17 @@ export async function getOwnerPackageGrant(userId: string): Promise<ManualPackag
   return parseAccess(latest?.metadata);
 }
 
-export async function getOwnerGrantedDigitalInvitationIds(userId: string) {
+export async function getOwnerGrantedDigitalInvitationIds(
+  userId: string,
+  includeInvitationId?: string,
+) {
   const grant = await getOwnerPackageGrant(userId);
   if (grant.digitalCredits <= 0) return new Set<string>();
 
   const invitations = await prisma.invitation.findMany({
-    where: { ownerId: userId, eventConfigured: true },
+    where: includeInvitationId
+      ? { ownerId: userId, OR: [{ eventConfigured: true }, { id: includeInvitationId }] }
+      : { ownerId: userId, eventConfigured: true },
     select: {
       id: true,
       payment: { select: { packageKey: true, status: true } },
@@ -68,9 +73,18 @@ export async function getOwnerGrantedDigitalInvitationIds(userId: string) {
   );
 }
 
-export async function hasOwnerDigitalInvitationGrant(userId: string, invitationId: string) {
+export async function hasOwnerDigitalInvitationGrant(
+  userId: string,
+  invitationId: string,
+  includeUnconfigured = false,
+) {
   if (!invitationId) return false;
-  return (await getOwnerGrantedDigitalInvitationIds(userId)).has(invitationId);
+  return (
+    await getOwnerGrantedDigitalInvitationIds(
+      userId,
+      includeUnconfigured ? invitationId : undefined,
+    )
+  ).has(invitationId);
 }
 
 export async function setOwnerPackageGrant(
