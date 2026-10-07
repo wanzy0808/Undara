@@ -77,7 +77,10 @@ function fixture({ invitation = event(), guests = [], grants, allowed = true, be
       return guest;
     },
   } };
-  const access = loadPackageAccess({ grants });
+  const access = loadPackageAccess({
+    grants,
+    invitations: invitation ? { [invitation.ownerId]: [invitation] } : {},
+  });
   const identity = loadSource("lib/guests/identity.ts", { "@/lib/prisma": { prisma } });
   const modules = {
     "next/server": { NextResponse: { json: (body, init) => Response.json(body, init) } },
