@@ -33,7 +33,7 @@ export async function PATCH(request: Request) {
     if (body.invitationId !== undefined && body.invitationId !== guest.invitationId) {
       return NextResponse.json({ error: "Tamu tidak ditemukan pada acara ini." }, { status: 404 });
     }
-    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment, guest.invitation.id))) {
       return NextResponse.json({ error: "Pengelolaan tamu membutuhkan paket Digital Invitation." }, { status: 402 });
     }
 
@@ -156,7 +156,7 @@ export async function DELETE(request: Request) {
     if (query.has("invitationId") && query.get("invitationId") !== guest.invitationId) {
       return NextResponse.json({ error: "Tamu tidak ditemukan pada acara ini." }, { status: 404 });
     }
-    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, guest.invitation.payment, guest.invitation.id))) {
       return NextResponse.json({ error: "Pengelolaan tamu membutuhkan paket Digital Invitation." }, { status: 402 });
     }
     if (guest.personalToken || guest.checkedIn) {
