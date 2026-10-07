@@ -736,8 +736,8 @@ test("setup and guest entry sit above a shared canvas panel with the guest list 
   for (const locale of ["id", "en"]) {
     const f = chartFixture();
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(f.Chart, { invitationId: "event-a", tables: [table], guests: [], onAssigned: async () => {} })));
-    assert.ok(html.includes(locale === "en" ? "Tables:</span>" : "Meja:</span>"));
-    assert.ok(html.includes(locale === "en" ? "Seats:</span>" : "Kursi:</span>"));
+    assert.ok(html.includes(locale === "en" ? ">Tables<" : ">Meja<"));
+    assert.ok(html.includes(locale === "en" ? ">Seats<" : ">Kursi<"));
     assert.doesNotMatch(html, /Meja ditambahkan|Bangku per meja|Tables to add|Chairs per table/);
     assert.doesNotMatch(html, /aria-label="(?:Halaman denah|Plan pages)"/);
   }
