@@ -55,7 +55,13 @@ function saveFixture({ invitation = event(), current, user = { id: "user-a", fir
     "@/lib/events/parents": parents,
     "@/lib/security/request-origin": trusted,
     "@/lib/packages/access": access,
-    "@/lib/packages/owner-grants": { getOwnerPackageGrant: async () => ({ digital }) },
+    "@/lib/packages/owner-grants": {
+      getOwnerGrantedDigitalInvitationIds: async () => new Set(digital ? ["event-a"] : []),
+    },
+    "@/lib/packages/server-access": {
+      hasAccountDigitalInvitation: async (_userId, payment, invitationId) =>
+        access.hasPaidDigitalInvitation(payment) || (digital && invitationId === "event-a"),
+    },
     "@/lib/invitations/music-selection": music,
     "@/lib/templates/catalog": catalog,
     "@/lib/events/catalog": categories,
