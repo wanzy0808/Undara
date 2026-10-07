@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getServicePackage } from "@/lib/packages/catalog";
 import { hasPaidDigitalInvitation } from "@/lib/packages/access";
 import { getOwnerPackageGrant } from "@/lib/packages/owner-grants";
+import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { sendInvoiceEmail } from "@/lib/notifications/email";
 import { attributeOrderToPartner, getActivePartnerVoucher, getOrderReferral, getSelectedReferralCode, normalizeVoucherCode } from "@/lib/partners/vouchers";
 import { referralPrice } from "@/lib/partners/referral-pricing";
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
       if (!invitation) {
         return NextResponse.json({ error: "Pilih acara sebelum membeli add-on WA Blast." }, { status: 400 });
       }
-      if (!(ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment))) {
+      if (!(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id, true))) {
         return NextResponse.json({ error: "Aktifkan Undangan Digital untuk acara ini sebelum membeli WA Blast." }, { status: 409 });
       }
     } else if (!invitation) {
@@ -110,7 +111,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Acara tidak ditemukan." }, { status: 404 });
     }
 
-    if (packageKey === "INVITATION_BASIC" && (ownerGrant.digital || hasPaidDigitalInvitation(invitation.payment))) {
+    if (
+      packageKey === "INVITATION_BASIC" &&
+      (await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id, true))
+    ) {
       return NextResponse.json({ error: "Undangan Digital untuk acara ini sudah aktif." }, { status: 409 });
     }
 
