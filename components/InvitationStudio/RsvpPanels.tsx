@@ -1,5 +1,7 @@
 "use client";
 
+import { weddingSessionLabel, type WeddingSession } from "@/lib/events/wedding-sessions";
+
 import type { FormEvent } from "react";
 import {
   CalendarPlus,
@@ -19,10 +21,11 @@ import { rsvpElementStyleCss, type InvitationRsvpConfig } from "@/lib/templates/
 import { invitationFieldColors } from "@/lib/templates/visual-colors";
 import { confirmedRsvpPax } from "@/lib/guests/rsvp";
 
-export function RsvpSuccessPanel({ ticketGuest, ticketUrl, calendarUrl }: {
+export function RsvpSuccessPanel({ ticketGuest, ticketUrl, calendarUrl, calendarLinks = [] }: {
   ticketGuest: RsvpTicketGuest;
   ticketUrl: string;
   calendarUrl: string;
+  calendarLinks?: { label: string; url: string }[];
 }) {
   const language = useInvitationLanguage();
   const tr = (text: string) => invitationText(language, text);
@@ -53,6 +56,7 @@ export function RsvpSuccessPanel({ ticketGuest, ticketUrl, calendarUrl }: {
         <p className="mt-3 text-xs opacity-60">{tr("Simpan QR ini dan tunjukkan kepada petugas saat tiba di acara.")}</p>
       </>}
       {attending && !ticketUrl && <p className="mt-4 text-sm opacity-70">{tr("RSVP Anda sudah tersimpan. QR belum tersedia; hubungi pemilik undangan untuk bantuan.")}</p>}
+      {attending && calendarLinks.map((link) => <div key={link.label} className="mt-3"><Button asChild><a href={link.url} target="_blank" rel="noreferrer"><CalendarPlus aria-hidden="true" className="h-4 w-4" />{tr("Tambah ke Kalender")} · {link.label}</a></Button></div>)}
       {attending && calendarUrl && calendarUrl !== "#" && <div className="mt-3">
         <Button asChild>
           <a href={calendarUrl} target="_blank" rel="noreferrer">
@@ -72,6 +76,7 @@ export function RsvpInputPanel({
   invitedPax,
   eventCategory,
   rsvpConfig,
+  weddingSessions = [],
   form,
   setForm,
   message,
@@ -85,6 +90,7 @@ export function RsvpInputPanel({
   invitedPax?: number;
   eventCategory?: string | null;
   rsvpConfig: InvitationRsvpConfig;
+  weddingSessions?: WeddingSession[];
   form: RsvpFormState;
   setForm: (next: RsvpFormState) => void;
   message: string;
@@ -163,8 +169,8 @@ export function RsvpInputPanel({
             required
           >
             <option value="">{tr("Pilih acara")}</option>
-            {rsvpConfig.ceremony && <option value="ceremony">{tr("Upacara Nikah")}</option>}
-            {rsvpConfig.reception && <option value="reception">{tr("Resepsi")}</option>}
+            {rsvpConfig.ceremony && <option value="ceremony">{weddingSessions.find((session) => session.id === "ceremony") ? weddingSessionLabel(weddingSessions.find((session) => session.id === "ceremony")!, language) : tr("Upacara Nikah")}</option>}
+            {rsvpConfig.reception && <option value="reception">{weddingSessions.find((session) => session.id === "reception") ? weddingSessionLabel(weddingSessions.find((session) => session.id === "reception")!, language) : tr("Resepsi")}</option>}
             {rsvpConfig.attendAll && rsvpConfig.ceremony && rsvpConfig.reception && <option value="all">{tr("Hadiri Semua Acara")}</option>}
           </select>
         </label>

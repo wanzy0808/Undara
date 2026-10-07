@@ -1,3 +1,6 @@
+import WeddingSessionSchedule from "./WeddingSessionSchedule";
+import { weddingSessionsFor, weddingRsvpConfig } from "@/lib/events/wedding-sessions";
+import { parseInvitationRsvpConfig } from "@/lib/templates/rsvp-config";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { MapPin } from "lucide-react";
 import RsvpForm from "@/components/InvitationStudio/RsvpForm";
@@ -75,6 +78,8 @@ export default function ClassicInvitationTemplate({
   const eventCategory = normalizeEventCategory(invitation.eventCategory);
   const category = getEventCategory(eventCategory);
   const timezone = getIndonesiaTimezone(invitation.timezone);
+  const sessions = weddingSessionsFor(invitation);
+  const rsvpConfig = weddingRsvpConfig(invitation, parseInvitationRsvpConfig(invitation.templateKey));
   const sections = parseInvitationSections(invitation.templateKey);
   const date = new Intl.DateTimeFormat("id-ID", {
     dateStyle: "full",
@@ -235,6 +240,7 @@ export default function ClassicInvitationTemplate({
               title="Waktu & Lokasi"
               description="Detail acara untuk membantu Anda mempersiapkan kehadiran."
             />
+            {sessions.length ? <WeddingSessionSchedule sessions={sessions} timezone={timezone.label} date={date} location /> : <>
             <div className="grid w-full gap-3 sm:grid-cols-2">
               <div className="w-full rounded-xl border border-stone-400 bg-stone-200 p-6 text-center">
                 <h3 className="font-[Cormorant_Garamond,serif] text-xl">Mulai</h3>
@@ -270,6 +276,7 @@ export default function ClassicInvitationTemplate({
                 </a>
               )}
             </div>
+            </>}
           </section>
 
           {sections.rsvp && (
@@ -284,6 +291,10 @@ export default function ClassicInvitationTemplate({
                 <div className="mt-8">
                   <RsvpForm
                     slug={invitation.slug}
+                    eventCategory={invitation.eventCategory}
+                    rsvpConfig={rsvpConfig}
+                    weddingSessions={sessions}
+                    timezone={invitation.timezone}
                     eventDate={invitation.eventDate}
                     venue={invitation.venue}
                     title={rsvpTitle}

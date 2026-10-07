@@ -8,6 +8,7 @@ import { invitationQrDownloadCard } from "../lib/invitations/qr-card.ts";
 import { createGuestQrToken, verifyGuestQrToken } from "../lib/usher/qr.ts";
 import { hasPaidDigitalInvitation, hasPaidGuestbook } from "../lib/packages/access.ts";
 import { loadPackageAccess, loadSource } from "./helpers/package-access.mjs";
+import * as weddingSessions from "../lib/events/wedding-sessions.ts";
 
 const previousSecret = process.env.QR_SIGNING_SECRET;
 before(() => { process.env.QR_SIGNING_SECRET = "test-only-admission-card-secret"; });
@@ -31,6 +32,7 @@ function loadHandler({ user = { id: "owner-a" }, invitation, guest = { id: "gues
   const packageAccess = loadPackageAccess({ grants, grantError });
   calls.grantQueries = packageAccess.queries;
   const modules = {
+    "@/lib/events/wedding-sessions": weddingSessions,
     "next/server": { NextResponse: { json: (body, init) => Response.json(body, init) } },
     qrcode: { toBuffer: (...args) => { calls.renders.push(structuredClone(args)); return render(...args); } },
     "@/lib/auth": { getCurrentUser: async () => user },
@@ -318,6 +320,7 @@ function loadCheckin({ user = { id: "owner-a" }, ownerId = "owner-a", invitation
     "@/lib/packages/owner-grants": { getOwnerPackageGrant: async () => ({ digital: false, guestbook: false }) },
   });
   const modules = {
+    "@/lib/events/wedding-sessions": weddingSessions,
     "next/server": { NextResponse: { json: (body, init) => Response.json(body, init) } },
     "@/lib/auth": { getCurrentUser: async () => user },
     "@/lib/security/request-origin": { isTrustedMutationOrigin: () => trustedOrigin },
@@ -338,6 +341,7 @@ function loadCheckin({ user = { id: "owner-a" }, ownerId = "owner-a", invitation
     } } },
   };
   const routeModule = { exports: {} };
+  modules["@/lib/usher/wedding-check-in"] = loadSource("lib/usher/wedding-check-in.ts", modules);
   new Function("require", "exports", "module", "console", checkinCompiled)((id) => {
     assert.ok(Object.hasOwn(modules, id), `Unexpected check-in dependency: ${id}`);
     return modules[id];

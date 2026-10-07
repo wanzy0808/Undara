@@ -1,3 +1,5 @@
+import { parseWeddingSessions, weddingSessionProjection, WeddingSessionError } from "@/lib/events/wedding-sessions";
+import { reconcileWeddingGuestScopes, WeddingScopeConflict } from "@/lib/events/wedding-session-mutation";
 import { Prisma } from "@/generated/prisma/client";
 import { isWeddingChildPosition } from "@/lib/events/parents";
 import { NextResponse } from "next/server";
@@ -154,13 +156,15 @@ export async function POST(request: Request) {
       const brideMotherName = wedding ? optionalName(body.brideMotherName) : null;
       const brideChildOrder = wedding ? optionalPositiveInt(body.brideChildOrder) : null;
       const brideChildPosition = wedding && isWeddingChildPosition(body.brideChildPosition) ? body.brideChildPosition : null;
-      const venue = String(body.venue ?? "").trim();
-      const address = String(body.address ?? "").trim() || null;
-      const mapUrl = String(body.mapUrl ?? "").trim() || null;
+      const weddingSessions = parseWeddingSessions(body.weddingSessions, eventCategory);
+      const sessionDetails = weddingSessionProjection(weddingSessions ?? []);
+      const venue = sessionDetails.venue ?? String(body.venue ?? "").trim();
+      const address = weddingSessions ? sessionDetails.address! : (String(body.address ?? "").trim() || null);
+      const mapUrl = weddingSessions ? sessionDetails.mapUrl! : (String(body.mapUrl ?? "").trim() || null);
       const timezone = normalizeIndonesiaTimezone(body.timezone);
       const eventDate = new Date(String(body.eventDate ?? ""));
-      const ceremonyTime = String(body.ceremonyTime ?? "").trim() || null;
-      const receptionTime = String(body.receptionTime ?? "").trim() || null;
+      const ceremonyTime = sessionDetails.ceremonyTime ?? (String(body.ceremonyTime ?? "").trim() || null);
+      const receptionTime = weddingSessions ? sessionDetails.receptionTime! : (String(body.receptionTime ?? "").trim() || null);
       const requestedTitle = String(body.title ?? "").trim();
       const title = buildEventTitle(eventCategory, groomName, brideName, requestedTitle);
 
@@ -234,13 +238,20 @@ export async function POST(request: Request) {
         description: String(body.description ?? "").trim() || null,
         eventNotes: String(body.eventNotes ?? "").trim() || null,
         eventConfigured: true,
+        weddingSessions: weddingSessions === null ? Prisma.DbNull : weddingSessions,
       };
 
       const invitation = reusableDraft
-        ? await prisma.invitation.update({
+        ? await prisma.$transaction(async (tx) => {
+            await tx.$queryRaw`SELECT "id" FROM "Invitation" WHERE "id" = ${reusableDraft.id} AND "ownerId" = ${user.id} FOR UPDATE`;
+            const current = await tx.invitation.findUniqueOrThrow({ where: { id: reusableDraft.id } });
+            if (current.isPublished || current.eventConfigured) throw new WeddingSessionError("Draft acara berubah. Muat ulang daftar acara.", 409);
+            await reconcileWeddingGuestScopes(tx, current.id, current, weddingSessions, eventDate, body.weddingGuestScopes);
+            return tx.invitation.update({
             where: { id: reusableDraft.id },
             data,
             include: { assets: { orderBy: { createdAt: "asc" } }, payment: true },
+            });
           })
         : await prisma.invitation.create({
             data: {
@@ -306,6 +317,8 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof WeddingScopeConflict) return NextResponse.json({ error: error.message, guestsRequiringScope: error.guests }, { status: 409 });
+    if (error instanceof WeddingSessionError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("POST /api/invitations failed", error);
     return databaseFailure(error, "Acara baru belum dapat dibuat.");
   }
@@ -369,14 +382,16 @@ export async function PUT(request: Request) {
     const brideChildPosition = wedding
       ? (body.brideChildPosition === null || body.brideChildPosition === "" ? null : isWeddingChildPosition(body.brideChildPosition) ? body.brideChildPosition : invitation.brideChildPosition)
       : null;
-    const venue = String(body.venue ?? invitation.venue).trim();
-    const address = String(body.address ?? invitation.address ?? "").trim() || null;
-    const mapUrl = String(body.mapUrl ?? invitation.mapUrl ?? "").trim() || null;
+    const weddingSessions = parseWeddingSessions(body.weddingSessions === undefined ? (wedding ? invitation.weddingSessions : null) : body.weddingSessions, eventCategory);
+    const sessionDetails = weddingSessionProjection(weddingSessions ?? []);
+    const venue = sessionDetails.venue ?? String(body.venue ?? invitation.venue).trim();
+    const address = weddingSessions ? sessionDetails.address! : (String(body.address ?? invitation.address ?? "").trim() || null);
+    const mapUrl = weddingSessions ? sessionDetails.mapUrl! : (String(body.mapUrl ?? invitation.mapUrl ?? "").trim() || null);
     const timezone = normalizeIndonesiaTimezone(body.timezone ?? invitation.timezone);
     const rawEventDate = String(body.eventDate ?? invitation.eventDate);
     const eventDate = new Date(rawEventDate);
-    const ceremonyTime = String(body.ceremonyTime ?? invitation.ceremonyTime ?? "").trim() || null;
-    const receptionTime = String(body.receptionTime ?? invitation.receptionTime ?? "").trim() || null;
+    const ceremonyTime = weddingSessions ? sessionDetails.ceremonyTime! : (String(body.ceremonyTime ?? invitation.ceremonyTime ?? "").trim() || null);
+    const receptionTime = weddingSessions ? sessionDetails.receptionTime! : (String(body.receptionTime ?? invitation.receptionTime ?? "").trim() || null);
     const templateKey = String(body.templateKey ?? invitation.templateKey).trim();
     const requestedTemplateBase = templateKey.split("::", 1)[0];
     const persistedTemplateBase = invitation.templateKey.split("::", 1)[0];
@@ -473,7 +488,10 @@ export async function PUT(request: Request) {
       // Share the upload/delete lock so an old editor cannot restore a removed file.
       await tx.$queryRaw`SELECT "id" FROM "Invitation" WHERE "id" = ${invitation.id} FOR UPDATE`;
       const current = await tx.invitation.findUniqueOrThrow({ where: { id: invitation.id } });
+      if (current.isPublished && (hasEventDetailMutation(body) || body.isPublished === false)) throw new WeddingSessionError("Acara yang sudah dipublish terkunci.", 409);
       const latestEventCategory = body.eventCategory === undefined ? normalizeEventCategory(current.eventCategory) : eventCategory;
+      const currentSessions = parseWeddingSessions(body.weddingSessions === undefined ? (latestEventCategory !== "WEDDING" ? null : current.weddingSessions) : body.weddingSessions, latestEventCategory);
+      await reconcileWeddingGuestScopes(tx, invitation.id, current, currentSessions, body.eventDate === undefined ? current.eventDate : eventDate, body.weddingGuestScopes, wantsPublish);
       assertTemplateCategory(templateKey, latestEventCategory, current, wantsPublish);
       const musicUrl = String(body.musicUrl ?? current.musicUrl ?? "").trim() || null;
       await assertInvitationMusicAsset(musicUrl, invitation.id, user.id, (where) =>
@@ -484,6 +502,7 @@ export async function PUT(request: Request) {
         data: {
           slug,
           eventCategory: latestEventCategory,
+          ...(body.weddingSessions !== undefined || body.eventCategory !== undefined ? { weddingSessions: currentSessions === null ? Prisma.DbNull : currentSessions } : {}),
           groomName,
           brideName,
           groomFatherName,
@@ -502,6 +521,7 @@ export async function PUT(request: Request) {
           eventConfigured,
           ceremonyTime,
           receptionTime,
+          ...(currentSessions ? weddingSessionProjection(currentSessions) : {}),
           title,
           templateKey,
           description: String(body.description ?? invitation.description ?? "").trim() || null,
@@ -528,6 +548,8 @@ export async function PUT(request: Request) {
       accessPaid,
     });
   } catch (error) {
+    if (error instanceof WeddingScopeConflict) return NextResponse.json({ error: error.message, guestsRequiringScope: error.guests }, { status: 409 });
+    if (error instanceof WeddingSessionError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (error instanceof IncompatibleTemplateError) return NextResponse.json({ error: error.message }, { status: 400 });
     if (error instanceof MissingMusicAssetError) return NextResponse.json({ error: error.message }, { status: 409 });
     console.error("PUT /api/invitations failed", error);

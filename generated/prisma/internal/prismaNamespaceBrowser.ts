@@ -64,6 +64,7 @@ export const ModelName = {
   SeatingPlan: 'SeatingPlan',
   WeddingTable: 'WeddingTable',
   Guest: 'Guest',
+  GuestSessionCheckIn: 'GuestSessionCheckIn',
   GuestWish: 'GuestWish',
   AuditLog: 'AuditLog',
   WaBlastTemplate: 'WaBlastTemplate'
@@ -162,6 +163,7 @@ export const InvitationScalarFieldEnum = {
   eventConfigured: 'eventConfigured',
   ceremonyTime: 'ceremonyTime',
   receptionTime: 'receptionTime',
+  weddingSessions: 'weddingSessions',
   description: 'description',
   weddingHashtag: 'weddingHashtag',
   dressCode: 'dressCode',
@@ -306,6 +308,7 @@ export const GuestScalarFieldEnum = {
   personalAddressee: 'personalAddressee',
   recipientType: 'recipientType',
   invitedPax: 'invitedPax',
+  invitedSessions: 'invitedSessions',
   personalGreeting: 'personalGreeting',
   personalEnvelopeEnabled: 'personalEnvelopeEnabled',
   personalLanguage: 'personalLanguage',
@@ -330,6 +333,17 @@ export const GuestScalarFieldEnum = {
 } as const
 
 export type GuestScalarFieldEnum = (typeof GuestScalarFieldEnum)[keyof typeof GuestScalarFieldEnum]
+
+
+export const GuestSessionCheckInScalarFieldEnum = {
+  id: 'id',
+  guestId: 'guestId',
+  session: 'session',
+  checkedInAt: 'checkedInAt',
+  checkedInById: 'checkedInById'
+} as const
+
+export type GuestSessionCheckInScalarFieldEnum = (typeof GuestSessionCheckInScalarFieldEnum)[keyof typeof GuestSessionCheckInScalarFieldEnum]
 
 
 export const GuestWishScalarFieldEnum = {

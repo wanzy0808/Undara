@@ -1,5 +1,7 @@
 "use client";
 
+import { weddingSessionLabel, type WeddingSession } from "@/lib/events/wedding-sessions";
+
 import { FloatingField } from "@/components/ui/floating-field";
 
 import { useMemo, useState } from "react";
@@ -51,6 +53,7 @@ type Props = {
   embedded?: boolean;
   onRefresh?: () => Promise<void> | void;
   rsvpConfig?: InvitationRsvpConfig;
+  weddingSessions?: WeddingSession[];
 };
 type SortKey = "name" | "status" | "pax" | "checkedIn";
 
@@ -73,6 +76,7 @@ export default function RsvpAnalyticsPanel({
   embedded = false,
   onRefresh,
   rsvpConfig = defaultInvitationRsvpConfig,
+  weddingSessions = [],
 }: Props) {
   const { d, locale } = useDashboardI18n();
   const [query, setQuery] = useState("");
@@ -81,9 +85,11 @@ export default function RsvpAnalyticsPanel({
   const [qr, setQr] = useState<{ name: string; token: string } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const eventNames = (guest: RsvpGuest) => (guest.rsvpEvents ?? []).flatMap((event) =>
-    event === "ceremony" ? [d("Upacara Nikah")] : event === "reception" ? [d("Resepsi")] : [],
-  ).join(", ");
+  const eventNames = (guest: RsvpGuest) => (guest.rsvpEvents ?? []).flatMap((event) => {
+    const session = weddingSessions.find((session) => session.id === event);
+    if (session) return [weddingSessionLabel(session, locale === "en" ? "EN" : "ID")];
+    return event === "ceremony" ? [d("Upacara Nikah")] : event === "reception" ? [d("Resepsi")] : [];
+  }).join(", ");
   const answer = (guest: RsvpGuest, id: string) => typeof guest.rsvpAnswers?.[id] === "string" ? guest.rsvpAnswers[id] : "";
 
   const stats = useMemo(

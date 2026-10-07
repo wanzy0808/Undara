@@ -2,6 +2,18 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import ts from "typescript";
 import * as paidAccess from "../../lib/packages/access.ts";
+import * as weddingSessions from "../../lib/events/wedding-sessions.ts";
+import * as weddingMutation from "../../lib/events/wedding-session-mutation.ts";
+import * as weddingFields from "../../components/Dashboard/WeddingSessionFields.tsx";
+
+// Pure production helpers stay real; each fixture still owns its DB/auth boundary.
+const sharedModules = {
+  "@/lib/events/wedding-sessions": weddingSessions,
+  "./wedding-sessions": weddingSessions,
+  "@/lib/events/wedding-session-mutation": weddingMutation,
+  "./WeddingSessionFields": weddingFields,
+  "@/components/Dashboard/WeddingSessionFields": weddingFields,
+};
 
 export function loadSource(path, modules, { env = {}, errors = [] } = {}) {
   const source = readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
@@ -10,6 +22,8 @@ export function loadSource(path, modules, { env = {}, errors = [] } = {}) {
   }).outputText;
   const sourceModule = { exports: {} };
   new Function("require", "exports", "module", "process", "console", compiled)((id) => {
+    if (!Object.hasOwn(modules, id) && Object.hasOwn(sharedModules, id)) return sharedModules[id];
+    if (!Object.hasOwn(modules, id) && id === "@/lib/usher/wedding-check-in") return loadSource("lib/usher/wedding-check-in.ts", modules, { env, errors });
     assert.ok(Object.hasOwn(modules, id), `Unexpected access dependency: ${id}`);
     return modules[id];
   }, sourceModule.exports, sourceModule, { env }, { error: (...args) => errors.push(args) });

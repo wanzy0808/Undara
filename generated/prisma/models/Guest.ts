@@ -116,6 +116,7 @@ export type GuestCountAggregateOutputType = {
   personalAddressee: number
   recipientType: number
   invitedPax: number
+  invitedSessions: number
   personalGreeting: number
   personalEnvelopeEnabled: number
   personalLanguage: number
@@ -231,6 +232,7 @@ export type GuestCountAggregateInputType = {
   personalAddressee?: true
   recipientType?: true
   invitedPax?: true
+  invitedSessions?: true
   personalGreeting?: true
   personalEnvelopeEnabled?: true
   personalLanguage?: true
@@ -353,6 +355,7 @@ export type GuestGroupByOutputType = {
   personalAddressee: string | null
   recipientType: string
   invitedPax: number
+  invitedSessions: string[]
   personalGreeting: string | null
   personalEnvelopeEnabled: boolean
   personalLanguage: string
@@ -411,6 +414,7 @@ export type GuestWhereInput = {
   personalAddressee?: Prisma.StringNullableFilter<"Guest"> | string | null
   recipientType?: Prisma.StringFilter<"Guest"> | string
   invitedPax?: Prisma.IntFilter<"Guest"> | number
+  invitedSessions?: Prisma.StringNullableListFilter<"Guest">
   personalGreeting?: Prisma.StringNullableFilter<"Guest"> | string | null
   personalEnvelopeEnabled?: Prisma.BoolFilter<"Guest"> | boolean
   personalLanguage?: Prisma.StringFilter<"Guest"> | string
@@ -435,6 +439,7 @@ export type GuestWhereInput = {
   invitation?: Prisma.XOR<Prisma.InvitationScalarRelationFilter, Prisma.InvitationWhereInput>
   table?: Prisma.XOR<Prisma.WeddingTableNullableScalarRelationFilter, Prisma.WeddingTableWhereInput> | null
   checkedInBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  sessionCheckIns?: Prisma.GuestSessionCheckInListRelationFilter
 }
 
 export type GuestOrderByWithRelationInput = {
@@ -449,6 +454,7 @@ export type GuestOrderByWithRelationInput = {
   personalAddressee?: Prisma.SortOrderInput | Prisma.SortOrder
   recipientType?: Prisma.SortOrder
   invitedPax?: Prisma.SortOrder
+  invitedSessions?: Prisma.SortOrder
   personalGreeting?: Prisma.SortOrderInput | Prisma.SortOrder
   personalEnvelopeEnabled?: Prisma.SortOrder
   personalLanguage?: Prisma.SortOrder
@@ -473,6 +479,7 @@ export type GuestOrderByWithRelationInput = {
   invitation?: Prisma.InvitationOrderByWithRelationInput
   table?: Prisma.WeddingTableOrderByWithRelationInput
   checkedInBy?: Prisma.UserOrderByWithRelationInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInOrderByRelationAggregateInput
 }
 
 export type GuestWhereUniqueInput = Prisma.AtLeast<{
@@ -492,6 +499,7 @@ export type GuestWhereUniqueInput = Prisma.AtLeast<{
   personalAddressee?: Prisma.StringNullableFilter<"Guest"> | string | null
   recipientType?: Prisma.StringFilter<"Guest"> | string
   invitedPax?: Prisma.IntFilter<"Guest"> | number
+  invitedSessions?: Prisma.StringNullableListFilter<"Guest">
   personalGreeting?: Prisma.StringNullableFilter<"Guest"> | string | null
   personalEnvelopeEnabled?: Prisma.BoolFilter<"Guest"> | boolean
   personalLanguage?: Prisma.StringFilter<"Guest"> | string
@@ -515,6 +523,7 @@ export type GuestWhereUniqueInput = Prisma.AtLeast<{
   invitation?: Prisma.XOR<Prisma.InvitationScalarRelationFilter, Prisma.InvitationWhereInput>
   table?: Prisma.XOR<Prisma.WeddingTableNullableScalarRelationFilter, Prisma.WeddingTableWhereInput> | null
   checkedInBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  sessionCheckIns?: Prisma.GuestSessionCheckInListRelationFilter
 }, "id" | "personalToken" | "tableId_seatNumber">
 
 export type GuestOrderByWithAggregationInput = {
@@ -529,6 +538,7 @@ export type GuestOrderByWithAggregationInput = {
   personalAddressee?: Prisma.SortOrderInput | Prisma.SortOrder
   recipientType?: Prisma.SortOrder
   invitedPax?: Prisma.SortOrder
+  invitedSessions?: Prisma.SortOrder
   personalGreeting?: Prisma.SortOrderInput | Prisma.SortOrder
   personalEnvelopeEnabled?: Prisma.SortOrder
   personalLanguage?: Prisma.SortOrder
@@ -572,6 +582,7 @@ export type GuestScalarWhereWithAggregatesInput = {
   personalAddressee?: Prisma.StringNullableWithAggregatesFilter<"Guest"> | string | null
   recipientType?: Prisma.StringWithAggregatesFilter<"Guest"> | string
   invitedPax?: Prisma.IntWithAggregatesFilter<"Guest"> | number
+  invitedSessions?: Prisma.StringNullableListFilter<"Guest">
   personalGreeting?: Prisma.StringNullableWithAggregatesFilter<"Guest"> | string | null
   personalEnvelopeEnabled?: Prisma.BoolWithAggregatesFilter<"Guest"> | boolean
   personalLanguage?: Prisma.StringWithAggregatesFilter<"Guest"> | string
@@ -605,6 +616,7 @@ export type GuestCreateInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -628,6 +640,7 @@ export type GuestCreateInput = {
   invitation: Prisma.InvitationCreateNestedOneWithoutGuestsInput
   table?: Prisma.WeddingTableCreateNestedOneWithoutGuestsInput
   checkedInBy?: Prisma.UserCreateNestedOneWithoutGuestCheckInsInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInCreateNestedManyWithoutGuestInput
 }
 
 export type GuestUncheckedCreateInput = {
@@ -642,6 +655,7 @@ export type GuestUncheckedCreateInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -663,6 +677,7 @@ export type GuestUncheckedCreateInput = {
   personalViewCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedCreateNestedManyWithoutGuestInput
 }
 
 export type GuestUpdateInput = {
@@ -675,6 +690,7 @@ export type GuestUpdateInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -698,6 +714,7 @@ export type GuestUpdateInput = {
   invitation?: Prisma.InvitationUpdateOneRequiredWithoutGuestsNestedInput
   table?: Prisma.WeddingTableUpdateOneWithoutGuestsNestedInput
   checkedInBy?: Prisma.UserUpdateOneWithoutGuestCheckInsNestedInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestUncheckedUpdateInput = {
@@ -712,6 +729,7 @@ export type GuestUncheckedUpdateInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -733,6 +751,7 @@ export type GuestUncheckedUpdateInput = {
   personalViewCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestCreateManyInput = {
@@ -747,6 +766,7 @@ export type GuestCreateManyInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -780,6 +800,7 @@ export type GuestUpdateManyMutationInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -814,6 +835,7 @@ export type GuestUncheckedUpdateManyInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -864,6 +886,7 @@ export type GuestCountOrderByAggregateInput = {
   personalAddressee?: Prisma.SortOrder
   recipientType?: Prisma.SortOrder
   invitedPax?: Prisma.SortOrder
+  invitedSessions?: Prisma.SortOrder
   personalGreeting?: Prisma.SortOrder
   personalEnvelopeEnabled?: Prisma.SortOrder
   personalLanguage?: Prisma.SortOrder
@@ -963,6 +986,11 @@ export type GuestSumOrderByAggregateInput = {
   invitedPax?: Prisma.SortOrder
   plusOnes?: Prisma.SortOrder
   personalViewCount?: Prisma.SortOrder
+}
+
+export type GuestScalarRelationFilter = {
+  is?: Prisma.GuestWhereInput
+  isNot?: Prisma.GuestWhereInput
 }
 
 export type GuestCreateNestedManyWithoutCheckedInByInput = {
@@ -1095,11 +1123,20 @@ export type GuestCreatetagsInput = {
   set: string[]
 }
 
+export type GuestCreateinvitedSessionsInput = {
+  set: string[]
+}
+
 export type GuestCreatersvpEventsInput = {
   set: string[]
 }
 
 export type GuestUpdatetagsInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type GuestUpdateinvitedSessionsInput = {
   set?: string[]
   push?: string | string[]
 }
@@ -1117,6 +1154,20 @@ export type GuestUpdatersvpEventsInput = {
   push?: string | string[]
 }
 
+export type GuestCreateNestedOneWithoutSessionCheckInsInput = {
+  create?: Prisma.XOR<Prisma.GuestCreateWithoutSessionCheckInsInput, Prisma.GuestUncheckedCreateWithoutSessionCheckInsInput>
+  connectOrCreate?: Prisma.GuestCreateOrConnectWithoutSessionCheckInsInput
+  connect?: Prisma.GuestWhereUniqueInput
+}
+
+export type GuestUpdateOneRequiredWithoutSessionCheckInsNestedInput = {
+  create?: Prisma.XOR<Prisma.GuestCreateWithoutSessionCheckInsInput, Prisma.GuestUncheckedCreateWithoutSessionCheckInsInput>
+  connectOrCreate?: Prisma.GuestCreateOrConnectWithoutSessionCheckInsInput
+  upsert?: Prisma.GuestUpsertWithoutSessionCheckInsInput
+  connect?: Prisma.GuestWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GuestUpdateToOneWithWhereWithoutSessionCheckInsInput, Prisma.GuestUpdateWithoutSessionCheckInsInput>, Prisma.GuestUncheckedUpdateWithoutSessionCheckInsInput>
+}
+
 export type GuestCreateWithoutCheckedInByInput = {
   id?: string
   seatNumber?: number | null
@@ -1127,6 +1178,7 @@ export type GuestCreateWithoutCheckedInByInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1149,6 +1201,7 @@ export type GuestCreateWithoutCheckedInByInput = {
   updatedAt?: Date | string
   invitation: Prisma.InvitationCreateNestedOneWithoutGuestsInput
   table?: Prisma.WeddingTableCreateNestedOneWithoutGuestsInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInCreateNestedManyWithoutGuestInput
 }
 
 export type GuestUncheckedCreateWithoutCheckedInByInput = {
@@ -1163,6 +1216,7 @@ export type GuestUncheckedCreateWithoutCheckedInByInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1183,6 +1237,7 @@ export type GuestUncheckedCreateWithoutCheckedInByInput = {
   personalViewCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedCreateNestedManyWithoutGuestInput
 }
 
 export type GuestCreateOrConnectWithoutCheckedInByInput = {
@@ -1226,6 +1281,7 @@ export type GuestScalarWhereInput = {
   personalAddressee?: Prisma.StringNullableFilter<"Guest"> | string | null
   recipientType?: Prisma.StringFilter<"Guest"> | string
   invitedPax?: Prisma.IntFilter<"Guest"> | number
+  invitedSessions?: Prisma.StringNullableListFilter<"Guest">
   personalGreeting?: Prisma.StringNullableFilter<"Guest"> | string | null
   personalEnvelopeEnabled?: Prisma.BoolFilter<"Guest"> | boolean
   personalLanguage?: Prisma.StringFilter<"Guest"> | string
@@ -1259,6 +1315,7 @@ export type GuestCreateWithoutInvitationInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1281,6 +1338,7 @@ export type GuestCreateWithoutInvitationInput = {
   updatedAt?: Date | string
   table?: Prisma.WeddingTableCreateNestedOneWithoutGuestsInput
   checkedInBy?: Prisma.UserCreateNestedOneWithoutGuestCheckInsInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInCreateNestedManyWithoutGuestInput
 }
 
 export type GuestUncheckedCreateWithoutInvitationInput = {
@@ -1294,6 +1352,7 @@ export type GuestUncheckedCreateWithoutInvitationInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1315,6 +1374,7 @@ export type GuestUncheckedCreateWithoutInvitationInput = {
   personalViewCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedCreateNestedManyWithoutGuestInput
 }
 
 export type GuestCreateOrConnectWithoutInvitationInput = {
@@ -1353,6 +1413,7 @@ export type GuestCreateWithoutTableInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1375,6 +1436,7 @@ export type GuestCreateWithoutTableInput = {
   updatedAt?: Date | string
   invitation: Prisma.InvitationCreateNestedOneWithoutGuestsInput
   checkedInBy?: Prisma.UserCreateNestedOneWithoutGuestCheckInsInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInCreateNestedManyWithoutGuestInput
 }
 
 export type GuestUncheckedCreateWithoutTableInput = {
@@ -1388,6 +1450,7 @@ export type GuestUncheckedCreateWithoutTableInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1409,6 +1472,7 @@ export type GuestUncheckedCreateWithoutTableInput = {
   personalViewCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedCreateNestedManyWithoutGuestInput
 }
 
 export type GuestCreateOrConnectWithoutTableInput = {
@@ -1437,6 +1501,166 @@ export type GuestUpdateManyWithWhereWithoutTableInput = {
   data: Prisma.XOR<Prisma.GuestUpdateManyMutationInput, Prisma.GuestUncheckedUpdateManyWithoutTableInput>
 }
 
+export type GuestCreateWithoutSessionCheckInsInput = {
+  id?: string
+  seatNumber?: number | null
+  name: string
+  phone?: string | null
+  category?: string | null
+  tags?: Prisma.GuestCreatetagsInput | string[]
+  personalAddressee?: string | null
+  recipientType?: string
+  invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
+  personalGreeting?: string | null
+  personalEnvelopeEnabled?: boolean
+  personalLanguage?: string
+  personalSharedAt?: Date | string | null
+  source?: $Enums.GuestSource
+  rsvpStatus?: $Enums.RsvpStatus
+  plusOnes?: number
+  rsvpEvents?: Prisma.GuestCreatersvpEventsInput | string[]
+  rsvpAnswers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  checkedIn?: boolean
+  checkedInAt?: Date | string | null
+  waBlastSelected?: boolean
+  waBlastSentAt?: Date | string | null
+  personalToken?: string | null
+  personalPublished?: boolean
+  personalPasswordProtected?: boolean
+  personalPasswordHash?: string | null
+  personalViewCount?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  invitation: Prisma.InvitationCreateNestedOneWithoutGuestsInput
+  table?: Prisma.WeddingTableCreateNestedOneWithoutGuestsInput
+  checkedInBy?: Prisma.UserCreateNestedOneWithoutGuestCheckInsInput
+}
+
+export type GuestUncheckedCreateWithoutSessionCheckInsInput = {
+  id?: string
+  invitationId: string
+  tableId?: string | null
+  seatNumber?: number | null
+  name: string
+  phone?: string | null
+  category?: string | null
+  tags?: Prisma.GuestCreatetagsInput | string[]
+  personalAddressee?: string | null
+  recipientType?: string
+  invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
+  personalGreeting?: string | null
+  personalEnvelopeEnabled?: boolean
+  personalLanguage?: string
+  personalSharedAt?: Date | string | null
+  source?: $Enums.GuestSource
+  rsvpStatus?: $Enums.RsvpStatus
+  plusOnes?: number
+  rsvpEvents?: Prisma.GuestCreatersvpEventsInput | string[]
+  rsvpAnswers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  checkedIn?: boolean
+  checkedInAt?: Date | string | null
+  checkedInById?: string | null
+  waBlastSelected?: boolean
+  waBlastSentAt?: Date | string | null
+  personalToken?: string | null
+  personalPublished?: boolean
+  personalPasswordProtected?: boolean
+  personalPasswordHash?: string | null
+  personalViewCount?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type GuestCreateOrConnectWithoutSessionCheckInsInput = {
+  where: Prisma.GuestWhereUniqueInput
+  create: Prisma.XOR<Prisma.GuestCreateWithoutSessionCheckInsInput, Prisma.GuestUncheckedCreateWithoutSessionCheckInsInput>
+}
+
+export type GuestUpsertWithoutSessionCheckInsInput = {
+  update: Prisma.XOR<Prisma.GuestUpdateWithoutSessionCheckInsInput, Prisma.GuestUncheckedUpdateWithoutSessionCheckInsInput>
+  create: Prisma.XOR<Prisma.GuestCreateWithoutSessionCheckInsInput, Prisma.GuestUncheckedCreateWithoutSessionCheckInsInput>
+  where?: Prisma.GuestWhereInput
+}
+
+export type GuestUpdateToOneWithWhereWithoutSessionCheckInsInput = {
+  where?: Prisma.GuestWhereInput
+  data: Prisma.XOR<Prisma.GuestUpdateWithoutSessionCheckInsInput, Prisma.GuestUncheckedUpdateWithoutSessionCheckInsInput>
+}
+
+export type GuestUpdateWithoutSessionCheckInsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  seatNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.GuestUpdatetagsInput | string[]
+  personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientType?: Prisma.StringFieldUpdateOperationsInput | string
+  invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
+  personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
+  personalSharedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source?: Prisma.EnumGuestSourceFieldUpdateOperationsInput | $Enums.GuestSource
+  rsvpStatus?: Prisma.EnumRsvpStatusFieldUpdateOperationsInput | $Enums.RsvpStatus
+  plusOnes?: Prisma.IntFieldUpdateOperationsInput | number
+  rsvpEvents?: Prisma.GuestUpdatersvpEventsInput | string[]
+  rsvpAnswers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  checkedIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  checkedInAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  waBlastSelected?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  waBlastSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  personalToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personalPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  personalPasswordProtected?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  personalPasswordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personalViewCount?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  invitation?: Prisma.InvitationUpdateOneRequiredWithoutGuestsNestedInput
+  table?: Prisma.WeddingTableUpdateOneWithoutGuestsNestedInput
+  checkedInBy?: Prisma.UserUpdateOneWithoutGuestCheckInsNestedInput
+}
+
+export type GuestUncheckedUpdateWithoutSessionCheckInsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  invitationId?: Prisma.StringFieldUpdateOperationsInput | string
+  tableId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seatNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.GuestUpdatetagsInput | string[]
+  personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientType?: Prisma.StringFieldUpdateOperationsInput | string
+  invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
+  personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
+  personalSharedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source?: Prisma.EnumGuestSourceFieldUpdateOperationsInput | $Enums.GuestSource
+  rsvpStatus?: Prisma.EnumRsvpStatusFieldUpdateOperationsInput | $Enums.RsvpStatus
+  plusOnes?: Prisma.IntFieldUpdateOperationsInput | number
+  rsvpEvents?: Prisma.GuestUpdatersvpEventsInput | string[]
+  rsvpAnswers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  checkedIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  checkedInAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  checkedInById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  waBlastSelected?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  waBlastSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  personalToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personalPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  personalPasswordProtected?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  personalPasswordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personalViewCount?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type GuestCreateManyCheckedInByInput = {
   id?: string
   invitationId: string
@@ -1449,6 +1673,7 @@ export type GuestCreateManyCheckedInByInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1481,6 +1706,7 @@ export type GuestUpdateWithoutCheckedInByInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1503,6 +1729,7 @@ export type GuestUpdateWithoutCheckedInByInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   invitation?: Prisma.InvitationUpdateOneRequiredWithoutGuestsNestedInput
   table?: Prisma.WeddingTableUpdateOneWithoutGuestsNestedInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestUncheckedUpdateWithoutCheckedInByInput = {
@@ -1517,6 +1744,7 @@ export type GuestUncheckedUpdateWithoutCheckedInByInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1537,6 +1765,7 @@ export type GuestUncheckedUpdateWithoutCheckedInByInput = {
   personalViewCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestUncheckedUpdateManyWithoutCheckedInByInput = {
@@ -1551,6 +1780,7 @@ export type GuestUncheckedUpdateManyWithoutCheckedInByInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1584,6 +1814,7 @@ export type GuestCreateManyInvitationInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1617,6 +1848,7 @@ export type GuestUpdateWithoutInvitationInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1639,6 +1871,7 @@ export type GuestUpdateWithoutInvitationInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   table?: Prisma.WeddingTableUpdateOneWithoutGuestsNestedInput
   checkedInBy?: Prisma.UserUpdateOneWithoutGuestCheckInsNestedInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestUncheckedUpdateWithoutInvitationInput = {
@@ -1652,6 +1885,7 @@ export type GuestUncheckedUpdateWithoutInvitationInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1673,6 +1907,7 @@ export type GuestUncheckedUpdateWithoutInvitationInput = {
   personalViewCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestUncheckedUpdateManyWithoutInvitationInput = {
@@ -1686,6 +1921,7 @@ export type GuestUncheckedUpdateManyWithoutInvitationInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1720,6 +1956,7 @@ export type GuestCreateManyTableInput = {
   personalAddressee?: string | null
   recipientType?: string
   invitedPax?: number
+  invitedSessions?: Prisma.GuestCreateinvitedSessionsInput | string[]
   personalGreeting?: string | null
   personalEnvelopeEnabled?: boolean
   personalLanguage?: string
@@ -1753,6 +1990,7 @@ export type GuestUpdateWithoutTableInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1775,6 +2013,7 @@ export type GuestUpdateWithoutTableInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   invitation?: Prisma.InvitationUpdateOneRequiredWithoutGuestsNestedInput
   checkedInBy?: Prisma.UserUpdateOneWithoutGuestCheckInsNestedInput
+  sessionCheckIns?: Prisma.GuestSessionCheckInUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestUncheckedUpdateWithoutTableInput = {
@@ -1788,6 +2027,7 @@ export type GuestUncheckedUpdateWithoutTableInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1809,6 +2049,7 @@ export type GuestUncheckedUpdateWithoutTableInput = {
   personalViewCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessionCheckIns?: Prisma.GuestSessionCheckInUncheckedUpdateManyWithoutGuestNestedInput
 }
 
 export type GuestUncheckedUpdateManyWithoutTableInput = {
@@ -1822,6 +2063,7 @@ export type GuestUncheckedUpdateManyWithoutTableInput = {
   personalAddressee?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientType?: Prisma.StringFieldUpdateOperationsInput | string
   invitedPax?: Prisma.IntFieldUpdateOperationsInput | number
+  invitedSessions?: Prisma.GuestUpdateinvitedSessionsInput | string[]
   personalGreeting?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personalEnvelopeEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   personalLanguage?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1845,6 +2087,35 @@ export type GuestUncheckedUpdateManyWithoutTableInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+
+/**
+ * Count Type GuestCountOutputType
+ */
+
+export type GuestCountOutputType = {
+  sessionCheckIns: number
+}
+
+export type GuestCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  sessionCheckIns?: boolean | GuestCountOutputTypeCountSessionCheckInsArgs
+}
+
+/**
+ * GuestCountOutputType without action
+ */
+export type GuestCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the GuestCountOutputType
+   */
+  select?: Prisma.GuestCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * GuestCountOutputType without action
+ */
+export type GuestCountOutputTypeCountSessionCheckInsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.GuestSessionCheckInWhereInput
+}
 
 
 export type GuestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1859,6 +2130,7 @@ export type GuestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   personalAddressee?: boolean
   recipientType?: boolean
   invitedPax?: boolean
+  invitedSessions?: boolean
   personalGreeting?: boolean
   personalEnvelopeEnabled?: boolean
   personalLanguage?: boolean
@@ -1883,6 +2155,8 @@ export type GuestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   invitation?: boolean | Prisma.InvitationDefaultArgs<ExtArgs>
   table?: boolean | Prisma.Guest$tableArgs<ExtArgs>
   checkedInBy?: boolean | Prisma.Guest$checkedInByArgs<ExtArgs>
+  sessionCheckIns?: boolean | Prisma.Guest$sessionCheckInsArgs<ExtArgs>
+  _count?: boolean | Prisma.GuestCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["guest"]>
 
 export type GuestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1897,6 +2171,7 @@ export type GuestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   personalAddressee?: boolean
   recipientType?: boolean
   invitedPax?: boolean
+  invitedSessions?: boolean
   personalGreeting?: boolean
   personalEnvelopeEnabled?: boolean
   personalLanguage?: boolean
@@ -1935,6 +2210,7 @@ export type GuestSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   personalAddressee?: boolean
   recipientType?: boolean
   invitedPax?: boolean
+  invitedSessions?: boolean
   personalGreeting?: boolean
   personalEnvelopeEnabled?: boolean
   personalLanguage?: boolean
@@ -1973,6 +2249,7 @@ export type GuestSelectScalar = {
   personalAddressee?: boolean
   recipientType?: boolean
   invitedPax?: boolean
+  invitedSessions?: boolean
   personalGreeting?: boolean
   personalEnvelopeEnabled?: boolean
   personalLanguage?: boolean
@@ -1996,11 +2273,13 @@ export type GuestSelectScalar = {
   updatedAt?: boolean
 }
 
-export type GuestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "invitationId" | "tableId" | "seatNumber" | "name" | "phone" | "category" | "tags" | "personalAddressee" | "recipientType" | "invitedPax" | "personalGreeting" | "personalEnvelopeEnabled" | "personalLanguage" | "personalSharedAt" | "source" | "rsvpStatus" | "plusOnes" | "rsvpEvents" | "rsvpAnswers" | "checkedIn" | "checkedInAt" | "checkedInById" | "waBlastSelected" | "waBlastSentAt" | "personalToken" | "personalPublished" | "personalPasswordProtected" | "personalPasswordHash" | "personalViewCount" | "createdAt" | "updatedAt", ExtArgs["result"]["guest"]>
+export type GuestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "invitationId" | "tableId" | "seatNumber" | "name" | "phone" | "category" | "tags" | "personalAddressee" | "recipientType" | "invitedPax" | "invitedSessions" | "personalGreeting" | "personalEnvelopeEnabled" | "personalLanguage" | "personalSharedAt" | "source" | "rsvpStatus" | "plusOnes" | "rsvpEvents" | "rsvpAnswers" | "checkedIn" | "checkedInAt" | "checkedInById" | "waBlastSelected" | "waBlastSentAt" | "personalToken" | "personalPublished" | "personalPasswordProtected" | "personalPasswordHash" | "personalViewCount" | "createdAt" | "updatedAt", ExtArgs["result"]["guest"]>
 export type GuestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invitation?: boolean | Prisma.InvitationDefaultArgs<ExtArgs>
   table?: boolean | Prisma.Guest$tableArgs<ExtArgs>
   checkedInBy?: boolean | Prisma.Guest$checkedInByArgs<ExtArgs>
+  sessionCheckIns?: boolean | Prisma.Guest$sessionCheckInsArgs<ExtArgs>
+  _count?: boolean | Prisma.GuestCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type GuestIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invitation?: boolean | Prisma.InvitationDefaultArgs<ExtArgs>
@@ -2019,6 +2298,7 @@ export type $GuestPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     invitation: Prisma.$InvitationPayload<ExtArgs>
     table: Prisma.$WeddingTablePayload<ExtArgs> | null
     checkedInBy: Prisma.$UserPayload<ExtArgs> | null
+    sessionCheckIns: Prisma.$GuestSessionCheckInPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2032,6 +2312,7 @@ export type $GuestPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     personalAddressee: string | null
     recipientType: string
     invitedPax: number
+    invitedSessions: string[]
     personalGreeting: string | null
     personalEnvelopeEnabled: boolean
     personalLanguage: string
@@ -2450,6 +2731,7 @@ export interface Prisma__GuestClient<T, Null = never, ExtArgs extends runtime.Ty
   invitation<T extends Prisma.InvitationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.InvitationDefaultArgs<ExtArgs>>): Prisma.Prisma__InvitationClient<runtime.Types.Result.GetResult<Prisma.$InvitationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   table<T extends Prisma.Guest$tableArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Guest$tableArgs<ExtArgs>>): Prisma.Prisma__WeddingTableClient<runtime.Types.Result.GetResult<Prisma.$WeddingTablePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   checkedInBy<T extends Prisma.Guest$checkedInByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Guest$checkedInByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  sessionCheckIns<T extends Prisma.Guest$sessionCheckInsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Guest$sessionCheckInsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GuestSessionCheckInPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2490,6 +2772,7 @@ export interface GuestFieldRefs {
   readonly personalAddressee: Prisma.FieldRef<"Guest", 'String'>
   readonly recipientType: Prisma.FieldRef<"Guest", 'String'>
   readonly invitedPax: Prisma.FieldRef<"Guest", 'Int'>
+  readonly invitedSessions: Prisma.FieldRef<"Guest", 'String[]'>
   readonly personalGreeting: Prisma.FieldRef<"Guest", 'String'>
   readonly personalEnvelopeEnabled: Prisma.FieldRef<"Guest", 'Boolean'>
   readonly personalLanguage: Prisma.FieldRef<"Guest", 'String'>
@@ -2947,6 +3230,30 @@ export type Guest$checkedInByArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   include?: Prisma.UserInclude<ExtArgs> | null
   where?: Prisma.UserWhereInput
+}
+
+/**
+ * Guest.sessionCheckIns
+ */
+export type Guest$sessionCheckInsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the GuestSessionCheckIn
+   */
+  select?: Prisma.GuestSessionCheckInSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the GuestSessionCheckIn
+   */
+  omit?: Prisma.GuestSessionCheckInOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GuestSessionCheckInInclude<ExtArgs> | null
+  where?: Prisma.GuestSessionCheckInWhereInput
+  orderBy?: Prisma.GuestSessionCheckInOrderByWithRelationInput | Prisma.GuestSessionCheckInOrderByWithRelationInput[]
+  cursor?: Prisma.GuestSessionCheckInWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.GuestSessionCheckInScalarFieldEnum | Prisma.GuestSessionCheckInScalarFieldEnum[]
 }
 
 /**

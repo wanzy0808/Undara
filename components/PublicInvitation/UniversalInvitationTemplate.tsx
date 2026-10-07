@@ -1,5 +1,8 @@
 "use client";
 
+import WeddingSessionSchedule from "./WeddingSessionSchedule";
+import { weddingSessionsFor, weddingRsvpConfig } from "@/lib/events/wedding-sessions";
+
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { getInvitationCountdown } from "@/lib/invitations/countdown";
 
@@ -116,6 +119,7 @@ type InvitationData = {
   mapUrl?: string | null;
   timezone: string;
   eventDate: Date | string;
+  weddingSessions?: unknown;
   ceremonyTime: string | null;
   receptionTime: string | null;
   description: string | null;
@@ -290,7 +294,8 @@ export default function UniversalInvitationTemplate({
   usePremiumSectionTimelines(rootRef, sectionStyles, String(opened));
   useInvitationCopyAnimations(rootRef, copyMotions, editableCopy, String(opened));
   useInvitationNativeVisualAnimations(rootRef, activeDesignKey, String(opened), templateHasDefaultMotion(key) ? { template: key, sectionStyles } : undefined);
-  const rsvpConfig = parseInvitationRsvpConfig(activeDesignKey);
+  const sessions = weddingSessionsFor(invitation);
+  const rsvpConfig = weddingRsvpConfig(invitation, parseInvitationRsvpConfig(activeDesignKey));
   const sectionElementStyles = parseSectionElementStyles(activeDesignKey);
   const sectionLayout = parseInvitationSectionLayout(activeDesignKey);
   useInvitationNativeLayerOrder(rootRef, activeDesignKey);
@@ -834,7 +839,7 @@ export default function UniversalInvitationTemplate({
             </div>
           ), 3)}
 
-          {section("dateTime", key === "modern-maroon" ? (
+          {section("dateTime", sessions.length ? <WeddingSessionSchedule sessions={sessions} timezone={invitation.timezone} date={date} preview={preview} /> : key === "modern-maroon" ? (
             <div data-studio-native-object="object:dateTime:panel" className="mm-date-poster">
               <p data-studio-native-object="object:dateTime:date" className="mm-date-main">{date}</p>
               <div className="mm-date-times">
@@ -929,7 +934,7 @@ export default function UniversalInvitationTemplate({
             <p data-studio-native-object="object:countdown:empty-copy" className="text-sm opacity-65">{tr("Tanggal acara belum tersedia.")}</p>
           ), 6)}
 
-          {section("location", key === "modern-maroon" ? (
+          {section("location", sessions.length ? <WeddingSessionSchedule sessions={sessions} timezone={invitation.timezone} location preview={preview} /> : key === "modern-maroon" ? (
             <div data-studio-native-object="object:location:details-group" className="mm-location-card">
               <MapPin aria-hidden data-studio-native-object="object:location:map-icon" className="mm-location-icon" />
               <p data-studio-native-object="object:location:venue" className="mm-location-venue">{invitation.venue || tr("Lokasi belum ditentukan")}</p>
@@ -951,8 +956,8 @@ export default function UniversalInvitationTemplate({
             <div data-studio-native-object="object:rsvp:form-group">
               {key === "pencil-reverie" || key === "zen-atelier" || key === "serein" || key === "botanical-ivory" || key === "eternal-blossom" || key === "modern-maroon" || key === "garden-light" || key === "midnight-romance" || key === "classic-pearl" || key === "golden-art-deco" || key === "celestial-ink" || key === "velvet-horizon" || key === "paper-cut-botanical" ? <>
                 <p data-studio-native-object="object:rsvp:intro" className="mx-auto mb-7 max-w-sm text-sm leading-7">{tr("Merupakan kebahagiaan bagi kami apabila Anda berkenan hadir.")}</p>
-                <RsvpForm slug={invitation.slug} appearance="zen" preview={preview} eventCategory={invitation.eventCategory} rsvpConfig={rsvpConfig} guestId={personalGuest?.id} guestName={personalGuest?.name} guestToken={personalGuest?.token} invitedPax={personalGuest?.invitedPax} eventDate={invitation.eventDate} venue={invitation.venue} title={eventTitle} start={invitation.ceremonyTime} description={invitation.description} />
-              </> : <RsvpForm slug={invitation.slug} preview={preview} eventCategory={invitation.eventCategory} rsvpConfig={rsvpConfig} guestId={personalGuest?.id} guestName={personalGuest?.name} guestToken={personalGuest?.token} invitedPax={personalGuest?.invitedPax} eventDate={invitation.eventDate} venue={invitation.venue} title={eventTitle} start={invitation.ceremonyTime} description={invitation.description} />}
+                <RsvpForm slug={invitation.slug} appearance="zen" preview={preview} eventCategory={invitation.eventCategory} rsvpConfig={rsvpConfig} weddingSessions={sessions} timezone={invitation.timezone} guestId={personalGuest?.id} guestName={personalGuest?.name} guestToken={personalGuest?.token} invitedPax={personalGuest?.invitedPax} eventDate={invitation.eventDate} venue={invitation.venue} title={eventTitle} start={invitation.ceremonyTime} description={invitation.description} />
+              </> : <RsvpForm slug={invitation.slug} preview={preview} eventCategory={invitation.eventCategory} rsvpConfig={rsvpConfig} weddingSessions={sessions} timezone={invitation.timezone} guestId={personalGuest?.id} guestName={personalGuest?.name} guestToken={personalGuest?.token} invitedPax={personalGuest?.invitedPax} eventDate={invitation.eventDate} venue={invitation.venue} title={eventTitle} start={invitation.ceremonyTime} description={invitation.description} />}
             </div>
           ), 8)}
 

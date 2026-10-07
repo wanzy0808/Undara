@@ -1,5 +1,8 @@
 "use client";
 
+import { WeddingGuestScopeField } from "./WeddingSessionFields";
+import { weddingSessionsFor, weddingSessionLabel, type WeddingSessionId } from "@/lib/events/wedding-sessions";
+
 import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -86,10 +89,10 @@ export function PersonalInvitationCreatePanel({
   onRemoveDraft: (key: string) => void;
   onEditDraft: (
     key: string,
-    value: { name?: string; category?: string; salutation?: PersonalSalutation; invitedPax?: number },
+    value: { name?: string; category?: string; salutation?: PersonalSalutation; invitedPax?: number; invitedSessions?: WeddingSessionId[] },
   ) => void;
 }) {
-  const { d } = useDashboardI18n();
+  const { d, locale } = useDashboardI18n();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(40);
@@ -109,11 +112,12 @@ export function PersonalInvitationCreatePanel({
     // Invalid names keep Add disabled.
   }
   const minimumPax = minimumInvitedPaxForSalutation(salutation);
+  const sessions = weddingSessionsFor(selectedEvent ?? {});
   const manualPaxValid = Number.isInteger(profile.invitedPax)
     && profile.invitedPax >= minimumPax
     && profile.invitedPax <= MAX_GUEST_PARTY_SIZE;
   const valid =
-    Boolean(profile.category.trim()) &&
+    Boolean(profile.category.trim()) && (sessions.length < 2 || profile.invitedSessions.length > 0) &&
     Boolean(
       guestId
         ? selectedGuest
@@ -165,6 +169,8 @@ export function PersonalInvitationCreatePanel({
         }}
         className="space-y-4"
       >
+        <WeddingGuestScopeField sessions={sessions} value={profile.invitedSessions} onChange={(invitedSessions) => setProfile({ ...profile, invitedSessions })} disabled={busy} />
+        {sessions.length === 2 && <p className="text-xs text-muted-foreground">{locale === "en" ? "Use personal links to limit invited sessions. The general public link shows both sessions." : "Gunakan tautan personal untuk membatasi sesi undangan. Tautan publik umum menampilkan kedua sesi."}</p>}
         <div
           className={
             guestId
@@ -430,6 +436,7 @@ export function PersonalInvitationCreatePanel({
                 >
                   <Trash2 className="size-4" />
                 </Button>
+                <div className="col-span-full"><WeddingGuestScopeField sessions={sessions} value={draft.invitedSessions} onChange={(invitedSessions) => onEditDraft(draft.key, { invitedSessions })} disabled={Boolean(busyId)} /></div>
               </div>
             ))}
           </div>
@@ -504,7 +511,8 @@ export function PersonalInvitationListPanel({
   onPublishSelected: (ids: string[]) => void;
   onCopyLink: (item: PersonalInvitationItem) => void;
 }) {
-  const { d } = useDashboardI18n();
+  const { d, locale } = useDashboardI18n();
+  const sessions = weddingSessionsFor(selectedEvent);
   const [selection, setSelection] = useState<{
     eventId: string;
     ids: string[];
@@ -686,6 +694,7 @@ export function PersonalInvitationListPanel({
                           <span className="undara-ui-name">{item.name}</span>
                         </p>
                       )}
+                    {sessions.length > 0 && <p className="mt-1 break-words text-xs text-muted-foreground">{sessions.filter((session) => item.invitedSessions?.includes(session.id)).map((session) => weddingSessionLabel(session, locale === "en" ? "EN" : "ID")).join(" · ") || (locale === "en" ? "Choose sessions" : "Pilih sesi")}</p>}
                     <p className="mt-1 truncate text-xs text-muted-foreground">
                       {item.phone || d("Tanpa nomor")}
                     </p>
@@ -873,6 +882,7 @@ export function PersonalInvitationListPanel({
                           onChange={setEditProfile}
                           disabled={busy}
                         />
+                        <WeddingGuestScopeField sessions={sessions} value={editProfile.invitedSessions} onChange={(invitedSessions) => setEditProfile({ ...editProfile, invitedSessions })} disabled={busy || item.checkedIn} />
                         <Button
                           type="button"
                           size="sm"

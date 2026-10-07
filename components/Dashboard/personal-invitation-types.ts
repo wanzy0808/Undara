@@ -1,3 +1,4 @@
+import type { WeddingSessionId } from "@/lib/events/wedding-sessions";
 import type { EventScopeOption } from "@/components/Dashboard/EventScopePicker";
 import type { GuestInvitationForm } from "@/components/Dashboard/PersonalInvitationGuestFields";
 import type { PersonalSalutation } from "@/lib/guests/personal-envelope";
@@ -8,6 +9,7 @@ export type PersonalInvitationDraft = {
   category: string;
   salutation?: PersonalSalutation;
   invitedPax?: number;
+  invitedSessions?: WeddingSessionId[];
   guestId?: string;
   invitationId?: string;
   profile?: GuestInvitationForm;
@@ -21,6 +23,7 @@ export type PersonalInvitationGuest = {
   tags?: string[];
   recipientType?: "INDIVIDUAL" | "COUPLE" | "FAMILY" | "GROUP";
   invitedPax?: number;
+  invitedSessions?: WeddingSessionId[];
   personalAddressee?: string | null;
   personalGreeting?: string | null;
   personalEnvelopeEnabled?: boolean;
@@ -45,6 +48,8 @@ export type PersonalInvitationItem = PersonalInvitationGuest & {
 
 export type PersonalInvitationEvent = EventScopeOption & {
   slug: string;
+  eventCategory?: string;
+  weddingSessions?: unknown;
   templateKey: string;
   eventConfigured: boolean;
   accessPaid: boolean;

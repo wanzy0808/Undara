@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { createGuestQrToken, verifyGuestQrToken } from "../lib/usher/qr.ts";
 import { hasPaidDigitalInvitation } from "../lib/packages/access.ts";
 import { usherQrImageUrl } from "../components/Usher/utils.ts";
+import * as weddingSessions from "../lib/events/wedding-sessions.ts";
 
 const previousSecret = process.env.QR_SIGNING_SECRET;
 before(() => { process.env.QR_SIGNING_SECRET = "test-only-owner-qr-image-secret"; });
@@ -27,6 +28,7 @@ function loadHandler({ user = { id: "owner-a" }, guest, ownerGrant = false, trus
   } : guest;
   const calls = { queries: [], renders: [], fetches: [], entitlements: [] };
   const modules = {
+    "@/lib/events/wedding-sessions": weddingSessions,
     "next/server": { NextResponse: { json: (body, init) => Response.json(body, init) } },
     qrcode: { toBuffer: (...args) => { calls.renders.push(structuredClone(args)); return render(...args); } },
     "@/lib/auth": { getCurrentUser: async () => user },

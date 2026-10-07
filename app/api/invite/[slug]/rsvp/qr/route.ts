@@ -1,3 +1,4 @@
+import { weddingSessionsFor, parseInvitedSessions } from "@/lib/events/wedding-sessions";
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
@@ -28,6 +29,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       || !(await hasAccountDigitalInvitation(guest.invitation.ownerId, guest.invitation.payment, guest.invitation.id))) {
       return NextResponse.json({ error: "QR tidak tersedia." }, { status: 404, headers });
     }
+    if (weddingSessionsFor(guest.invitation).length) parseInvitedSessions(guest.invitedSessions, weddingSessionsFor(guest.invitation));
     const png = await QRCode.toBuffer(token, { type: "png", width: 840, margin: 4, errorCorrectionLevel: "M" });
     return new Response(new Uint8Array(png), {
       headers: { ...headers, "Content-Type": "image/png",

@@ -1,3 +1,4 @@
+import { invitationForWeddingGuest, WeddingSessionError } from "@/lib/events/wedding-sessions";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
@@ -43,12 +44,16 @@ export default async function PersonalInvitationPage({
     );
   }
 
+  let scopedInvitation;
+  try { scopedInvitation = invitationForWeddingGuest(invitation, guest.invitedSessions); }
+  catch (error) { if (error instanceof WeddingSessionError) notFound(); throw error; }
+
   await prisma.guest.update({
     where: { id: guest.id },
     data: { personalViewCount: { increment: 1 } },
   });
 
-  const content = <PublicInvitationRenderer invitation={invitation} personalGuest={{
+  const content = <PublicInvitationRenderer invitation={scopedInvitation} personalGuest={{
     id: guest.id,
     name: guest.name,
     token,

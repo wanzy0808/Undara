@@ -33,7 +33,7 @@ const event = (overrides = {}) => ({
 const personal = (overrides = {}) => ({
   id: "guest-a", invitationId: "event-a", name: "Naya", phone: "081234567890",
   invitedPax: 5, plusOnes: 0, rsvpStatus: "PENDING", personalToken: "test-only-personal-token",
-  personalPublished: true, checkedIn: false, ...overrides,
+  personalPublished: true, checkedIn: false, rsvpEvents: [], invitedSessions: [], ...overrides,
 });
 const options = { ...configHelpers.defaultInvitationRsvpConfig, ceremony: true, reception: true, attendAll: true,
   customFields: [{ id: "meal", label: "Pilihan makanan", required: true }, { id: "city", label: "Kota asal", required: false }],
@@ -62,10 +62,12 @@ function fixture({ invitation = event(), guests = [], grants, allowed = true, be
       beforePersonalWrite?.(records);
       const guest = records.find((guest) => guest.id === where.id && guest.invitationId === where.invitationId
         && guest.personalToken === where.personalToken && guest.personalPublished === where.personalPublished
+        && (!where.invitedSessions || JSON.stringify(guest.invitedSessions) === JSON.stringify(where.invitedSessions.equals))
         && (!where.invitedPax || guest.invitedPax >= where.invitedPax.gte)
         && where.OR.some((condition) => guest.checkedIn === condition.checkedIn
           && (condition.rsvpStatus === undefined || guest.rsvpStatus === condition.rsvpStatus)
-          && (condition.plusOnes === undefined || guest.plusOnes === condition.plusOnes)));
+          && (condition.plusOnes === undefined || guest.plusOnes === condition.plusOnes)
+          && (!condition.rsvpEvents || JSON.stringify(guest.rsvpEvents) === JSON.stringify(condition.rsvpEvents.equals))));
       if (!guest) return { count: 0 };
       calls.updates.push({ where, data }); Object.assign(guest, data);
       return { count: 1 };
@@ -77,6 +79,8 @@ function fixture({ invitation = event(), guests = [], grants, allowed = true, be
       return guest;
     },
   } };
+  prisma.$transaction = async (callback) => callback(prisma);
+  prisma.$queryRaw = async () => [{ id: invitation.id }];
   const access = loadPackageAccess({
     grants,
     invitations: invitation ? { [invitation.ownerId]: [invitation] } : {},
@@ -312,4 +316,64 @@ test("CSV keeps guest answers, quoted newlines and international phones as safe 
   for (const text of ['=1+1', ' +6281234567890', '-1+1', '@SUM(1,1)', '\t=HYPERLINK("https://example.test")']) {
     assert.equal(rsvpCsvCell(text), `"'${text.replaceAll('"', '""')}"`);
   }
+});
+
+const weddingSessions = [
+  { id: "ceremony", kind: "AKAD", label: "", start: "09:00", end: "10:00", venue: "Kapel Pagi", address: null, mapUrl: null },
+  { id: "reception", kind: null, label: "", start: "18:00", end: "END", venue: "Gedung Malam", address: null, mapUrl: null },
+];
+
+test("personal RSVP respects the guest scope even when both sessions are active on the event", async () => {
+  const f = fixture({ invitation: event({ eventCategory: "WEDDING", weddingSessions }), guests: [personal({ invitedSessions: ["reception"] })] });
+  assert.equal((await f.submit(personalBody({ rsvpEvents: ["ceremony"] }))).status, 403);
+  assert.equal(f.calls.updates.length, 0);
+  const saved = await f.submit(personalBody({ rsvpEvents: ["reception"] }));
+  assert.equal(saved.status, 200);
+  assert.deepEqual((await saved.json()).guest.rsvpEvents, ["reception"]);
+  assert.deepEqual(f.records[0].invitedSessions, ["reception"]);
+});
+
+test("a guest invited to both can RSVP for just one without losing the invitation allowance", async () => {
+  const f = fixture({ invitation: event({ eventCategory: "WEDDING", weddingSessions }), guests: [personal({ invitedSessions: ["ceremony", "reception"] })] });
+  const saved = await f.submit(personalBody({ rsvpEvents: ["ceremony"] }));
+  assert.equal(saved.status, 200);
+  assert.deepEqual((await saved.json()).guest.rsvpEvents, ["ceremony"]);
+  assert.deepEqual(f.records[0].invitedSessions, ["ceremony", "reception"]);
+});
+
+test("generic RSVP rejects inactive, duplicate and absent session choices instead of normalizing them silently", async () => {
+  for (const value of [[], ["other"], ["reception", "other"], ["reception", "reception"], undefined]) {
+    const f = fixture({ invitation: event({ eventCategory: "WEDDING", weddingSessions }) });
+    assert.equal((await f.submit(genericBody({ rsvpEvents: value }))).status, 400);
+    assert.equal(f.calls.creates.length, 0);
+  }
+});
+
+test("a generic link offers all active sessions but records only the attendance actually chosen", async () => {
+  const f = fixture({ invitation: event({ eventCategory: "WEDDING", weddingSessions }) });
+  assert.equal((await f.submit(genericBody({ rsvpEvents: ["reception"] }))).status, 200);
+  assert.deepEqual(f.records[0].rsvpEvents, ["reception"]);
+  assert.deepEqual(f.records[0].invitedSessions, ["ceremony", "reception"]);
+});
+
+test("a concurrent scope revocation or session check-in prevents a stale RSVP write", async () => {
+  const invitation = event({ eventCategory: "WEDDING", weddingSessions });
+  const guest = personal({ invitedSessions: ["ceremony", "reception"] });
+  for (const beforePersonalWrite of [
+    (records) => { records[0].invitedSessions = ["reception"]; },
+    (records) => { Object.assign(records[0], { checkedIn: true, rsvpStatus: "ATTENDING", plusOnes: 4, rsvpEvents: ["reception"] }); },
+  ]) {
+    const f = fixture({ invitation, guests: [guest], beforePersonalWrite });
+    assert.equal((await f.submit(personalBody({ rsvpEvents: ["ceremony"] }))).status, 409);
+    assert.equal(f.calls.updates.length, 0);
+  }
+});
+
+
+test("dashboard RSVP uses the configured ceremony kind and custom session label", () => {
+  const configured = [{ ...weddingSessions[0], kind: "BLESSING" }, { ...weddingSessions[1], label: "Jamuan keluarga" }];
+  const markup = renderToStaticMarkup(createElement(LanguageProvider, null, createElement(RsvpAnalyticsPanel, { guests: [personal({ name: "Naya", rsvpStatus: "ATTENDING", rsvpEvents: ["ceremony", "reception"] })], slug: "event-a", accent: "#703B3B", weddingSessions: configured })));
+  assert.match(markup, /Pemberkatan Pernikahan/);
+  assert.match(markup, /Jamuan keluarga/);
+  assert.doesNotMatch(markup, /Upacara Nikah/);
 });

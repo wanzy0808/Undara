@@ -10,6 +10,7 @@ import type {
   InvitationSections,
 } from "@/lib/templates/sections";
 import { MAX_RSVP_CUSTOM_FIELDS, type InvitationRsvpConfig } from "@/lib/templates/rsvp-config";
+import { weddingSessionLabel, type WeddingSession } from "@/lib/events/wedding-sessions";
 import {
   availableEditableCopyFields,
   editableCopyMaxLength,
@@ -95,6 +96,7 @@ export function ContentPanel({
   sections,
   rsvpConfig,
   eventCategory,
+  weddingSessions = [],
   templateKey,
   eventDescription,
   narrativeCopy,
@@ -113,6 +115,7 @@ export function ContentPanel({
   sections: InvitationSections;
   rsvpConfig: InvitationRsvpConfig;
   eventCategory: string;
+  weddingSessions?: WeddingSession[];
   templateKey: string;
   eventDescription?: string | null;
   narrativeCopy: EditableInvitationCopy;
@@ -237,17 +240,18 @@ export function ContentPanel({
                           </label>
                           <h4 className="text-xs font-semibold text-primary">{en ? "Event options" : "Pilihan acara"}</h4>
                           <label className="undara-studio-rsvp-switch">
-                            <span>{en ? "Wedding Ceremony" : "Upacara Nikah"}</span>
-                            <input type="checkbox" checked={rsvpConfig.ceremony} onChange={(event) => onRsvpConfig({ ceremony: event.target.checked })} />
+                            <span>{weddingSessions.find((session) => session.id === "ceremony") ? weddingSessionLabel(weddingSessions.find((session) => session.id === "ceremony")!, en ? "EN" : "ID") : en ? "Wedding Ceremony" : "Upacara Nikah"}</span>
+                            <input type="checkbox" checked={rsvpConfig.ceremony} disabled={weddingSessions.length > 0} onChange={(event) => onRsvpConfig({ ceremony: event.target.checked })} />
                           </label>
                           <label className="undara-studio-rsvp-switch">
                             <span>{en ? "Reception" : "Resepsi"}</span>
-                            <input type="checkbox" checked={rsvpConfig.reception} onChange={(event) => onRsvpConfig({ reception: event.target.checked })} />
+                            <input type="checkbox" checked={rsvpConfig.reception} disabled={weddingSessions.length > 0} onChange={(event) => onRsvpConfig({ reception: event.target.checked })} />
                           </label>
                           <label className="undara-studio-rsvp-switch">
                             <span>{en ? "Attend all events" : "Hadiri Semua Acara"}</span>
-                            <input type="checkbox" checked={rsvpConfig.attendAll} disabled={!(rsvpConfig.ceremony && rsvpConfig.reception)} onChange={(event) => onRsvpConfig({ attendAll: event.target.checked })} />
+                            <input type="checkbox" checked={rsvpConfig.attendAll} disabled={weddingSessions.length > 0 || !(rsvpConfig.ceremony && rsvpConfig.reception)} onChange={(event) => onRsvpConfig({ attendAll: event.target.checked })} />
                           </label>
+                          {weddingSessions.length > 0 && <p className="text-xs text-muted-foreground">{en ? "Sessions follow Event Schedule and each guest’s invitation." : "Sesi mengikuti Rangkaian Acara dan undangan masing-masing tamu."}</p>}
 
                           <div className="pt-1">
                             <div className="mb-1.5 flex items-center justify-between gap-2">

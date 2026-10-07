@@ -1,3 +1,5 @@
+import { weddingSessionsFor, WeddingSessionError } from "@/lib/events/wedding-sessions";
+import { checkInWeddingSession } from "@/lib/usher/wedding-check-in";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Usher App belum aktif untuk acara tamu ini." }, { status: 402 });
     }
 
+    if (weddingSessionsFor(guest.invitation).length) return NextResponse.json(await checkInWeddingSession(user.id, guest.invitationId, guest.id, body.session));
     const checkedInAt = new Date();
     // Only ONE successful scan may change the canonical Guest record.
     const result = await prisma.guest.updateMany({
@@ -68,6 +71,7 @@ export async function POST(request: Request) {
     if (!updated) return NextResponse.json({ error: "Data check-in gagal dimuat ulang." }, { status: 500 });
     return NextResponse.json({ guest: updated, checkedInAt: updated.checkedInAt });
   } catch (error) {
+    if (error instanceof WeddingSessionError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("POST /api/usher/checkin failed", error);
     return NextResponse.json({ error: "Check-in gagal diproses." }, { status: 500 });
   }

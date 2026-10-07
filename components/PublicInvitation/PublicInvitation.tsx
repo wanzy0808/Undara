@@ -1,3 +1,5 @@
+import WeddingSessionSchedule from "./WeddingSessionSchedule";
+import { weddingSessionsFor, weddingRsvpConfig } from "@/lib/events/wedding-sessions";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import Link from "next/link";
 import { CalendarDays, Clock3, LockKeyhole, MapPin } from "lucide-react";
@@ -34,6 +36,7 @@ export type PublicInvitationData = {
   mapUrl: string | null;
   timezone: string;
   eventDate: Date;
+  weddingSessions?: unknown;
   ceremonyTime: string | null;
   receptionTime: string | null;
   description: string | null;
@@ -72,7 +75,8 @@ export default function PublicInvitation({
   const category = getEventCategory(eventCategory);
   const timezone = getIndonesiaTimezone(invitation.timezone);
   const sections = parseInvitationSections(invitation.templateKey);
-  const rsvpConfig = parseInvitationRsvpConfig(invitation.templateKey);
+  const sessions = weddingSessionsFor(invitation);
+  const rsvpConfig = weddingRsvpConfig(invitation, parseInvitationRsvpConfig(invitation.templateKey));
   const generatedTitle = buildEventTitle(
     eventCategory,
     displayTitleCase(invitation.groomName),
@@ -161,6 +165,7 @@ export default function PublicInvitation({
               <CalendarDays className="h-4 w-4 text-primary" />
               {formatDate(invitation.eventDate, invitation.timezone)}
             </div>
+            {sessions.length ? <WeddingSessionSchedule sessions={sessions} timezone={timezone.label} location /> : <>
             {timeLabel && (
               <div className="flex items-center justify-center gap-2">
                 <Clock3 className="h-4 w-4 text-primary" />
@@ -184,6 +189,7 @@ export default function PublicInvitation({
                 Lihat Lokasi
               </a>
             )}
+            </>}
           </div>
         </header>
 
@@ -194,6 +200,8 @@ export default function PublicInvitation({
               slug={invitation.slug}
               eventCategory={invitation.eventCategory}
               rsvpConfig={rsvpConfig}
+              weddingSessions={sessions}
+              timezone={invitation.timezone}
               eventDate={invitation.eventDate}
               venue={invitation.venue}
               title={title}

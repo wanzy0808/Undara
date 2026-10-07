@@ -4,10 +4,12 @@ import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { buildPersonalGuestAddressee, getPersonalGuestSalutation } from "./personal-envelope";
 import { MAX_GUEST_PARTY_SIZE, minimumInvitedPaxForSalutation } from "./manual-party";
 import { seatingBlocksOverlap, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
+import { editableGuestWeddingScope, weddingSessionsFor } from "@/lib/events/wedding-sessions";
 
 export const managedGuestSelect = {
   id: true, invitationId: true, name: true, phone: true, category: true, tags: true,
   invitedPax: true, rsvpStatus: true, plusOnes: true, tableId: true, seatNumber: true,
+  invitedSessions: true, checkedIn: true,
   source: true, personalAddressee: true,
 } as const satisfies Prisma.GuestSelect;
 
@@ -30,7 +32,7 @@ export async function resizeManagedGuestParty(ownerId: string, invitationId: str
       include: { invitation: { include: { payment: true } } },
     });
     if (!guest) throw new GuestPartyUpdateError("Tamu tidak ditemukan pada acara ini.", 404);
-    if (!(await hasAccountDigitalInvitation(ownerId, guest.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(ownerId, guest.invitation.payment, invitationId))) {
       throw new GuestPartyUpdateError("Pengelolaan tamu membutuhkan paket Digital Invitation.", 402);
     }
     const salutation = getPersonalGuestSalutation({ name: guest.name, personalAddressee: guest.personalAddressee });
@@ -62,6 +64,7 @@ export async function resizeManagedGuestParty(ownerId: string, invitationId: str
       }
     }
     const data = { ...changes, invitedPax };
+    if (changes.invitedSessions !== undefined) data.invitedSessions = editableGuestWeddingScope(changes.invitedSessions, weddingSessionsFor(guest.invitation), guest);
     if (typeof data.name === "string" && salutation && data.personalAddressee === undefined) {
       data.personalAddressee = buildPersonalGuestAddressee(data.name, salutation);
     }

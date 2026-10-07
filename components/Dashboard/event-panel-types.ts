@@ -1,3 +1,4 @@
+import type { WeddingSession } from "@/lib/events/wedding-sessions";
 import type { WeddingChildPosition } from "@/lib/events/parents";
 import type { EventCategory } from "@/lib/events/catalog";
 
@@ -22,6 +23,7 @@ export type EventPanelInvitation = {
   timezone: string;
   eventDate: string;
   eventConfigured: boolean;
+  weddingSessions?: unknown;
   ceremonyTime: string | null;
   receptionTime: string | null;
   description: string | null;
@@ -42,6 +44,7 @@ export type EventPanelProps = {
 export type EventEditorMode = "closed" | "new" | "edit";
 
 export type EventForm = {
+  weddingSessions: WeddingSession[] | null;
   eventCategory: EventCategory | "";
   customTitle: string;
   groomName: string;

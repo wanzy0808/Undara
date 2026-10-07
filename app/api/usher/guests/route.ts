@@ -46,14 +46,17 @@ export async function GET(request: Request) {
         category: true,
         tags: true,
         invitedPax: true,
+        invitedSessions: true,
+        sessionCheckIns: { select: { session: true, checkedInAt: true } },
         rsvpStatus: true,
+        rsvpEvents: true,
         plusOnes: true,
         checkedIn: true,
         checkedInAt: true,
         updatedAt: true,
       },
     });
-    return NextResponse.json({ guests, invitation: { id: invitation.id, title: invitation.title } });
+    return NextResponse.json({ guests, invitation: { id: invitation.id, title: invitation.title, eventCategory: invitation.eventCategory, weddingSessions: invitation.weddingSessions } });
   } catch (error) {
     console.error("GET /api/usher/guests failed", error);
     return NextResponse.json({ error: "Data usher gagal dimuat." }, { status: 500 });

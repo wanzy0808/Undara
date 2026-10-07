@@ -1,5 +1,8 @@
 "use client";
 
+import WeddingSessionSchedule from "./WeddingSessionSchedule";
+import { weddingSessionsFor, weddingRsvpConfig } from "@/lib/events/wedding-sessions";
+
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { getInvitationCountdown } from "@/lib/invitations/countdown";
 
@@ -71,6 +74,7 @@ type RoseInvitation = {
   mapUrl?: string | null;
   timezone: string;
   eventDate: Date | string;
+  weddingSessions?: unknown;
   ceremonyTime: string | null;
   receptionTime: string | null;
   description: string | null;
@@ -213,7 +217,8 @@ export default function RomanticRoseTemplate({
   const sectionStyles = useMemo(() => parseInvitationSectionStyles(activeDesignKey), [activeDesignKey]);
   useInvitationSectionAnimations(rootRef, sectionStyles);
   usePremiumSectionTimelines(rootRef, sectionStyles, String(opened));
-  const rsvpConfig = parseInvitationRsvpConfig(activeDesignKey);
+  const sessions = weddingSessionsFor(invitation);
+  const rsvpConfig = weddingRsvpConfig(invitation, parseInvitationRsvpConfig(activeDesignKey));
   const sectionElementStyles = parseSectionElementStyles(activeDesignKey);
   const sectionLayout = parseInvitationSectionLayout(activeDesignKey);
   useInvitationNativeLayerOrder(rootRef, activeDesignKey);
@@ -435,13 +440,13 @@ export default function RomanticRoseTemplate({
             <section data-invitation-section="dateTime" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#f7efe9] px-8 py-24 text-left">
                         {objectOverlay("dateTime", instanceId)}
                         <RoseHeading section="dateTime" eyebrow="A day to remember" align="left">{tr("Tanggal & Waktu")}</RoseHeading>
-                        <div data-studio-native-object="object:dateTime:panel" className="max-w-md border-y border-[#c9a98d]/55 py-9">
+                        {sessions.length ? <WeddingSessionSchedule sessions={sessions} timezone={invitation.timezone} date={eventDate} preview={preview} /> : <div data-studio-native-object="object:dateTime:panel" className="max-w-md border-y border-[#c9a98d]/55 py-9">
                           <CalendarDays data-studio-native-object="object:dateTime:calendar-icon" className="mb-6 h-5 w-5 text-[#8c5664]" />
                           <p data-studio-native-object="object:dateTime:date" className="font-[family-name:var(--rr-display)] text-2xl leading-tight text-[#5a2e3a]">{eventDate}</p>
                           {invitation.ceremonyTime && <p data-studio-native-object="object:dateTime:start" className="text-sm">{tr("Mulai")}: {invitation.ceremonyTime}</p>}
                           {invitation.receptionTime && <p data-studio-native-object="object:dateTime:end" className="text-sm">{tr("Selesai")}: {invitation.receptionTime === "END" ? "- end" : invitation.receptionTime}</p>}
                           <p data-studio-native-object="object:dateTime:timezone" className="text-xs text-[#916f7a]">{invitation.timezone || "Asia/Jakarta"}</p>
-                        </div>
+                        </div>}
                       </section>
           ))}
 
@@ -488,7 +493,7 @@ export default function RomanticRoseTemplate({
             <section data-invitation-section="location" style={invitationSectionStyleCss(sectionStyle)} className="relative bg-[#fffaf6] px-8 py-24 text-left">
                         {objectOverlay("location", instanceId)}
                         <RoseHeading section="location" eyebrow="Find your way" align="left">{tr("Lokasi")}</RoseHeading>
-                        <div data-studio-native-object="object:location:details-group">
+                        {sessions.length ? <WeddingSessionSchedule sessions={sessions} timezone={invitation.timezone} location preview={preview} /> : <div data-studio-native-object="object:location:details-group">
                         <MapPin data-studio-native-object="object:location:map-icon" className="mb-5 h-5 w-5 text-[#8c5664]" />
                         <h3 data-studio-native-object="object:location:venue" className="max-w-[19ch] font-[family-name:var(--rr-display)] text-2xl leading-tight text-[#5a2e3a]">{invitation.venue || tr("Lokasi belum ditentukan")}</h3>
                         {invitation.address && <p data-studio-native-object="object:location:address" className="mt-4 max-w-md text-sm leading-7 text-[#6f5057]">{invitation.address}</p>}
@@ -497,7 +502,7 @@ export default function RomanticRoseTemplate({
                             <MapPin className="h-4 w-4" /> Buka Google Maps
                           </a>
                         )}
-                        </div>
+                        </div>}
                       </section>
           ))}
 
@@ -506,7 +511,7 @@ export default function RomanticRoseTemplate({
                         {objectOverlay("rsvp", instanceId)}
                           <RoseHeading section="rsvp" eyebrow="Your presence means so much" studioElement="title" style={rsvpElementStyleCss(rsvpConfig, "title")}>{tr(rsvpConfig.title || "Konfirmasi Kehadiran")}</RoseHeading>
                           <div data-studio-native-object="object:rsvp:form-group">
-                            <RsvpForm slug={invitation.slug} preview={preview} eventCategory="WEDDING" rsvpConfig={rsvpConfig} guestId={personalGuest?.id} guestName={personalGuest?.name} guestToken={personalGuest?.token} invitedPax={personalGuest?.invitedPax} eventDate={invitation.eventDate} venue={invitation.venue} title={displayTitleCase(invitation.title) || displayName} start={invitation.ceremonyTime} description={invitation.description} />
+                            <RsvpForm slug={invitation.slug} preview={preview} eventCategory="WEDDING" rsvpConfig={rsvpConfig} weddingSessions={sessions} timezone={invitation.timezone} guestId={personalGuest?.id} guestName={personalGuest?.name} guestToken={personalGuest?.token} invitedPax={personalGuest?.invitedPax} eventDate={invitation.eventDate} venue={invitation.venue} title={displayTitleCase(invitation.title) || displayName} start={invitation.ceremonyTime} description={invitation.description} />
                           </div>
                         </section>
           ))}

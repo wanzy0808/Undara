@@ -12,6 +12,7 @@ export type PersonalGuestFields = {
   personalAddressee?: string | null;
   recipientType?: RecipientType;
   invitedPax?: number;
+  invitedSessions?: ("ceremony" | "reception")[];
   category?: string | null;
   tags?: string[];
   personalGreeting?: string | null;
@@ -21,6 +22,10 @@ export type PersonalGuestFields = {
 
 export function parsePersonalGuestFields(body: Record<string, unknown>): PersonalGuestFields {
   const data: PersonalGuestFields = {};
+  if (body.invitedSessions !== undefined) {
+    if (!Array.isArray(body.invitedSessions) || body.invitedSessions.length > 2 || new Set(body.invitedSessions).size !== body.invitedSessions.length || body.invitedSessions.some((id) => id !== "ceremony" && id !== "reception")) throw new Error("Pilihan sesi tamu tidak valid.");
+    data.invitedSessions = body.invitedSessions;
+  }
   if (body.personalAddressee !== undefined) {
     if (typeof body.personalAddressee !== "string" || body.personalAddressee.trim().length > 160) {
       throw new Error("Nama di amplop maksimal 160 karakter.");

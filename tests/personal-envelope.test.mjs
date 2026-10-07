@@ -125,7 +125,7 @@ test("personal drafts are editable before payment, but guest publication require
   const panel = read("components/Dashboard/PersonalInvitationPanel.tsx");
   const publicPage = read("app/invite/[slug]/p/[token]/page.tsx");
 
-  assert.doesNotMatch(api, /hasAccountDigitalInvitation/);
+  assert.match(api, /body\.published && !\(await hasAccountDigitalInvitation/);
   assert.doesNotMatch(panel, /if \(!selectedEvent\.accessPaid\)/);
   assert.match(api, /body\.published && !invitation\.isPublished/);
   assert.match(publicPage, /await hasAccountDigitalInvitation\(invitation\.ownerId, invitation\.payment, invitation\.id\)/);

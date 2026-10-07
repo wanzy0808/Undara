@@ -10,6 +10,7 @@ import {
 } from "@/components/InvitationStudio/RsvpPanels";
 import {
   buildGoogleCalendarUrl,
+  buildWeddingCalendarLinks,
   buildRsvpTicketQrUrl,
 } from "@/components/InvitationStudio/rsvp-helpers";
 import type {
@@ -33,6 +34,8 @@ export default function RsvpForm({
   end,
   description,
   eventCategory,
+  weddingSessions = [],
+  timezone = "Asia/Jakarta",
   rsvpConfig = defaultInvitationRsvpConfig,
 }: RsvpFormProps) {
   const language = useInvitationLanguage();
@@ -42,7 +45,7 @@ export default function RsvpForm({
     phone: "",
     status: "ATTENDING",
     plusOnes: "0",
-    eventChoice: "",
+    eventChoice: weddingSessions.length === 1 ? weddingSessions[0].id : "",
     customAnswers: {},
   });
   const [message, setMessage] = useState("");
@@ -113,7 +116,8 @@ export default function RsvpForm({
         <RsvpSuccessPanel
           ticketGuest={ticketGuest}
           ticketUrl={ticketUrl}
-          calendarUrl={calendarUrl}
+          calendarUrl={weddingSessions.length ? "" : calendarUrl}
+          calendarLinks={buildWeddingCalendarLinks({ sessions: weddingSessions, selected: ticketGuest.rsvpEvents ?? [], title: title || "Acara", eventDate: String(eventDate || ""), timezone, language })}
         />
       ) : (
         <RsvpInputPanel
@@ -124,6 +128,7 @@ export default function RsvpForm({
           invitedPax={invitedPax}
           eventCategory={eventCategory}
           rsvpConfig={rsvpConfig}
+          weddingSessions={weddingSessions}
           form={form}
           setForm={setForm}
           message={message}

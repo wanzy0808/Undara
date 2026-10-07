@@ -7,6 +7,7 @@ import { minimumInvitedPaxForSalutation, recipientTypeForManualParty } from "@/l
 import { seatingPartySize } from "@/lib/seating/guest-seats";
 import { findGuestsByContact } from "@/lib/guests/identity";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
+import { weddingSessionsFor, parseInvitedSessions, WeddingSessionError } from "@/lib/events/wedding-sessions";
 
 async function getInvitation(userId: string, invitationId: string) {
   if (!invitationId) return null;
@@ -27,6 +28,7 @@ const guestSelect = {
   personalAddressee: true,
   recipientType: true,
   invitedPax: true,
+  invitedSessions: true,
   personalGreeting: true,
   personalEnvelopeEnabled: true,
   personalLanguage: true,
@@ -207,12 +209,19 @@ export async function POST(request: Request) {
       }
     }
 
-    const guest = await prisma.guest.create({
+    const guest = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Invitation" WHERE "id" = ${invitation.id} AND "ownerId" = ${user.id} FOR UPDATE`;
+      const current = await tx.invitation.findFirst({ where: { id: invitation.id, ownerId: user.id, eventConfigured: true } });
+      if (!current) throw new WeddingSessionError("Acara tidak ditemukan.", 404);
+      const sessions = weddingSessionsFor(current);
+      const invitedSessions = parseInvitedSessions(sharedGuestProfile.invitedSessions, sessions);
+      return tx.guest.create({
       data: {
         invitationId: invitation.id,
         name,
         phone,
         ...sharedGuestProfile,
+        ...(sessions.length ? { invitedSessions } : {}),
         category: category ?? "REGULAR",
         tags,
         tableId,
@@ -220,9 +229,11 @@ export async function POST(request: Request) {
         source: "MANUAL",
       },
       select: guestSelect,
+      });
     });
     return NextResponse.json({ guest }, { status: 201 });
   } catch (error) {
+    if (error instanceof WeddingSessionError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("POST /api/guests failed", error);
     return NextResponse.json({ error: "Tamu gagal ditambahkan." }, { status: 500 });
   }

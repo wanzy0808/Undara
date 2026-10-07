@@ -8,6 +8,7 @@ import { loadSource, loadPackageAccess } from "./helpers/package-access.mjs";
 
 const origin = loadSource("lib/security/request-origin.ts", {}, { env: { APP_URL: "https://example.test", NODE_ENV: "production" } });
 const recipient = (name = "Ibu Rina", category = "REGULAR") => ({ key: crypto.randomUUID(), name, category });
+const post = (f, body) => f.route.POST(request("POST", body));
 const request = (method, body, headers = {}) => new Request("https://example.test/api/personal-invitations", { method, headers: { Origin: "https://example.test", "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
 const saved = (id = "guest-a", invitationId = "event-a") => ({ id, invitationId, name: "Bapak Andi", category: "VIP", phone: "081234567890", recipientType: "FAMILY", invitedPax: 4, personalAddressee: "Keluarga Andi", personalLanguage: "EN", personalEnvelopeEnabled: false, personalGreeting: "Terima kasih", tags: ["Keluarga"], rsvpStatus: "ATTENDING", plusOnes: 2, checkedIn: true, seatNumber: 3, tableId: "table-a", personalToken: "existing-token", personalPublished: false, personalPasswordProtected: true, personalPasswordHash: "private-hash", personalViewCount: 9 });
 
@@ -17,12 +18,14 @@ function fixture(options = {}) {
   const calls = { locks: [], writes: [], access: [] };
   const payment = options.payment ?? { status: "PAID", packageKey: "INVITATION_BASIC" };
   const matches = (guest, where) => (!where.invitationId || guest.invitationId === where.invitationId)
+    && (typeof where.id !== "string" || guest.id === where.id)
     && (!where.id?.in || where.id.in.includes(guest.id))
     && (!where.personalToken?.in || where.personalToken.in.includes(guest.personalToken))
     && (!Object.hasOwn(where.personalToken ?? {}, "not") || guest.personalToken != null);
-  const findInvitation = async ({ where }) => where.id === "event-a" && where.ownerId === "owner-a" && options.configured !== false ? { id: "event-a", ownerId: "owner-a", templateKey: options.templateKey ?? "romantic-rose", isPublished: options.published !== false, payment } : null;
+  const findInvitation = async ({ where }) => where.id === "event-a" && where.ownerId === "owner-a" && options.configured !== false ? { id: "event-a", ownerId: "owner-a", templateKey: options.templateKey ?? "romantic-rose", isPublished: options.published !== false, eventCategory: options.weddingSessions ? "WEDDING" : "OTHER", weddingSessions: options.weddingSessions, payment } : null;
   const prisma = {
     invitation: { findFirst: findInvitation },
+    guest: { findUnique: async ({ where }) => state.find((guest) => guest.personalToken === where.personalToken) ?? null },
     async $transaction(callback) {
       const previous = tail;
       let release;
@@ -34,6 +37,7 @@ function fixture(options = {}) {
           $queryRaw: async (sql, ...values) => { calls.locks.push({ sql: sql.join("?"), values }); return values[0] === "event-a" && values[1] === "owner-a" && options.lock !== false ? [{ id: "event-a" }] : []; },
           invitation: { findFirst: findInvitation },
           guest: {
+            findFirst: async ({ where }) => draft.find((guest) => matches(guest, where)) ?? null,
             findMany: async ({ where }) => draft.filter((guest) => matches(guest, where)),
             update: async ({ where, data }) => {
               const index = draft.findIndex((guest) => guest.id === where.id);
@@ -61,7 +65,7 @@ function fixture(options = {}) {
       } finally { release(); }
     },
   };
-  const packageAccess = loadPackageAccess({ grants: options.grant ? { "owner-a": { digital: true, guestbook: false } } : {} });
+  const packageAccess = loadPackageAccess({ grants: options.grant ? { "owner-a": { digital: true, guestbook: false } } : {}, invitations: { "owner-a": [{ id: "event-a", payment }] } });
   const batch = loadSource("lib/guests/personal-batch.ts", {
     "node:crypto": crypto, "@/lib/prisma": { prisma },
     "@/lib/guests/personal-envelope": envelope,
@@ -73,6 +77,7 @@ function fixture(options = {}) {
     "node:crypto": crypto, "next/server": { NextResponse: { json: (body, init) => Response.json(body, init) } },
     "@/lib/auth": { getCurrentUser: async () => options.signedOut ? null : { id: "owner-a" } },
     "@/lib/prisma": { prisma }, "@/lib/security/request-origin": origin,
+    "@/lib/packages/server-access": packageAccess.access,
     "@/lib/invitations/password": { hashInvitationPassword: async () => "hash" },
     "@/lib/guests/personal-profile": profile, "@/lib/guests/identity": {}, "@/lib/guests/personal-batch": batch,
   });
@@ -220,5 +225,81 @@ test("single and batch personal-link creation require an already saved design, i
     assert.equal(res.status, 409);
     assert.match((await res.json()).error, /Edit undangan/);
     assert.deepEqual(f.state(), before); assert.equal(f.calls.writes.length, 0);
+  }
+});
+
+const weddingSessions = [
+  { id: "ceremony", kind: "BLESSING", label: "", start: "09:00", end: null, venue: "Kapel", address: null, mapUrl: null },
+  { id: "reception", kind: null, label: "", start: "18:00", end: "END", venue: "Gedung", address: null, mapUrl: null },
+];
+
+test("personal batches require explicit active-session scopes and roll back the complete batch on an invalid row", async () => {
+  for (const invitedSessions of [undefined, [], ["other"], ["ceremony", "ceremony"]]) {
+    const f = fixture({ weddingSessions, guests: [] });
+    const response = await post(f, { invitationId: "event-a", recipients: [
+      { key: crypto.randomUUID(), name: "Nina", category: "REGULAR", invitedSessions: ["reception"] },
+      { key: crypto.randomUUID(), name: "Budi", category: "REGULAR", invitedSessions },
+    ] });
+    assert.equal(response.status, 400);
+    assert.match((await response.json()).error, /sesi/);
+    assert.deepEqual(f.state(), []);
+  }
+});
+
+test("personal batch retries preserve canonical identity and explicit session choices", async () => {
+  const f = fixture({ weddingSessions, guests: [] });
+  const body = { invitationId: "event-a", recipients: [{ key: crypto.randomUUID(), name: "Nina", category: "REGULAR", invitedSessions: ["reception"] }] };
+  const first = await post(f, body);
+  assert.equal(first.status, 201);
+  const record = (await first.json()).invitations[0];
+  const retry = await post(f, body);
+  assert.equal(retry.status, 201);
+  assert.equal((await retry.json()).invitations[0].id, record.id);
+  assert.deepEqual(f.state()[0].invitedSessions, ["reception"]);
+  assert.equal((await post(f, { ...body, recipients: [{ ...body.recipients[0], invitedSessions: ["ceremony"] }] })).status, 409);
+  assert.equal(f.state().length, 1);
+});
+
+test("a single active wedding session is automatic while legacy batches keep the old guest fields", async () => {
+  const f = fixture({ weddingSessions: [weddingSessions[1]], guests: [] });
+  const response = await post(f, { invitationId: "event-a", recipients: [{ key: crypto.randomUUID(), name: "Nina", category: "REGULAR" }] });
+  assert.equal(response.status, 201);
+  assert.deepEqual(f.state()[0].invitedSessions, ["reception"]);
+});
+
+
+test("single personal edits require an active scope, preserve tokens, and reject confirmed-session revocation", async () => {
+  const canonical = { ...saved(), invitedSessions: ["ceremony", "reception"], checkedIn: false, rsvpEvents: ["ceremony"] };
+  const f = fixture({ weddingSessions, guests: [canonical] });
+  const change = (invitedSessions) => f.route.PATCH(request("PATCH", { invitationId: "event-a", id: "guest-a", invitedSessions }));
+  assert.equal((await change([])).status, 400);
+  assert.equal((await change(["reception"])).status, 409);
+  assert.equal((await change(["ceremony"])).status, 200);
+  assert.deepEqual(f.state()[0].invitedSessions, ["ceremony"]);
+  assert.equal(f.state()[0].personalToken, canonical.personalToken);
+  const checked = fixture({ weddingSessions, guests: [{ ...canonical, checkedIn: true }] });
+  assert.equal((await checked.route.PATCH(request("PATCH", { invitationId: "event-a", id: "guest-a", invitedSessions: ["ceremony"] }))).status, 409);
+});
+
+test("single personal creation and publication keep the parent publication and event-specific entitlement gates", async () => {
+  for (const method of ["POST", "PATCH"]) {
+    for (const options of [{ published: false }, { payment: { status: "PENDING", packageKey: "INVITATION_BASIC" } }, { grant: true, payment: { status: "PENDING", packageKey: "INVITATION_BASIC" } }]) {
+      const canonical = { ...saved(), checkedIn: false, invitedSessions: ["reception"], rsvpEvents: [] };
+      const f = fixture({ weddingSessions, guests: [canonical], ...options });
+      const body = { invitationId: "event-a", ...(method === "POST" ? { guestId: "guest-a" } : { id: "guest-a" }), invitedSessions: ["reception"], published: true };
+      const response = await f.route[method](request(method, body));
+      assert.equal(response.status, options.published === false ? 409 : options.grant ? 200 : 403);
+      assert.equal(f.state()[0].personalPublished, Boolean(options.grant));
+    }
+  }
+});
+
+
+test("single personal drafts and profile edits remain available before payment and publication", async () => {
+  for (const method of ["POST", "PATCH"]) {
+    const f = fixture({ weddingSessions, published: false, payment: { status: "PENDING", packageKey: "INVITATION_BASIC" }, guests: [{ ...saved(), checkedIn: false, invitedSessions: ["reception"], rsvpEvents: [] }] });
+    const response = await f.route[method](request(method, { invitationId: "event-a", ...(method === "POST" ? { guestId: "guest-a" } : { id: "guest-a" }), category: "REGULAR", invitedSessions: ["reception"] }));
+    assert.equal(response.status, 200);
+    assert.equal(f.state()[0].personalPublished, false);
   }
 });

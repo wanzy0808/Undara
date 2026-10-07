@@ -1,5 +1,7 @@
 "use client";
 
+import { weddingSessionsFor, parseInvitedSessions, type WeddingSessionId } from "@/lib/events/wedding-sessions";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EventScopePicker from "@/components/Dashboard/EventScopePicker";
 import { Button } from "@/components/ui/button";
@@ -244,7 +246,15 @@ export default function PersonalInvitationPanel({
     const guest = availableGuests.find((item) => item.id === guestId);
     if (!guest || !eventId || creating.current) return;
     if (drafts.length >= 1000) { setNotice(d("Simpan daftar sebelum menambahkan lebih dari 1000 tamu.")); return; }
-    setDrafts((current) => current.some((row) => row.guestId === guest.id) ? current : [...current, { key: `guest:${eventId}:${guest.id}`, guestId: guest.id, invitationId: eventId, name: guest.name, category: profile.category, profile: guestInvitationFormFrom(guest) }]);
+    let invitedSessions: WeddingSessionId[];
+    try {
+      const sessions = weddingSessionsFor(selectedEvent ?? {});
+      invitedSessions = parseInvitedSessions(sessions.length === 1 ? [sessions[0].id] : profile.invitedSessions, sessions);
+    } catch (error) {
+      setNotice(error instanceof Error ? d(error.message) : d("Data tamu tidak valid."));
+      return;
+    }
+    setDrafts((current) => current.some((row) => row.guestId === guest.id) ? current : [...current, { key: `guest:${eventId}:${guest.id}`, guestId: guest.id, invitationId: eventId, name: guest.name, category: profile.category, profile: { ...profile }, ...(weddingSessionsFor(selectedEvent ?? {}).length ? { invitedSessions } : {}) }]);
     setGuestId("");
     setName("");
     setProfile({ ...emptyGuestInvitationForm });
@@ -260,7 +270,9 @@ export default function PersonalInvitationPanel({
       if (!Number.isInteger(profile.invitedPax) || profile.invitedPax < minimum || profile.invitedPax > MAX_GUEST_PARTY_SIZE) {
         throw new Error(d("Jumlah tamu wajib 1–30 orang."));
       }
-      const rows = names.map((name) => ({ key: crypto.randomUUID(), name, category: profile.category, salutation, invitedPax: profile.invitedPax }));
+      const sessions = weddingSessionsFor(selectedEvent ?? {});
+      const invitedSessions = parseInvitedSessions(sessions.length === 1 ? [sessions[0].id] : profile.invitedSessions, sessions);
+      const rows = names.map((name) => ({ key: crypto.randomUUID(), name, category: profile.category, salutation, invitedPax: profile.invitedPax, ...(sessions.length ? { invitedSessions } : {}) }));
       stagedInput.current = name;
       setDrafts((current) => [...current, ...rows]);
       setName("");
@@ -270,16 +282,17 @@ export default function PersonalInvitationPanel({
     }
   }
 
-  function editDraft(key: string, value: { name?: string; category?: string; salutation?: PersonalSalutation; invitedPax?: number }) {
+  function editDraft(key: string, value: { name?: string; category?: string; salutation?: PersonalSalutation; invitedPax?: number; invitedSessions?: WeddingSessionId[] }) {
     if (creating.current) return;
     setDrafts((current) => current.map((row) => {
       if (row.key !== key) return row;
-      if (row.guestId) return value.category ? { ...row, category: value.category } : row;
+      if (row.guestId) return { ...row, ...value };
       const nextSalutation = value.salutation ?? row.salutation ?? "BAPAK";
       const minimum = minimumInvitedPaxForSalutation(nextSalutation);
       const currentPax = value.invitedPax ?? row.invitedPax ?? 1;
       return {
         ...row,
+        ...(value.invitedSessions !== undefined ? { invitedSessions: value.invitedSessions } : {}),
         ...(value.name !== undefined ? { name: value.name } : {}),
         ...(value.salutation ? { salutation: value.salutation } : {}),
         ...(value.category ? { category: value.category } : {}),
@@ -306,7 +319,7 @@ export default function PersonalInvitationPanel({
         const batch = rows.slice(index, index + 100);
         const response = await fetch("/api/personal-invitations", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ invitationId: eventId, published: false, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category, salutation: row.salutation ?? "BAPAK", invitedPax: row.invitedPax ?? minimumInvitedPaxForSalutation(row.salutation ?? "BAPAK") }) }),
+          body: JSON.stringify({ invitationId: eventId, published: false, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category, invitedSessions: row.invitedSessions } : { key: row.key, name: row.name, category: row.category, invitedSessions: row.invitedSessions, salutation: row.salutation ?? "BAPAK", invitedPax: row.invitedPax ?? minimumInvitedPaxForSalutation(row.salutation ?? "BAPAK") }) }),
         });
         const data = await response.json().catch(() => null);
         if (!response.ok || !Array.isArray(data?.invitations) || data.invitations.length !== batch.length) {
@@ -481,6 +494,7 @@ export default function PersonalInvitationPanel({
     const ok = await patchPersonalInvitation(
       item.id,
       { name: editName.trim(), phone: editPhone.trim(), category: editProfile.category,
+        ...(!item.checkedIn && weddingSessionsFor(selectedEvent ?? {}).length ? { invitedSessions: weddingSessionsFor(selectedEvent ?? {}).length === 1 ? [weddingSessionsFor(selectedEvent ?? {})[0].id] : editProfile.invitedSessions } : {}),
         ...(personalAddressee && personalAddressee !== item.personalAddressee ? { personalAddressee } : {}),
       },
       d("Data tamu diperbarui."),
