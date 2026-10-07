@@ -819,3 +819,11 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Eligible unassigned guests remain draggable by canonical Guest ID; assigned guests remain visible. Category/tag/reset/no-results filtering includes displayed Regular fallback and assigned rows without rewriting stored data or fabricating companion Guests.
 - [x] Local validation: focused seating/party fixtures 70/70, full regression 807/807, TypeScript, changed-source/test ESLint (zero errors/warnings), production webpack build (73/73) and whitespace check PASS. Exact published-commit GitHub checks are observed after publication; this records local pre-push evidence.
 - [ ] Signed-in desktop/tablet/phone in ID/EN and both themes: compact panel widths, long names/tags/native select values, roster scrolling/group readability, party drag into seats, assignment updates and event switching. Verify real Save/reopen, browser A4/PDF and physical print on the target app; isolated tests/build are not that runtime QA.
+
+
+### Clear drawing-mode exit — 7 October 2026
+
+- [x] Existing Gambar jalur toggle becomes Selesai menggambar / Finish drawing while active, with check icon, Esc tooltip and complete wrapping caption; clicking returns to moving tables/guests without removing completed routes.
+- [x] Focus canvas without scrolling when a valid drawing gesture starts so its existing Escape handler receives keyboard input; Escape also exits from the focused mode button before drawing. Preserve stroke cancellation/capture, route-limit exit and canonical guest drag behavior.
+- [x] Focused seating/party fixtures 70/70, full regression 807/807, TypeScript, changed-source/test ESLint (zero errors/warnings), production webpack build (73/73) and whitespace check PASS. Exact published-commit GitHub checks are observed after publication; this records local pre-push evidence.
+- [ ] Signed-in desktop/mobile ID/EN and both themes: draw a route, click Finish or press Escape, then drag tables/guest parties; Escape during an unfinished stroke must cancel only that stroke. Check focus/viewport stability, complete button captions and explicit Save/reopen on the target app.

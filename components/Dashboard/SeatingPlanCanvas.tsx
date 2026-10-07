@@ -80,6 +80,7 @@ export default function SeatingPlanCanvas({
     if (event.button !== 0) return;
     const point = pointAt(event);
     if (!point || !gesture.current.start(event.pointerId, point, layout.height)) return;
+    container.current?.focus({ preventScroll: true });
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     onDrawingChange(true);

@@ -521,6 +521,7 @@ const english: Record<string, string> = {
   "Alat denah": "Seating plan tools",
   "Pilih / geser": "Select / move",
   "Gambar jalur": "Draw route",
+  "Selesai menggambar": "Finish drawing",
   "Undo": "Undo",
   "Redo": "Redo",
   "Hapus jalur": "Clear routes",

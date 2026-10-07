@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, GripVertical, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
+import { ArrowLeftRight, Check, GripVertical, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -623,7 +623,19 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       >
 
         <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label={d("Alat denah")}>
-          <Button type="button" size="sm" variant={tool === "draw" ? "default" : "outline"} aria-pressed={tool === "draw"} disabled={toolbarBusy || (tool !== "draw" && layout.paths.length >= SEATING_MAX_PATHS)} onClick={() => { setTool(tool === "draw" ? "move" : "draw"); setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null); }}><PencilLine className="h-4 w-4" />{d("Gambar jalur")}</Button>
+          <Button type="button" size="sm" variant={tool === "draw" ? "default" : "outline"}
+            className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
+            aria-pressed={tool === "draw"}
+            title={tool === "draw" ? `${d("Selesai menggambar")} (Esc)` : undefined}
+            disabled={toolbarBusy || (tool !== "draw" && layout.paths.length >= SEATING_MAX_PATHS)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && tool === "draw" && !drawing) { event.preventDefault(); setTool("move"); }
+            }}
+            onClick={() => { setTool(tool === "draw" ? "move" : "draw"); setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null); }}
+          >
+            {tool === "draw" ? <Check className="h-4 w-4" /> : <PencilLine className="h-4 w-4" />}
+            <span className="min-w-0 break-words">{d(tool === "draw" ? "Selesai menggambar" : "Gambar jalur")}</span>
+          </Button>
           <Button type="button" size="icon-sm" variant="outline" aria-label={d("Undo")} title={d("Undo")} disabled={toolbarBusy || !plan.editor.past.length} onClick={() => plan.dispatch({ type: "UNDO" })}><Undo2 className="h-4 w-4" /></Button>
           <Button type="button" size="icon-sm" variant="outline" aria-label={d("Redo")} title={d("Redo")} disabled={toolbarBusy || !plan.editor.future.length} onClick={() => plan.dispatch({ type: "REDO" })}><Redo2 className="h-4 w-4" /></Button>
           <Button type="button" size="sm" variant="outline" disabled={toolbarBusy || !layout.paths.length} onClick={() => plan.dispatch({ type: "EDIT", plan: { ...layout, paths: [] } })}><Trash2 className="h-4 w-4" />{d("Hapus jalur")}</Button>

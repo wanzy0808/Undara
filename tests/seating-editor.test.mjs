@@ -390,8 +390,8 @@ function elements(element, match) {
   return [...(match(element) ? [element] : []), ...React.Children.toArray(element.props?.children).flatMap((child) => elements(child, match))];
 }
 function canvasFixture(overrides = {}) {
-  const calls = { paths: [], drawing: [], tables: [], guests: [], capture: new Set(), preview: [] };
-  const container = { focus() {}, setPointerCapture: (id) => calls.capture.add(id), hasPointerCapture: (id) => calls.capture.has(id), releasePointerCapture: (id) => calls.capture.delete(id) };
+  const calls = { paths: [], drawing: [], tables: [], guests: [], capture: new Set(), preview: [], focus: [] };
+  const container = { focus: (options) => calls.focus.push(options), setPointerCapture: (id) => calls.capture.add(id), hasPointerCapture: (id) => calls.capture.has(id), releasePointerCapture: (id) => calls.capture.delete(id) };
   const bounds = { left: 30, top: -50, width: 550, height: 310 };
   const refs = [container, { container: () => ({ getBoundingClientRect: () => bounds }) }, { visible: (v) => calls.preview.push(v), points: (p) => calls.preview.push(p) }];
   let index = 0;
@@ -420,6 +420,7 @@ function canvasFixture(overrides = {}) {
 test("actual canvas pointer handlers draw in scaled/scrolled logical coordinates and release capture", () => {
   const { tree, calls, pointer } = canvasFixture();
   tree.props.onPointerDown(pointer(1));
+  assert.deepEqual(calls.focus, [{ preventScroll: true }]);
   tree.props.onPointerMove(pointer(2, 500, 210));
   tree.props.onPointerUp(pointer(2, 500, 210));
   assert.equal(calls.paths.length, 0);
@@ -444,6 +445,7 @@ test("actual canvas cancelled/lost pointers and Escape discard unfinished stroke
   const busy = canvasFixture({ busy: true });
   busy.tree.props.onPointerDown(busy.pointer(1));
   assert.equal(busy.calls.capture.size, 0);
+  assert.deepEqual(busy.calls.focus, []);
 });
 
 test("table drag clamps the real Konva group; child guest drag does not move the whole table", () => {
@@ -701,7 +703,7 @@ test("member row drags the canonical party ID, updates placement after assignmen
   assert.equal(rosterRows(tree)[0].props.draggable, false);
   rosterRows(tree)[0].props.onDragStart({ preventDefault() { prevented++; }, dataTransfer: transfer });
   assert.equal(prevented, 1); assert.equal(data.length, 1);
-  chartButton(tree, "Gambar jalur").props.onClick(); tree = f.render(props);
+  chartButton(tree, "Selesai menggambar").props.onClick(); tree = f.render(props);
   rosterRows(tree)[0].props.onDragStart({ dataTransfer: transfer });
   tree = f.render(props);
   await chartCanvas(tree).onGuestDrop("regular-party", geometry.seatingSeatPoint(layout().tables[table.id], 5, table.capacity));
@@ -740,12 +742,21 @@ test("actual chart toggles Draw back to direct table dragging, including Escape 
   assert.equal(elements(tree, (el) => el.type === "select" && el.props["aria-label"] === "Pilih meja").length, 0);
   chartButton(tree, "Gambar jalur").props.onClick();
   tree = f.render(chartProps); assert.equal(chartCanvas(tree).tool, "draw");
-  chartButton(tree, "Gambar jalur").props.onClick();
+  assert.equal(chartButton(tree, "Gambar jalur"), undefined);
+  assert.equal(chartButton(tree, "Selesai menggambar").props["aria-pressed"], true);
+  assert.ok(chartButton(tree, "Selesai menggambar").props.title.includes("Esc"));
+  chartButton(tree, "Selesai menggambar").props.onClick();
   tree = f.render(chartProps); assert.equal(chartCanvas(tree).tool, "move");
+  assert.deepEqual(f.plan.editor.plan, layout());
+  chartButton(tree, "Gambar jalur").props.onClick(); tree = f.render(chartProps);
+  let prevented = false;
+  chartButton(tree, "Selesai menggambar").props.onKeyDown({ key: "Escape", preventDefault() { prevented = true; } });
+  tree = f.render(chartProps); assert.equal(chartCanvas(tree).tool, "move"); assert.equal(prevented, true);
+  assert.deepEqual(f.plan.editor.plan, layout());
   chartButton(tree, "Gambar jalur").props.onClick();
   f.plan.dispatch({ type: "EDIT", plan: { ...layout(), paths: Array.from({ length: 20 }, () => [100, 100, 500, 200]) } });
   tree = f.render(chartProps);
-  assert.equal(chartButton(tree, "Gambar jalur").props.disabled, false);
+  assert.equal(chartButton(tree, "Selesai menggambar").props.disabled, false);
   chartCanvas(tree).onExitDraw();
   tree = f.render(chartProps); assert.equal(chartCanvas(tree).tool, "move");
   assert.equal(chartButton(tree, "Gambar jalur").props.disabled, true);
