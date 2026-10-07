@@ -209,7 +209,7 @@ export default function OwnerDashboard() {
                       <td className="px-5 py-3">{roleLabel(user.role)}</td>
                       <td className="px-5 py-3 text-xs text-muted-foreground">
                         {user.packageAccess.guestbook
-                          ? `Guest Book Rp2 jt · ${user.packageAccess.grantedDigitalCredits} hak Owner`
+                          ? `Guest Book Rp2 jt${user.packageAccess.grantedDigitalCredits ? ` · ${user.packageAccess.grantedDigitalCredits} hak Undangan Owner` : ""}`
                           : user.packageAccess.digital || user.packageAccess.purchasedDigital
                             ? `Undangan Digital · ${user.packageAccess.grantedDigitalCredits} hak Owner${user.packageAccess.purchasedDigitalCount ? ` · ${user.packageAccess.purchasedDigitalCount} pembayaran` : ""}`
                             : "—"}
