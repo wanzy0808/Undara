@@ -26,7 +26,7 @@ export default async function PersonalInvitationPage({
   });
   if (!guest) notFound();
 
-  if (!invitation.isPublished || !guest.personalPublished || !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment))) {
+  if (!invitation.isPublished || !guest.personalPublished || !(await hasAccountDigitalInvitation(invitation.ownerId, invitation.payment, invitation.id))) {
     return <InvitationLockedState />;
   }
 
