@@ -13,8 +13,10 @@ type PackageAccess = {
   digital: boolean;
   guestbook: boolean;
   purchasedDigital: boolean;
+  purchasedDigitalCount: number;
   purchasedGuestbook: boolean;
   grantedDigital: boolean;
+  grantedDigitalCredits: number;
   grantedGuestbook: boolean;
 };
 
@@ -41,7 +43,7 @@ const emptyForm = {
   email: "",
   role: "USER",
   password: "",
-  packageAccess: { digital: false, guestbook: false },
+  packageAccess: { digitalCredits: 0, guestbook: false },
 };
 
 export default function OwnerDashboard() {
@@ -71,7 +73,7 @@ export default function OwnerDashboard() {
       role: roles.includes(user.role) ? user.role : "USER",
       password: "",
       packageAccess: {
-        digital: user.packageAccess.grantedDigital,
+        digitalCredits: user.packageAccess.grantedDigitalCredits,
         guestbook: user.packageAccess.grantedGuestbook,
       },
     });
@@ -145,9 +147,9 @@ export default function OwnerDashboard() {
   };
 
   const purchasedDigital = selected?.packageAccess.purchasedDigital ?? false;
+  const purchasedDigitalCount = selected?.packageAccess.purchasedDigitalCount ?? 0;
   const purchasedGuestbook = selected?.packageAccess.purchasedGuestbook ?? false;
   const effectiveGuestbook = purchasedGuestbook || form.packageAccess.guestbook;
-  const effectiveDigital = purchasedDigital || effectiveGuestbook || form.packageAccess.digital;
 
   return (
     <main className="mx-auto w-[80vw] max-w-full space-y-8 px-5 py-8 font-[family-name:var(--font-undara-body)]">
@@ -207,9 +209,9 @@ export default function OwnerDashboard() {
                       <td className="px-5 py-3">{roleLabel(user.role)}</td>
                       <td className="px-5 py-3 text-xs text-muted-foreground">
                         {user.packageAccess.guestbook
-                          ? "Guest Book Rp2 jt + Undangan Digital"
-                          : user.packageAccess.digital
-                            ? "Undangan Digital Rp150 rb"
+                          ? `Guest Book Rp2 jt · ${user.packageAccess.grantedDigitalCredits} hak Owner`
+                          : user.packageAccess.digital || user.packageAccess.purchasedDigital
+                            ? `Undangan Digital · ${user.packageAccess.grantedDigitalCredits} hak Owner${user.packageAccess.purchasedDigitalCount ? ` · ${user.packageAccess.purchasedDigitalCount} pembayaran` : ""}`
                             : "—"}
                       </td>
                       <td className="px-5 py-3 text-xs text-muted-foreground">
@@ -255,22 +257,28 @@ export default function OwnerDashboard() {
             <div className="rounded-xl border border-border p-4">
               <p className="text-sm font-semibold">Hak paket</p>
               <p className="mt-1 text-xs text-muted-foreground">Grant Owner tidak tercatat sebagai penjualan.</p>
-              <label className="mt-4 flex items-start gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={effectiveDigital}
-                  disabled={purchasedDigital || effectiveGuestbook}
-                  onChange={(event) => setForm({
-                    ...form,
-                    packageAccess: { ...form.packageAccess, digital: event.target.checked },
-                  })}
-                  className="mt-0.5 size-4 accent-[var(--primary)]"
-                />
-                <span>
-                  <span className="block font-medium">Undangan Digital · Rp150.000</span>
-                  {purchasedDigital && <span className="text-xs text-muted-foreground">Sudah dibeli user</span>}
+              <div className="mt-4 flex flex-wrap items-end gap-3 text-sm">
+                <label className="block">
+                  <span className="block font-medium">Hak Undangan Digital · Rp150.000</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={form.packageAccess.digitalCredits}
+                    onChange={(event) => setForm({
+                      ...form,
+                      packageAccess: {
+                        ...form.packageAccess,
+                        digitalCredits: Math.max(0, Math.min(100, Number(event.target.value) || 0)),
+                      },
+                    })}
+                    className="mt-2 h-10 w-24"
+                  />
+                </label>
+                <span className="pb-2 text-xs text-muted-foreground">
+                  1 hak = 1 undangan{purchasedDigital ? ` · ${purchasedDigitalCount} sudah dibayar user` : ""}
                 </span>
-              </label>
+              </div>
               <label className="mt-4 flex items-start gap-3 text-sm">
                 <input
                   type="checkbox"
@@ -279,7 +287,9 @@ export default function OwnerDashboard() {
                   onChange={(event) => setForm({
                     ...form,
                     packageAccess: {
-                      digital: event.target.checked ? true : form.packageAccess.digital,
+                      digitalCredits: event.target.checked
+                        ? Math.max(1, form.packageAccess.digitalCredits)
+                        : form.packageAccess.digitalCredits,
                       guestbook: event.target.checked,
                     },
                   })}
