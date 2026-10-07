@@ -25,6 +25,8 @@ import ActionsModule from "../components/Dashboard/SeatingGuestActions.tsx";
 import { controlStyles } from "../components/ui/control-styles.ts";
 import * as utils from "../lib/utils.ts";
 import { loadSource } from "./helpers/package-access.mjs";
+import Konva from "konva";
+import { DD } from "konva/lib/DragAndDrop.js";
 
 const layout = () => ({ height: 620, tables: { "table-a": { x: 420, y: 310 } }, paths: [[100, 200, 260, 210, 330, 330]] });
 const table = { id: "table-a", name: "Meja keluarga", shape: "ROUND", capacity: 8 };
@@ -393,9 +395,10 @@ function elements(element, match) {
   if (!element || typeof element !== "object") return [];
   return [...(match(element) ? [element] : []), ...React.Children.toArray(element.props?.children).flatMap((child) => elements(child, match))];
 }
+const draggableSeatGroups = (tree) => elements(tree, (el) => el.type === "Group" && el.props.draggable && el.props.onDragMove);
 function canvasFixture(overrides = {}) {
   const calls = { paths: [], drawing: [], tables: [], guests: [], capture: new Set(), preview: [], focus: [] };
-  const container = { focus: (options) => calls.focus.push(options), setPointerCapture: (id) => calls.capture.add(id), hasPointerCapture: (id) => calls.capture.has(id), releasePointerCapture: (id) => calls.capture.delete(id) };
+  const container = { getBoundingClientRect: () => ({ left: 30, right: 580, top: -50, bottom: 260 }), focus: (options) => calls.focus.push(options), setPointerCapture: (id) => calls.capture.add(id), hasPointerCapture: (id) => calls.capture.has(id), releasePointerCapture: (id) => calls.capture.delete(id) };
   const bounds = { left: 30, top: -50, width: 550, height: 310 };
   const refs = [container, { container: () => ({ getBoundingClientRect: () => bounds }) }, { visible: (v) => calls.preview.push(v), points: (p) => calls.preview.push(p) }];
   let index = 0;
@@ -458,12 +461,12 @@ test("table drag clamps the real Konva group; child guest drag does not move the
   const target = { x: () => -800, y: () => 2000, position: (p) => calls.tables.push(["node", p]) };
   group.props.onDragEnd({ target, currentTarget: target });
   assert.deepEqual(calls.tables, [["node", { x: 110, y: 510 }], ["move", table.id, { x: 110, y: 510 }]]);
-  const guestCircle = elements(tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+  const guestCircle = draggableSeatGroups(tree)[0];
   const guestNode = { getStage: () => ({ getRelativePointerPosition: () => ({ x: 740, y: 420 }) }), position: (p) => calls.guests.push(["reset", p]) };
-  const event = { target: guestNode, currentTarget: guestNode };
+  const event = { target: guestNode, currentTarget: guestNode, evt: { type: "mouseup" } };
   guestCircle.props.onDragEnd(event);
   assert.equal(event.cancelBubble, true);
-  assert.deepEqual(calls.guests, [["reset", { x: 0, y: 0 }], ["drop", "guest-a", { x: 740, y: 420 }]]);
+  assert.deepEqual(calls.guests, [["reset", { x: guestCircle.props.x, y: guestCircle.props.y }], ["drop", "guest-a", { x: 740, y: 420 }]]);
   group.props.onDragEnd({ target: guestNode, currentTarget: target });
   assert.equal(calls.tables.length, 2);
 });
@@ -488,9 +491,9 @@ test("later canvas pages translate paths and both guest drag modes into the orig
 
   const moving = canvasFixture({ layout: tall, pageOffset: 400, tool: "move" });
   moving.tree.props.onDrop({ ...moving.pointer(1), dataTransfer: {} });
-  const circle = elements(moving.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+  const circle = draggableSeatGroups(moving.tree)[0];
   const node = { getStage: () => ({ getRelativePointerPosition: () => ({ x: 740, y: 420 }) }), position() {} };
-  circle.props.onDragEnd({ target: node });
+  circle.props.onDragEnd({ target: node, evt: { type: "mouseup" } });
   assert.deepEqual(moving.calls.guests, [["drop", "guest-a", { x: 440, y: 710 }], ["drop", "guest-a", { x: 740, y: 820 }]]);
   const group = elements(moving.tree, (el) => el.type === "Group" && el.props.x === 420)[0];
   const tableNode = { x: () => 520, y: () => 900, position() {} };
@@ -500,39 +503,154 @@ test("later canvas pages translate paths and both guest drag modes into the orig
   assert.deepEqual(moving.calls.tables.at(-1), ["move", table.id, { x: 420, y: 820 }]);
 });
 
-test("dropping an assigned guest outside the visible page cancels rather than seating it on a hidden page", () => {
+test("dropping a seated party outside the canvas releases it rather than placing it on a hidden page", () => {
   let cancelled = 0;
-  const f = canvasFixture({ layout: { ...layout(), height: 1240 }, pageOffset: 400, tool: "move", onGuestCancel: () => cancelled++ });
-  const circle = elements(f.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+  const released = [];
+  const f = canvasFixture({ layout: { ...layout(), height: 1240 }, pageOffset: 400, tool: "move", onGuestCancel: () => cancelled++, onGuestRelease: async (id) => released.push(id) });
+  const circle = draggableSeatGroups(f.tree)[0];
   const node = { getStage: () => ({ getRelativePointerPosition: () => ({ x: 440, y: -30 }) }), position() {} };
-  circle.props.onDragEnd({ target: node });
-  assert.equal(cancelled, 1); assert.deepEqual(f.calls.guests, []);
+  circle.props.onDragEnd({ target: node, evt: { type: "mouseup" } });
+  assert.equal(cancelled, 0); assert.deepEqual(f.calls.guests, []); assert.deepEqual(released, ["guest-a"]);
 });
 
-test("canvas returns a whole seated party to the DOM roster using mouse/touch client coordinates", () => {
-  for (const evt of [{ clientX: 950, clientY: 280 }, { changedTouches: [{ clientX: 950, clientY: 280 }] }]) {
+test("mouse/touch drops anywhere outside the canvas release the same whole party", () => {
+  for (const evt of [{ type: "mouseup", clientX: 5, clientY: 10 }, { type: "touchend", changedTouches: [{ clientX: 950, clientY: 280 }] }]) {
     const returned = [], positions = [], f = canvasFixture({ tool: "move", pageOffset: 400,
       layout: { ...layout(), height: 1240 },
-      onGuestReturn: (id, point) => { returned.push([id, point]); return true; },
+      onGuestRelease: async (id) => { returned.push(id); },
     });
-    const circle = elements(f.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+    const circle = draggableSeatGroups(f.tree)[0];
     const node = { getStage: () => ({ getRelativePointerPosition: () => ({ x: 1500, y: 800 }) }), position: (point) => positions.push(point) };
     circle.props.onDragEnd({ target: node, evt });
-    assert.deepEqual(returned, [["guest-a", { x: 950, y: 280 }]]);
-    assert.deepEqual(positions, [{ x: 0, y: 0 }]); assert.deepEqual(f.calls.guests, []);
+    assert.deepEqual(returned, ["guest-a"]);
+    assert.deepEqual(positions, [{ x: circle.props.x, y: circle.props.y }]); assert.deepEqual(f.calls.guests, []);
   }
 });
 
 test("canvas seat click/tap selects its canonical guest and Escape dismisses the selected actions", () => {
   const selected = [], f = canvasFixture({ tool: "move", onGuestSelect: (id) => selected.push(id) });
-  const circle = elements(f.tree, (el) => el.type === "Circle" && el.props.draggable)[0];
+  const circle = draggableSeatGroups(f.tree)[0];
   for (const action of ["onClick", "onTap"]) {
     const event = {}; circle.props[action](event); assert.equal(event.cancelBubble, true);
   }
   assert.deepEqual(selected, ["guest-a", "guest-a"]);
   f.tree.props.onKeyDown({ key: "Escape" }); assert.deepEqual(selected, ["guest-a", "guest-a", ""]);
   const busy = canvasFixture({ tool: "move", busy: true, onGuestSelect: () => assert.fail("busy seat must not select") });
-  elements(busy.tree, (el) => el.type === "Circle")[1].props.onClick({});
+  elements(busy.tree, (el) => el.type === "Group" && el.props.onDragMove)[0].props.onClick({});
+});
+
+test("cancelled touch/programmatic guest drags restore the seat without changing assignment", () => {
+  for (const evt of [undefined, { type: "touchcancel" }, { type: "pointercancel" }]) {
+    let cancelled = 0;
+    const f = canvasFixture({ tool: "move", onGuestRelease: () => assert.fail("cancel is not a drop"), onGuestCancel: () => cancelled++ });
+    const seat = draggableSeatGroups(f.tree)[0], positions = [];
+    seat.props.onDragEnd({ evt, target: { getStage: () => ({ getRelativePointerPosition: () => ({ x: 1500, y: 900 }) }), position: (p) => positions.push(p) } });
+    assert.deepEqual(positions, [{ x: seat.props.x, y: seat.props.y }]);
+    assert.equal(cancelled, 1); assert.deepEqual(f.calls.guests, []);
+  }
+});
+
+test("outside the visible scroll viewport releases a party even when the full stage still reports a hidden seat", () => {
+  for (const evt of [{ type: "mouseup", clientX: 250, clientY: 105 }, { type: "touchend", changedTouches: [{ clientX: 250, clientY: 105 }] }]) {
+    const released = [], f = canvasFixture({ tool: "move", onGuestRelease: async (id) => released.push(id) });
+    f.tree.props.ref.current.getBoundingClientRect = () => ({ left: 30, right: 580, top: -50, bottom: 40 });
+    const seat = draggableSeatGroups(f.tree)[0];
+    seat.props.onDragEnd({ evt, target: { getStage: () => ({ getRelativePointerPosition: () => ({ x: 420, y: 246 }) }), position() {} } });
+    assert.deepEqual(released, ["guest-a"]); assert.deepEqual(f.calls.guests, []);
+  }
+});
+
+test("real Konva mouse/touch bubbling drags names and companion seats as their whole party, never the table", (t) => {
+  // Only font metrics and the DOM stage boundary are stubbed; Konva selects,
+  // bubbles, moves and ends the drag through its actual Node/DD implementation.
+  t.mock.method(Konva.Util, "createCanvasElement", () => ({ getContext: () => ({ measureText: (text) => ({ width: Array.from(text).length * 6 }) }) }));
+  const autoDraw = Konva.autoDrawEnabled; Konva.autoDrawEnabled = false;
+  t.after(() => { DD._dragElements.clear(); Konva.autoDrawEnabled = autoDraw; });
+  for (const touch of [false, true]) for (const surface of ["circle", "name"]) {
+    const released = [], guest = { id: "party", name: "hendra", invitedPax: 3, tableId: table.id, seatNumber: 8 };
+    const f = canvasFixture({ tool: "move", guests: [guest], onGuestRelease: async (id) => released.push(id) });
+    const stage = new Konva.Group(), id = touch ? 41 : 999;
+    const boundary = {
+      _changedPointerPositions: [],
+      setPointersPositions(evt) {
+        const pointer = evt.touches?.[0] ?? evt.changedTouches?.[0] ?? evt;
+        this._changedPointerPositions = [{ id, x: (pointer.clientX - 30) * 2, y: (pointer.clientY + 50) * 2 }];
+      },
+      _getPointerById() { return this._changedPointerPositions[0]; },
+      getRelativePointerPosition() { return this._changedPointerPositions[0]; },
+    };
+    stage.getStage = () => boundary;
+    function mount(element, parent) {
+      if (!element || typeof element !== "object") return;
+      if (element.type === "div" || element.type === "Stage") {
+        React.Children.toArray(element.props.children).forEach((child) => mount(child, parent)); return;
+      }
+      const { children, ref, ...props } = element.props;
+      const attrs = Object.fromEntries(Object.entries(props).filter(([key]) => !key.startsWith("on")));
+      const node = new Konva[element.type === "Layer" ? "Group" : element.type](attrs);
+      parent.add(node);
+      for (const [key, handler] of Object.entries(props)) if (key.startsWith("on")) node.on(key.slice(2).toLowerCase(), handler);
+      if (typeof ref === "function") ref(node);
+      React.Children.toArray(children).forEach((child) => mount(child, node));
+      return node;
+    }
+    mount(f.tree, stage);
+    const tableNode = stage.find("Group").find((node) => node.draggable() && node.x() === 420);
+    const seatNode = tableNode.children.find((node) => node instanceof Konva.Group && Math.abs(node.y() + 64) < 0.001);
+    const hit = surface === "circle" ? seatNode.children[0] : seatNode.children.find((node) => node instanceof Konva.Text && node.text() === "Hendra 2");
+    assert.equal(hit.isListening(), true);
+    const seatPosition = seatNode.position(), tablePosition = tableNode.position();
+    const origin = hit.getAbsolutePosition(), client = { clientX: origin.x / 2 + 30, clientY: origin.y / 2 - 50 };
+    const event = (type, pointer) => touch
+      ? { type, touches: type === "touchend" ? [] : [{ identifier: id, ...pointer }], changedTouches: [{ identifier: id, ...pointer }] }
+      : { type, button: 0, ...pointer };
+    const down = event(touch ? "touchstart" : "mousedown", client);
+    boundary.setPointersPositions(down); hit.fire(down.type, { evt: down }, true);
+    assert.deepEqual([...DD._dragElements.values()].map((entry) => entry.node), [seatNode]);
+    const move = event(touch ? "touchmove" : "mousemove", { clientX: 10, clientY: 500 });
+    DD._drag(move);
+    assert.equal(seatNode.isDragging(), true);
+    assert.deepEqual(f.calls.guests[0], ["start", guest.id]);
+    const up = event(touch ? "touchend" : "mouseup", { clientX: 10, clientY: 500 });
+    DD._endDragBefore(up); DD._endDragAfter(up);
+    assert.deepEqual(released, [guest.id]); assert.deepEqual(seatNode.position(), seatPosition);
+    assert.deepEqual(tableNode.position(), tablePosition);
+    assert.ok(!f.calls.tables.some(([action]) => action === "move"));
+    assert.equal(DD._dragElements.size, 0);
+    stage.destroy();
+  }
+});
+
+test("party names follow each seat outward with matching canvas/print wrapping and complete capitalization", () => {
+  const guest = { id: "party", name: "hendra", tableId: table.id, seatNumber: 1, invitedPax: 8 };
+  const f = canvasFixture({ guests: [guest], tool: "move" });
+  const printed = PrintModule.default ?? PrintModule;
+  const svg = printed({ title: "Acara", layout: layout(), tables: [table], guests: [guest], locale: "id" });
+  const canvasLabels = elements(f.tree, (el) => el.type === "Text" && el.props.text.startsWith("Hendra"));
+  const printLabels = elements(svg, (el) => el.type === "text" && el.props.dominantBaseline === "text-before-edge");
+  assert.equal(canvasLabels.length, 8); assert.equal(printLabels.length, 8);
+  assert.ok(canvasLabels[0].props.y < -geometry.SEATING_SEAT_RADIUS); // seat 1, above
+  assert.ok(canvasLabels[2].props.x > geometry.SEATING_SEAT_RADIUS); // seat 3, right
+  assert.ok(canvasLabels[4].props.y > geometry.SEATING_SEAT_RADIUS); // seat 5, below
+  assert.ok(canvasLabels[6].props.x < -geometry.SEATING_SEAT_RADIUS); // seat 7, left
+  assert.deepEqual([0, 2, 4, 6].map((i) => canvasLabels[i].props.align), ["center", "left", "center", "right"]);
+  canvasLabels.forEach((label, i) => {
+    assert.equal(label.props.text, `Hendra ${i + 1}`); assert.equal(label.props.listening, true);
+    assert.equal(label.props.x, printLabels[i].props.x); assert.equal(label.props.y, printLabels[i].props.y);
+    assert.equal(label.props.fontSize, printLabels[i].props.fontSize);
+  });
+  const long = "alexander christopher wirawan suryanegara";
+  const expected = guestSeats.seatingGuestSeatLabel({ ...guest, name: long }, 3, 8);
+  const longCanvas = canvasFixture({ guests: [{ ...guest, name: long }], tool: "move" });
+  const label = elements(longCanvas.tree, (el) => el.type === "Text" && el.props.text.endsWith("3"))[1];
+  const split = geometry.seatingSeatLabelLayout(expected, 2, 8);
+  assert.equal(split.lines.join(" "), expected); assert.ok(split.lines.length > 1);
+  assert.ok(label.props.text.includes("\n")); assert.equal(label.props.width, undefined); // auto width never clips a name
+  const printLong = printed({ title: "Acara", layout: layout(), tables: [table], guests: [{ ...guest, name: long }], locale: "id" });
+  const lines = elements(printLong, (el) => el.type === "text" && el.props.dominantBaseline === "text-before-edge")[2];
+  assert.deepEqual(elements(lines, (el) => el.type === "tspan").map((span) => span.props.children), split.lines);
+  const word = "ABCDEFGHIJKLMNOPQRSTUVWXY";
+  assert.equal(geometry.seatingSeatLabelLayout(word, 0, 8).lines.join(""), word);
 });
 
 const Print = PrintModule.default ?? PrintModule;
@@ -770,21 +888,34 @@ test("release blocks same-frame duplicates and ignores aborted late replies", as
   assert.equal(f.writes(), writes); assert.deepEqual(chartCanvas(f.render(props)).guests, [guest]);
 });
 
-test("Konva return checks the actual right-list bounds and current guest before any release", async (t) => {
+test("empty canvas drops return seated parties but preserve waiting rows; valid seats still accept placement", async (t) => {
   const guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true), requests = [];
   t.mock.method(globalThis, "fetch", async (url, options) => {
     requests.push({ url, options }); return Response.json({ guest: { ...guest, invitationId: "event-a", tableId: null, seatNumber: null } });
   });
   let tree = f.render(props);
-  const aside = elements(tree, (el) => el.type === "aside")[0];
-  aside.props.ref.current = { getBoundingClientRect: () => ({ left: 900, right: 1200, top: 200, bottom: 850 }) };
-  assert.equal(chartCanvas(tree).onGuestReturn(guest.id, { x: 500, y: 500 }), false);
-  assert.equal(chartCanvas(tree).onGuestReturn("unknown", { x: 950, y: 500 }), false);
-  assert.equal(chartCanvas(tree).onGuestReturn(guest.id, { x: NaN, y: 500 }), false);
+  await chartCanvas(tree).onGuestRelease("unknown");
   assert.equal(requests.length, 0);
-  assert.equal(chartCanvas(tree).onGuestReturn(guest.id, { x: 950, y: 500 }), true); await flush(); tree = f.render(props);
+  await chartCanvas(tree).onGuestDrop(guest.id, { x: 800, y: 550 }); tree = f.render(props);
   assert.equal(requests.length, 1); assert.equal(rosterRows(tree)[0].props["data-guest-id"], guest.id);
   assert.equal(chartCanvas(tree).guests[0].tableId, null);
+  assert.deepEqual(JSON.parse(requests[0].options.body), { tableId: null, seatNumber: null });
+  await chartCanvas(tree).onGuestDrop(guest.id, { x: 800, y: 550 }); tree = f.render(props);
+  assert.equal(requests.length, 1); assert.equal(rosterRows(tree).length, 1);
+  const moves = [], mover = chartFixture({}, true);
+  let moving = mover.render({ ...props, onAssigned: async (...args) => moves.push(args) });
+  chartCanvas(moving).onGuestStart(guest.id); moving = mover.render({ ...props, onAssigned: async (...args) => moves.push(args) });
+  await chartCanvas(moving).onGuestDrop(guest.id, geometry.seatingSeatPoint(layout().tables[table.id], 3, table.capacity));
+  assert.deepEqual(moves, [[guest.id, table.id, 4]]); assert.equal(requests.length, 1);
+});
+
+test("a same-frame guest drop uses the dragged identity rather than stale hover state for collision checks", async () => {
+  const guest = rosterProps.guests[2], moves = [], f = chartFixture({}, true);
+  const tree = f.render({ ...chartProps, guests: [guest], onAssigned: async (...args) => moves.push(args) });
+  // onGuestStart has not rendered yet; the saved anchor is occupied by this party.
+  chartCanvas(tree).onGuestStart(guest.id);
+  await chartCanvas(tree).onGuestDrop(guest.id, geometry.seatingSeatPoint(layout().tables[table.id], 7, table.capacity));
+  assert.deepEqual(moves, [[guest.id, table.id, 8]]);
 });
 
 test("legacy table reservations without a seat anchor remain in the right list and can be placed", async () => {
@@ -1312,9 +1443,9 @@ test("actual canvas and print label every seat of a lowercase party without spli
   const f = canvasFixture({ guests: [guest], tool: "move" });
   const texts = elements(f.tree, (el) => el.type === "Text").map((el) => el.props.text);
   for (const label of ["Hendra Wijaya 1", "Hendra Wijaya 2", "Hendra Wijaya 3", "Hendra Wijaya 4", "Meja Keluarga"]) assert.ok(texts.includes(label), label);
-  assert.equal(elements(f.tree, (el) => el.type === "Circle" && el.props.draggable).length, 1);
+  assert.equal(draggableSeatGroups(f.tree).length, guestSeats.seatingPartySize(guest));
   const html = printHtml({ guests: [guest] });
-  for (let member = 1; member <= 4; member++) assert.ok(html.includes(`>Hendra Wijaya ${member}</text>`));
+  for (let member = 1; member <= 4; member++) assert.ok(html.includes(`>Hendra Wijaya ${member}</tspan>`));
   assert.ok(html.includes("<td>7, 8, 1, 2</td><td>Hendra Wijaya · 4 pax</td>"));
   const unassigned = chartFixture();
   const roster = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "id" }, React.createElement(unassigned.Chart, { ...chartProps, guests: [{ ...guest, source: "MANUAL", tableId: null, seatNumber: null }] })));

@@ -83,7 +83,6 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [drawing, setDrawing] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState("");
   const [selectedGuestId, setSelectedGuestId] = useState("");
-  const rosterContainer = useRef<HTMLElement | null>(null);
   const [pageSelection, setPageSelection] = useState({ invitationId, index: 0 });
   const [printing, setPrinting] = useState(false);
   const printCleanup = useRef<(() => void) | null>(null);
@@ -348,10 +347,14 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
   async function assignGuestAtPoint(guestId: string, point: SeatingPoint) {
     if (layoutBusy || drawing || guestMutationBusy.current) return;
-    const target = targetAtPoint(point);
+    const target = findSeatingSeatTarget(point, visibleTables, visibleGuests, guestId, layout);
     setHoverTarget(null);
 
     if (!target) {
+      if (visibleGuests.some((guest) => guest.id === guestId && guest.tableId && guest.seatNumber)) {
+        await releaseGuest(guestId);
+        return;
+      }
       setMessage(d("Jatuhkan tamu tepat di kursi."));
       setDraggedGuestId(null);
       return;
@@ -412,16 +415,6 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       if (guestRequest.current === controller) { guestRequest.current = null; guestMutationBusy.current = false; }
       if (!controller.signal.aborted) setSavingGuestId(null);
     }
-  }
-
-  function returnGuestToRoster(guestId: string, clientPoint: SeatingPoint) {
-    if (toolbarBusy || tool !== "move" || guestMutationBusy.current) return false;
-    const bounds = rosterContainer.current?.getBoundingClientRect();
-    if (!bounds || !Number.isFinite(clientPoint.x) || !Number.isFinite(clientPoint.y)
-      || clientPoint.x < bounds.left || clientPoint.x > bounds.right || clientPoint.y < bounds.top || clientPoint.y > bounds.bottom) return false;
-    if (!visibleGuests.some((guest) => guest.id === guestId && guest.tableId && guest.seatNumber)) return false;
-    void releaseGuest(guestId);
-    return true;
   }
 
   async function confirmSwap() {
@@ -696,7 +689,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
               onDrawingChange={setDrawing}
               onExitDraw={() => setTool("move")}
               onGuestStart={(id) => { setDraggedGuestId(id); setSelectedGuestId(id); setSwapCandidate(null); }} onGuestHover={setHoverFromPoint} onGuestDrop={assignGuestAtPoint}
-              onGuestReturn={returnGuestToRoster}
+              onGuestRelease={releaseGuest}
               onGuestCancel={() => { setDraggedGuestId(null); setHoverTarget(null); }}
               onUndo={() => plan.dispatch({ type: "UNDO" })} onRedo={() => plan.dispatch({ type: "REDO" })}
               label={d("Denah: pilih meja, lalu gunakan tombol panah untuk menggeser.")} emptyLabel={d("Atur jumlah meja dan kursi untuk membuat denah.")}
@@ -717,13 +710,8 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
               </Button>
             </div>}
           </div>
-          <aside ref={rosterContainer} aria-label={d("Daftar tamu")}
-            className={cn("min-w-0 border-t border-border pt-4 @min-[52rem]:border-t-0 @min-[52rem]:border-l @min-[52rem]:pt-0 @min-[52rem]:pl-4", draggedGuest?.tableId && draggedGuest.seatNumber && "bg-primary/5 outline outline-1 outline-primary/30")}
-            onDragOver={(event) => { if (draggedGuest?.tableId && draggedGuest.seatNumber && !toolbarBusy && tool === "move") { event.preventDefault(); event.dataTransfer.dropEffect = "move"; } }}
-            onDrop={(event) => {
-              if (!draggedGuest?.tableId || !draggedGuest.seatNumber || toolbarBusy || tool !== "move") return;
-              event.preventDefault(); void releaseGuest(draggedGuest.id);
-            }}>
+          <aside aria-label={d("Daftar tamu")}
+            className={cn("min-w-0 self-stretch border-t border-border pt-4 @min-[52rem]:border-t-0 @min-[52rem]:border-l @min-[52rem]:pt-0 @min-[52rem]:pl-4", draggedGuest?.tableId && draggedGuest.seatNumber && "bg-primary/5 outline outline-1 outline-primary/30")}>
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-lg font-semibold">{d("Daftar tamu")}</h3>
               <DashboardStatusBadge active={rosterGuests.length > 0}>

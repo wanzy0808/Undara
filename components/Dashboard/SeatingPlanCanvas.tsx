@@ -9,13 +9,13 @@ import { seatingCanvasColors } from "@/lib/seating/appearance";
 import { seatingGuestAtSeat, seatingGuestSeatLabel, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { clampSeatingPoint, seatingPointFromClient, SEATING_TABLE_MARGIN, SEATING_WIDTH, type SeatingPlan, type SeatingPoint } from "@/lib/seating/plan";
-import { seatingSeatPoint, seatingTableBounds, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_STAGE_HEIGHT, SEATING_TABLE_BODY_RADIUS } from "./seating-chart-geometry";
+import { seatingSeatLabelLayout, seatingSeatPoint, seatingTableBounds, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_STAGE_HEIGHT, SEATING_TABLE_BODY_RADIUS } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingSeatTarget, SeatingTable } from "./seating-chart-types";
 
 const noPoints: number[] = [];
 export default function SeatingPlanCanvas({
   layout, tables, guests, tool, dark, busy, draggedGuestId, hoverTarget, selectedTableId,
-  onTableSelect, onTableMove, onPath, onDrawingChange, onExitDraw, onGuestStart, onGuestHover, onGuestDrop, onGuestReturn, onGuestSelect, onGuestCancel, onUndo, onRedo, label, emptyLabel, pageOffset = 0,
+  onTableSelect, onTableMove, onPath, onDrawingChange, onExitDraw, onGuestStart, onGuestHover, onGuestDrop, onGuestRelease, onGuestSelect, onGuestCancel, onUndo, onRedo, label, emptyLabel, pageOffset = 0,
 }: {
   layout: SeatingPlan; tables: SeatingTable[]; guests: SeatingGuest[]; tool: "move" | "draw";
   dark: boolean; busy: boolean; draggedGuestId: string | null; hoverTarget: SeatingSeatTarget | null; selectedTableId: string;
@@ -25,8 +25,7 @@ export default function SeatingPlanCanvas({
   onGuestDrop: (id: string, point: SeatingPoint) => Promise<void>; onUndo: () => void; onRedo: () => void;
   onGuestCancel?: () => void;
   onGuestSelect?: (id: string) => void;
-  /** Client coordinates allow dropping a Konva guest onto the DOM roster. */
-  onGuestReturn?: (id: string, clientPoint: SeatingPoint) => boolean;
+  onGuestRelease?: (id: string) => Promise<void>;
   label: string; emptyLabel: string; pageOffset?: number;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -72,16 +71,17 @@ export default function SeatingPlanCanvas({
     const point = bounds ? seatingPointFromClient({ x: event.clientX, y: event.clientY }, bounds, height) : null;
     return point ? { x: point.x, y: point.y + offset } : null;
   }
-  function guestPointAt(node: Konva.Node) {
-    const point = node.getStage()?.getRelativePointerPosition();
-    if (!point || point.x < 0 || point.x > SEATING_WIDTH || point.y < 0 || point.y > height) return null;
-    return { x: point.x, y: point.y + offset };
-  }
-  function guestClientPoint(event: KonvaEventObject<DragEvent>) {
+  function guestPointAt(node: Konva.Node, event: KonvaEventObject<DragEvent>) {
     const native = event.evt as unknown as { clientX?: number; clientY?: number; changedTouches?: ArrayLike<{ clientX: number; clientY: number }> } | undefined;
     const pointer = native?.changedTouches?.[0] ?? native;
-    return typeof pointer?.clientX === "number" && typeof pointer.clientY === "number"
-      ? { x: pointer.clientX, y: pointer.clientY } : null;
+    if (typeof pointer?.clientX === "number" && typeof pointer.clientY === "number") {
+      const bounds = container.current?.getBoundingClientRect();
+      if (bounds && (pointer.clientX < bounds.left || pointer.clientX > bounds.right || pointer.clientY < bounds.top || pointer.clientY > bounds.bottom)) return null;
+      return pointAt({ clientX: pointer.clientX, clientY: pointer.clientY });
+    }
+    const point = node.getStage()?.getRelativePointerPosition();
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.x > SEATING_WIDTH || point.y < 0 || point.y > height) return null;
+    return { x: point.x, y: point.y + offset };
   }
   function startPath(event: React.PointerEvent<HTMLDivElement>) {
     if (busy) return;
@@ -174,26 +174,29 @@ export default function SeatingPlanCanvas({
                 {Array.from({ length: table.capacity }, (_, seatIndex) => {
                   const seat = seatIndex + 1, point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);
                   const guest = seatingGuestAtSeat(guests, table.id, seat, table.capacity);
-                  const anchor = guest?.seatNumber === seat;
+                  const label = guest ? seatingSeatLabelLayout(seatingGuestSeatLabel(guest, seat, table.capacity), seatIndex, table.capacity) : null;
                   const highlighted = highlightedSeats.has(seat);
-                  return <Group key={seat} x={point.x} y={point.y}>
-                    <Circle radius={highlighted ? SEATING_SEAT_RADIUS + 5 : SEATING_SEAT_RADIUS} fill={guest ? colors.seatOccupied : colors.seatEmpty}
-                      stroke={colors.seatStroke} strokeWidth={highlighted ? 5 : 2} draggable={Boolean(guest && anchor) && tool === "move" && !busy}
+                  return <Group key={seat} x={point.x} y={point.y} draggable={Boolean(guest) && tool === "move" && !busy}
                       onClick={(event) => { if (guest && tool === "move" && !busy) { event.cancelBubble = true; onTableSelect(table.id); onGuestSelect?.(guest.id); } }}
                       onTap={(event) => { if (guest && tool === "move" && !busy) { event.cancelBubble = true; onTableSelect(table.id); onGuestSelect?.(guest.id); } }}
-                      onDragStart={(event) => { event.cancelBubble = true; if (guest && anchor) onGuestStart(guest.id); }}
-                      onDragMove={(event) => { event.cancelBubble = true; const point = guestPointAt(event.target); if (point) onGuestHover(point); }}
+                      onDragStart={(event) => { event.cancelBubble = true; if (guest) { onTableSelect(table.id); onGuestStart(guest.id); } }}
+                      onDragMove={(event) => { event.cancelBubble = true; const point = guestPointAt(event.target, event); if (point) onGuestHover(point); }}
                       onDragEnd={(event) => {
                         event.cancelBubble = true;
-                        const point = guestPointAt(event.target);
-                        const clientPoint = guestClientPoint(event);
-                        event.target.position({ x: 0, y: 0 });
-                        if (guest && anchor && clientPoint && onGuestReturn?.(guest.id, clientPoint)) return;
-                        if (guest && anchor && point) void onGuestDrop(guest.id, point);
+                        const dropPoint = guestPointAt(event.target, event);
+                        event.target.position(point);
+                        if (!event.evt || event.evt.type === "touchcancel" || event.evt.type === "pointercancel") { onGuestCancel?.(); return; }
+                        if (guest && dropPoint) void onGuestDrop(guest.id, dropPoint);
+                        else if (guest && onGuestRelease) void onGuestRelease(guest.id);
                         else onGuestCancel?.();
-                      }} />
+                      }}>
+                    <Circle radius={highlighted ? SEATING_SEAT_RADIUS + 5 : SEATING_SEAT_RADIUS} fill={guest ? colors.seatOccupied : colors.seatEmpty}
+                      stroke={colors.seatStroke} strokeWidth={highlighted ? 5 : 2} />
                     <Text x={-12} y={-6} width={24} align="center" text={String(seat)} fontSize={10} fill={guest ? "#321B1B" : colors.seatStroke} listening={false} />
-                    {guest && <Text x={-50} y={20} width={100} align="center" text={seatingGuestSeatLabel(guest, seat, table.capacity)} wrap="word" fontFamily="Roboto" fontSize={11} fill={colors.guestText} listening={false} />}
+                    {label && <Text x={label.x} y={label.y} align={label.align} text={label.lines.join("\n")} wrap="none"
+                      ref={(node) => { if (node) node.offsetX(node.width() * label.horizontalAnchor); }}
+                      fontFamily="Roboto" fontSize={label.fontSize} lineHeight={label.lineHeight / label.fontSize} fill={colors.guestText}
+                      listening={tool === "move" && !busy} />}
                   </Group>;
                 })}
               </Group>

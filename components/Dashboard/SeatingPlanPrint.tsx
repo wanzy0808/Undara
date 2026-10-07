@@ -3,7 +3,7 @@ import { displayTitleCase } from "@/lib/text/display-title-case";
 import { seatingCanvasColors } from "@/lib/seating/appearance";
 import { seatingGuestAtSeat, seatingGuestSeatLabel, seatingGuestSeats, seatingPartySize } from "@/lib/seating/guest-seats";
 import { SEATING_WIDTH, type SeatingPlan } from "@/lib/seating/plan";
-import { seatingPlanPageOffsets, seatingSeatPoint, seatingTableBounds, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_TABLE_BODY_RADIUS } from "./seating-chart-geometry";
+import { seatingPlanPageOffsets, seatingSeatLabelLayout, seatingSeatPoint, seatingTableBounds, seatingTableCenter, SEATING_SEAT_RADIUS, SEATING_TABLE_BODY_RADIUS } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingTable } from "./seating-chart-types";
 
 export const seatingPrintCss = `
@@ -59,11 +59,13 @@ export default function SeatingPlanPrint({ title, layout, tables, guests, locale
               const point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);
               const seat = seatIndex + 1;
               const guest = seatingGuestAtSeat(guests, table.id, seat, table.capacity);
-              const label = guest ? seatingGuestSeatLabel(guest, seat, table.capacity) : "";
+              const label = guest ? seatingSeatLabelLayout(seatingGuestSeatLabel(guest, seat, table.capacity), seatIndex, table.capacity) : null;
               return <g key={seatIndex} transform={`translate(${point.x} ${point.y})`}>
                 <circle r={SEATING_SEAT_RADIUS} fill={guest ? colors.seatOccupied : colors.seatEmpty} stroke={colors.seatStroke} strokeWidth={2} />
                 <text textAnchor="middle" dominantBaseline="middle" fontSize={10} fill={guest ? "#321B1B" : colors.seatStroke}>{seat}</text>
-                {guest && <text y={31} textAnchor="middle" fontSize={10} fill={colors.guestText}>{label}</text>}
+                {label && <text x={label.x} y={label.y} textAnchor={label.textAnchor} dominantBaseline="text-before-edge" fontSize={label.fontSize} fill={colors.guestText}>
+                  {label.lines.map((line, index) => <tspan key={index} x={label.x} y={label.y + index * label.lineHeight}>{line}</tspan>)}
+                </text>}
               </g>;
             })}
           </g>;

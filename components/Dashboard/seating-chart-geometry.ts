@@ -102,6 +102,35 @@ export function seatingSeatPoint(
   };
 }
 
+/** Keep names outside their seats; wrap complete names the same way in print. */
+export function seatingSeatLabelLayout(text: string, index: number, capacity: number) {
+  const lines: string[] = [];
+  let line = "";
+  for (const word of text.trim().split(/\s+/u)) {
+    const letters = Array.from(word);
+    for (let start = 0; start < letters.length; start += 18) {
+      const part = letters.slice(start, start + 18).join("");
+      const next = line ? `${line} ${part}` : part;
+      if (Array.from(next).length > 18) { lines.push(line); line = part; }
+      else line = next;
+    }
+  }
+  if (line) lines.push(line);
+  const angle = (Math.PI * 2 * index) / Math.max(capacity, 1) - Math.PI / 2;
+  const horizontal = Math.cos(angle), vertical = Math.sin(angle);
+  const horizontalAnchor = horizontal > 0.35 ? 0 : horizontal < -0.35 ? 1 : 0.5;
+  const verticalAnchor = vertical < -0.35 ? 1 : vertical > 0.35 ? 0 : 0.5;
+  const fontSize = 11, lineHeight = 14, height = lines.length * lineHeight;
+  const textAnchor: "start" | "end" | "middle" = horizontalAnchor === 0 ? "start" : horizontalAnchor === 1 ? "end" : "middle";
+  return {
+    x: horizontal * (SEATING_SEAT_RADIUS + 8),
+    y: vertical * (SEATING_SEAT_RADIUS + 8) - height * verticalAnchor,
+    horizontalAnchor, fontSize, lineHeight, lines,
+    align: horizontalAnchor === 0 ? "left" : horizontalAnchor === 1 ? "right" : "center",
+    textAnchor,
+  };
+}
+
 export function findSeatingSeatTarget(
   point: SeatingPoint,
   tables: SeatingTable[],
