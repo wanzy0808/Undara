@@ -16,9 +16,12 @@ export async function hasAccountDigitalInvitation(
   userId: string,
   directPayment?: PaymentLike,
   invitationId?: string,
+  includeUnconfigured = false,
 ) {
   if (hasPaidDigitalInvitation(directPayment)) return true;
-  if (invitationId) return hasOwnerDigitalInvitationGrant(userId, invitationId);
+  if (invitationId) {
+    return hasOwnerDigitalInvitationGrant(userId, invitationId, includeUnconfigured);
+  }
 
   // Backward-compatible account-level capability checks. Sensitive event routes should pass
   // invitationId so one Owner credit can never unlock every invitation.
