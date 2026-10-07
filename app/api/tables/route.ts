@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       include: { payment: true },
       orderBy: invitationId ? undefined : { createdAt: "asc" },
     });
-    if (!invitation || !(await hasAccountDigitalInvitation(user.id, invitation.payment))) {
+    if (!invitation || !(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))) {
       return NextResponse.json({ error: "Table arrangement membutuhkan paket Digital Invitation." }, { status: 402 });
     }
 
