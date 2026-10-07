@@ -38,7 +38,7 @@ import {
   UsherPanel,
   WorkspaceOverview,
 } from "@/components/Dashboard/DashboardWorkspaces";
-import { dashboardTabMeta, guestManagementTabs, invitationTabs } from "@/components/Dashboard/dashboard-navigation";
+import { dashboardHrefForTab, dashboardTabFromSearch, dashboardTabMeta, guestManagementTabs, invitationTabs } from "@/components/Dashboard/dashboard-navigation";
 import DashboardSidebar from "@/components/Dashboard/DashboardSidebar";
 import DashboardAccountPanel from "@/components/Dashboard/DashboardAccountPanel";
 import DashboardWhatsAppHelp from "@/components/Dashboard/DashboardWhatsAppHelp";
@@ -126,10 +126,21 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    const syncTabFromLocation = () => {
+      if (window.location.pathname !== "/dashboard") return;
+      const nextTab = dashboardTabFromSearch(window.location.search);
+      setTab(nextTab);
+      if (invitationTabs.has(nextTab)) setInvitationMenuOpen(true);
+      if (guestManagementTabs.has(nextTab)) setGuestMenuOpen(true);
+      setMobileOpen(false);
+      setProfileMenu(false);
+      if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0;
+    };
+
+    syncTabFromLocation();
+    window.addEventListener("popstate", syncTabFromLocation);
+
     const params = new URLSearchParams(window.location.search);
-    if (params.get("tab") === "events") {
-      setTab("events");
-    }
     // Only resume a locally saved theme during an explicit catalog->event flow:
     // browsing the Dashboard normally must not overwrite another event's design.
     if (params.get("from") === "template") {
@@ -140,6 +151,8 @@ export default function DashboardPage() {
         rememberTemplateSelection(selected);
       }
     }
+
+    return () => window.removeEventListener("popstate", syncTabFromLocation);
   }, []);
 
   useEffect(() => {
@@ -352,6 +365,10 @@ export default function DashboardPage() {
     if (guestManagementTabs.has(id)) setGuestMenuOpen(true);
     setMobileOpen(false);
     setProfileMenu(false);
+
+    const href = dashboardHrefForTab(id, window.location.search);
+    const currentHref = `${window.location.pathname}${window.location.search}`;
+    if (href !== currentHref) window.history.pushState(null, "", href);
   }
 
   const meta = dashboardTabMeta[tab];
