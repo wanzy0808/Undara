@@ -24,7 +24,7 @@ export * as $Enums from './enums'
 export * from "./enums"
 /**
  * ## Prisma Client
- *
+ * 
  * Type-safe database client for TypeScript
  * @example
  * ```
@@ -34,7 +34,7 @@ export * from "./enums"
  * // Fetch zero or more Users
  * const users = await prisma.user.findMany()
  * ```
- *
+ * 
  * Read more in our [docs](https://pris.ly/d/client).
  */
 export const PrismaClient = $Class.getPrismaClientClass()
@@ -43,86 +43,86 @@ export { Prisma }
 
 /**
  * Model User
- *
+ * 
  */
 export type User = Prisma.UserModel
 /**
  * Model Session
- *
+ * 
  */
 export type Session = Prisma.SessionModel
 /**
  * Model EmailVerificationToken
- *
+ * 
  */
 export type EmailVerificationToken = Prisma.EmailVerificationTokenModel
 /**
  * Model AccountActionToken
- *
+ * 
  */
 export type AccountActionToken = Prisma.AccountActionTokenModel
 /**
  * Model Invitation
- *
+ * 
  */
 export type Invitation = Prisma.InvitationModel
 /**
  * Model InvitationAsset
- *
+ * 
  */
 export type InvitationAsset = Prisma.InvitationAssetModel
 /**
  * Model Payment
- *
+ * 
  */
 export type Payment = Prisma.PaymentModel
 /**
  * Model PaymentOrder
- *
+ * 
  */
 export type PaymentOrder = Prisma.PaymentOrderModel
 /**
  * Model DesignerAsset
- *
+ * 
  */
 export type DesignerAsset = Prisma.DesignerAssetModel
 /**
  * Model DesignerTemplate
- *
+ * 
  */
 export type DesignerTemplate = Prisma.DesignerTemplateModel
 /**
  * Model SeatingPlan
- *
+ * 
  */
 export type SeatingPlan = Prisma.SeatingPlanModel
 /**
  * Model WeddingTable
- *
+ * 
  */
 export type WeddingTable = Prisma.WeddingTableModel
 /**
  * Model Guest
- *
+ * 
  */
 export type Guest = Prisma.GuestModel
 /**
  * Model GuestSessionCheckIn
- *
+ * 
  */
 export type GuestSessionCheckIn = Prisma.GuestSessionCheckInModel
 /**
  * Model GuestWish
- *
+ * 
  */
 export type GuestWish = Prisma.GuestWishModel
 /**
  * Model AuditLog
- *
+ * 
  */
 export type AuditLog = Prisma.AuditLogModel
 /**
  * Model WaBlastTemplate
- *
+ * 
  */
 export type WaBlastTemplate = Prisma.WaBlastTemplateModel

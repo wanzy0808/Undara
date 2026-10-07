@@ -6,7 +6,7 @@
 /*
  * This file should be your main import to use Prisma-related types and utilities in a browser. 
  * Use it to get access to models, enums, and input types.
- *
+ * 
  * This file does not contain a `PrismaClient` class, nor several other helpers that are intended as server-side only.
  * See `client.ts` for the standard, server-side entry point.
  *
@@ -19,86 +19,86 @@ export * as $Enums from './enums'
 export * from './enums';
 /**
  * Model User
- *
+ * 
  */
 export type User = Prisma.UserModel
 /**
  * Model Session
- *
+ * 
  */
 export type Session = Prisma.SessionModel
 /**
  * Model EmailVerificationToken
- *
+ * 
  */
 export type EmailVerificationToken = Prisma.EmailVerificationTokenModel
 /**
  * Model AccountActionToken
- *
+ * 
  */
 export type AccountActionToken = Prisma.AccountActionTokenModel
 /**
  * Model Invitation
- *
+ * 
  */
 export type Invitation = Prisma.InvitationModel
 /**
  * Model InvitationAsset
- *
+ * 
  */
 export type InvitationAsset = Prisma.InvitationAssetModel
 /**
  * Model Payment
- *
+ * 
  */
 export type Payment = Prisma.PaymentModel
 /**
  * Model PaymentOrder
- *
+ * 
  */
 export type PaymentOrder = Prisma.PaymentOrderModel
 /**
  * Model DesignerAsset
- *
+ * 
  */
 export type DesignerAsset = Prisma.DesignerAssetModel
 /**
  * Model DesignerTemplate
- *
+ * 
  */
 export type DesignerTemplate = Prisma.DesignerTemplateModel
 /**
  * Model SeatingPlan
- *
+ * 
  */
 export type SeatingPlan = Prisma.SeatingPlanModel
 /**
  * Model WeddingTable
- *
+ * 
  */
 export type WeddingTable = Prisma.WeddingTableModel
 /**
  * Model Guest
- *
+ * 
  */
 export type Guest = Prisma.GuestModel
 /**
  * Model GuestSessionCheckIn
- *
+ * 
  */
 export type GuestSessionCheckIn = Prisma.GuestSessionCheckInModel
 /**
  * Model GuestWish
- *
+ * 
  */
 export type GuestWish = Prisma.GuestWishModel
 /**
  * Model AuditLog
- *
+ * 
  */
 export type AuditLog = Prisma.AuditLogModel
 /**
  * Model WaBlastTemplate
- *
+ * 
  */
 export type WaBlastTemplate = Prisma.WaBlastTemplateModel
