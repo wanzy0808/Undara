@@ -43,7 +43,13 @@ export async function GET() {
     ]);
 
   const paidEntitlements = getPackageEntitlements(latestPayment);
-  const hasDigitalInvitation = ownerGrant.digital || paidEntitlements.hasDigitalInvitation;
+  const ownerGrantedInvitationIds = new Set(
+    invitations
+      .filter((item) => !hasPaidDigitalInvitation(item.payment))
+      .slice(0, ownerGrant.digitalCredits)
+      .map((item) => item.id),
+  );
+  const hasDigitalInvitation = ownerGrant.digitalCredits > 0 || paidEntitlements.hasDigitalInvitation;
   const hasGuestbook = ownerGrant.guestbook || paidEntitlements.hasGuestbook;
   const entitlements = {
     ...paidEntitlements,
@@ -56,7 +62,7 @@ export async function GET() {
   };
   const invitationsCreated = invitations.length;
   const activeInvitations = invitations.filter(
-    (item) => ownerGrant.digital || hasPaidDigitalInvitation(item.payment),
+    (item) => ownerGrantedInvitationIds.has(item.id) || hasPaidDigitalInvitation(item.payment),
   ).length;
   const invitationsShared = invitations.reduce(
     (sum, item) => sum + (item.viewCount ?? 0),
@@ -99,7 +105,7 @@ export async function GET() {
       ? { key: latestPayment.packageKey, status: latestPayment.status }
       : ownerGrant.guestbook
         ? { key: "GUESTBOOK_DIGITAL", status: "OWNER_GRANTED" }
-        : ownerGrant.digital
+        : ownerGrant.digitalCredits > 0
           ? { key: "INVITATION_BASIC", status: "OWNER_GRANTED" }
           : { key: null, status: "UNPAID" },
     entitlements,
