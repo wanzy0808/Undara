@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
+import { seatingBlocksOverlap, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -43,11 +44,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const [source, target] = await Promise.all([
         tx.guest.findFirst({
           where: { id, invitationId },
-          select: { id: true, name: true, tableId: true, seatNumber: true, source: true, rsvpStatus: true },
+          select: { id: true, name: true, tableId: true, seatNumber: true, invitedPax: true, source: true, rsvpStatus: true },
         }),
         tx.guest.findFirst({
           where: { id: targetGuestId, invitationId },
-          select: { id: true, name: true, tableId: true, seatNumber: true, source: true, rsvpStatus: true },
+          select: { id: true, name: true, tableId: true, seatNumber: true, invitedPax: true, source: true, rsvpStatus: true },
         }),
       ]);
 
@@ -66,6 +67,40 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const sourceSeatNumber = source.seatNumber;
       const targetTableId = target.tableId;
       const targetSeatNumber = target.seatNumber;
+      const tableIds = Array.from(new Set([sourceTableId, targetTableId]));
+      const tables = await tx.weddingTable.findMany({ where: { invitationId, id: { in: tableIds } } });
+      const tableById = new Map(tables.map((table) => [table.id, table]));
+      const sourceTable = tableById.get(sourceTableId);
+      const targetTable = tableById.get(targetTableId);
+      if (!sourceTable || !targetTable) throw new SwapError("Meja tidak ditemukan pada acara ini.", 404);
+
+      const nextSourceSeats = seatingSeatBlock(targetSeatNumber, seatingPartySize(source), targetTable.capacity);
+      const nextTargetSeats = seatingSeatBlock(sourceSeatNumber, seatingPartySize(target), sourceTable.capacity);
+      if (!nextSourceSeats.length || !nextTargetSeats.length) {
+        throw new SwapError("Ukuran rombongan tidak muat di meja tujuan.", 409);
+      }
+      if (sourceTableId === targetTableId && seatingBlocksOverlap(nextSourceSeats, nextTargetSeats)) {
+        throw new SwapError("Rombongan tidak dapat ditukar karena blok kursinya saling bertumpuk.", 409);
+      }
+      const others = await tx.guest.findMany({
+        where: {
+          invitationId,
+          tableId: { in: tableIds },
+          id: { notIn: [source.id, target.id] },
+          OR: [
+            { source: "MANUAL" as const },
+            { source: "RSVP" as const, rsvpStatus: "ATTENDING" as const },
+          ],
+        },
+        select: { id: true, tableId: true, seatNumber: true, invitedPax: true },
+      });
+      const hasConflict = (tableId: string, seats: number[], capacity: number) =>
+        others.some((other) => other.tableId === tableId
+          && seatingBlocksOverlap(seats, seatingSeatBlock(other.seatNumber ?? 0, seatingPartySize(other), capacity)));
+      if (hasConflict(targetTableId, nextSourceSeats, targetTable.capacity)
+        || hasConflict(sourceTableId, nextTargetSeats, sourceTable.capacity)) {
+        throw new SwapError("Kursi bersebelahan untuk salah satu rombongan tidak tersedia.", 409);
+      }
 
       await tx.guest.updateMany({
         where: { id: { in: [source.id, target.id] }, invitationId },

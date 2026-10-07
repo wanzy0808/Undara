@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parsePersonalGuestFields } from "@/lib/guests/personal-profile";
+import { buildPersonalGuestAddressee, PERSONAL_SALUTATIONS, type PersonalSalutation } from "@/lib/guests/personal-envelope";
+import { minimumInvitedPaxForSalutation, recipientTypeForManualParty } from "@/lib/guests/manual-party";
+import { seatingPartySize } from "@/lib/seating/guest-seats";
 import { findGuestsByContact } from "@/lib/guests/identity";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 
@@ -144,6 +147,24 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    const salutationValue = typeof body.salutation === "string" ? body.salutation : "";
+    if (body.salutation !== undefined && !PERSONAL_SALUTATIONS.some((item) => item === salutationValue)) {
+      return NextResponse.json({ error: "Sapaan tamu tidak valid." }, { status: 400 });
+    }
+    if (salutationValue) {
+      const salutation = salutationValue as PersonalSalutation;
+      const minimum = minimumInvitedPaxForSalutation(salutation);
+      const invitedPax = sharedGuestProfile.invitedPax ?? minimum;
+      if (invitedPax < minimum) {
+        return NextResponse.json({ error: `Jumlah tamu minimal ${minimum} orang untuk sapaan ini.` }, { status: 400 });
+      }
+      sharedGuestProfile = {
+        ...sharedGuestProfile,
+        invitedPax,
+        recipientType: recipientTypeForManualParty(salutation, invitedPax),
+        personalAddressee: buildPersonalGuestAddressee(name, salutation),
+      };
+    }
     const category = sharedGuestProfile.category ?? (String(body.category ?? "").trim() || null);
     const tags = sharedGuestProfile.tags ?? normalizeTags(body.tags);
 
@@ -174,11 +195,15 @@ export async function POST(request: Request) {
     if (tableId) {
       const table = await prisma.weddingTable.findFirst({
         where: { id: tableId, invitationId: invitation.id },
-        include: { _count: { select: { guests: true } } },
+        include: { guests: { select: { invitedPax: true, source: true, rsvpStatus: true } } },
       });
       if (!table) return NextResponse.json({ error: "Meja tidak ditemukan pada acara ini." }, { status: 404 });
-      if (table._count.guests >= table.capacity) {
-        return NextResponse.json({ error: "Meja sudah penuh. Pilih meja lain atau simpan tamu tanpa meja." }, { status: 409 });
+      const occupied = table.guests
+        .filter((guest) => guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING")
+        .reduce((sum, guest) => sum + seatingPartySize(guest), 0);
+      const requested = seatingPartySize({ invitedPax: sharedGuestProfile.invitedPax });
+      if (occupied + requested > table.capacity) {
+        return NextResponse.json({ error: "Kapasitas meja tidak cukup untuk seluruh rombongan tamu." }, { status: 409 });
       }
     }
 

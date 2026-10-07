@@ -6,6 +6,7 @@ import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { createSeatingPathGesture } from "@/lib/seating/editor";
 import { seatingCanvasColors } from "@/lib/seating/appearance";
+import { seatingGuestAtSeat, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
 import { clampSeatingPoint, seatingPointFromClient, SEATING_TABLE_MARGIN, SEATING_WIDTH, type SeatingPlan, type SeatingPoint } from "@/lib/seating/plan";
 import { seatingSeatPoint, seatingTableCenter, SEATING_SEAT_RADIUS } from "./seating-chart-geometry";
 import type { SeatingGuest, SeatingSeatTarget, SeatingTable } from "./seating-chart-types";
@@ -30,6 +31,7 @@ export default function SeatingPlanCanvas({
   const [width, setWidth] = useState(1100);
   const colors = seatingCanvasColors(dark);
   const scale = width / SEATING_WIDTH;
+  const draggedGuest = draggedGuestId ? guests.find((guest) => guest.id === draggedGuestId) ?? null : null;
 
   useEffect(() => {
     const node = container.current;
@@ -131,6 +133,11 @@ export default function SeatingPlanCanvas({
         <Layer>
           {tables.map((table, index) => {
             const center = seatingTableCenter(table.id, index, tables.length, layout);
+            const highlightedSeats = new Set(
+              hoverTarget?.table.id === table.id && draggedGuest
+                ? seatingSeatBlock(hoverTarget.seat, seatingPartySize(draggedGuest), table.capacity)
+                : [],
+            );
             return (
               <Group key={table.id} x={center.x} y={center.y} draggable={tool === "move" && !busy}
                 onClick={() => onTableSelect(table.id)} onTap={() => onTableSelect(table.id)}
@@ -142,21 +149,22 @@ export default function SeatingPlanCanvas({
                 <Text x={-44} y={-10} width={88} height={30} align="center" text={table.name} fontSize={13} fontFamily="Roboto" fontStyle="bold" fill={colors.tableText} listening={false} />
                 {Array.from({ length: table.capacity }, (_, seatIndex) => {
                   const seat = seatIndex + 1, point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);
-                  const guest = guests.find((guest) => guest.tableId === table.id && guest.seatNumber === seat);
-                  const highlighted = hoverTarget?.table.id === table.id && hoverTarget.seat === seat;
+                  const guest = seatingGuestAtSeat(guests, table.id, seat, table.capacity);
+                  const anchor = guest?.seatNumber === seat;
+                  const highlighted = highlightedSeats.has(seat);
                   return <Group key={seat} x={point.x} y={point.y}>
                     <Circle radius={highlighted ? SEATING_SEAT_RADIUS + 5 : SEATING_SEAT_RADIUS} fill={guest ? colors.seatOccupied : colors.seatEmpty}
-                      stroke={colors.seatStroke} strokeWidth={highlighted ? 5 : 2} draggable={Boolean(guest) && tool === "move" && !busy}
-                      onDragStart={(event) => { event.cancelBubble = true; if (guest) onGuestStart(guest.id); }}
+                      stroke={colors.seatStroke} strokeWidth={highlighted ? 5 : 2} draggable={Boolean(guest && anchor) && tool === "move" && !busy}
+                      onDragStart={(event) => { event.cancelBubble = true; if (guest && anchor) onGuestStart(guest.id); }}
                       onDragMove={(event) => { event.cancelBubble = true; const point = event.target.getStage()?.getRelativePointerPosition(); if (point) onGuestHover(point); }}
                       onDragEnd={(event) => {
                         event.cancelBubble = true;
                         const point = event.target.getStage()?.getRelativePointerPosition();
                         event.target.position({ x: 0, y: 0 });
-                        if (guest && point) void onGuestDrop(guest.id, point);
+                        if (guest && anchor && point) void onGuestDrop(guest.id, point);
                       }} />
                     <Text x={-12} y={-6} width={24} align="center" text={String(seat)} fontSize={10} fill={guest ? "#321B1B" : colors.seatStroke} listening={false} />
-                    {guest && <Text x={-42} y={20} width={84} height={30} align="center" text={guest.name} fontFamily="Roboto" fontSize={11} fill={colors.guestText} listening={false} />}
+                    {guest && anchor && <Text x={-42} y={20} width={84} height={30} align="center" text={guest.name} fontFamily="Roboto" fontSize={11} fill={colors.guestText} listening={false} />}
                   </Group>;
                 })}
               </Group>

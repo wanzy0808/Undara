@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
+import { seatingBlocksOverlap, seatingPartySize, seatingSeatBlock } from "@/lib/seating/guest-seats";
 
 function isSeatingEligibleGuest(guest: { source: "RSVP" | "MANUAL"; rsvpStatus: string }) {
   return guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING";
@@ -22,6 +23,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       select: {
         id: true,
         tableId: true,
+        invitedPax: true,
         source: true,
         rsvpStatus: true,
         invitation: {
@@ -79,17 +81,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           { source: "RSVP" as const, rsvpStatus: "ATTENDING" as const },
         ],
       };
-      const occupied = await tx.guest.count({ where: eligibleWhere });
-      if (occupied >= table.capacity && guest.tableId !== tableId) {
-        throw new PlacementError("Meja sudah penuh.", 409);
+      const others = await tx.guest.findMany({
+        where: eligibleWhere,
+        select: { id: true, tableId: true, seatNumber: true, invitedPax: true },
+      });
+      const partySize = seatingPartySize(guest);
+      if (partySize > table.capacity) {
+        throw new PlacementError(`Rombongan ${partySize} orang melebihi kapasitas meja (${table.capacity}).`, 409);
       }
 
       if (seatNumber !== null) {
-        const duplicateSeat = await tx.guest.findFirst({
-          where: { ...eligibleWhere, seatNumber },
-          select: { id: true },
-        });
-        if (duplicateSeat) throw new PlacementError("Nomor kursi sudah digunakan.", 409);
+        const requestedSeats = seatingSeatBlock(seatNumber, partySize, table.capacity);
+        const conflict = others.some((other) =>
+          seatingBlocksOverlap(requestedSeats, seatingSeatBlock(other.seatNumber ?? 0, seatingPartySize(other), table.capacity)),
+        );
+        if (conflict) {
+          throw new PlacementError(`Tidak tersedia ${partySize} kursi bersebelahan dari posisi ini.`, 409);
+        }
+      } else {
+        const occupied = others.reduce((sum, other) => sum + seatingPartySize(other), 0);
+        if (occupied + partySize > table.capacity) {
+          throw new PlacementError("Kapasitas meja tidak cukup untuk seluruh rombongan tamu.", 409);
+        }
       }
 
       return tx.guest.update({

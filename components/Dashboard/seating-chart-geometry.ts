@@ -5,6 +5,7 @@ import type {
   SeatingTable,
 } from "@/components/Dashboard/seating-chart-types";
 import { clampSeatingPoint, seatingPlanForTables, SEATING_MAX_HEIGHT, SEATING_TABLE_MARGIN, type SeatingPlan } from "@/lib/seating/plan";
+import { seatingGuestAtSeat } from "@/lib/seating/guest-seats";
 
 export const SEATING_STAGE_WIDTH = 1100;
 export const SEATING_STAGE_HEIGHT = 620;
@@ -106,13 +107,7 @@ export function findSeatingSeatTarget(
       nearest = {
         table,
         seat: index + 1,
-        guest:
-          guests.find(
-            (item) =>
-              item.tableId === table.id &&
-              item.seatNumber === index + 1 &&
-              item.id !== draggedGuestId,
-          ) ?? null,
+        guest: seatingGuestAtSeat(guests, table.id, index + 1, table.capacity, draggedGuestId),
       };
       distance = currentDistance;
     }

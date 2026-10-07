@@ -3,6 +3,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { buildPersonalGuestAddressee, PERSONAL_SALUTATIONS, type PersonalSalutation } from "@/lib/guests/personal-envelope";
+import { MAX_GUEST_PARTY_SIZE, minimumInvitedPaxForSalutation, recipientTypeForManualParty } from "@/lib/guests/manual-party";
+import type { RecipientType } from "@/lib/guests/personal-profile";
 
 const MAX_BATCH = 100;
 const categories = ["REGULAR", "VIP", "VVIP"];
@@ -11,7 +13,7 @@ export class PersonalBatchError extends Error {
   constructor(message: string, public status = 400) { super(message); }
 }
 
-type Recipient = { key: string; name: string; category: string; guestId: string; personalAddressee?: string };
+type Recipient = { key: string; name: string; category: string; guestId: string; personalAddressee?: string; invitedPax?: number; recipientType?: RecipientType };
 
 function parseRecipients(value: unknown): Recipient[] {
   if (!Array.isArray(value) || !value.length || value.length > MAX_BATCH) {
@@ -33,15 +35,27 @@ function parseRecipients(value: unknown): Recipient[] {
     if (!guestId && (!name || name.length > 120)) throw new PersonalBatchError("Nama tamu wajib diisi (maksimal 120 karakter).");
     if (!category || category.length > 60 || (!guestId && !categories.includes(category))) throw new PersonalBatchError("Kategori tamu tidak valid.");
     let personalAddressee: string | undefined;
+    let invitedPax: number | undefined;
+    let recipientType: RecipientType | undefined;
     if (item.salutation !== undefined) {
       if (guestId || !PERSONAL_SALUTATIONS.some((salutation) => salutation === item.salutation)) throw new PersonalBatchError("Sapaan tamu tidak valid.");
-      personalAddressee = buildPersonalGuestAddressee(name, item.salutation as PersonalSalutation);
+      const salutation = item.salutation as PersonalSalutation;
+      personalAddressee = buildPersonalGuestAddressee(name, salutation);
       if (!personalAddressee || personalAddressee.length > 160) throw new PersonalBatchError("Nama tamu wajib diisi (maksimal 120 karakter).");
+      const minimum = minimumInvitedPaxForSalutation(salutation);
+      const requestedPax = item.invitedPax === undefined ? minimum : Number(item.invitedPax);
+      if (!Number.isInteger(requestedPax) || requestedPax < minimum || requestedPax > MAX_GUEST_PARTY_SIZE) {
+        throw new PersonalBatchError(`Jumlah tamu harus ${minimum} sampai ${MAX_GUEST_PARTY_SIZE} orang.`);
+      }
+      invitedPax = requestedPax;
+      recipientType = recipientTypeForManualParty(salutation, requestedPax);
+    } else if (item.invitedPax !== undefined) {
+      throw new PersonalBatchError("Jumlah tamu baru harus memiliki sapaan.");
     }
     const identity = `${guestId ? "guest" : "new"}:${key}`;
     if (keys.has(identity)) throw new PersonalBatchError("Tamu yang sama dipilih lebih dari sekali.");
     keys.add(identity);
-    return { key, name, category, guestId, personalAddressee };
+    return { key, name, category, guestId, personalAddressee, invitedPax, recipientType };
   });
 }
 
@@ -78,7 +92,7 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
       if (row.guestId && !categories.includes(row.category) && row.category !== guest?.category) {
         throw new PersonalBatchError("Kategori tamu tidak valid.");
       }
-      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category || (guest.personalAddressee ?? undefined) !== row.personalAddressee)) {
+      if (!row.guestId && guest && (guest.invitationId !== invitationId || guest.name !== row.name || guest.category !== row.category || (guest.personalAddressee ?? undefined) !== row.personalAddressee || guest.invitedPax !== row.invitedPax || guest.recipientType !== row.recipientType)) {
         throw new PersonalBatchError("Tamu ini sudah disimpan. Muat ulang daftar sebelum mengubahnya.", 409);
       }
     }
@@ -94,6 +108,8 @@ export async function createPersonalBatch(ownerId: string, invitationId: string,
         } })
         : await tx.guest.create({ data: { invitationId, name: row.name, category: row.category,
           ...(row.personalAddressee ? { personalAddressee: row.personalAddressee } : {}),
+          ...(row.invitedPax ? { invitedPax: row.invitedPax } : {}),
+          ...(row.recipientType ? { recipientType: row.recipientType } : {}),
           source: "MANUAL", personalToken: token, personalPublished: published === true } });
       const safe = { ...guest };
       Reflect.deleteProperty(safe, "personalPasswordHash");
