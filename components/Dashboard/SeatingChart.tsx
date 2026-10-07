@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, LayoutGrid, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
+import { ArrowLeftRight, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -403,28 +403,29 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 onChange={(event) => setTableCount(Number(event.target.value))}
               />
             </label>
-            <label className="inline-flex items-center gap-2 text-sm font-medium">
-              <span>{d("Kursi")}:</span>
-              <Input
-                type="number"
-                min={1}
-                max={50}
+            <div className="flex min-w-0 flex-1 basis-56 items-end gap-2">
+              <label className="inline-flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm font-medium">
+                <span>{d("Kursi")}:</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={50}
+                  disabled={toolbarBusy || visibleTables.length >= 100}
+                  value={seatsPerTable}
+                  className="min-h-11 w-20 max-w-full"
+                  onChange={(event) => setSeatsPerTable(Number(event.target.value))}
+                />
+              </label>
+              <Button
+                type="submit"
+                size="sm"
+                className="w-28"
                 disabled={toolbarBusy || visibleTables.length >= 100}
-                value={seatsPerTable}
-                className="min-h-11 w-20"
-                onChange={(event) => setSeatsPerTable(Number(event.target.value))}
-              />
-            </label>
-            <Button
-              type="submit"
-              size="sm"
-              className="w-full"
-              disabled={toolbarBusy || visibleTables.length >= 100}
-              title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
-            >
-              <LayoutGrid className="h-4 w-4" />
-              {generating ? d("Menambahkan meja...") : d("Tambah meja")}
-            </Button>
+                title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
+              >
+                <span className="truncate">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
+              </Button>
+            </div>
           </form>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
