@@ -145,7 +145,9 @@ test("names use three short salutations before choosing an invitation, with cate
     assert.equal((html.match(/<textarea\b/g) ?? []).length, 1);
     assert.deepEqual([...html.matchAll(/<option value="([^"]+)"/g)].map((match) => match[1]), ["BAPAK", "IBU", "BAPAK_IBU", "REGULAR", "VIP", "VVIP"]);
     assert.match(html, /value="REGULAR" selected=""/);
-    assert.match(html, /rows="2"/);
+    assert.match(html, /rows="1"/);
+    assert.match(html, /capitalize/);
+    assert.match(html, /resize-none/);
     assert.doesNotMatch(html, /Satu nama per baris|One name per line/);
   }
 });
@@ -207,7 +209,7 @@ test("saved guest picker searches explicit IDs even for duplicate names and expo
   const guests = Array.from({ length: 43 }, (_, i) => ({ ...guest(`guest-${i}`), phone: `08123${i}` }));
   const harness = createHarness({ availableGuests: guests, setGuestId(id) { chosen.push(id); } });
   let tree = harness.render();
-  assert.ok(nodes(tree).some((node) => node.type === Button && text(node.props.children) === "Cari dari Daftar Tamu"));
+  assert.equal(text(find(tree, dialogs.DialogTrigger)), "Cari dari Daftar Tamu");
   find(tree, dialogs.Dialog).props.onOpenChange(true);
   tree = harness.render();
   let rows = nodes(tree).filter((node) => node.type === Button && /^guest-/.test(node.key ?? ""));
