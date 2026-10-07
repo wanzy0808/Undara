@@ -157,6 +157,9 @@ export default function SeatingPlanCanvas({
         <Layer y={-offset}>
           {tables.map((table, index) => {
             const center = seatingTableCenter(table.id, index, tables.length, layout);
+            const tableBodyBounds = table.shape === "ROUND"
+              ? { x: -SEATING_TABLE_BODY_RADIUS, y: -SEATING_TABLE_BODY_RADIUS, width: SEATING_TABLE_BODY_RADIUS * 2, height: SEATING_TABLE_BODY_RADIUS * 2 }
+              : seatingTableBounds(table.shape);
             const highlightedSeats = new Set(
               hoverTarget?.table.id === table.id && draggedGuest
                 ? seatingSeatBlock(hoverTarget.seat, seatingPartySize(draggedGuest), table.capacity)
@@ -170,7 +173,7 @@ export default function SeatingPlanCanvas({
                 {table.shape === "ROUND"
                   ? <Circle radius={SEATING_TABLE_BODY_RADIUS} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />
                   : <Rect {...seatingTableBounds(table.shape)} cornerRadius={8} fill={colors.table} stroke={selectedTableId === table.id ? colors.tableText : undefined} strokeWidth={3} />}
-                <Text x={-SEATING_TABLE_BODY_RADIUS} y={-13} width={SEATING_TABLE_BODY_RADIUS * 2} height={32} align="center" text={displayTitleCase(table.name)} fontSize={13} fontFamily="Roboto" fontStyle="bold" fill={colors.tableText} listening={false} />
+                <Text {...tableBodyBounds} align="center" verticalAlign="middle" text={displayTitleCase(table.name)} fontSize={13} fontFamily="Roboto" fontStyle="bold" fill={colors.tableText} listening={false} />
                 {Array.from({ length: table.capacity }, (_, seatIndex) => {
                   const seat = seatIndex + 1, point = seatingSeatPoint({ x: 0, y: 0 }, seatIndex, table.capacity);
                   const guest = seatingGuestAtSeat(guests, table.id, seat, table.capacity);
