@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, Check, PencilLine, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
+import { ArrowLeftRight, Check, PencilLine, Plus, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -531,42 +531,41 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             }
         >
 
-          <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-end gap-3">
-            <label className="block text-xs text-muted-foreground">
-              <span>{d("Meja")}:</span>
+          <form onSubmit={generateTables} className="mt-4 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
+            <label className="block w-20 max-w-full text-xs text-muted-foreground">
+              {d("Meja")}
               <Input
                 type="number"
                 min={1}
                 max={Math.max(1, 100 - visibleTables.length)}
                 disabled={toolbarBusy || visibleTables.length >= 100}
                 value={tableCount}
-                className="mt-1 min-h-11 w-16 px-2"
+                className="mt-1 min-h-11 w-full px-2"
                 onChange={(event) => setTableCount(Number(event.target.value))}
               />
             </label>
-            <div className="flex min-w-0 max-w-full items-end gap-2">
-              <label className="block min-w-0 text-xs text-muted-foreground">
-                <span>{d("Kursi")}:</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={50}
-                  disabled={toolbarBusy || visibleTables.length >= 100}
-                  value={seatsPerTable}
-                  className="mt-1 min-h-11 w-16 max-w-full px-2"
-                  onChange={(event) => setSeatsPerTable(Number(event.target.value))}
-                />
-              </label>
-              <Button
-                type="submit"
-                size="sm"
-                className="h-auto min-h-11 max-w-full shrink px-3 py-2 whitespace-normal"
+            <label className="block w-20 max-w-full text-xs text-muted-foreground">
+              {d("Kursi")}
+              <Input
+                type="number"
+                min={1}
+                max={50}
                 disabled={toolbarBusy || visibleTables.length >= 100}
-                title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
-              >
-                <span className="min-w-0 break-words">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
-              </Button>
-            </div>
+                value={seatsPerTable}
+                className="mt-1 min-h-11 w-full px-2"
+                onChange={(event) => setSeatsPerTable(Number(event.target.value))}
+              />
+            </label>
+            <Button
+              type="submit"
+              size="sm"
+              className="h-auto min-h-11 max-w-full shrink px-3 py-2 whitespace-normal"
+              disabled={toolbarBusy || visibleTables.length >= 100}
+              title={visibleTables.length >= 100 ? d("Maksimal 100 meja per acara.") : undefined}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="min-w-0 break-words">{generating ? d("Menambahkan meja...") : d("Tambah meja")}</span>
+            </Button>
           </form>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
