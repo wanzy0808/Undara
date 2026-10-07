@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     if (!invitation) {
       return NextResponse.json({ error: "Undangan tidak ditemukan." }, { status: 404, headers: PRIVATE_HEADERS });
     }
-    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))) {
       return NextResponse.json(
         { error: "QR undangan membutuhkan akses Undangan Digital." },
         { status: 402, headers: PRIVATE_HEADERS },
