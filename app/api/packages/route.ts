@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getServicePackage } from "@/lib/packages/catalog";
 import { getOwnerPackageGrant } from "@/lib/packages/owner-grants";
+import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { isTrustedMutationOrigin } from "@/lib/security/request-origin";
 
 const invitationKey = "INVITATION_BASIC";
@@ -43,8 +44,11 @@ export async function POST(request: Request) {
     if (ownerGrant.guestbook) {
       return NextResponse.json({ error: "Paket Guest Book sudah diaktifkan oleh Owner untuk akun ini." }, { status: 409 });
     }
-    if (requestedKey === invitationKey && ownerGrant.digital) {
-      return NextResponse.json({ error: "Undangan Digital sudah diaktifkan oleh Owner untuk akun ini." }, { status: 409 });
+    if (
+      requestedKey === invitationKey &&
+      (await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))
+    ) {
+      return NextResponse.json({ error: "Undangan Digital sudah diaktifkan untuk acara ini." }, { status: 409 });
     }
 
     if (currentPaidKey === guestbookKey || currentPaidKey === legacyBundleKey) {
