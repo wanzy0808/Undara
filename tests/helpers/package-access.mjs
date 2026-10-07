@@ -20,13 +20,23 @@ export function loadSource(path, modules, { env = {}, errors = [] } = {}) {
 // replace only the database boundary with the user's latest audit metadata.
 export function loadPackageAccess({ grants = {}, grantError, invitations = {} } = {}) {
   const queries = [];
+  const assignmentLogs = [];
   const prisma = {
-    auditLog: { findFirst: async (query) => {
-      queries.push(query);
-      if (grantError) throw grantError;
-      const metadata = grants[query.where.entityId];
-      return metadata === undefined ? null : { metadata };
-    } },
+    auditLog: {
+      findFirst: async (query) => {
+        queries.push(query);
+        if (grantError) throw grantError;
+        const metadata = grants[query.where.entityId];
+        return metadata === undefined ? null : { metadata };
+      },
+      findMany: async (query) => assignmentLogs
+        .filter((entry) => entry.entityId === query.where.entityId && entry.action === query.where.action)
+        .map((entry) => ({ metadata: entry.metadata })),
+      create: async (query) => {
+        assignmentLogs.push(query.data);
+        return query.data;
+      },
+    },
     invitation: { findMany: async (query) => {
       const ownerId = query.where.ownerId;
       return invitations[ownerId] ?? [{ id: "invitation-a", payment: null }];
