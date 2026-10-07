@@ -8,6 +8,10 @@ function fixture(metadata) {
   const prisma = {
     auditLog: {
       findFirst: async () => metadata == null ? null : { metadata },
+      findMany: async (query) => writes
+        .map((entry) => entry.data)
+        .filter((entry) => entry.action === query.where.action && entry.entityId === query.where.entityId)
+        .map((entry) => ({ metadata: entry.metadata })),
       create: async (query) => { writes.push(query); return query.data; },
     },
     invitation: {
