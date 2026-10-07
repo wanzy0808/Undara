@@ -90,7 +90,7 @@ export async function PATCH(request: Request) {
 
     const current = await ownedTable(user.id, id);
     if (!current) return NextResponse.json({ error: "Meja tidak ditemukan." }, { status: 404 });
-    if (!(await hasAccountDigitalInvitation(user.id, current.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, current.invitation.payment, current.invitation.id))) {
       return NextResponse.json({ error: "Penempatan Tamu membutuhkan paket Digital Invitation." }, { status: 402 });
     }
 
@@ -142,7 +142,7 @@ export async function DELETE(request: Request) {
 
     const current = await ownedTable(user.id, id);
     if (!current) return NextResponse.json({ error: "Meja tidak ditemukan." }, { status: 404 });
-    if (!(await hasAccountDigitalInvitation(user.id, current.invitation.payment))) {
+    if (!(await hasAccountDigitalInvitation(user.id, current.invitation.payment, current.invitation.id))) {
       return NextResponse.json({ error: "Penempatan Tamu membutuhkan paket Digital Invitation." }, { status: 402 });
     }
 
