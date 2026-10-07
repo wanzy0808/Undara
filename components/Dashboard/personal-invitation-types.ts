@@ -7,6 +7,7 @@ export type PersonalInvitationDraft = {
   name: string;
   category: string;
   salutation?: PersonalSalutation;
+  invitedPax?: number;
   guestId?: string;
   invitationId?: string;
   profile?: GuestInvitationForm;

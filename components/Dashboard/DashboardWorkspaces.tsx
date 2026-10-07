@@ -38,6 +38,7 @@ import type {
 import ReferralCodePanel from "@/components/Dashboard/ReferralCodePanel";
 import InvitationQrMenu from "@/components/Dashboard/InvitationQrMenu";
 import { parseInvitationRsvpConfig } from "@/lib/templates/rsvp-config";
+import { seatingPartySize } from "@/lib/seating/guest-seats";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 
 function formatEventDate(value: string, locale: "id" | "en" = "id") {
@@ -352,7 +353,9 @@ function PlacementPanel({
   onRefresh: () => Promise<void>;
 }) {
   const { d } = useDashboardI18n();
-  const assigned = guests.filter((guest) => guest.tableId).length;
+  const eligibleGuests = guests.filter((guest) => guest.source === "MANUAL" || guest.rsvpStatus === "ATTENDING");
+  const assigned = eligibleGuests.filter((guest) => guest.tableId).reduce((sum, guest) => sum + seatingPartySize(guest), 0);
+  const totalPeople = eligibleGuests.reduce((sum, guest) => sum + seatingPartySize(guest), 0);
 
   const assignGuest = async (
     guestId: string,
@@ -386,7 +389,7 @@ function PlacementPanel({
         <DashboardMetricGrid className="mt-4 xl:grid-cols-3">
           <DashboardMetricCard icon={Users} label={d("Tamu")} value={String(guests.length)} />
           <DashboardMetricCard icon={LayoutGrid} label={d("Meja")} value={String(tables.length)} />
-          <DashboardMetricCard icon={CheckCircle2} label={d("Ditempatkan")} value={`${assigned} / ${guests.length}`} />
+          <DashboardMetricCard icon={CheckCircle2} label={d("Ditempatkan")} value={`${assigned} / ${totalPeople}`} />
         </DashboardMetricGrid>
         <SeatingChart
           key={invitationId}

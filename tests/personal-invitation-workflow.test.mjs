@@ -14,6 +14,7 @@ import * as fields from "../components/Dashboard/PersonalInvitationGuestFields.t
 import * as helpers from "../components/Dashboard/personal-invitation-helpers.ts";
 import * as titles from "../lib/text/display-title-case.ts";
 import * as envelope from "../lib/guests/personal-envelope.ts";
+import * as manualParty from "../lib/guests/manual-party.ts";
 import { loadSource } from "./helpers/package-access.mjs";
 
 const d = (text) => text;
@@ -95,7 +96,7 @@ function createHarness(overrides = {}) {
     react: hooks.hooks, "react/jsx-runtime": jsxRuntime, "next/link": () => null, "lucide-react": icons,
     "@/components/ui/button": { Button }, "@/components/ui/input": { Input }, "@/components/ui/dialog": dialogs,
     "@/components/Dashboard/useDashboardI18n": i18n, "@/lib/text/display-title-case": titles,
-    "@/lib/guests/personal-envelope": envelope, "@/components/Dashboard/DashboardPrimitives": primitives,
+    "@/lib/guests/personal-envelope": envelope, "@/lib/guests/manual-party": manualParty, "@/components/Dashboard/DashboardPrimitives": primitives,
     "@/components/Dashboard/PersonalInvitationGuestFields": fields,
     "@/components/Dashboard/personal-invitation-helpers": helpers,
   });
@@ -114,6 +115,7 @@ function panelHarness(fetcher) {
     "@/components/Dashboard/personal-invitation-helpers": helpers,
     "@/components/Dashboard/PersonalInvitationGuestFields": fields,
     "@/lib/guests/personal-envelope": envelope,
+    "@/lib/guests/manual-party": manualParty,
   });
   const originalFetch = globalThis.fetch;
   globalThis.fetch = fetcher;
@@ -141,8 +143,9 @@ test("names use three short salutations before choosing an invitation, with cate
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: locale }, React.createElement(PersonalInvitationCreatePanel, props)));
     assert.ok(html.includes(label)); assert.ok(html.includes(add));
     assert.match(html, /Kepada Yth : Bapak Andi/);
-    assert.doesNotMatch(html, /Sumber penerima|Recipient source|<details\b|type="tel"|type="number"|type="checkbox"|Buat undangan/);
+    assert.doesNotMatch(html, /Sumber penerima|Recipient source|<details\b|type="tel"|type="checkbox"|Buat undangan/);
     assert.equal((html.match(/<textarea\b/g) ?? []).length, 1);
+    assert.match(html, /type="number"/);
     assert.deepEqual([...html.matchAll(/<option value="([^"]+)"/g)].map((match) => match[1]), ["BAPAK", "IBU", "BAPAK_IBU", "REGULAR", "VIP", "VVIP"]);
     assert.match(html, /value="REGULAR" selected=""/);
     assert.match(html, /rows="1"/);
@@ -150,6 +153,21 @@ test("names use three short salutations before choosing an invitation, with cate
     assert.match(html, /resize-none/);
     assert.doesNotMatch(html, /Satu nama per baris|One name per line/);
   }
+});
+
+test("Bapak & Ibu immediately raises the manual party size to two", () => {
+  let nextProfile = null;
+  const harness = createHarness({
+    profile: { ...fields.emptyGuestInvitationForm, invitedPax: 1 },
+    setProfile(value) { nextProfile = value; },
+  });
+  const tree = harness.render();
+  find(tree, fields.PersonalInvitationSalutationField).props.onChange("BAPAK_IBU");
+  assert.equal(nextProfile.invitedPax, 2);
+  const partyInput = nodes(harness.render({ salutation: "BAPAK_IBU", profile: nextProfile }))
+    .find((node) => node.type === Input && node.props.type === "number");
+  assert.equal(partyInput.props.min, 2);
+  assert.equal(partyInput.props.max, 30);
 });
 
 test("Add uses the selected mode, rejects invalid names and retains exact couple, override and disabled-envelope previews", () => {
@@ -243,8 +261,8 @@ test("a multi-name list comes before the invitation picker and is saved only on 
     assert.equal(calls.length, 0);
     const first = view.save.onClick(); await view.save.onClick();
     assert.equal(calls.length, 1);
-    assert.deepEqual(calls[0], { invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category, salutation }) => ({ key, name, category, salutation })) });
-    assert.equal(Object.hasOwn(calls[0].recipients[0], "invitedPax"), false);
+    assert.deepEqual(calls[0], { invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category, salutation, invitedPax }) => ({ key, name, category, salutation, invitedPax })) });
+    assert.ok(calls[0].recipients.every((row) => row.invitedPax === 1));
     post.resolve(Response.json({ invitations: [personal(), { ...personal(), id: "second" }] }));
     await first;
     assert.deepEqual(panel.render().create.drafts, []);
@@ -282,7 +300,7 @@ test("saved recipients retain their canonical ID and hidden profile while staged
   } finally { panel.dispose(); }
 });
 
-test("each staged name retains its own editable salutation and sends only its name, category and title", async () => {
+test("each staged name keeps salutation and party size in one canonical Guest payload", async () => {
   const calls = [];
   const panel = panelHarness(async (url, options = {}) => {
     if (options.method === "POST") {
@@ -293,17 +311,21 @@ test("each staged name retains its own editable salutation and sends only its na
   });
   try {
     await panel.settle();
-    for (const [salutation, name] of [["BAPAK", "Andi"], ["IBU", "Rina"], ["BAPAK_IBU", "Budi & Sari"]]) {
-      panel.render().create.setSalutation(salutation); panel.render().create.setName(name); panel.render().create.onAddNames();
+    for (const [salutation, name, invitedPax] of [["BAPAK", "Andi", 1], ["IBU", "Rina", 1], ["BAPAK_IBU", "Budi & Sari", 2]]) {
+      panel.render().create.setSalutation(salutation);
+      panel.render().create.setProfile({ ...panel.render().create.profile, invitedPax });
+      panel.render().create.setName(name);
+      panel.render().create.onAddNames();
     }
     let view = panel.render();
-    assert.deepEqual(view.create.drafts.map((row) => [row.name, row.salutation]), [["Andi", "BAPAK"], ["Rina", "IBU"], ["Budi & Sari", "BAPAK_IBU"]]);
+    assert.deepEqual(view.create.drafts.map((row) => [row.name, row.salutation, row.invitedPax]), [["Andi", "BAPAK", 1], ["Rina", "IBU", 1], ["Budi & Sari", "BAPAK_IBU", 2]]);
     const key = view.create.drafts[0].key;
-    view.create.onEditDraft(key, { name: "Nina", salutation: "IBU" }); view = panel.render();
+    view.create.onEditDraft(key, { name: "Nina", salutation: "IBU", invitedPax: 3 }); view = panel.render();
     const preview = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLocale: "id" }, React.createElement(PersonalInvitationCreatePanel, view.create)));
     assert.match(preview, /Kepada Yth : Ibu Nina/); assert.match(preview, /Kepada Yth : Bapak Budi dan Ibu Sari/);
     await view.save.onClick();
-    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category, salutation }) => ({ key, name, category, salutation })) }]);
+    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: view.create.drafts.map(({ key, name, category, salutation, invitedPax }) => ({ key, name, category, salutation, invitedPax })) }]);
+    assert.deepEqual(calls[0].recipients.map((row) => row.invitedPax), [3, 1, 2]);
   } finally { panel.dispose(); }
 });
 
@@ -336,7 +358,7 @@ test("changing a chosen saved name creates a new recipient without copying old c
     view.create.setGuestId("guest-from-another-event");
     panel.render().create.onAddNames(); view = panel.render();
     await view.save.onClick();
-    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: [{ key: view.create.drafts[0].key, name: "Bapak Budi", category: "REGULAR", salutation: "BAPAK" }] }]);
+    assert.deepEqual(calls, [{ invitationId: "event-a", published: false, recipients: [{ key: view.create.drafts[0].key, name: "Bapak Budi", category: "REGULAR", salutation: "BAPAK", invitedPax: 1 }] }]);
   } finally { panel.dispose(); }
 });
 

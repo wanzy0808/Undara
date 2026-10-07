@@ -49,7 +49,7 @@ function parseRecipients(value: unknown): Recipient[] {
       }
       invitedPax = requestedPax;
       recipientType = recipientTypeForManualParty(salutation, requestedPax);
-    } else if (item.invitedPax !== undefined) {
+    } else if (!guestId && item.invitedPax !== undefined) {
       throw new PersonalBatchError("Jumlah tamu baru harus memiliki sapaan.");
     }
     const identity = `${guestId ? "guest" : "new"}:${key}`;

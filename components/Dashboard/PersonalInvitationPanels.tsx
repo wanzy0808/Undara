@@ -28,6 +28,7 @@ import {
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import { buildPersonalGuestAddressee, formatPersonalEnvelopeAddress, type PersonalSalutation } from "@/lib/guests/personal-envelope";
+import { MAX_GUEST_PARTY_SIZE, minimumInvitedPaxForSalutation } from "@/lib/guests/manual-party";
 import {
   DashboardEmptyState,
   DashboardPanel,
@@ -84,7 +85,7 @@ export function PersonalInvitationCreatePanel({
   onRemoveDraft: (key: string) => void;
   onEditDraft: (
     key: string,
-    value: { name?: string; category?: string; salutation?: PersonalSalutation },
+    value: { name?: string; category?: string; salutation?: PersonalSalutation; invitedPax?: number },
   ) => void;
 }) {
   const { d } = useDashboardI18n();
@@ -106,15 +107,20 @@ export function PersonalInvitationCreatePanel({
   } catch {
     // Invalid names keep Add disabled.
   }
+  const minimumPax = minimumInvitedPaxForSalutation(salutation);
+  const manualPaxValid = Number.isInteger(profile.invitedPax)
+    && profile.invitedPax >= minimumPax
+    && profile.invitedPax <= MAX_GUEST_PARTY_SIZE;
   const valid =
     Boolean(profile.category.trim()) &&
     Boolean(
       guestId
         ? selectedGuest
-        : names.length &&
-            names.every((guestName) =>
-              buildPersonalGuestAddressee(guestName, salutation),
-            ),
+        : manualPaxValid &&
+          names.length &&
+          names.every((guestName) =>
+            buildPersonalGuestAddressee(guestName, salutation),
+          ),
     );
   const envelopeAddress = formatPersonalEnvelopeAddress({
     name: selectedGuest?.name ?? names[0] ?? "",
@@ -161,14 +167,18 @@ export function PersonalInvitationCreatePanel({
         <div
           className={
             guestId
-              ? "grid max-w-[760px] gap-3 sm:grid-cols-[minmax(240px,420px)_170px_auto] sm:items-end"
-              : "grid max-w-[920px] gap-3 sm:grid-cols-[132px_minmax(240px,420px)] xl:grid-cols-[132px_minmax(260px,420px)_170px_auto] xl:items-end"
+              ? "grid max-w-[860px] gap-3 sm:grid-cols-[minmax(240px,420px)_170px_92px_auto] sm:items-end"
+              : "grid max-w-[1020px] gap-3 sm:grid-cols-[132px_minmax(240px,420px)] xl:grid-cols-[132px_minmax(260px,420px)_170px_92px_auto] xl:items-end"
           }
         >
           {!guestId && (
             <PersonalInvitationSalutationField
               value={salutation}
-              onChange={setSalutation}
+              onChange={(next) => {
+                setSalutation(next);
+                const minimum = minimumInvitedPaxForSalutation(next);
+                if (profile.invitedPax < minimum) setProfile({ ...profile, invitedPax: minimum });
+              }}
               disabled={busy}
             />
           )}
@@ -197,6 +207,19 @@ export function PersonalInvitationCreatePanel({
             onChange={setProfile}
             disabled={busy}
           />
+          <label className="block min-w-0 text-sm font-medium text-foreground">
+            {d("Jumlah orang")}
+            <Input
+              type="number"
+              min={guestId ? 1 : minimumPax}
+              max={MAX_GUEST_PARTY_SIZE}
+              value={guestId ? selectedGuest?.invitedPax ?? profile.invitedPax : profile.invitedPax}
+              readOnly={Boolean(guestId)}
+              disabled={busy}
+              className="mt-1.5 min-h-11"
+              onChange={(event) => setProfile({ ...profile, invitedPax: Number(event.target.value) })}
+            />
+          </label>
           <div className="flex items-end">
             <Button type="submit" size="sm" disabled={!valid || busy}>
               <Plus className="size-4" />
@@ -205,7 +228,7 @@ export function PersonalInvitationCreatePanel({
           </div>
         </div>
 
-        <div className="flex max-w-[920px] flex-col gap-2 border-t border-primary/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex max-w-[1020px] flex-col gap-2 border-t border-primary/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <p
             className="min-w-0 break-words text-xs text-muted-foreground"
             aria-live="polite"
@@ -279,13 +302,14 @@ export function PersonalInvitationCreatePanel({
                         <span className="block break-words">
                           {displayTitleCase(guest.name)}
                         </span>
-                        {(guest.phone || guest.category) && (
+                        {(guest.phone || guest.category || guest.invitedPax) && (
                           <span className="mt-1 block text-xs text-muted-foreground">
                             {[
                               guest.phone,
                               guest.category === "REGULAR"
                                 ? d("Reguler")
                                 : guest.category,
+                              guest.invitedPax ? `${guest.invitedPax} ${d("orang diundang")}` : null,
                             ]
                               .filter(Boolean)
                               .join(" · ")}
@@ -315,17 +339,18 @@ export function PersonalInvitationCreatePanel({
 
       {drafts.length > 0 && (
         <div className="mt-5 border-t border-primary/15 pt-4">
-          <div className="hidden max-w-[920px] grid-cols-[132px_minmax(260px,420px)_170px_44px] gap-3 px-1 pb-2 text-xs font-medium text-muted-foreground xl:grid">
+          <div className="hidden max-w-[1020px] grid-cols-[132px_minmax(260px,420px)_170px_92px_44px] gap-3 px-1 pb-2 text-xs font-medium text-muted-foreground xl:grid">
             <span>{d("Sapaan")}</span>
             <span>{d("Nama tamu")}</span>
             <span>{d("Kategori tamu")}</span>
+            <span>{d("Jumlah orang")}</span>
             <span className="sr-only">{d("Aksi")}</span>
           </div>
           <div className="max-h-[32rem] overflow-y-auto pr-1">
             {drafts.slice(0, draftLimit).map((draft, index) => (
               <div
                 key={draft.key}
-                className="grid max-w-[920px] gap-3 border-t border-primary/10 py-3 first:border-t-0 sm:grid-cols-[132px_minmax(220px,1fr)_170px_44px] sm:items-start xl:grid-cols-[132px_minmax(260px,420px)_170px_44px]"
+                className="grid max-w-[1020px] gap-3 border-t border-primary/10 py-3 first:border-t-0 sm:grid-cols-[132px_minmax(220px,1fr)_170px_92px_44px] sm:items-start xl:grid-cols-[132px_minmax(260px,420px)_170px_92px_44px]"
               >
                 {draft.guestId ? (
                   <div className="flex min-h-11 items-center text-xs text-muted-foreground">
@@ -381,6 +406,17 @@ export function PersonalInvitationCreatePanel({
                   }
                   disabled={Boolean(busyId)}
                   showLabel={false}
+                />
+                <Input
+                  type="number"
+                  min={draft.guestId ? 1 : minimumInvitedPaxForSalutation(draft.salutation ?? "BAPAK")}
+                  max={MAX_GUEST_PARTY_SIZE}
+                  value={draft.guestId ? draft.profile?.invitedPax ?? 1 : draft.invitedPax ?? 1}
+                  readOnly={Boolean(draft.guestId)}
+                  disabled={Boolean(busyId)}
+                  className="min-h-11"
+                  aria-label={`${d("Jumlah orang")} ${index + 1}`}
+                  onChange={(event) => onEditDraft(draft.key, { invitedPax: Number(event.target.value) })}
                 />
                 <Button
                   type="button"

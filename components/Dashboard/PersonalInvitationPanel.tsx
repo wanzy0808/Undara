@@ -15,6 +15,7 @@ import {
 } from "@/components/Dashboard/PersonalInvitationPanels";
 import { buildPersonalInvitationPublicUrl, sortPersonalInvitationEvents, splitPersonalGuestNames } from "@/components/Dashboard/personal-invitation-helpers";
 import { buildPersonalGuestAddressee, getPersonalGuestSalutation, type PersonalSalutation } from "@/lib/guests/personal-envelope";
+import { MAX_GUEST_PARTY_SIZE, minimumInvitedPaxForSalutation } from "@/lib/guests/manual-party";
 import {
   emptyGuestInvitationForm,
   guestInvitationFormFrom,
@@ -255,7 +256,11 @@ export default function PersonalInvitationPanel({
       const names = splitPersonalGuestNames(name);
       if (names.some((name) => !buildPersonalGuestAddressee(name, salutation))) throw new Error(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
       if (drafts.length + names.length > 1000) throw new Error(d("Simpan daftar sebelum menambahkan lebih dari 1000 tamu."));
-      const rows = names.map((name) => ({ key: crypto.randomUUID(), name, category: profile.category, salutation }));
+      const minimum = minimumInvitedPaxForSalutation(salutation);
+      if (!Number.isInteger(profile.invitedPax) || profile.invitedPax < minimum || profile.invitedPax > MAX_GUEST_PARTY_SIZE) {
+        throw new Error(d("Jumlah tamu wajib 1–30 orang."));
+      }
+      const rows = names.map((name) => ({ key: crypto.randomUUID(), name, category: profile.category, salutation, invitedPax: profile.invitedPax }));
       stagedInput.current = name;
       setDrafts((current) => [...current, ...rows]);
       setName("");
@@ -265,15 +270,28 @@ export default function PersonalInvitationPanel({
     }
   }
 
-  function editDraft(key: string, value: { name?: string; category?: string; salutation?: PersonalSalutation }) {
+  function editDraft(key: string, value: { name?: string; category?: string; salutation?: PersonalSalutation; invitedPax?: number }) {
     if (creating.current) return;
-    setDrafts((current) => current.map((row) => row.key === key ? { ...row, ...(!row.guestId && value.name !== undefined ? { name: value.name } : {}), ...(!row.guestId && value.salutation ? { salutation: value.salutation } : {}), ...(value.category ? { category: value.category } : {}) } : row));
+    setDrafts((current) => current.map((row) => {
+      if (row.key !== key) return row;
+      if (row.guestId) return value.category ? { ...row, category: value.category } : row;
+      const nextSalutation = value.salutation ?? row.salutation ?? "BAPAK";
+      const minimum = minimumInvitedPaxForSalutation(nextSalutation);
+      const currentPax = value.invitedPax ?? row.invitedPax ?? 1;
+      return {
+        ...row,
+        ...(value.name !== undefined ? { name: value.name } : {}),
+        ...(value.salutation ? { salutation: value.salutation } : {}),
+        ...(value.category ? { category: value.category } : {}),
+        invitedPax: Math.max(minimum, Math.min(MAX_GUEST_PARTY_SIZE, currentPax)),
+      };
+    }));
   }
 
   async function createBatch() {
     if (!selectedEvent || !currentDrafts.length || creating.current) return;
     const rows = currentDrafts.map((row) => ({ ...row, name: row.name.trim() }));
-    if (rows.some((row) => !row.name || row.name.length > 120 || (!row.guestId && !buildPersonalGuestAddressee(row.name, row.salutation ?? "BAPAK")))) {
+    if (rows.some((row) => !row.name || row.name.length > 120 || (!row.guestId && (!buildPersonalGuestAddressee(row.name, row.salutation ?? "BAPAK") || !Number.isInteger(row.invitedPax) || (row.invitedPax ?? 0) < minimumInvitedPaxForSalutation(row.salutation ?? "BAPAK") || (row.invitedPax ?? 0) > MAX_GUEST_PARTY_SIZE)))) {
       setNotice(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
       return;
     }
@@ -288,7 +306,7 @@ export default function PersonalInvitationPanel({
         const batch = rows.slice(index, index + 100);
         const response = await fetch("/api/personal-invitations", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ invitationId: eventId, published: false, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category, salutation: row.salutation ?? "BAPAK" }) }),
+          body: JSON.stringify({ invitationId: eventId, published: false, recipients: batch.map((row) => row.guestId ? { guestId: row.guestId, category: row.category } : { key: row.key, name: row.name, category: row.category, salutation: row.salutation ?? "BAPAK", invitedPax: row.invitedPax ?? minimumInvitedPaxForSalutation(row.salutation ?? "BAPAK") }) }),
         });
         const data = await response.json().catch(() => null);
         if (!response.ok || !Array.isArray(data?.invitations) || data.invitations.length !== batch.length) {

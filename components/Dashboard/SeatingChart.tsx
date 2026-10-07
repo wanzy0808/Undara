@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
+import type { PersonalSalutation } from "@/lib/guests/personal-envelope";
+import { MAX_GUEST_PARTY_SIZE, minimumInvitedPaxForSalutation } from "@/lib/guests/manual-party";
+import { seatingOccupiedSeatCount } from "@/lib/seating/guest-seats";
 import {
   DashboardCompactStat,
   DashboardEmptyState,
@@ -37,6 +40,9 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [savingGuestId, setSavingGuestId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [manualName, setManualName] = useState("");
+  const [manualSalutation, setManualSalutation] = useState<PersonalSalutation>("BAPAK");
+  const [manualPax, setManualPax] = useState(1);
+  const [manualCategory, setManualCategory] = useState("REGULAR");
   const [manualSaving, setManualSaving] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
@@ -113,7 +119,10 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   );
   const hasRosterFilter = Boolean(categoryFilter || tagFilter);
   const totalSeats = visibleTables.reduce((sum, table) => sum + table.capacity, 0);
-  const assignedCount = visibleGuests.filter((guest) => guest.tableId).length;
+  const assignedCount = visibleTables.reduce(
+    (sum, table) => sum + seatingOccupiedSeatCount(visibleGuests, table.id, table.capacity),
+    0,
+  );
 
   async function generateTables(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -180,6 +189,11 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       setMessage(d("Nama tamu manual wajib diisi."));
       return;
     }
+    const minimumPax = minimumInvitedPaxForSalutation(manualSalutation);
+    if (!Number.isInteger(manualPax) || manualPax < minimumPax || manualPax > MAX_GUEST_PARTY_SIZE) {
+      setMessage(d("Jumlah tamu wajib 1–30 orang."));
+      return;
+    }
 
     setManualSaving(true);
     setMessage("");
@@ -187,7 +201,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       const response = await fetch("/api/guests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invitationId, name }),
+        body: JSON.stringify({ invitationId, name, salutation: manualSalutation, invitedPax: manualPax, category: manualCategory }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) {
@@ -195,7 +209,10 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       }
       setLocalGuests((current) => [...current, data.guest as SeatingGuest]);
       setManualName("");
-      setMessage(d("Tamu manual ditambahkan ke roster."));
+      setManualSalutation("BAPAK");
+      setManualPax(1);
+      setManualCategory("REGULAR");
+      setMessage(d("Tamu ditambahkan ke Daftar Tamu."));
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : d("Tamu manual gagal ditambahkan."),
@@ -411,20 +428,70 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         >
 
           <form onSubmit={addManualGuest} className="mt-4 space-y-2">
-            <Input
-              value={manualName}
-              onChange={(event) => setManualName(event.target.value)}
-              placeholder={d("Nama tamu manual")}
-            />
+            <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-2">
+              <label className="block text-xs text-muted-foreground">
+                {d("Sapaan")}
+                <select
+                  value={manualSalutation}
+                  disabled={manualSaving}
+                  className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                  onChange={(event) => {
+                    const next = event.target.value as PersonalSalutation;
+                    setManualSalutation(next);
+                    setManualPax((current) => Math.max(current, minimumInvitedPaxForSalutation(next)));
+                  }}
+                >
+                  <option value="BAPAK">{d("Bapak")}</option>
+                  <option value="IBU">{d("Ibu")}</option>
+                  <option value="BAPAK_IBU">{d("Bapak & Ibu")}</option>
+                </select>
+              </label>
+              <label className="block text-xs text-muted-foreground">
+                {d("Nama")}
+                <Input
+                  value={manualName}
+                  onChange={(event) => setManualName(event.target.value)}
+                  placeholder={d("Nama tamu manual")}
+                  className="mt-1 capitalize"
+                />
+              </label>
+            </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_92px] gap-2">
+              <label className="block text-xs text-muted-foreground">
+                {d("Kategori tamu")}
+                <select
+                  value={manualCategory}
+                  disabled={manualSaving}
+                  className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                  onChange={(event) => setManualCategory(event.target.value)}
+                >
+                  <option value="REGULAR">{d("Reguler")}</option>
+                  <option value="VIP">VIP</option>
+                  <option value="VVIP">VVIP</option>
+                </select>
+              </label>
+              <label className="block text-xs text-muted-foreground">
+                {d("Jumlah orang")}
+                <Input
+                  type="number"
+                  min={minimumInvitedPaxForSalutation(manualSalutation)}
+                  max={MAX_GUEST_PARTY_SIZE}
+                  value={manualPax}
+                  disabled={manualSaving}
+                  className="mt-1"
+                  onChange={(event) => setManualPax(Number(event.target.value))}
+                />
+              </label>
+            </div>
             <Button
               type="submit"
               size="sm"
               className="w-full"
               disabled={manualSaving}
-              title={d("Tambahkan tamu manual ke roster")}
+              title={d("Tambah ke Daftar Tamu")}
             >
               <UserPlus className="h-4 w-4" />
-              {manualSaving ? d("Menambahkan tamu...") : d("Tambah tamu manual")}
+              {manualSaving ? d("Menambahkan tamu...") : d("Tambah ke Daftar Tamu")}
             </Button>
           </form>
 
@@ -522,7 +589,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
           actions={
             <div className="flex gap-2">
               <DashboardCompactStat label={d("Meja")} value={String(visibleTables.length)} className="min-w-20" />
-              <DashboardCompactStat label={d("Tamu")} value={`${assignedCount}/${visibleGuests.length}`} className="min-w-20" />
+              <DashboardCompactStat label={d("Kursi")} value={`${assignedCount}/${totalSeats}`} className="min-w-20" />
             </div>
           }
       >

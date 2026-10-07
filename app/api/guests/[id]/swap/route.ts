@@ -67,7 +67,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const sourceSeatNumber = source.seatNumber;
       const targetTableId = target.tableId;
       const targetSeatNumber = target.seatNumber;
-      const tableIds = Array.from(new Set([sourceTableId, targetTableId]));
+      const tableIds = Array.from(new Set([sourceTableId, targetTableId])).sort();
+      for (const lockedTableId of tableIds) {
+        const locked = await tx.$queryRaw<{ id: string }[]>\`SELECT "id" FROM "WeddingTable" WHERE "id" = ${lockedTableId} AND "invitationId" = ${invitationId} FOR UPDATE\`;
+        if (!locked.length) throw new SwapError("Meja tidak ditemukan pada acara ini.", 404);
+      }
       const tables = await tx.weddingTable.findMany({ where: { invitationId, id: { in: tableIds } } });
       const tableById = new Map(tables.map((table) => [table.id, table]));
       const sourceTable = tableById.get(sourceTableId);

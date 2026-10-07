@@ -3,6 +3,7 @@ import test from "node:test";
 import * as crypto from "node:crypto";
 import * as profile from "../lib/guests/personal-profile.ts";
 import * as envelope from "../lib/guests/personal-envelope.ts";
+import * as manualParty from "../lib/guests/manual-party.ts";
 import { loadSource, loadPackageAccess } from "./helpers/package-access.mjs";
 
 const origin = loadSource("lib/security/request-origin.ts", {}, { env: { APP_URL: "https://example.test", NODE_ENV: "production" } });
@@ -64,6 +65,8 @@ function fixture(options = {}) {
   const batch = loadSource("lib/guests/personal-batch.ts", {
     "node:crypto": crypto, "@/lib/prisma": { prisma },
     "@/lib/guests/personal-envelope": envelope,
+    "@/lib/guests/manual-party": manualParty,
+    "@/lib/guests/personal-profile": profile,
     "@/lib/packages/server-access": { hasAccountDigitalInvitation: async (...args) => { calls.access.push(args); return packageAccess.access.hasAccountDigitalInvitation(...args); } },
   });
   const route = loadSource("app/api/personal-invitations/route.ts", {
@@ -111,14 +114,16 @@ test("chosen salutations persist separately from canonical names and stable retr
     { ...recipient("andi"), salutation: "BAPAK" },
     { ...recipient("ibu rina"), salutation: "IBU" },
     { ...recipient("andi & sari"), salutation: "BAPAK_IBU" },
-    { ...recipient("budi"), salutation: "BAPAK_IBU" },
+    { ...recipient("budi"), salutation: "BAPAK_IBU", invitedPax: 4 },
   ];
   const body = { invitationId: "event-a", recipients, published: false };
   const first = await f.route.POST(request("POST", body)); assert.equal(first.status, 201);
   const rows = (await first.json()).invitations;
   assert.deepEqual(rows.map((row) => row.name), recipients.map((row) => row.name));
   assert.deepEqual(rows.map((row) => row.personalAddressee), ["Bapak Andi", "Ibu Rina", "Bapak Andi dan Ibu Sari", "Bapak & Ibu Budi"]);
-  assert.ok(rows.every((row) => row.invitedPax === 1 && row.recipientType === "INDIVIDUAL" && !row.personalPublished));
+  assert.deepEqual(rows.map((row) => row.invitedPax), [1, 1, 2, 4]);
+  assert.deepEqual(rows.map((row) => row.recipientType), ["INDIVIDUAL", "INDIVIDUAL", "COUPLE", "FAMILY"]);
+  assert.ok(rows.every((row) => !row.personalPublished));
   assert.deepEqual(rows.map(envelope.formatPersonalEnvelopeAddress), rows.map((row) => `Kepada Yth : ${row.personalAddressee}`));
   const retry = await f.route.POST(request("POST", body)); assert.equal(retry.status, 201);
   assert.deepEqual((await retry.json()).invitations.map((row) => [row.id, row.personalToken]), rows.map((row) => [row.id, row.personalToken]));
@@ -163,6 +168,8 @@ test("bulk writes require login, trusted origin, explicit owned configured invit
     [{}, { ...good, recipients: [{ ...recipient(), guestId: 7 }] }, {}, 400],
     ...["CUSTOM", "", null, 7, true].map((salutation) => [{}, { ...good, recipients: [{ ...recipient(), salutation }] }, {}, 400]),
     [{}, { ...good, recipients: [{ ...recipient("Bapak"), salutation: "BAPAK" }] }, {}, 400],
+    [{}, { ...good, recipients: [{ ...recipient("Andi & Sari"), salutation: "BAPAK_IBU", invitedPax: 1 }] }, {}, 400],
+    [{}, { ...good, recipients: [{ ...recipient("Andi"), salutation: "BAPAK", invitedPax: 31 }] }, {}, 400],
     [{}, { ...good, recipients: [{ guestId: "guest-a", category: "VIP", salutation: "IBU" }] }, {}, 400],
     [{}, { ...good, recipients: [good.recipients[0], good.recipients[0]] }, {}, 400],
     [{}, { ...good, published: "true" }, {}, 400],

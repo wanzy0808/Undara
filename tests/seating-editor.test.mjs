@@ -16,6 +16,8 @@ import * as dialogs from "../components/ui/dialog.tsx";
 import { LanguageProvider } from "../components/I18n/LanguageProvider.tsx";
 import { useDashboardI18n } from "../components/Dashboard/useDashboardI18n.ts";
 import * as filters from "../lib/guests/filters.ts";
+import * as manualParty from "../lib/guests/manual-party.ts";
+import * as guestSeats from "../lib/seating/guest-seats.ts";
 import * as titles from "../lib/text/display-title-case.ts";
 import PrintModule, { seatingPrintOffsets } from "../components/Dashboard/SeatingPlanPrint.tsx";
 import { loadSource } from "./helpers/package-access.mjs";
@@ -476,6 +478,7 @@ function chartFixture(overrides = {}, interactive = false) {
     "@/components/ui/dialog": dialogs,
     "@/components/Dashboard/useDashboardI18n": { useDashboardI18n: interactive ? () => ({ d: (text) => text, locale: "id" }) : useDashboardI18n }, "@/lib/text/display-title-case": titles,
     "@/components/Dashboard/DashboardPrimitives": primitives, "@/lib/guests/filters": filters,
+    "@/lib/guests/manual-party": manualParty, "@/lib/seating/guest-seats": guestSeats,
     "@/components/Dashboard/seating-chart-geometry": geometry, "@/lib/seating/plan": plans, "@/lib/seating/editor": editor,
     "./use-seating-plan": { useSeatingPlan: () => plan },
     "./SeatingPlanCanvas": { __esModule: true, default: (props) => { canvasProps = props; return React.createElement("div", { "aria-label": "Denah" }); } },
@@ -582,6 +585,49 @@ test("actual chart Add is repeatable, guards double submits and retains old geom
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test("manual seating input creates the shared Guest party used by Personal Invitation", async () => {
+  const originalFetch = globalThis.fetch, calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, body: JSON.parse(options.body) });
+    return Response.json({
+      guest: {
+        id: "guest-party",
+        name: "andi & rina",
+        source: "MANUAL",
+        category: "REGULAR",
+        personalAddressee: "Bapak Andi dan Ibu Rina",
+        recipientType: "FAMILY",
+        invitedPax: 4,
+        tableId: null,
+        seatNumber: null,
+      },
+    }, { status: 201 });
+  };
+  try {
+    const f = chartFixture({}, true);
+    const props = { ...chartProps, guests: [] };
+    let tree = f.render(props);
+    const salutation = elements(tree, (el) => el.type === "select" && el.props.value === "BAPAK")[0];
+    salutation.props.onChange({ target: { value: "BAPAK_IBU" } });
+    tree = f.render(props);
+    const partyInput = elements(tree, (el) => el.type === Input && el.props.type === "number" && el.props.max === 30)[0];
+    assert.equal(partyInput.props.value, 2);
+    elements(tree, (el) => el.type === Input && el.props.placeholder === "Nama tamu manual")[0]
+      .props.onChange({ target: { value: "andi & rina" } });
+    partyInput.props.onChange({ target: { value: "4" } });
+    tree = f.render(props);
+    await elements(tree, (el) => el.type === "form")[1].props.onSubmit({ preventDefault() {} });
+    assert.deepEqual(calls, [{
+      url: "/api/guests",
+      body: { invitationId: "event-a", name: "andi & rina", salutation: "BAPAK_IBU", invitedPax: 4, category: "REGULAR" },
+    }]);
+    tree = f.render(props);
+    assert.equal(chartCanvas(tree).guests.find((guest) => guest.id === "guest-party")?.invitedPax, 4);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("actual chart failed Add retains tables and the layout, and the allowance disables additions at 100", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => Response.json({ error: "Maksimal 100 meja per acara." }, { status: 409 });
@@ -652,7 +698,7 @@ test("actual print SSR matches moved geometry/routes, includes the full roster a
 
 test("print labels support English and guest/event text is escaped by React", () => {
   const html = printHtml({ locale: "en", title: "<script>alert(1)</script>", guests: [{ id: "a", name: '<img src=x onerror="alert(1)">', tableId: table.id, seatNumber: 1 }] });
-  assert.match(html, /Guest placement|guests assigned/);
+  assert.match(html, /Guest placement|seats occupied/);
   assert.match(html, /Dashed arrow: bridal route/);
   assert.match(html, /&lt;script&gt;/i);
   assert.match(html, /&lt;img/i);

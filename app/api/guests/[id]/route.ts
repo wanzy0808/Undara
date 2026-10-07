@@ -66,6 +66,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         });
       }
 
+      const locked = await tx.$queryRaw<{ id: string }[]>\`SELECT "id" FROM "WeddingTable" WHERE "id" = ${tableId} AND "invitationId" = ${invitationId} FOR UPDATE\`;
+      if (!locked.length) throw new PlacementError("Meja tidak ditemukan pada acara ini.", 404);
       const table = await tx.weddingTable.findFirst({ where: { id: tableId, invitationId } });
       if (!table) throw new PlacementError("Meja tidak ditemukan pada acara ini.", 404);
       if (seatNumber !== null && seatNumber > table.capacity) {
