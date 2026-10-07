@@ -301,6 +301,24 @@ export const invitationTemplates: InvitationTemplate[] = [
     preset: { layout: "editorial", palette: "gathering", font: "syneInter" },
     previewImage: "/templates/gathering/preview.svg", assetPath: "/templates/gathering",
   },
+  {
+    key: "taman-doa", name: "Taman Doa",
+    description: "Syukuran khitanan dengan taman kertas hijau, lengkung hangat, layang-layang, dan doa keluarga.",
+    descriptionEn: "A khitan celebration with a green paper garden, warm arches, a kite and family wishes.",
+    category: "Family", eventCategories: ["KHITANAN"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "tamanDoa", font: "youngInstrument" },
+    previewImage: "/templates/taman-doa/preview.svg", assetPath: "/templates/taman-doa",
+  },
+  {
+    key: "red-thread", name: "Red Thread",
+    description: "Undangan sangjit dengan folio merah, simpul emas, awan ornamental, dan cerita dua keluarga.",
+    descriptionEn: "A sangjit invitation with a crimson folio, golden knots, cloud ornaments and two family stories.",
+    category: "Celebration", eventCategories: ["SANGJIT"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "redThread", font: "bodoniManrope" },
+    previewImage: "/templates/red-thread/preview.svg", assetPath: "/templates/red-thread",
+  },
 ];
 
 export function templateSupportsEventCategory(

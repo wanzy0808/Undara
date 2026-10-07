@@ -85,8 +85,23 @@ export const gatheringTemplateDemoInvitation: InvitationDesignerInvitation = {
   assets: [],
 };
 
+export const khitananTemplateDemoInvitation: InvitationDesignerInvitation = {
+  ...templateDemoInvitation, id: "khitanan-gallery-preview-only", slug: "khitanan-gallery-preview-only",
+  eventCategory: "KHITANAN", title: "Khitanan Aksa", groomName: "Aksa", brideName: "",
+  description: null, venue: "Taman Keluarga", eventDate: "2027-07-18T10:00:00+07:00",
+  ceremonyTime: "10:00", receptionTime: "END", assets: [],
+};
+export const sangjitTemplateDemoInvitation: InvitationDesignerInvitation = {
+  ...templateDemoInvitation, id: "sangjit-gallery-preview-only", slug: "sangjit-gallery-preview-only",
+  eventCategory: "SANGJIT", title: "Sangjit Leon & Mei", groomName: "Leon", brideName: "Mei",
+  description: null, venue: "Rumah Keluarga", eventDate: "2027-08-21T10:00:00+07:00",
+  ceremonyTime: "10:00", receptionTime: "13:00", assets: [],
+};
+
 export function getTemplateDemoInvitation(templateKey: string): InvitationDesignerInvitation {
   const key = templateKey.split("::")[0];
+  if (key === "taman-doa") return khitananTemplateDemoInvitation;
+  if (key === "red-thread") return sangjitTemplateDemoInvitation;
   if (key === "little-cloud") return babyTemplateDemoInvitation;
   if (key === "gathering") return gatheringTemplateDemoInvitation;
   if (key === "silver-reverie") return silverTemplateDemoInvitation;
@@ -100,7 +115,7 @@ export function getTemplateDemoInvitation(templateKey: string): InvitationDesign
 /** Follow master theme selection/Undo without replacing customer/custom event data. */
 export function resolveTemplateStudioDemo(current: InvitationDesignerInvitation, templateKey: string): InvitationDesignerInvitation {
   const fixture = getTemplateDemoInvitation(templateKey);
-  const demos = [templateDemoInvitation, birthdayTemplateDemoInvitation, silverTemplateDemoInvitation, goldenTemplateDemoInvitation, babyTemplateDemoInvitation, gatheringTemplateDemoInvitation];
+  const demos = [templateDemoInvitation, birthdayTemplateDemoInvitation, silverTemplateDemoInvitation, goldenTemplateDemoInvitation, babyTemplateDemoInvitation, gatheringTemplateDemoInvitation, khitananTemplateDemoInvitation, sangjitTemplateDemoInvitation];
   const demoIds = new Set(demos.flatMap((demo) => demo.assets.map((asset) => asset.id)));
   return {
     ...current, ...fixture,

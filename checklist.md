@@ -484,6 +484,9 @@ Create Customer A and Customer B with separate events.
 
 # 13. P1 — Guest management, seating & Usher
 
+- [x] Khitanan/Sangjit: kategori dan validasi nama existing, tema Taman Doa/Red Thread terdaftar di katalog tunggal; amplop, 13 section isi, musik, Studio, foto opsional, ID/EN dan personal recipient memakai engine bersama. Save/Publish/gateway/custom handoff mengikuti kategori persis.
+- [ ] QA tema Taman Doa/Red Thread di browser desktop/tablet/HP: nama panjang, buka amplop dengan mouse/keyboard/Reduced Motion/OFF, foto/crop, Gallery, native paint/transform/hide/restore, Undo/Redo → Simpan → reload → public; RSVP/Wishes/Maps/Gift/QR pada acara berbayar yang benar. Source/SSR/build tidak menggantikan target-app QA.
+
 - [x] Sesi pernikahan satu tanggal (§5.7): source model/migrasi, validasi event dan Guest scope, Personal Invitation single/batch, filtering server untuk publik/preview, RSVP/kalender dan check-in per sesi terhubung. Legacy start/end tidak diinfer menjadi dua sesi; tanggal berbeda wajib event/paket terpisah. Bukti regresi/build ada di Appendix A batch 7 Oktober 2026.
 - [ ] Terapkan migrasi `20261007130000_wedding_sessions` pada database target setelah backup, regenerasi client dan restart app. Verifikasi satu sesi/dua sesi, scope Prosesi/Resepsi/Keduanya, ganti tanggal/aktivasi sebelum Publish, reload desain/tamu, password, undangan umum/personal, kalender dan scan ulang/bersamaan per sesi pada PostgreSQL nyata.
 - [ ] QA visual sesi di desktop/mobile Light/Dark/ID/EN, navigasi keyboard/fokus label, error/retry form, pilihan Usher dan QR perangkat nyata. Tes handler/SSR tidak menggantikan QA browser/perangkat.

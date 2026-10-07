@@ -5,6 +5,18 @@ export type InvitationLanguage = "ID" | "EN";
 
 /** Text owned by the invitation product. Event data and customer-authored copy are never machine-translated. */
 const english: Record<string, string> = {
+  "Khitanan": "Khitan Celebration",
+  "Syukuran Khitanan": "Khitan Celebration",
+  "Syukur untuk langkah kecilnya": "Gratitude for his next little step",
+  "Sebuah ikatan, dua keluarga": "One bond, two families",
+  "Dengan penuh rasa syukur, kami mengundang Anda untuk hadir pada syukuran khitanan putra kami.": "With gratitude, we invite you to celebrate our son's khitan with us.",
+  "Mari berbagi kebahagiaan dan doa bersama keluarga kami. Kehadiran Anda akan membuat hari ini semakin berarti.": "Join our family in sharing joy and prayers. Your presence will make this day even more meaningful.",
+  "Semoga putra kami tumbuh sehat, berhati baik, dan selalu dikelilingi kasih serta doa yang baik.": "May our son grow in good health and kindness, always surrounded by love and warm wishes.",
+  "Terima kasih atas kehadiran dan doa Anda. Semoga kebersamaan ini menjadi kenangan yang hangat bagi kita semua.": "Thank you for your presence and prayers. May this time together become a warm memory for us all.",
+  "Dua keluarga bertemu untuk merangkai ikatan yang penuh makna. Dengan hangat, kami mengundang Anda ke acara sangjit kami.": "Two families come together to form a meaningful bond. We warmly invite you to our sangjit celebration.",
+  "Kehadiran Anda akan melengkapi kebahagiaan kedua keluarga pada hari istimewa ini.": "Your presence will complete both families' joy on this special day.",
+  "Semoga ikatan ini membawa kasih, keharmonisan, dan kebersamaan yang terus bertumbuh.": "May this bond bring love, harmony and togetherness that keep growing.",
+  "Terima kasih telah menjadi bagian dari pertemuan kedua keluarga kami. Sampai bertemu di hari yang penuh kebahagiaan.": "Thank you for being part of our families' gathering. We look forward to seeing you on this joyful day.",
   "Kami sedang menanti cerita kecil yang akan membawa banyak bahagia. Kami ingin berbagi rasa syukur ini bersama Anda.": "We are waiting for a little story that will bring so much joy. We would love to share this grateful moment with you.",
   "Datanglah untuk berbagi doa, cerita, dan kebersamaan sebelum kami menyambut si kecil.": "Join us for good wishes, stories and togetherness as we prepare to welcome our little one.",
   "Semoga si kecil dan keluarga selalu dikelilingi kesehatan, kasih, dan hari-hari yang hangat.": "May our little one and family be surrounded by health, love and warm days.",

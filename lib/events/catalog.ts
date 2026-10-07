@@ -4,6 +4,8 @@ export const eventCategoryOptions = [
   { key: "GOLDEN_WEDDING", label: "Golden Wedding", nameMode: "couple" },
   { key: "BIRTHDAY", label: "Ulang Tahun", nameMode: "single" },
   { key: "BABY_SHOWER", label: "Baby Shower", nameMode: "single" },
+  { key: "KHITANAN", label: "Khitanan", nameMode: "single" },
+  { key: "SANGJIT", label: "Sangjit", nameMode: "couple" },
   { key: "OTHER", label: "Event Lainnya", nameMode: "optional" },
 ] as const;
 
@@ -35,7 +37,7 @@ export function normalizeIndonesiaTimezone(value: unknown): IndonesiaTimezone {
 }
 
 export function getEventCategory(category: EventCategory) {
-  return eventCategoryOptions.find((item) => item.key === category) ?? eventCategoryOptions[5];
+  return eventCategoryOptions.find((item) => item.key === category) ?? eventCategoryOptions.find((item) => item.key === "OTHER")!;
 }
 
 export function getIndonesiaTimezone(value: string) {
@@ -62,6 +64,10 @@ export function buildEventTitle(
       return primary ? `Ulang Tahun ${primary}` : "Ulang Tahun";
     case "BABY_SHOWER":
       return primary ? `Baby Shower ${primary}` : "Baby Shower";
+    case "KHITANAN":
+      return primary ? `Khitanan ${primary}` : "Khitanan";
+    case "SANGJIT":
+      return primary && secondary ? `Sangjit ${primary} & ${secondary}` : "Sangjit";
     case "OTHER":
       return customTitle.trim();
   }

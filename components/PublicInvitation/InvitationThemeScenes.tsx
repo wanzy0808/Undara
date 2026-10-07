@@ -137,6 +137,7 @@ function ThemeEnvelope({theme,names,date,cover,focus,crop,onOpen,preview,allowEn
 const PencilReverieScene = dynamic(() => import("@/components/PublicInvitation/PencilReverieScene"));
 const ZenAtelierScene = dynamic(() => import("@/components/PublicInvitation/ZenAtelierScene"));
 const SereinScene = dynamic(() => import("@/components/PublicInvitation/SereinScene"));
+const FamilyCelebrationScene = dynamic(() => import("@/components/PublicInvitation/FamilyCelebrationScene"));
 const CelebrationScene = dynamic(() => import("@/components/PublicInvitation/CelebrationScene"));
 const AnniversaryScene = dynamic(() => import("@/components/PublicInvitation/AnniversaryScene"));
 const ConfettiClubScene = dynamic(() => import("@/components/PublicInvitation/ConfettiClubScene"));
@@ -153,6 +154,7 @@ const VelvetHorizonScene = dynamic(() => import("@/components/PublicInvitation/V
 export default function InvitationThemeScenes({theme,names,date,time,eventLabel,cover,focus,crop,cropEditing,onCropChange,onFinishCrop,locale,stage,onOpen,onEditPhoto,preview,allowEnvelopeOpen,isWedding,couple,hashtag,recipientLine,motionEnabled}: SceneProps) {
   const language = useInvitationLanguage();
   const tr = (text: string) => invitationText(language, text);
+  if (theme === "taman-doa" || theme === "red-thread") return <FamilyCelebrationScene {...{theme,names,date,time,eventLabel,cover,focus,crop,cropEditing,onCropChange,onFinishCrop,locale,stage,onOpen,onEditPhoto,preview,allowEnvelopeOpen,isWedding,couple,hashtag,recipientLine,motionEnabled}} />;
   if (theme === "blank-canvas") {
     return (
       <section
