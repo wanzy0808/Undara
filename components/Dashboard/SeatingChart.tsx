@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
-import type { PersonalSalutation } from "@/lib/guests/personal-envelope";
+import { getPersonalGuestSalutation, type PersonalSalutation } from "@/lib/guests/personal-envelope";
 import { MAX_GUEST_PARTY_SIZE, minimumInvitedPaxForSalutation } from "@/lib/guests/manual-party";
 import { seatingGuestSeats, seatingOccupiedSeatCount, seatingPartySize } from "@/lib/seating/guest-seats";
 import {
@@ -54,6 +54,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
   const [guestAction, setGuestAction] = useState<{ mode: "edit" | "delete"; guest: SeatingGuest } | null>(null);
   const [guestEditName, setGuestEditName] = useState("");
   const [guestEditCategory, setGuestEditCategory] = useState("REGULAR");
+  const [guestEditPax, setGuestEditPax] = useState(1);
   const [guestMutating, setGuestMutating] = useState(false);
   const [guestError, setGuestError] = useState("");
   const guestRequest = useRef<AbortController | null>(null);
@@ -152,12 +153,16 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
     (sum, table) => sum + seatingOccupiedSeatCount(visibleGuests, table.id, table.capacity),
     0,
   );
+  const guestEditMinimumPax = minimumInvitedPaxForSalutation(
+    (guestAction && getPersonalGuestSalutation(guestAction.guest)) || "BAPAK",
+  );
 
   function openGuestAction(mode: "edit" | "delete", guest: SeatingGuest) {
     if (toolbarBusy || manualSaving || guestMutationBusy.current) return;
     setGuestAction({ mode, guest });
     setGuestEditName(guest.name);
     setGuestEditCategory(guest.category || "REGULAR");
+    setGuestEditPax(seatingPartySize(guest));
     setGuestError("");
     setDraggedGuestId(null); setHoverTarget(null); setSwapCandidate(null);
   }
@@ -171,6 +176,15 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       setGuestError(d("Nama tamu wajib diisi (maksimal 120 karakter)."));
       return;
     }
+    if (mode === "edit" && (!Number.isInteger(guestEditPax) || guestEditPax < 1 || guestEditPax > MAX_GUEST_PARTY_SIZE)) {
+      setGuestError(d("Jumlah tamu wajib 1–30 orang."));
+      return;
+    }
+    if (mode === "edit" && guestEditPax < guestEditMinimumPax) {
+      setGuestError(d("Bapak & Ibu minimal 2 orang."));
+      return;
+    }
+    const resizing = mode === "edit" && guestEditPax !== seatingPartySize(guest);
     guestMutationBusy.current = true;
     const controller = new AbortController(); guestRequest.current = controller;
     setGuestMutating(true); setGuestError(""); setMessage("");
@@ -179,7 +193,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         method: mode === "edit" ? "PATCH" : "DELETE", signal: controller.signal,
         ...(mode === "edit" ? {
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: guest.id, invitationId, name, ...(guestEditCategory !== (guest.category || "REGULAR") ? { category: guestEditCategory } : {}) }),
+          body: JSON.stringify({ id: guest.id, invitationId, name, ...(guestEditCategory !== (guest.category || "REGULAR") ? { category: guestEditCategory } : {}), ...(resizing ? { invitedPax: guestEditPax } : {}) }),
         } : {}),
       });
       const data = await response.json().catch(() => null);
@@ -188,12 +202,16 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
       if (data?.ok !== true || (mode === "edit" && (data.guest?.id !== guest.id || data.guest?.invitationId !== invitationId || typeof data.guest?.name !== "string" || !data.guest.name.trim() || data.guest.name.length > 120 || (data.guest.category != null && typeof data.guest.category !== "string") || (data.guest.personalAddressee != null && typeof data.guest.personalAddressee !== "string")))) {
         throw new Error("Data tamu tidak valid. Muat ulang dan coba lagi.");
       }
+      if (resizing && (!Number.isInteger(data.guest.invitedPax) || data.guest.invitedPax !== guestEditPax)) {
+        throw new Error("Data tamu tidak valid. Muat ulang dan coba lagi.");
+      }
       if (mode === "edit") {
         const updated = data.guest as SeatingGuest;
         setGuestOverrides((current) => ({ ...current, [guest.id]: {
           ...current[guest.id], name: updated.name,
           ...(updated.category !== undefined ? { category: updated.category } : {}),
           ...(updated.personalAddressee !== undefined ? { personalAddressee: updated.personalAddressee } : {}),
+          ...(resizing ? { invitedPax: updated.invitedPax } : {}),
         } }));
         setMessage(d("Data tamu diperbarui."));
       } else {
@@ -462,18 +480,19 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
   return (
     <div className="mt-5 min-w-0 space-y-4">
-      <div className="grid min-w-0 items-start gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))]">
+      <div className="grid min-w-0 items-stretch gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))]">
         <DashboardPanel
+            className="h-full min-w-0"
             title={d("Struktur meja")}
             actions={
-              <DashboardStatusBadge active={visibleTables.length > 0}>
+              <DashboardStatusBadge active={visibleTables.length > 0} className="min-h-7">
                 {visibleTables.length} {locale === "en" ? "tables" : "meja"}
               </DashboardStatusBadge>
             }
         >
 
           <form onSubmit={generateTables} className="mt-4 flex flex-wrap items-end gap-3">
-            <label className="inline-flex items-center gap-2 text-sm font-medium">
+            <label className="block text-xs text-muted-foreground">
               <span>{d("Meja")}:</span>
               <Input
                 type="number"
@@ -481,12 +500,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 max={Math.max(1, 100 - visibleTables.length)}
                 disabled={toolbarBusy || visibleTables.length >= 100}
                 value={tableCount}
-                className="min-h-11 w-16 px-2"
+                className="mt-1 min-h-11 w-16 px-2"
                 onChange={(event) => setTableCount(Number(event.target.value))}
               />
             </label>
             <div className="flex min-w-0 max-w-full items-end gap-2">
-              <label className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium">
+              <label className="block min-w-0 text-xs text-muted-foreground">
                 <span>{d("Kursi")}:</span>
                 <Input
                   type="number"
@@ -494,7 +513,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                   max={50}
                   disabled={toolbarBusy || visibleTables.length >= 100}
                   value={seatsPerTable}
-                  className="min-h-11 w-16 max-w-full px-2"
+                  className="mt-1 min-h-11 w-16 max-w-full px-2"
                   onChange={(event) => setSeatsPerTable(Number(event.target.value))}
                 />
               </label>
@@ -516,7 +535,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
           </div>
         </DashboardPanel>
 
-        <DashboardPanel title={d("Isi tamu")}>
+        <DashboardPanel title={d("Isi tamu")} className="h-full min-w-0">
           <form onSubmit={addManualGuest} className="mt-4 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
             <label className="block w-40 max-w-full text-xs text-muted-foreground">
               {d("Sapaan")}
@@ -536,7 +555,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
               style={{ width: Math.min(320, Math.max(192, manualName.length * 8 + 32)) }}>
               {d("Nama")}
               <Input value={manualName} onChange={(event) => setManualName(event.target.value)}
-                placeholder={d("Nama tamu manual")} className="mt-1 capitalize" />
+                placeholder={d("Nama tamu manual")} className="mt-1 min-h-11 capitalize" />
             </label>
             <label className="block w-36 max-w-full text-xs text-muted-foreground">
               {d("Kategori tamu")}
@@ -658,7 +677,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                   ))}
                 </select>
               </label>
-              <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
+              {(tags.length > 0 || tagFilter) && <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
                 {d("Tag tamu")}
                 <select
                   value={tagFilter}
@@ -673,7 +692,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     <option key={tag} value={tag}>{displayTitleCase(tag)}</option>
                   ))}
                 </select>
-              </label>
+              </label>}
               <p role="status" className="w-full text-xs text-muted-foreground">
                 {locale === "en"
                   ? `Showing ${filteredRoster.length} of ${rosterGuests.length} guests · ${unassigned.length} unassigned.`
@@ -828,6 +847,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     <option value="VVIP">VVIP</option>
                     {!primaryCategories.includes(guestEditCategory) && <option value={guestEditCategory}>{displayTitleCase(guestEditCategory)}</option>}
                   </select>
+                </label>
+                <label className="block w-24 max-w-full text-sm">
+                  {d("Jumlah orang")}
+                  <Input type="number" min={guestEditMinimumPax} max={MAX_GUEST_PARTY_SIZE} step={1} required
+                    value={guestEditPax} disabled={guestMutating} className="mt-1 min-h-11"
+                    onChange={(event) => setGuestEditPax(Number(event.target.value))} />
                 </label>
               </div> : <p className="break-words text-sm font-medium">{displayTitleCase(guestAction.guest.name)}</p>}
               {guestError && <p role="alert" className="text-sm text-destructive">{guestError}</p>}

@@ -96,8 +96,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
           { status: 409 },
         );
       }
-      guest = await prisma.guest.update({
-        where: { id: guest.id },
+      // Quota edits and check-in may commit after the initial token lookup.
+      // Evaluate these guards in the same write that saves the attendance.
+      const saved = await prisma.guest.updateMany({
+        where: {
+          id: guest.id, invitationId: invitation.id,
+          personalToken: guest.personalToken, personalPublished: true,
+          ...(status === "ATTENDING" ? { invitedPax: { gte: confirmedPlusOnes + 1 } } : {}),
+          OR: [{ checkedIn: false }, { checkedIn: true, rsvpStatus, plusOnes: confirmedPlusOnes }],
+        },
         data: {
           source: "RSVP",
           rsvpStatus,
@@ -106,6 +113,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
           rsvpAnswers,
         },
       });
+      if (saved.count !== 1) {
+        return NextResponse.json({ error: "Data tamu berubah. Muat ulang dan coba lagi." }, { status: 409 });
+      }
+      guest = await prisma.guest.findFirst({ where: { id: guest.id, invitationId: invitation.id } });
+      if (!guest) return NextResponse.json({ error: "Tamu tidak ditemukan." }, { status: 404 });
     } else {
       if (status === "ATTENDING" && confirmedPlusOnes > 10) {
         return NextResponse.json({ error: "Jumlah pendamping maksimal 10 orang." }, { status: 400 });

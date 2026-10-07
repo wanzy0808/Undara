@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as profile from "../lib/guests/personal-profile.ts";
 import * as envelope from "../lib/guests/personal-envelope.ts";
+import * as manualParty from "../lib/guests/manual-party.ts";
+import * as guestSeats from "../lib/seating/guest-seats.ts";
 import { loadSource } from "./helpers/package-access.mjs";
 
 const origin = loadSource("lib/security/request-origin.ts", {}, { env: { APP_URL: "https://example.test", NODE_ENV: "production" } });
@@ -44,11 +46,16 @@ function fixture(options = {}) {
       return { count: before - guests.length };
     },
   } };
+  const access = { hasAccountDigitalInvitation: async (...args) => { calls.access.push(args); return options.access !== false; } };
+  const partyUpdate = loadSource("lib/guests/party-update.ts", {
+    "@/lib/prisma": { prisma }, "@/lib/packages/server-access": access,
+    "./personal-envelope": envelope, "./manual-party": manualParty, "@/lib/seating/guest-seats": guestSeats,
+  });
   const routes = loadSource("app/api/guests/manage/route.ts", {
     "next/server": { NextResponse: { json: (body, init) => Response.json(body, init) } },
     "@/lib/auth": { getCurrentUser: async () => options.signedOut ? null : { id: "owner-a" } }, "@/lib/prisma": { prisma },
     "@/lib/security/request-origin": origin,
-    "@/lib/packages/server-access": { hasAccountDigitalInvitation: async (...args) => { calls.access.push(args); return options.access !== false; } },
+    "@/lib/packages/server-access": access, "@/lib/guests/party-update": partyUpdate,
     "@/lib/guests/identity": { findGuestsByContact: async (...args) => { calls.contacts.push(args); return options.duplicate ? [{ id: "other-guest" }] : [{ id: "guest-a" }]; } },
     "@/lib/guests/personal-profile": profile, "@/lib/guests/personal-envelope": envelope,
   });

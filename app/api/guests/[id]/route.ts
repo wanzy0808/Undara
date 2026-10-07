@@ -58,6 +58,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const invitationId = guest.invitation.id;
     const updated = await prisma.$transaction(async (tx) => {
+      const event = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Invitation" WHERE "id" = ${invitationId} AND "ownerId" = ${user.id} FOR UPDATE`;
+      if (!event.length) throw new PlacementError("Tamu tidak ditemukan.", 404);
+      const currentGuest = await tx.guest.findFirst({ where: { id: guest.id, invitationId }, select: { id: true, invitedPax: true, source: true, rsvpStatus: true } });
+      if (!currentGuest) throw new PlacementError("Tamu tidak ditemukan.", 404);
+      if (!isSeatingEligibleGuest(currentGuest)) throw new PlacementError("Tamu RSVP yang belum berstatus ATTENDING tidak dapat ditempatkan di denah.", 409);
       if (!tableId) {
         return tx.guest.update({
           where: { id: guest.id },
@@ -87,7 +92,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         where: eligibleWhere,
         select: { id: true, tableId: true, seatNumber: true, invitedPax: true },
       });
-      const partySize = seatingPartySize(guest);
+      const partySize = seatingPartySize(currentGuest);
       if (partySize > table.capacity) {
         throw new PlacementError(`Rombongan ${partySize} orang melebihi kapasitas meja (${table.capacity}).`, 409);
       }

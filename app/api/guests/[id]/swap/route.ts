@@ -41,6 +41,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const invitationId = sourceOwner.invitation.id;
     const result = await prisma.$transaction(async (tx) => {
+      const event = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Invitation" WHERE "id" = ${invitationId} AND "ownerId" = ${user.id} FOR UPDATE`;
+      if (!event.length) throw new SwapError("Tamu tidak ditemukan pada acara ini.", 404);
       const [source, target] = await Promise.all([
         tx.guest.findFirst({
           where: { id, invitationId },

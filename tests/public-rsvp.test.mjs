@@ -39,7 +39,7 @@ const options = { ...configHelpers.defaultInvitationRsvpConfig, ceremony: true, 
   customFields: [{ id: "meal", label: "Pilihan makanan", required: true }, { id: "city", label: "Kota asal", required: false }],
 };
 
-function fixture({ invitation = event(), guests = [], grants, allowed = true } = {}) {
+function fixture({ invitation = event(), guests = [], grants, allowed = true, beforePersonalWrite } = {}) {
   const records = structuredClone(guests);
   const calls = { creates: [], updates: [], renders: [], rates: [], queries: [] };
   const prisma = { invitation: {
@@ -58,9 +58,17 @@ function fixture({ invitation = event(), guests = [], grants, allowed = true } =
         && (!where.name || (guest.name.toLowerCase() === where.name.equals.toLowerCase() && guest.phone)))
         .map((guest) => Object.fromEntries(Object.keys(select).filter((key) => select[key] === true).map((key) => [key, guest[key]])));
     },
-    update: async ({ where, data }) => {
-      calls.updates.push({ where, data });
-      return Object.assign(records.find((guest) => guest.id === where.id), data);
+    updateMany: async ({ where, data }) => {
+      beforePersonalWrite?.(records);
+      const guest = records.find((guest) => guest.id === where.id && guest.invitationId === where.invitationId
+        && guest.personalToken === where.personalToken && guest.personalPublished === where.personalPublished
+        && (!where.invitedPax || guest.invitedPax >= where.invitedPax.gte)
+        && where.OR.some((condition) => guest.checkedIn === condition.checkedIn
+          && (condition.rsvpStatus === undefined || guest.rsvpStatus === condition.rsvpStatus)
+          && (condition.plusOnes === undefined || guest.plusOnes === condition.plusOnes)));
+      if (!guest) return { count: 0 };
+      calls.updates.push({ where, data }); Object.assign(guest, data);
+      return { count: 1 };
     },
     create: async ({ data }) => {
       calls.creates.push(data);
@@ -161,6 +169,19 @@ test("personal RSVP updates the same canonical guest and saves all configured an
   assert.equal(f.records[0].plusOnes, 0);
   assert.deepEqual(f.records[0].rsvpEvents, []);
   assert.equal((await f.image(saved.qrToken)).status, 404);
+});
+
+test("personal RSVP atomically refuses a quota shrink, check-in, or revoked link after token lookup", async () => {
+  for (const changes of [{ invitedPax: 2 }, { checkedIn: true }, { personalPublished: false }, { personalToken: "replaced-token" }]) {
+    const f = fixture({ guests: [personal()], beforePersonalWrite: (records) => Object.assign(records[0], changes) });
+    const response = await f.submit(personalBody());
+    assert.equal(response.status, 409); assert.match((await response.json()).error, /Data tamu berubah/);
+    assert.equal(f.calls.updates.length, 0); assert.equal(f.records[0].rsvpStatus, "PENDING");
+    assert.equal(f.records[0].plusOnes, 0); assert.equal(f.records[0].source, undefined);
+  }
+  const unchanged = fixture({ guests: [personal({ checkedIn: true, rsvpStatus: "ATTENDING", plusOnes: 4 })] });
+  assert.equal((await unchanged.submit(personalBody())).status, 200);
+  assert.equal(unchanged.records[0].checkedIn, true); assert.equal(unchanged.records[0].invitedPax, 5);
 });
 
 test("RSVP validates required data, numbers, personal quota and attendee edits before writing", async (t) => {

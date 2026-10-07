@@ -17,6 +17,7 @@ import { LanguageProvider } from "../components/I18n/LanguageProvider.tsx";
 import { useDashboardI18n } from "../components/Dashboard/useDashboardI18n.ts";
 import * as filters from "../lib/guests/filters.ts";
 import * as manualParty from "../lib/guests/manual-party.ts";
+import * as envelope from "../lib/guests/personal-envelope.ts";
 import * as guestSeats from "../lib/seating/guest-seats.ts";
 import * as titles from "../lib/text/display-title-case.ts";
 import PrintModule, { seatingPrintOffsets } from "../components/Dashboard/SeatingPlanPrint.tsx";
@@ -534,6 +535,7 @@ function chartFixture(overrides = {}, interactive = false) {
     "@/components/Dashboard/useDashboardI18n": { useDashboardI18n: interactive ? () => ({ d: (text) => text, locale: "id" }) : useDashboardI18n }, "@/lib/text/display-title-case": titles,
     "@/components/Dashboard/DashboardPrimitives": primitives, "@/lib/guests/filters": filters,
     "@/lib/guests/manual-party": manualParty, "@/lib/seating/guest-seats": guestSeats,
+    "@/lib/guests/personal-envelope": envelope,
     "@/components/Dashboard/seating-chart-geometry": geometry, "@/lib/seating/plan": plans, "@/lib/seating/editor": editor,
     "./use-seating-plan": { useSeatingPlan: () => plan },
     "./SeatingPlanCanvas": { __esModule: true, default: (props) => { canvasProps = props; return React.createElement("div", { "aria-label": "Denah" }); } },
@@ -599,8 +601,10 @@ test("setup and guest entry sit above a shared canvas panel with the guest list 
   const sections = React.Children.toArray(tree.props.children);
   assert.equal(sections.length, 2);
   assert.ok(sections[0].props.className.includes("auto-fit"));
+  assert.ok(sections[0].props.className.includes("items-stretch"));
   assert.deepEqual(elements(sections[0], (el) => el.type === primitives.DashboardPanel).map((el) => el.props.title), ["Struktur meja", "Isi tamu"]);
   const topPanels = React.Children.toArray(sections[0].props.children);
+  assert.ok(topPanels.every((panel) => panel.props.className.includes("h-full")));
   assert.equal(elements(topPanels[0], (el) => el.type === "form").length, 1);
   assert.equal(elements(topPanels[1], (el) => el.type === "form").length, 1);
   assert.equal(sections[1].props.title, "Denah tempat duduk");
@@ -765,6 +769,88 @@ test("failed or mismatched edit responses retain draft fields and the original s
   }
 });
 
+test("party edits grow and shrink the whole canonical block, occupancy and numbered print labels", async (t) => {
+  const original = rosterProps.guests[2], requests = [], f = chartFixture({}, true);
+  let refreshed = 0;
+  const props = { ...chartProps, guests: [original], onTablesChanged: async () => { refreshed++; } };
+  t.mock.method(globalThis, "fetch", async (_url, options) => {
+    const body = JSON.parse(options.body); requests.push(body);
+    return Response.json({ ok: true, guest: { ...original, invitationId: props.invitationId, invitedPax: body.invitedPax } });
+  });
+  let tree = f.render(props);
+  for (const pax of [5, 2]) {
+    const current = chartCanvas(tree).guests[0];
+    guestActions(tree, current.id).props.onEdit(current); tree = f.render(props);
+    const input = elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0];
+    assert.equal(input.props.value, guestSeats.seatingPartySize(current));
+    assert.equal(input.props.min, 1); assert.equal(input.props.max, 30); assert.equal(input.props.step, 1);
+    input.props.onChange({ target: { value: String(pax) } });
+    await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+    assert.equal(guestForm(tree), undefined);
+    assert.deepEqual(requests.at(-1), { id: original.id, invitationId: "event-a", name: original.name, invitedPax: pax });
+    const changed = chartCanvas(tree).guests;
+    assert.deepEqual(changed, [{ ...original, invitedPax: pax }]);
+    assert.equal(elements(tree, (el) => el.type === primitives.DashboardCompactStat && el.props.label === "Terisi")[0].props.value, String(pax));
+    assert.ok(labelOf(rosterRows(tree)[0]).includes(`${pax} orang`));
+    const printed = renderToStaticMarkup(React.createElement(Print, { title: "Acara", layout: layout(), tables: [table], guests: changed, locale: "id" }));
+    for (let i = 1; i <= pax; i++) assert.ok(printed.includes(`Hendra Wijaya ${i}`));
+    assert.ok(!printed.includes(`Hendra Wijaya ${pax + 1}`));
+    assert.deepEqual(f.plan.editor.plan, layout());
+  }
+  assert.equal(refreshed, 2); assert.equal(original.invitedPax, 3);
+});
+
+test("party editing rejects invalid counts and respects the generated Bapak & Ibu minimum", async (t) => {
+  const requests = [];
+  t.mock.method(globalThis, "fetch", async (...args) => { requests.push(args); throw Error("Unexpected write"); });
+  for (const [guest, count, message] of [
+    [rosterProps.guests[2], "0", /1–30/], [rosterProps.guests[2], "31", /1–30/],
+    [rosterProps.guests[2], "1.5", /1–30/], [rosterProps.guests[2], "", /1–30/],
+    [{ ...rosterProps.guests[2], personalAddressee: envelope.buildPersonalGuestAddressee(rosterProps.guests[2].name, "BAPAK_IBU") }, "1", /minimal 2/],
+  ]) {
+    const f = chartFixture({}, true), props = { ...chartProps, guests: [guest] };
+    let tree = f.render(props); guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    const input = elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0];
+    assert.equal(input.props.min, guest.personalAddressee ? 2 : 1);
+    input.props.onChange({ target: { value: count } });
+    await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+    assert.match(labelOf(elements(guestForm(tree), (el) => el.props.role === "alert")[0]), message);
+    assert.deepEqual(chartCanvas(tree).guests, [guest]);
+  }
+  assert.equal(requests.length, 0);
+});
+
+test("failed or wrong quota responses keep the original block and edited count for retry", async (t) => {
+  const guest = rosterProps.guests[2], props = { ...chartProps, guests: [guest] };
+  for (const result of [
+    Response.json({ error: "Kursi bersebelahan tidak cukup. Pindahkan tamu terlebih dahulu." }, { status: 409 }),
+    Response.json({ ok: true, guest: { id: guest.id, name: guest.name, invitationId: "event-a" } }),
+    Response.json({ ok: true, guest: { ...guest, invitedPax: "5", invitationId: "event-a" } }),
+    Response.json({ ok: true, guest: { ...guest, invitedPax: 4, invitationId: "event-a" } }),
+  ]) {
+    const f = chartFixture({}, true); t.mock.method(globalThis, "fetch", async () => result);
+    let tree = f.render(props); guestActions(tree, guest.id).props.onEdit(guest); tree = f.render(props);
+    elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0].props.onChange({ target: { value: "5" } });
+    await guestForm(f.render(props)).props.onSubmit({ preventDefault() {} }); tree = f.render(props);
+    assert.equal(elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0].props.value, 5);
+    assert.equal(elements(guestForm(tree), (el) => el.props.role === "alert").length, 1);
+    assert.deepEqual(chartCanvas(tree).guests, [guest]);
+  }
+});
+
+test("tag filter appears only for actual tags or an active filter, which remains resettable", () => {
+  const f = chartFixture({}, true), guest = { ...rosterProps.guests[0], tags: [] }, props = { ...chartProps, guests: [guest] };
+  let tree = f.render(props);
+  assert.equal(rosterSelect(tree, "Semua Tag"), undefined);
+  const tagged = { ...guest, tags: ["teman kantor"] };
+  tree = f.render({ ...props, guests: [tagged] });
+  rosterSelect(tree, "Semua Tag").props.onChange({ target: { value: "teman kantor" } });
+  tree = f.render(props);
+  assert.ok(rosterSelect(tree, "Semua Tag")); assert.equal(rosterRows(tree).length, 0);
+  chartButton(tree, "Reset filter").props.onClick(); tree = f.render(props);
+  assert.equal(rosterSelect(tree, "Semua Tag"), undefined); assert.equal(rosterRows(tree).length, 1);
+});
+
 test("delete needs named confirmation, preserves a protected guest on failure and frees the whole party after success", async (t) => {
   const guest = rosterProps.guests[2], calls = [], props = { ...chartProps, guests: [guest] }, f = chartFixture({}, true);
   let failing = true;
@@ -796,6 +882,7 @@ test("guest mutations block same-frame duplicate submits, lock canvas controls a
     await form.props.onSubmit({ preventDefault() {} }); tree = f.render(props);
     assert.equal(calls.length, 1); assert.equal(chartCanvas(tree).busy, true); assert.equal(guestActions(tree, guest.id).props.disabled, true);
     assert.equal(chartButton(tree, "Tambah meja").props.disabled, true); assert.equal(chartButton(guestForm(tree), "Batal").props.disabled, true);
+    if (mode === "edit") assert.equal(elements(guestForm(tree), (el) => el.type === Input && el.props.type === "number")[0].props.disabled, true);
     f.unmount(); const writes = f.writes(); assert.equal(calls[0].options.signal.aborted, true);
     pending.resolve(Response.json({ ok: true, guest: { ...guest, invitationId: "event-a", name: "late name" } })); await saving;
     assert.equal(f.writes(), writes); assert.deepEqual(chartCanvas(f.render(props)).guests, [guest]);

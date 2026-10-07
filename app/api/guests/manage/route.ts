@@ -7,6 +7,7 @@ import { hasAccountDigitalInvitation } from "@/lib/packages/server-access";
 import { findGuestsByContact } from "@/lib/guests/identity";
 import { parsePersonalGuestFields } from "@/lib/guests/personal-profile";
 import { buildPersonalGuestAddressee, getPersonalGuestSalutation } from "@/lib/guests/personal-envelope";
+import { GuestPartyUpdateError, managedGuestSelect, resizeManagedGuestParty } from "@/lib/guests/party-update";
 
 // Resolve the event FROM the guest being edited, never from the account's first
 // event. Personal Invitation, RSVP, WA Blast and seating share this Guest.id.
@@ -53,7 +54,7 @@ export async function PATCH(request: Request) {
       }
       data.name = name;
       const salutation = getPersonalGuestSalutation({ name: guest.name, personalAddressee: guest.personalAddressee });
-      if (salutation && profile.personalAddressee === undefined) {
+      if (profile.invitedPax === undefined && salutation && profile.personalAddressee === undefined) {
         data.personalAddressee = buildPersonalGuestAddressee(name, salutation);
       }
     }
@@ -112,26 +113,29 @@ export async function PATCH(request: Request) {
     if (nextStatus !== "ATTENDING" && (data.rsvpStatus !== undefined || data.plusOnes !== undefined)) {
       data.plusOnes = 0;
     }
-    if (nextStatus === "ATTENDING" && nextPlusOnes + 1 > (profile.invitedPax ?? guest.invitedPax)) {
+    if (profile.invitedPax === undefined && nextStatus === "ATTENDING" && nextPlusOnes + 1 > guest.invitedPax) {
       return NextResponse.json(
         { error: "Jumlah RSVP hadir melebihi kuota undangan. Ubah kuota terlebih dahulu." },
         { status: 409 },
       );
     }
-    if (guest.checkedIn && (
+    if (profile.invitedPax === undefined && guest.checkedIn && (
       (data.rsvpStatus !== undefined && data.rsvpStatus !== guest.rsvpStatus)
       || (data.plusOnes !== undefined && data.plusOnes !== guest.plusOnes)
     )) {
       return NextResponse.json({ error: "Tamu sudah check-in. Status RSVP tidak dapat diganti." }, { status: 409 });
     }
 
-    const updated = await prisma.guest.update({
-      where: { id: guest.id },
-      data,
-      select: { id: true, invitationId: true, name: true, phone: true, category: true, tags: true, invitedPax: true, rsvpStatus: true, plusOnes: true, tableId: true, seatNumber: true, source: true, personalAddressee: true },
-    });
+    const updated = profile.invitedPax !== undefined
+      ? await resizeManagedGuestParty(user.id, guest.invitationId, guest.id, profile.invitedPax, data)
+      : await prisma.guest.update({
+        where: { id: guest.id },
+        data,
+        select: managedGuestSelect,
+      });
     return NextResponse.json({ ok: true, guest: updated });
   } catch (error) {
+    if (error instanceof GuestPartyUpdateError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("PATCH /api/guests/manage failed", error);
     return NextResponse.json({ error: "Data tamu gagal diperbarui." }, { status: 500 });
   }

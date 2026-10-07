@@ -837,3 +837,12 @@ Pemeriksaan CI pada satu commit memvalidasi source pada commit tersebut, **bukan
 - [x] Modestly smaller table/seat/orbit geometry is shared by canvas/drop/print, with existing font sizes, saved centers, party capacity and full-plan paging/Save/Print preserved.
 - [x] Final local regression 820/820, standalone TypeScript, changed-source/test ESLint (zero diagnostics), production webpack build (73/73), generated 52rem container CSS and whitespace check PASS. Exact published-commit GitHub workflows are observed after publication; this records local pre-push evidence.
 - [ ] Signed-in target-app desktop/tablet/phone in ID/EN and both themes: menu pointer/keyboard/focus/Escape, scrolling and compact widths, row drag versus menu, edit → reload across shared workspaces, cancel/protected/ordinary Delete, event switch and network retry. Verify real database persistence, Save/reopen and browser A4/PDF/physical print; fixtures/build do not establish this runtime QA.
+
+
+### Seating guest party-size edit and balanced setup panels — 7 October 2026
+
+- [x] Compact Jumlah orang in Edit, initialized from the actual party; 1–30/generated Bapak & Ibu min 2, changed-count-only request and response validation, failure retains form and old block.
+- [x] Atomic event/Guest-scoped party resize preserves one canonical Guest, table/anchor, RSVP/check-in/tokens/custom profile; checks latest attendance, full capacity/reservations and all adjacent/wrapped seats before any profile/quota write. Assignment/swap read current quota under the shared event lock; personal RSVP conditionally validates current quota/link/check-in at write.
+- [x] Equal-height side-by-side setup panels, aligned above-input labels and shared compact-width fields/actions. Optional tag filter only appears with tagged guests or an active, resettable filter.
+- [x] Focused fixtures 101/101, full local regression 834/834, standalone TypeScript and changed-source/test ESLint (zero diagnostics) PASS. Production webpack build (73/73) and whitespace check PASS; exact-commit GitHub workflows are observed after publication.
+- [ ] Signed-in target-app desktop/tablet/phone in ID/EN and both themes: panel alignment/wrapping, Edit name/category/count → save → reload, adjacent/wrapped grow/shrink/conflict retry, Bapak & Ibu minimum and tagged/untagged filter states. Verify target PostgreSQL concurrent resize/assignment/RSVP/check-in, same QR/guest/profile, canvas/occupancy and browser A4/PDF/physical print. Fixtures/build do not establish this runtime QA.
