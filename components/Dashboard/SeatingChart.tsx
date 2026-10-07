@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeftRight, Check, PencilLine, Plus, Printer, Redo2, RefreshCw, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
 import { useTheme } from "@/components/Theme/ThemeProvider";
@@ -532,8 +533,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
         >
 
           <form onSubmit={generateTables} className="mt-4 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
-            <label className="block w-20 max-w-full text-xs text-muted-foreground">
-              {d("Meja")}
+            <FloatingField label={d("Meja")} className="block w-20 max-w-full text-xs text-muted-foreground">
               <Input
                 type="number"
                 min={1}
@@ -543,9 +543,8 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 className="mt-1 min-h-11 w-full px-2"
                 onChange={(event) => setTableCount(Number(event.target.value))}
               />
-            </label>
-            <label className="block w-20 max-w-full text-xs text-muted-foreground">
-              {d("Kursi")}
+            </FloatingField>
+            <FloatingField label={d("Kursi")} className="block w-20 max-w-full text-xs text-muted-foreground">
               <Input
                 type="number"
                 min={1}
@@ -555,7 +554,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 className="mt-1 min-h-11 w-full px-2"
                 onChange={(event) => setSeatsPerTable(Number(event.target.value))}
               />
-            </label>
+            </FloatingField>
             <Button
               type="submit"
               size="sm"
@@ -576,8 +575,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
 
         <DashboardPanel title={d("Isi tamu")} className="h-full min-w-0">
           <form onSubmit={addManualGuest} className="mt-4 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
-            <label className="block w-40 max-w-full text-xs text-muted-foreground">
-              {d("Sapaan")}
+            <FloatingField label={d("Sapaan")} className="block w-40 max-w-full text-xs text-muted-foreground">
               <select value={manualSalutation} disabled={manualSaving}
                 className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
                 onChange={(event) => {
@@ -589,15 +587,13 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 <option value="IBU">{d("Ibu")}</option>
                 <option value="BAPAK_IBU">{d("Bapak & Ibu")}</option>
               </select>
-            </label>
-            <label className="block min-w-0 max-w-full text-xs text-muted-foreground"
+            </FloatingField>
+            <FloatingField label={d("Nama")} className="block min-w-0 max-w-full text-xs text-muted-foreground"
               style={{ width: Math.min(320, Math.max(192, manualName.length * 8 + 32)) }}>
-              {d("Nama")}
               <Input value={manualName} onChange={(event) => setManualName(event.target.value)}
                 placeholder={d("Nama tamu manual")} className="mt-1 min-h-11 capitalize" />
-            </label>
-            <label className="block w-36 max-w-full text-xs text-muted-foreground">
-              {d("Kategori tamu")}
+            </FloatingField>
+            <FloatingField label={d("Kategori tamu")} className="block w-36 max-w-full text-xs text-muted-foreground">
               <select value={manualCategory} disabled={manualSaving}
                 className="mt-1 min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
                 onChange={(event) => setManualCategory(event.target.value)}>
@@ -605,13 +601,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 <option value="VIP">VIP</option>
                 <option value="VVIP">VVIP</option>
               </select>
-            </label>
-            <label className="block w-24 max-w-full text-xs text-muted-foreground">
-              {d("Jumlah orang")}
+            </FloatingField>
+            <FloatingField label={d("Jumlah orang")} className="block w-24 max-w-full text-xs text-muted-foreground">
               <Input type="number" min={minimumInvitedPaxForSalutation(manualSalutation)} max={MAX_GUEST_PARTY_SIZE}
                 value={manualPax} disabled={manualSaving} className="mt-1 min-h-11"
                 onChange={(event) => setManualPax(Number(event.target.value))} />
-            </label>
+            </FloatingField>
             <Button type="submit" size="sm" className="h-auto min-h-11 max-w-full py-2 whitespace-normal"
               disabled={manualSaving} title={d("Tambah ke Daftar Tamu")}>
               <UserPlus className="h-4 w-4" />
@@ -719,8 +714,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
             </div>
             {draggedGuest?.tableId && Boolean(draggedGuest.seatNumber) && <p className="mt-2 text-xs text-primary">{d("Lepaskan untuk kembali ke daftar")}</p>}
             <div className="mt-3 flex min-w-0 flex-wrap items-end gap-2">
-              <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
-                {d("Kategori tamu")}
+              <FloatingField label={d("Kategori tamu")} className="block min-w-0 max-w-full text-xs text-muted-foreground">
                 <select
                   value={categoryFilter}
                   onChange={(event) => setCategoryFilter(event.target.value)}
@@ -734,9 +728,8 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     <option key={category} value={category}>{category === "REGULAR" ? d("Reguler") : displayTitleCase(category)}</option>
                   ))}
                 </select>
-              </label>
-              {(tags.length > 0 || tagFilter) && <label className="block min-w-0 max-w-full text-xs text-muted-foreground">
-                {d("Tag tamu")}
+              </FloatingField>
+              {(tags.length > 0 || tagFilter) && <FloatingField label={d("Tag tamu")} className="block min-w-0 max-w-full text-xs text-muted-foreground">
                 <select
                   value={tagFilter}
                   onChange={(event) => setTagFilter(event.target.value)}
@@ -750,7 +743,7 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     <option key={tag} value={tag}>{displayTitleCase(tag)}</option>
                   ))}
                 </select>
-              </label>}
+              </FloatingField>}
               <p role="status" className="w-full text-xs text-muted-foreground">
                 {locale === "en"
                   ? `Showing ${filteredRoster.length} of ${rosterGuests.length} unassigned guests.`
@@ -889,14 +882,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                 </DialogDescription>
               </DialogHeader>
               {guestAction.mode === "edit" ? <div className="flex min-w-0 flex-wrap items-end gap-3">
-                <label className="block min-w-0 max-w-full text-sm"
+                <FloatingField label={d("Nama")} className="block min-w-0 max-w-full text-sm"
                   style={{ width: Math.min(320, Math.max(192, guestEditName.length * 8 + 32)) }}>
-                  {d("Nama")}
                   <Input autoFocus value={guestEditName} disabled={guestMutating} maxLength={120} required
                     className="mt-1 min-h-11 capitalize" onChange={(event) => setGuestEditName(event.target.value)} />
-                </label>
-                <label className="block w-36 max-w-full text-sm">
-                  {d("Kategori tamu")}
+                </FloatingField>
+                <FloatingField label={d("Kategori tamu")} className="block w-36 max-w-full text-sm">
                   <select value={guestEditCategory} disabled={guestMutating}
                     className={cn(controlStyles.input, "mt-1 min-h-11 px-3 py-2")}
                     onChange={(event) => setGuestEditCategory(event.target.value)}>
@@ -905,13 +896,12 @@ export default function SeatingChart({ invitationId, title = "", guests, tables,
                     <option value="VVIP">VVIP</option>
                     {!primaryCategories.includes(guestEditCategory) && <option value={guestEditCategory}>{displayTitleCase(guestEditCategory)}</option>}
                   </select>
-                </label>
-                <label className="block w-24 max-w-full text-sm">
-                  {d("Jumlah orang")}
+                </FloatingField>
+                <FloatingField label={d("Jumlah orang")} className="block w-24 max-w-full text-sm">
                   <Input type="number" min={guestEditMinimumPax} max={MAX_GUEST_PARTY_SIZE} step={1} required
                     value={guestEditPax} disabled={guestMutating} className="mt-1 min-h-11"
                     onChange={(event) => setGuestEditPax(Number(event.target.value))} />
-                </label>
+                </FloatingField>
               </div> : <p className="break-words text-sm font-medium">{displayTitleCase(guestAction.guest.name)}</p>}
               {guestError && <p role="alert" className="text-sm text-destructive">{guestError}</p>}
               <DialogFooter className="flex-row flex-wrap">

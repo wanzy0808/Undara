@@ -7,6 +7,7 @@ import * as icons from "lucide-react";
 import * as primitives from "../components/Dashboard/DashboardPrimitives.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
+import { FloatingField } from "../components/ui/floating-field.tsx";
 import * as dialogs from "../components/ui/dialog.tsx";
 import { LanguageProvider } from "../components/I18n/LanguageProvider.tsx";
 import { PersonalInvitationCreatePanel, PersonalInvitationListPanel } from "../components/Dashboard/PersonalInvitationPanels.tsx";
@@ -20,6 +21,7 @@ import { loadSource } from "./helpers/package-access.mjs";
 const d = (text) => text;
 const i18n = { useDashboardI18n: () => ({ d, locale: "id" }) };
 const CategoryFields = loadSource("components/Dashboard/PersonalInvitationGuestFields.tsx", {
+  "@/components/ui/floating-field": { FloatingField },
   "react/jsx-runtime": jsxRuntime,
   "@/components/Dashboard/useDashboardI18n": i18n,
   "@/lib/text/display-title-case": titles,
@@ -93,6 +95,7 @@ function createProps(overrides = {}) {
 function createHarness(overrides = {}) {
   const hooks = hookHarness();
   const production = loadSource("components/Dashboard/PersonalInvitationPanels.tsx", {
+    "@/components/ui/floating-field": { FloatingField },
     react: hooks.hooks, "react/jsx-runtime": jsxRuntime, "next/link": () => null, "lucide-react": icons,
     "@/components/ui/button": { Button }, "@/components/ui/input": { Input }, "@/components/ui/dialog": dialogs,
     "@/components/Dashboard/useDashboardI18n": i18n, "@/lib/text/display-title-case": titles,
@@ -584,6 +587,7 @@ test("queued names are editable/removable by row identity, preserve duplicate na
 function savedListHarness(overrides = {}) {
   const hooks = hookHarness();
   const production = loadSource("components/Dashboard/PersonalInvitationPanels.tsx", {
+    "@/components/ui/floating-field": { FloatingField },
     react: hooks.hooks,
     "react/jsx-runtime": jsxRuntime,
     "next/link": (props) => React.createElement("a", props, props.children),

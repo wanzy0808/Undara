@@ -12,6 +12,7 @@ import * as icons from "lucide-react";
 import * as primitives from "../components/Dashboard/DashboardPrimitives.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
+import { FloatingField } from "../components/ui/floating-field.tsx";
 import * as dialogs from "../components/ui/dialog.tsx";
 import { LanguageProvider } from "../components/I18n/LanguageProvider.tsx";
 import { useDashboardI18n } from "../components/Dashboard/useDashboardI18n.ts";
@@ -670,6 +671,7 @@ function chartFixture(overrides = {}, interactive = false) {
     useRef(value) { const key = index++; if (!(key in cells)) cells[key] = { current: value }; return cells[key]; },
   } : { useEffect() {}, useState: (initial) => [initial, () => {}], useRef: (value) => ({ current: value }), useMemo: (fn) => fn() };
   const Chart = loadSource("components/Dashboard/SeatingChart.tsx", {
+    "@/components/ui/floating-field": { FloatingField },
     "react/jsx-runtime": jsxRuntime,
     react: hooks,
     "lucide-react": icons, "@/components/Theme/ThemeProvider": { useTheme: () => ({ isDarkMode: false }) },

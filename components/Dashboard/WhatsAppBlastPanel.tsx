@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useMemo, useState } from "react";
 import { CreditCard, MessageCircle, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -222,10 +223,7 @@ export default function WhatsAppBlastPanel({
         >
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-          <label className="block min-w-0 flex-1 sm:max-w-md">
-            <span className="mb-1.5 block font-[family-name:var(--font-undara-mono)] text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-              {d("Undangan aktif")}
-            </span>
+          <FloatingField label={d("Undangan aktif")} className="block min-w-0 flex-1 sm:max-w-md">
             <select
               value={eventId}
               onChange={(event) => { setEventId(event.target.value); onSelectEvent(event.target.value); }}
@@ -243,7 +241,7 @@ export default function WhatsAppBlastPanel({
                 ))
               )}
             </select>
-          </label>
+          </FloatingField>
 
         </div>
 

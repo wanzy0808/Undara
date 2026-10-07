@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
+import { FloatingField } from "@/components/ui/floating-field";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 import type { PersonalInvitationGuest } from "@/components/Dashboard/personal-invitation-types";
 import { PERSONAL_SALUTATIONS, type PersonalSalutation } from "@/lib/guests/personal-envelope";
@@ -67,20 +68,18 @@ export function PersonalInvitationSalutationField({
 }) {
   const { d } = useDashboardI18n();
   const labels = { BAPAK: "Bapak", IBU: "Ibu", BAPAK_IBU: "Bapak & Ibu" };
-  return (
-    <label className="block min-w-0 text-sm font-medium text-foreground">
-      {showLabel && d("Sapaan")}
+  const select = (
       <select
         value={value}
         aria-label={!showLabel ? d("Sapaan") : undefined}
         onChange={(event) => onChange(event.target.value as PersonalSalutation)}
         disabled={disabled}
-        className={`${showLabel ? "mt-1.5 " : ""}min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground`}
+        className="min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground"
       >
         {PERSONAL_SALUTATIONS.map((salutation) => <option key={salutation} value={salutation}>{d(labels[salutation])}</option>)}
       </select>
-    </label>
   );
+  return showLabel ? <FloatingField label={d("Sapaan")}>{select}</FloatingField> : select;
 }
 
 export function PersonalInvitationGuestFields({
@@ -96,15 +95,13 @@ export function PersonalInvitationGuestFields({
 }) {
   const { d } = useDashboardI18n();
 
-  return (
-    <label className="block min-w-0 text-sm font-medium text-foreground">
-      {showLabel && d("Kategori tamu")}
+  const select = (
       <select
         value={value.category}
         aria-label={!showLabel ? d("Kategori tamu") : undefined}
         onChange={(event) => onChange({ ...value, category: event.target.value })}
         disabled={disabled}
-        className={`${showLabel ? "mt-1.5 " : ""}min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground`}
+        className="min-h-11 w-full border border-primary/25 bg-background px-3 text-sm text-foreground"
       >
         {value.category && !["REGULAR", "VIP", "VVIP"].includes(value.category) && (
           <option value={value.category} disabled>{displayTitleCase(value.category)}</option>
@@ -113,6 +110,6 @@ export function PersonalInvitationGuestFields({
         <option value="VIP">VIP</option>
         <option value="VVIP">VVIP</option>
       </select>
-    </label>
   );
+  return showLabel ? <FloatingField label={d("Kategori tamu")}>{select}</FloatingField> : select;
 }

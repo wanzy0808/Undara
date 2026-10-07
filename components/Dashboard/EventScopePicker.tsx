@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarDays, ChevronDown } from "lucide-react";
+import { FloatingField } from "@/components/ui/floating-field";
 import { useDashboardI18n } from "@/components/Dashboard/useDashboardI18n";
 import { displayTitleCase } from "@/lib/text/display-title-case";
 
@@ -40,11 +41,8 @@ export default function EventScopePicker({ events, value, onChange, disabled = f
 
   return (
     <div className="max-w-xl">
-      <label className="block">
-        <span className="mb-1.5 block text-sm font-semibold text-foreground">
-          {label ?? d("Pilih acara")}
-        </span>
-        <span className="relative block">
+      <div className="relative">
+        <FloatingField label={label ?? d("Pilih acara")}>
           <select
             data-dc-native-chevron="true"
             value={value}
@@ -59,9 +57,9 @@ export default function EventScopePicker({ events, value, onChange, disabled = f
               </option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
-        </span>
-      </label>
+        </FloatingField>
+        <ChevronDown className="pointer-events-none absolute right-3 top-[calc(50%+4px)] h-4 w-4 -translate-y-1/2 text-primary" aria-hidden="true" />
+      </div>
     </div>
   );
 }

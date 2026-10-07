@@ -1,5 +1,6 @@
 "use client";
 
+import { FloatingField } from "@/components/ui/floating-field";
 import { useEffect, useMemo, useState } from "react";
 import { Copy, FilePlus2, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -238,8 +239,7 @@ export default function WaBlastTemplateStudio({ event, recipients }: Props) {
           </div>
         ) : (
           <div className="grid min-w-0 gap-4">
-            <label className="grid gap-1.5 text-sm font-semibold text-foreground">
-              {d("Jenis pesan")}
+            <FloatingField label={d("Jenis pesan")} className="grid gap-1.5 text-sm font-semibold text-foreground">
               <select
                 value={form.category}
                 onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as WaMessageCategory }))}
@@ -248,17 +248,15 @@ export default function WaBlastTemplateStudio({ event, recipients }: Props) {
               >
                 {WA_MESSAGE_CATEGORIES.map((item) => <option key={item.id} value={item.id}>{displayTitleCase(locale === "en" ? item.english : item.label)}</option>)}
               </select>
-            </label>
-            <label className="grid gap-1.5 text-sm font-semibold text-foreground">
-              {d("Nama template")}
+            </FloatingField>
+            <FloatingField label={d("Nama template")} className="grid gap-1.5 text-sm font-semibold text-foreground">
               <Input value={form.name} maxLength={80} disabled={saving} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder={d("Nama template")} />
-            </label>
-            <label className="grid gap-1.5 text-sm font-semibold text-foreground">
-              {d("Judul pesan")}
+            </FloatingField>
+            <FloatingField label={d("Judul pesan")} className="grid gap-1.5 text-sm font-semibold text-foreground">
               <Input value={form.title} maxLength={120} disabled={saving} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder={d("Judul pesan")} />
-            </label>
-            <label className="grid gap-1.5 text-sm font-semibold text-foreground">
-              {d("Isi pesan")}
+            </FloatingField>
+            <div className="grid gap-1.5 text-sm text-foreground">
+              <FloatingField label={d("Isi pesan")}>
               <textarea
                 value={form.body}
                 maxLength={3000}
@@ -267,8 +265,9 @@ export default function WaBlastTemplateStudio({ event, recipients }: Props) {
                 rows={10}
                 className="min-h-56 w-full resize-y rounded-2xl border border-primary/25 bg-background px-4 py-3 text-sm font-normal leading-6 text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
               />
+              </FloatingField>
               <span className="text-right text-xs font-normal tabular-nums text-muted-foreground">{form.body.length} / 3000</span>
-            </label>
+            </div>
             <div className="flex flex-wrap gap-2">
               {WA_MESSAGE_PLACEHOLDERS.map((placeholder) => (
                 <Button key={placeholder} type="button" size="xs" onClick={() => setForm((current) => ({ ...current, body: current.body + placeholder }))} disabled={saving || form.body.length + placeholder.length > 3000}>
@@ -296,8 +295,7 @@ export default function WaBlastTemplateStudio({ event, recipients }: Props) {
       </DashboardPanel>
 
       <DashboardPanel title={d("Pratinjau pesan")}>
-        <label className="grid gap-1.5 text-sm font-semibold text-foreground">
-          {d("Tamu")}
+        <FloatingField label={d("Tamu")} className="grid gap-1.5 text-sm font-semibold text-foreground">
           <select
             value={recipient?.id || ""}
             onChange={(event) => setRecipientId(event.target.value)}
@@ -306,7 +304,7 @@ export default function WaBlastTemplateStudio({ event, recipients }: Props) {
           >
             {recipients.length ? recipients.map((item) => <option key={item.id} value={item.id}>{displayTitleCase(item.name)}</option>) : <option value="">{displayTitleCase(d("Contoh · belum ada penerima"))}</option>}
           </select>
-        </label>
+        </FloatingField>
         <div className="undara-dashboard-detail-card min-w-0 rounded-tr-[22px] border border-primary/20 bg-primary/[0.055] p-4">
           <p className="break-words text-sm font-semibold text-primary">{preview.title}</p>
           <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{preview.body}</p>
