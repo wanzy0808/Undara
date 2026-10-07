@@ -30,7 +30,7 @@ export async function DELETE(request: Request) {
     if (!id || !(revision === null || (typeof revision === "string" && Number.isFinite(Date.parse(revision)))) || !Array.isArray(ids) || ids.length > 100 || ids.some((value) => typeof value !== "string" || !value || value.length > 128) || new Set(ids).size !== ids.length) return json({ error: "Data denah tidak valid." }, 400);
     const invitation = await ownedEvent(user.id, id);
     if (!invitation) return json({ error: "Acara tidak ditemukan." }, 404);
-    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
+    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
     if (!prisma.seatingPlan) return storageUnavailable();
 
     const result = await prisma.$transaction(async (tx) => {
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     if (!id) return json({ error: "Acara wajib dipilih." }, 400);
     const invitation = await ownedEvent(user.id, id);
     if (!invitation) return json({ error: "Acara tidak ditemukan." }, 404);
-    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
+    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
     if (!prisma.seatingPlan) return storageUnavailable();
     const plan = await prisma.seatingPlan.findUnique({ where: { invitationId: id } });
     return json({ layout: plan?.layout ?? null, updatedAt: plan?.updatedAt.toISOString() ?? null });
@@ -95,7 +95,7 @@ export async function PUT(request: Request) {
     if (!id || !layout || !(revision === null || (typeof revision === "string" && Number.isFinite(Date.parse(revision))))) return json({ error: "Data denah tidak valid." }, 400);
     const invitation = await ownedEvent(user.id, id);
     if (!invitation) return json({ error: "Acara tidak ditemukan." }, 404);
-    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
+    if (!(await hasAccountDigitalInvitation(user.id, invitation.payment, invitation.id))) return json({ error: "Denah membutuhkan akses Undangan Digital." }, 402);
     if (!prisma.seatingPlan) return storageUnavailable();
 
     const result = await prisma.$transaction(async (tx) => {
