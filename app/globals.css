@@ -306,6 +306,12 @@
 }
 /* Event Planner shares the visible frame geometry; its foliage stays behind it. */
 .event-planner-shell {
+  /* Resolve aliases here, beneath the next/font variables on body. */
+  --font-undara-sans: var(--font-undara-body), Arial, sans-serif;
+  --font-undara-serif: var(--font-undara-display), Georgia, serif;
+  --font-undara-heading: var(--font-undara-display), Georgia, serif;
+  --font-undara-mono: var(--font-undara-technical), ui-monospace, monospace;
+  font-family: var(--font-undara-sans);
   height: 100dvh;
 }
 .undara-marketing-frame.event-planner-frame {
