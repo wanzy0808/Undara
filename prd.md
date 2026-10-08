@@ -1210,9 +1210,14 @@ Layanan konsultasi:
 - Wedding Organizer;
 - Wedding Planner;
 - Silver / Golden Wedding;
-- Baby Shower.
+- Baby Shower;
+- Sangjit;
+- Ulang Tahun;
+- Khitanan;
+- Acara Perusahaan;
+- Perayaan Lainnya.
 
-Bagian **Pilihan Layanan / Apa yang bisa kamu tanyakan?** memakai satu alur baca dari atas ke bawah pada desktop dan mobile: judul, pengantar, lalu setiap layanan dengan nama, penjelasan, poin layanan, dan CTA WhatsApp. Seluruh layanan sejajar pada sisi kiri yang sama, tanpa kolom atau arah yang bergantian; pemisah tipis membedakan tiap layanan.
+Bagian **Pilihan Layanan / Apa yang bisa kamu tanyakan?** memakai carousel horizontal bergaya business card, berurutan kiri ke kanan. Judul dan pengantar tetap di atas; setiap kartu memuat nama, ringkasan, poin kebutuhan dan CTA WhatsApp ke Undara. Pilihan mencakup Wedding Organizer, Wedding Planner, Silver / Golden Wedding, Baby Shower, Sangjit, Ulang Tahun, Khitanan, Acara Perusahaan dan Perayaan Lainnya. Mendukung swipe/native horizontal scroll, tombol sebelumnya/berikutnya dengan batas disabled dan keyboard. Tidak autoplay; reduced motion memakai perpindahan langsung. Ini jalur konsultasi, bukan janji paket/harga atau ketersediaan pasti.
 
 CTA: **Konsultasi** ke WhatsApp `+62 821-2478-6516`.
 
@@ -3557,3 +3562,11 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Implementation / affected files:** `app/event-planner/page.tsx` stacks the heading and introduction, limits the section to a readable width, and aligns all four services in one column. Names, descriptions, feature lists and existing WhatsApp actions follow the same order, with subtle separators between services. Existing ID/EN text, fonts, theme colors, decoration and interaction remain in place; the hero, process, digital-invitation CTA and FAQ retain their layouts. `tests/event-planner-redesign.test.mjs` removes two obsolete assertions that required alternating service columns. This canonical requirement and Appendix A are recorded in `prd.md`. No new dependency, schema or migration.
 
 **Observed validation / commit:** Existing Event Planner regression checks **4/4 PASS** before and after the change. `git diff --check` and source-preservation review PASS; ID/EN service text, WhatsApp actions and surrounding sections match the previous source. Commit: `fix(event-planner): stack service options consistently` (this implementation commit). Exact-commit GitHub regression/build checks will be observed after push. No production deployment or actual-page browser result is claimed.
+
+### 2026-10-08 — Event Planner business card carousel
+
+**Owner request / rationale:** Replace the long service list with left-to-right business cards and expand event consultation content.
+
+**Implementation:** Horizontal snap rail in `app/event-planner/page.tsx`, native touch scrolling, bounded arrow controls and keyboard navigation; reduced-motion handling and no autoplay. Expanded bilingual consultation data/FAQ in `data/services/event-planner.ts`; shared brand tokens and Undara WhatsApp handoff retained. No price/availability or execution claims added.
+
+**Commit / validation:** `feat(event-planner): add business card service carousel` (this implementation commit). Observed validation: 974/974 regression tests PASS via node --import tsx --test (the pnpm test launcher encountered a runtime IPC restriction); targeted Event Planner 4/4 PASS after final copy/layout adjustments; targeted ESLint, tsc --noEmit, pnpm build and git diff --check PASS. Browser visual/interaction QA and production deployment have not been observed. No database migration is required.
