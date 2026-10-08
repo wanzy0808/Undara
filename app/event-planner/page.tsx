@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useAnimationFrame, useInView } from "motion/react";
 import {
@@ -70,6 +70,27 @@ export default function EventPlannerPage() {
   function pauseServices() {
     serviceMotion.current.pauseUntil = performance.now() + 4000;
   }
+
+  useEffect(() => {
+    const rail = serviceRail.current;
+    if (!rail) return;
+    const wheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return; // Preserve browser zoom / trackpad pinch.
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      const unit = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? rail.clientWidth : 1;
+      const max = rail.scrollWidth - rail.clientWidth;
+      const next = Math.max(0, Math.min(max, rail.scrollLeft + delta * unit * 2.4));
+      // At either edge, let the normal vertical page scroll continue.
+      if (Math.abs(next - rail.scrollLeft) < 1) return;
+      event.preventDefault();
+      rail.scrollLeft = next;
+      serviceMotion.current.position = rail.scrollLeft;
+      serviceMotion.current.direction = delta > 0 ? 1 : -1;
+      serviceMotion.current.pauseUntil = performance.now() + 2000;
+    };
+    rail.addEventListener("wheel", wheel, { passive: false });
+    return () => rail.removeEventListener("wheel", wheel);
+  }, []);
 
   useAnimationFrame((_, delta) => {
     const rail = serviceRail.current;
@@ -275,7 +296,6 @@ export default function EventPlannerPage() {
                   onPointerDown={pauseServices}
                   onPointerUp={pauseServices}
                   onPointerMove={(event) => { if (event.buttons) pauseServices(); }}
-                  onWheel={pauseServices}
                   onKeyDown={(event) => {
                     if (event.target !== event.currentTarget) return;
                     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
@@ -283,9 +303,9 @@ export default function EventPlannerPage() {
                       moveServices(event.key === "ArrowLeft" ? -1 : 1);
                     }
                   }}
-                  className="relative z-10 mt-10 flex items-start gap-6 overflow-x-auto overscroll-x-contain rounded-[28px] px-1 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                  className="relative z-10 mt-10 flex items-start gap-6 overflow-x-auto overscroll-x-contain rounded-[20px] px-1 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                 >
-                  {plannerPackages.map((item, index) => {
+                  {plannerPackages.map((item) => {
                     const features = en ? item.featuresEn : item.features;
 
                     return (
@@ -294,10 +314,10 @@ export default function EventPlannerPage() {
                         role="group"
                         aria-roledescription={en ? "slide" : "kartu"}
                         aria-label={en ? item.nameEn : item.name}
-                        className={`flex min-h-[360px] w-[88%] shrink-0 flex-col gap-6 rounded-[28px] p-7 shadow-[0_8px_24px_-16px_rgba(58,32,32,0.4)] sm:w-[540px] md:p-9 ${index % 3 === 0 ? "bg-primary text-primary-foreground" : "bg-card text-card-foreground"}`}
+                        className="undara-editorial-surface flex min-h-[360px] w-[88%] shrink-0 flex-col gap-6 rounded-[20px] p-7 font-undara-body text-foreground sm:w-[540px] md:p-9"
                       >
                         <div>
-                          <h3 style={{ color: "inherit" }} className="max-w-3xl font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.08] text-current">
+                          <h3 className="max-w-3xl font-undara-heading text-3xl font-bold leading-[1.08] text-primary">
                             {en ? item.nameEn : item.name}
                           </h3>
                           <p className="mt-4 max-w-xl text-[15px] leading-7 opacity-80">
@@ -318,7 +338,6 @@ export default function EventPlannerPage() {
                           </ul>
 
                             <a
-                              style={{ color: "inherit" }}
                               className="mt-auto inline-flex w-fit items-center gap-3 rounded-sm py-2 text-sm font-medium underline decoration-current/40 underline-offset-8 transition-[gap] duration-200 hover:gap-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current motion-reduce:transition-none"
                               href={consultationUrl(en ? item.waMessageEn : item.waMessage)}
                               target="_blank"
