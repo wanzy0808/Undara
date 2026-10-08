@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useAnimationFrame, useInView } from "motion/react";
 import {
@@ -21,6 +21,7 @@ import { useLanguage } from "@/components/I18n/LanguageProvider";
 import { plannerFaq, plannerPackages } from "@/data/services/event-planner";
 
 const WHATSAPP_NUMBER = "6281285009609";
+const plannerCards = [0, 1, 2].flatMap((copy) => plannerPackages.map((item) => ({ item, copy })));
 
 function consultationUrl(message: string) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -64,58 +65,113 @@ export default function EventPlannerPage() {
   const reduced = Boolean(useReducedMotion());
   const en = locale === "en";
   const serviceRail = useRef<HTMLDivElement>(null);
-  const serviceMotion = useRef({ position: 0, direction: 1, pauseUntil: 0 });
+  const serviceMotion = useRef({ position: 0, cycle: 0, pauseUntil: 0, suppressClickUntil: 0 });
+  const serviceDrag = useRef<{ id: number; startX: number; lastX: number; moved: boolean } | null>(null);
   const servicesInView = useInView(serviceRail, { root: scrollRoot, amount: 0.15 });
 
-  function pauseServices() {
-    serviceMotion.current.pauseUntil = performance.now() + 4000;
+  function pauseServices(duration = 2000) {
+    serviceMotion.current.pauseUntil = performance.now() + duration;
   }
+
+  const loopPosition = useCallback((position: number) => {
+    const cycle = serviceMotion.current.cycle;
+    return cycle ? cycle + ((position - cycle) % cycle + cycle) % cycle : position;
+  }, []);
+
+  const writeServicePosition = useCallback((position: number) => {
+    const rail = serviceRail.current;
+    if (!rail) return;
+    serviceMotion.current.position = loopPosition(position);
+    rail.scrollLeft = serviceMotion.current.position;
+  }, [loopPosition]);
 
   useEffect(() => {
     const rail = serviceRail.current;
     if (!rail) return;
-    const wheel = (event: WheelEvent) => {
-      if (event.ctrlKey) return; // Preserve browser zoom / trackpad pinch.
-      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-      const unit = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? rail.clientWidth : 1;
-      const max = rail.scrollWidth - rail.clientWidth;
-      const next = Math.max(0, Math.min(max, rail.scrollLeft + delta * unit * 2.4));
-      // At either edge, let the normal vertical page scroll continue.
-      if (Math.abs(next - rail.scrollLeft) < 1) return;
-      event.preventDefault();
-      rail.scrollLeft = next;
-      serviceMotion.current.position = rail.scrollLeft;
-      serviceMotion.current.direction = delta > 0 ? 1 : -1;
-      serviceMotion.current.pauseUntil = performance.now() + 2000;
+    const measure = () => {
+      const first = rail.querySelector<HTMLElement>("article");
+      const middle = rail.querySelector<HTMLElement>('[data-service-copy="1"]');
+      if (!first || !middle) return;
+      const previousCycle = serviceMotion.current.cycle;
+      const cycle = middle.offsetLeft - first.offsetLeft;
+      if (cycle <= 0) return;
+      const relative = previousCycle ? (rail.scrollLeft - previousCycle) / previousCycle : 0;
+      serviceMotion.current.cycle = cycle;
+      writeServicePosition(cycle + relative * cycle);
     };
+    const wheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return;
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      if (!delta) return;
+      const unit = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? rail.clientWidth : 1;
+      event.preventDefault();
+      pauseServices();
+      writeServicePosition(rail.scrollLeft + delta * unit * 2.4);
+    };
+    const scroll = () => {
+      const wrapped = loopPosition(rail.scrollLeft);
+      if (Math.abs(wrapped - rail.scrollLeft) > 1) writeServicePosition(wrapped);
+      else if (!serviceDrag.current && performance.now() < serviceMotion.current.pauseUntil) {
+        serviceMotion.current.position = rail.scrollLeft;
+      }
+    };
+    measure();
+    const resize = new ResizeObserver(measure);
+    resize.observe(rail);
     rail.addEventListener("wheel", wheel, { passive: false });
-    return () => rail.removeEventListener("wheel", wheel);
-  }, []);
+    rail.addEventListener("scroll", scroll, { passive: true });
+    return () => {
+      resize.disconnect();
+      rail.removeEventListener("wheel", wheel);
+      rail.removeEventListener("scroll", scroll);
+    };
+  }, [reduced, loopPosition, writeServicePosition]);
 
   useAnimationFrame((_, delta) => {
     const rail = serviceRail.current;
-    if (!rail) return;
+    if (!rail || !serviceMotion.current.cycle) return;
     const state = serviceMotion.current;
     const keyboardFocus = rail.matches(":focus-visible") || rail.querySelector(":focus-visible");
-    if (reduced || !servicesInView || document.hidden || keyboardFocus || performance.now() < state.pauseUntil) {
+    if (reduced || !servicesInView || document.hidden || keyboardFocus || serviceDrag.current || performance.now() < state.pauseUntil) {
       state.position = rail.scrollLeft;
       return;
     }
-    const max = rail.scrollWidth - rail.clientWidth;
-    if (max <= 0) return;
-    if (state.position >= max) state.direction = -1;
-    else if (state.position <= 0) state.direction = 1;
-    // Keep fractional progress outside scrollLeft: some browsers round every DOM write.
-    state.position = Math.max(0, Math.min(max, state.position + state.direction * Math.min(delta, 40) * 0.04));
-    rail.scrollLeft = state.position;
+    // Fractional progress survives DOM rounding; wrap into the identical middle copy.
+    writeServicePosition(state.position + Math.min(delta, 40) * 0.04);
   });
+
+  function startServiceDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    pauseServices();
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    serviceDrag.current = { id: event.pointerId, startX: event.clientX, lastX: event.clientX, moved: false };
+  }
+
+  function dragServices(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = serviceDrag.current;
+    if (!drag || event.pointerId !== drag.id) return;
+    if (!drag.moved && Math.abs(event.clientX - drag.startX) < 5) return;
+    event.preventDefault();
+    if (!drag.moved) event.currentTarget.setPointerCapture(event.pointerId);
+    drag.moved = true;
+    writeServicePosition(serviceMotion.current.position - (event.clientX - drag.lastX) * 1.5);
+    drag.lastX = event.clientX;
+  }
+
+  function finishServiceDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    pauseServices();
+    const drag = serviceDrag.current;
+    if (!drag || drag.id !== event.pointerId) return;
+    if (drag.moved) serviceMotion.current.suppressClickUntil = performance.now() + 300;
+    serviceDrag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  }
 
   function moveServices(direction: number) {
     pauseServices();
     const rail = serviceRail.current;
     const card = rail?.querySelector<HTMLElement>("article");
     if (!rail || !card) return;
-    rail.scrollBy({ left: direction * (card.offsetWidth + 24), behavior: "instant" });
+    writeServicePosition(rail.scrollLeft + direction * (card.offsetWidth + 24));
   }
 
   const scope = en
@@ -293,9 +349,18 @@ export default function EventPlannerPage() {
                   aria-roledescription="carousel"
                   aria-label={en ? "Event planning services" : "Pilihan layanan acara"}
                   tabIndex={0}
-                  onPointerDown={pauseServices}
-                  onPointerUp={pauseServices}
-                  onPointerMove={(event) => { if (event.buttons) pauseServices(); }}
+                  onPointerDown={startServiceDrag}
+                  onPointerMove={dragServices}
+                  onPointerUp={finishServiceDrag}
+                  onPointerCancel={finishServiceDrag}
+                  onLostPointerCapture={finishServiceDrag}
+                  onDragStart={(event) => event.preventDefault()}
+                  onClickCapture={(event) => {
+                    if (performance.now() < serviceMotion.current.suppressClickUntil) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }
+                  }}
                   onKeyDown={(event) => {
                     if (event.target !== event.currentTarget) return;
                     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
@@ -303,14 +368,16 @@ export default function EventPlannerPage() {
                       moveServices(event.key === "ArrowLeft" ? -1 : 1);
                     }
                   }}
-                  className="relative z-10 mt-10 flex items-start gap-6 overflow-x-auto overscroll-x-contain rounded-[20px] px-1 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                  className="relative z-10 mt-10 flex cursor-grab select-none items-start gap-6 active:cursor-grabbing overflow-x-auto overscroll-x-contain rounded-[20px] px-1 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                 >
-                  {plannerPackages.map((item) => {
+                  {plannerCards.map(({ item, copy }) => {
                     const features = en ? item.featuresEn : item.features;
 
                     return (
                       <article
-                        key={item.key}
+                        key={`${copy}-${item.key}`}
+                        data-service-copy={copy}
+                        aria-hidden={copy !== 1 ? true : undefined}
                         role="group"
                         aria-roledescription={en ? "slide" : "kartu"}
                         aria-label={en ? item.nameEn : item.name}
@@ -339,6 +406,7 @@ export default function EventPlannerPage() {
 
                             <a
                               className="mt-auto inline-flex w-fit items-center gap-3 rounded-sm py-2 text-sm font-medium underline decoration-current/40 underline-offset-8 transition-[gap] duration-200 hover:gap-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current motion-reduce:transition-none"
+                              tabIndex={copy === 1 ? undefined : -1}
                               href={consultationUrl(en ? item.waMessageEn : item.waMessage)}
                               target="_blank"
                               rel="noreferrer"
