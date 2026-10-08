@@ -1212,6 +1212,8 @@ Layanan konsultasi:
 - Silver / Golden Wedding;
 - Baby Shower.
 
+Bagian **Pilihan Layanan / Apa yang bisa kamu tanyakan?** memakai satu alur baca dari atas ke bawah pada desktop dan mobile: judul, pengantar, lalu setiap layanan dengan nama, penjelasan, poin layanan, dan CTA WhatsApp. Seluruh layanan sejajar pada sisi kiri yang sama, tanpa kolom atau arah yang bergantian; pemisah tipis membedakan tiap layanan.
+
 CTA: **Konsultasi** ke WhatsApp `+62 821-2478-6516`.
 
 ---
@@ -3547,3 +3549,11 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Implementation / affected files:** Rename display strings in `lib/templates/catalog.ts` and matching `lib/templates/design.ts` palette labels; align the Prayer Garden SVG title/accessible label, active README/template/PRD naming rules and collection/theme briefs. Original generation prompts and previous implementation history retain their recorded names. Public catalog, marketing collection and Studio already read the shared registry. Persisted theme/palette keys, artwork paths, colors, fonts, layouts, motion, saved invitation data and event-category permissions remain unchanged. No schema, migration, dependency or extra naming registry.
 
 **Observed validation / commit:** One-off runtime comparison checks all 33 catalog entries and every palette against the source snapshot: exactly six display-name changes, unique names, matching palette labels, saved design-key lookup and exact event compatibility PASS; fonts and all other metadata remain identical. Fallback SVG XML/title/accessible-label validation and `git diff --check` PASS. Commit: `fix(templates): use English catalog theme names` (this implementation commit). Full GitHub regression/build and existing public-gallery browser QA are pending at commit creation and will be observed for the resulting commit; no production deployment or signed-in customer QA is claimed.
+
+### 2026-10-08 — Event Planner service reading order
+
+**Owner request / rationale:** The side-by-side heading and alternating service columns in **Pilihan Layanan / Apa yang bisa kamu tanyakan?** felt confusing. Give this section one consistent reading order from top to bottom.
+
+**Implementation / affected files:** `app/event-planner/page.tsx` stacks the heading and introduction, limits the section to a readable width, and aligns all four services in one column. Names, descriptions, feature lists and existing WhatsApp actions follow the same order, with subtle separators between services. Existing ID/EN text, fonts, theme colors, decoration and interaction remain in place; the hero, process, digital-invitation CTA and FAQ retain their layouts. `tests/event-planner-redesign.test.mjs` removes two obsolete assertions that required alternating service columns. This canonical requirement and Appendix A are recorded in `prd.md`. No new dependency, schema or migration.
+
+**Observed validation / commit:** Existing Event Planner regression checks **4/4 PASS** before and after the change. `git diff --check` and source-preservation review PASS; ID/EN service text, WhatsApp actions and surrounding sections match the previous source. Commit: `fix(event-planner): stack service options consistently` (this implementation commit). Exact-commit GitHub regression/build checks will be observed after push. No production deployment or actual-page browser result is claimed.

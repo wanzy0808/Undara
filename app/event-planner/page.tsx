@@ -204,7 +204,7 @@ export default function EventPlannerPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot}>
-              <section className="relative mx-auto w-full max-w-[1500px] overflow-hidden py-12 md:py-16 lg:py-20">
+              <section className="relative mx-auto w-full max-w-4xl overflow-hidden py-12 md:py-16 lg:py-20">
                 <PlannerNote
                   src="/assets/note3.webp"
                   className="-right-[5%] top-[2%] h-[64%] w-[36%] rotate-6 opacity-[0.09] lg:opacity-[0.14] dark:opacity-[0.06]"
@@ -213,18 +213,18 @@ export default function EventPlannerPage() {
                   reduced={reduced}
                 />
 
-                <div className="relative z-10 grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
+                <div className="relative z-10 flex flex-col gap-6 md:gap-8">
                   <div>
                     <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/80">
                       {en ? "Service Direction" : "Pilihan Layanan"}
                     </p>
-                    <h2 className="mt-4 max-w-[13ch] font-[family-name:var(--font-undara-heading)] text-[clamp(3.1rem,5.8vw,6.4rem)] font-bold leading-[0.94] tracking-[-0.035em] text-primary">
+                    <h2 className="mt-4 max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-[clamp(2.75rem,4.8vw,5.25rem)] font-bold leading-[1.02] tracking-[-0.035em] text-primary">
                       {en ? "What can you ask about?" : "Apa yang bisa kamu tanyakan?"}
                     </h2>
                   </div>
 
-                  <div className="max-w-3xl pb-1 lg:pb-2">
-                    <p className="max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-2xl font-bold leading-[1.08] text-foreground md:text-3xl lg:text-4xl">
+                  <div className="max-w-3xl">
+                    <p className="font-[family-name:var(--font-undara-heading)] text-xl font-bold leading-snug text-foreground md:text-2xl">
                       {en
                         ? "Start with the service that feels closest to your event."
                         : "Mulai dari layanan yang paling mendekati kebutuhan acaramu."}
@@ -237,17 +237,17 @@ export default function EventPlannerPage() {
                   </div>
                 </div>
 
-                <div className="relative z-10 mt-10">
-                  {plannerPackages.map((item, index) => {
+                <div className="relative z-10 mt-10 divide-y divide-primary/15">
+                  {plannerPackages.map((item) => {
                     const features = en ? item.featuresEn : item.features;
 
                     return (
                       <article
                         key={item.key}
-                        className={`grid gap-7 py-8 md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] md:gap-12 md:py-10 lg:py-12 ${index % 2 ? "lg:pl-[7%]" : "lg:pr-[7%]"}`}
+                        className="flex flex-col gap-5 py-8 md:py-10 lg:py-12"
                       >
-                        <div className={index % 2 ? "md:order-2" : ""}>
-                          <h3 className="max-w-[16ch] font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.02] text-primary md:text-4xl lg:text-[2.75rem]">
+                        <div>
+                          <h3 className="max-w-3xl font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.02] text-primary md:text-4xl lg:text-[2.75rem]">
                             {en ? item.nameEn : item.name}
                           </h3>
                           <p className="mt-3 max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
@@ -255,8 +255,8 @@ export default function EventPlannerPage() {
                           </p>
                         </div>
 
-                        <div className={index % 2 ? "md:order-1" : ""}>
-                          <ul className="grid gap-3 sm:grid-cols-2 sm:gap-x-8">
+                        <div>
+                          <ul className="grid gap-3">
                             {features.map((feature) => (
                               <li
                                 key={feature}

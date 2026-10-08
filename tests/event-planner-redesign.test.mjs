@@ -39,8 +39,6 @@ test("event planner uses planner notes as decoration and a wider body", () => {
   assert.match(services, /style=\{\{ gridRow: index \+ 1 \}\}/);
   assert.match(services, /md:col-start-2/);
   assert.match(services, /md:col-start-1/);
-  assert.match(page, /plannerPackages\.map\(\(item, index\)/);
-  assert.match(page, /md:order-2/);
 });
 
 test("event planner shares restrained woodland ambience across marketing pages", () => {
