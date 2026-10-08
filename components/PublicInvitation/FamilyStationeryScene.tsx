@@ -41,7 +41,7 @@ export default function FamilyStationeryScene(props: SceneProps) {
         <div className="rf-fold-flight rf-fold-flight--right"><div aria-hidden="true" data-studio-native-object="object:envelope:fold-right" className="rf-fold rf-paper" /></div>
       </> : <div className="rf-front-flight"><div aria-hidden="true" data-studio-native-object="object:envelope:pocket-front" className="rf-front rf-paper" /></div>}
       {direction.envelope === "pocket" && <div className="rf-flap-flight"><div aria-hidden="true" data-studio-native-object="object:envelope:fold-top" className="rf-flap rf-paper" /></div>}
-      <div className="rf-band-flight"><div aria-hidden="true" data-studio-native-object="object:envelope:paper-band" className="rf-band" /></div>
+      {direction.envelope !== "pocket" && <div className="rf-band-flight"><div aria-hidden="true" data-studio-native-object="object:envelope:paper-band" className="rf-band" /></div>}
       <div className="rf-seal-flight"><div aria-hidden="true" data-studio-native-object="object:envelope:seal" className="rf-seal" /></div>
     </div>
     {recipientLine && <p data-personal-envelope-address data-studio-native-object="object:envelope:address" className="rf-address rf-paper">{recipientLine}</p>}

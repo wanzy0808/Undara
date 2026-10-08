@@ -352,7 +352,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     descriptionEn: "Midnight arches and warm brass lanterns for a quiet, thoughtful khitan celebration.",
     category: "Family", eventCategories: ["KHITANAN"], previewType: "public",
     usesPhotos: true, photoSlots: ["cover", "gallery"],
-    preset: { layout: "editorial", palette: "purnamaBiru", font: "cinzelFauna" },
+    preset: { layout: "editorial", palette: "purnamaBiru", font: "crimsonDmSans" },
     previewImage: "/templates/purnama-biru/scene.webp", assetPath: "/templates/purnama-biru",
   },
   {

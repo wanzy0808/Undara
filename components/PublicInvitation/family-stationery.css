@@ -5,6 +5,7 @@
 .rf-cover-letter { position: relative; min-width: 0; padding: 32px clamp(24px,8%,48px); }
 .rf-event-label { margin: 0 0 14px; font-size: 17px; line-height: 1.5; }
 .rf-cover-name { margin: 0; font-family: var(--inv-heading); font-size: clamp(46px,12vw,74px); font-weight: 400; line-height: 1.06; letter-spacing: -.025em; overflow-wrap: anywhere; text-wrap: balance; }
+.rf-cover-name,.rf-envelope-heading,.rf-letter-name { color: inherit; }
 .rf-cover-date { margin: 22px 0 0; font-size: 16px; line-height: 1.6; }
 .rf-cover > .ot-scroll { padding-inline: 28px; margin: 0; padding-block: 18px 26px; background: var(--inv-bg); color: var(--inv-ink); }
 .rf-paper, .rf-editorial-letter .rf-cover-letter, .rf-porcelain-letter .rf-cover-letter { background-color: var(--inv-surface); background-image: url('/templates/family-stationery/cotton-paper.webp'); background-blend-mode: multiply; background-size: 360px; color: var(--ot-surface-ink); }

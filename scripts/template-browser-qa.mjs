@@ -10,6 +10,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { invitationTemplates } from "../lib/templates/catalog.ts";
+import { invitationPalettes } from "../lib/templates/design.ts";
+import { readableInk, contrastRatio } from "../lib/templates/presentation.ts";
 import { familyArtDirection } from "../lib/templates/family-art-directions.ts";
 
 const output = "artifacts/template-browser";
@@ -110,12 +112,19 @@ try {
         const a = root.getBoundingClientRect(), b = title.getBoundingClientRect();
         const objects = [...cover.querySelectorAll("[data-studio-native-object]")].map(n => n.dataset.studioNativeObject);
         return { canvasWidth: a.width, coverHeight: cover.offsetHeight, title: title.textContent,
+          titleColor: getComputedStyle(title).color,
+          titleBackground: getComputedStyle(title.parentElement).backgroundColor,
           titleFits: b.left >= a.left - 1 && b.right <= a.right + 1,
           overflow: cover.scrollWidth - cover.clientWidth,
           uniqueObjects: objects.length === new Set(objects).size,
           sections: [...root.querySelectorAll("[data-invitation-section]")].map(n => n.dataset.invitationSection) };
       })()`);
       assert.ok(measured.titleFits && measured.overflow <= 1 && measured.uniqueObjects, JSON.stringify({ theme: theme.key, width, ...measured }));
+      const palette = invitationPalettes[theme.preset.palette];
+      const hex = (rgb) => "#" + rgb.match(/[\d.]+/g).slice(0,3).map(n => Math.round(Number(n)).toString(16).padStart(2,"0")).join("");
+      const surface = ["giok-abadi", "rumah-senja", "porcelain-bloom"].includes(theme.key) ? palette.surface : palette.bg;
+      assert.equal(hex(measured.titleColor), readableInk(surface, palette.ink), "Heading must use its invitation surface ink, not the marketing brand: " + theme.key);
+      assert.ok(contrastRatio(hex(measured.titleColor), surface) >= 4.5, "Actual heading contrast: " + theme.key);
       const longNameFits = await evaluate(`(() => {
         const cover = document.querySelector("[role=dialog] .rf-cover");
         const title = cover.querySelector("h1");

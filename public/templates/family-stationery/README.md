@@ -21,6 +21,23 @@ The eight scenes were generated from original text prompts through the image-gen
 
 Production assets: eight opaque 1024 × 1536 `scene.webp`, eight transparent 960 × 640 `detail.webp`, and one 512 × 512 cotton-paper texture. Combined size is 1,779,722 bytes (about 1.70 MiB). WebP derivatives preserve full subjects and transparency; original PNG generations stay outside the application tree. No external stock URLs, new font files, audio files or dependencies.
 
+### Owner's source uploads — 8 October 2026
+
+The owner's 16 uploads on `main` (`355a359`) are preserved at their existing URLs. Their artwork is already represented by the smaller, theme-owned production derivatives below; those derivatives remain the catalog/Studio/public renderer assets, avoiding full-resolution downloads in each preview. Sources and derivatives were visually compared, including full subjects and alpha edges.
+
+| Theme | Uploaded scene source | Uploaded detail source | Runtime files |
+| --- | --- | --- | --- |
+| Serambi Pagi | `/templates/moodboardoorarabic.webp` | `/templates/daunkecil.webp` | `/templates/serambi-pagi/{scene,detail}.webp` |
+| Rumah Senja | `/templates/moodboardcard.webp` | `/templates/kain.webp` | `/templates/rumah-senja/{scene,detail}.webp` |
+| Langit Safari | `/templates/moodboardbabypet.webp` | `/templates/babywoodanimal.webp` | `/templates/langit-safari/{scene,detail}.webp` |
+| Purnama Biru | `/templates/moodboardnight.webp` | `/templates/lantern.webp` | `/templates/purnama-biru/{scene,detail}.webp` |
+| Giok Abadi | Original scene already in the collection | `/templates/teacup1.webp` | `/templates/giok-abadi/{scene,detail}.webp` |
+| Peony Silk | `/templates/mooboardflower.webp` | `/templates/flowerbouq.webp` | `/templates/peony-silk/{scene,detail}.webp` |
+| Imperial Crimson | `/templates/moodboardteacup.webp` | `/templates/sangjitacc.webp` | `/templates/imperial-crimson/{scene,detail}.webp` |
+| Porcelain Bloom | `/templates/moodboardpot2.webp` | `/templates/teacup.webp` | `/templates/porcelain-bloom/{scene,detail}.webp` |
+
+`/templates/moodboardpoci.webp` is a byte-identical duplicate of `/templates/moodboardcard.webp` (SHA256 `d4c94d62b03b80bbae4681105ce9ffd2065b98c7fd583894a6c8c4519214a724`). It is retained as uploaded but does not replace Giok Abadi's green tea artwork. The existing Giok scene and Porcelain detail remain complete. No uploaded source is deleted or renamed.
+
 ## Implementation and motion
 
 `family-art-directions.ts` chooses visual compositions only; event eligibility stays in `catalog.ts`. `FamilyStationeryScene` composes section-owned envelopes/covers in normal flow. `FamilyStationeryArtwork` keeps raster/frame targets independent. Whole-scroll styles remain scoped to `family-stationery-invitation` and each theme class.
@@ -41,6 +58,8 @@ Motion review (Emil animate/review-animations + STANDARDS):
 ## Validation boundary
 
 Regression tests cover exact category gating and stable defaults, isolated examples, escaped live data, unique/editable native targets, saved hide/paint/restore state, optional photos, bilingual defaults and authored-copy preservation, contrast, music precedence, OFF, asset dimensions/transparency/size, and the renderer contract. Browser QA runs the real public gallery on a disposable CI server at 320/390/768/1440px, opens each envelope, checks actual images/layout/13 content sections and long-name wrapping, and captures review screenshots. It does not create customer invitations or submit RSVP.
+
+Observed public-gallery run: [Build Validation 37713462937](https://github.com/wanzy0808/Undara/actions/runs/37713462937) passed 957 source tests, production build, 32 real browser previews, pointer/reduced-motion opening, loaded artwork, 13 content sections and long-name layout; all font waits settled and no runtime exceptions occurred. The 24 mobile envelope/cover/greeting screenshots were inspected in one batch. One visual fix round corrects heading ink leaking from the marketing brand (especially navy/crimson), uses Crimson Pro + DM Sans for the night theme, and removes the nonexistent pocket-band target. Browser QA now checks actual computed name color/contrast against the section surface. A final confirmation run will verify those changes.
 
 Customer Studio Undo/Redo → save/reload/public, a real paid-event RSVP/Wishes/Maps/Gift/QR path and physical-device/audio behavior remain release QA; public-preview checks are not a substitute. See `checklist.md` and the dated PRD Appendix A entry for observed results.
 
