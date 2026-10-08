@@ -28,6 +28,10 @@ export const invitationMusicLibrary = Object.entries(bundledTracks).map(([id, tr
 }));
 
 export const invitationDefaultTracks: Record<string, { title: string; file: string }> = {
+  "cherry-picnic": bundledTracks.withYouInTheMorning,
+  "velvet-wish": bundledTracks.untilWeMeetAgain,
+  "little-parade": bundledTracks.lullaby,
+  "disco-bloom": bundledTracks.theySay,
   "serambi-pagi": bundledTracks.whitePetals,
   "rumah-senja": bundledTracks.withYouInTheMorning,
   "langit-safari": bundledTracks.lullaby,

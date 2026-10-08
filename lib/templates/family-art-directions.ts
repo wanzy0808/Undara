@@ -2,6 +2,10 @@ import type { InvitationSectionKey } from "@/lib/templates/sections";
 
 /** Visual direction only; selectable themes and event compatibility live in catalog.ts. */
 export const familyArtDirections = {
+  "cherry-picnic": { cover: "picnic", envelope: "pocket", vignette: null, accent: "cherries" },
+  "velvet-wish": { cover: "velvet", envelope: "gatefold", vignette: null, accent: "candle" },
+  "little-parade": { cover: "parade", envelope: "sleeve", vignette: null, accent: "pennants" },
+  "disco-bloom": { cover: "disco", envelope: "wrap", vignette: null, accent: "mirror" },
   "serambi-pagi": { cover: "arched", envelope: "pocket", vignette: "greeting" },
   "rumah-senja": { cover: "editorial", envelope: "wrap", vignette: "closing" },
   "langit-safari": { cover: "playful", envelope: "sleeve", vignette: "greeting" },
@@ -26,4 +30,9 @@ export function familyArtworkUrl(theme: string, kind: "scene" | "detail" = "scen
 
 export function familyHasSectionArtwork(theme: string, section: InvitationSectionKey) {
   return familyArtDirection(theme)?.vignette === section;
+}
+
+export function birthdayStationeryAccent(theme: string) {
+  const direction = familyArtDirection(theme);
+  return direction && "accent" in direction ? direction.accent : undefined;
 }

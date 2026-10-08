@@ -25,6 +25,30 @@ export function availableEditableCopyFields(templateKey: string, isWedding = tru
 }
 
 const familyStationeryCopyDefaults: Record<string, EditableInvitationCopy> = {
+  "cherry-picnic": {
+    greeting: "Ada kue, cerita, dan satu hari ulang tahun yang ingin kami rayakan bersama Anda.",
+    attendanceRequest: "Mari luangkan waktu untuk menikmati perayaan kecil ini bersama orang-orang tersayang.",
+    prayerWish: "Semoga tahun yang baru membawa kesehatan, hari yang hangat, dan banyak cerita baik.",
+    closing: "Terima kasih sudah ikut merayakan. Kami menantikan tawa dan cerita Anda di pesta.",
+  },
+  "velvet-wish": {
+    greeting: "Satu tahun lagi, satu kesempatan untuk merayakan hidup bersama orang-orang yang berarti.",
+    attendanceRequest: "Kehadiran Anda akan melengkapi perayaan ulang tahun yang kami nantikan.",
+    prayerWish: "Semoga tahun ini dipenuhi ketenangan, kesehatan, dan harapan yang menemukan jalannya.",
+    closing: "Terima kasih untuk setiap harapan baik. Sampai bertemu di hari perayaan.",
+  },
+  "little-parade": {
+    greeting: "Ada pesta kecil dengan banyak tawa! Kami mengundang Anda untuk merayakan ulang tahun si kecil bersama keluarga.",
+    attendanceRequest: "Yuk, datang untuk berbagi kue, bermain, dan mengisi hari ini dengan senyum.",
+    prayerWish: "Semoga si kecil tumbuh sehat, penuh rasa ingin tahu, dan selalu dikelilingi kasih sayang.",
+    closing: "Terima kasih sudah ikut menambah bahagia. Sampai bertemu di pesta kecil kami!",
+  },
+  "disco-bloom": {
+    greeting: "Saatnya merayakan satu tahun penuh cerita. Mari berbagi musik, tawa, dan hari ulang tahun bersama kami.",
+    attendanceRequest: "Datang dan ikut merayakan. Pesta ini akan terasa lebih lengkap bersama Anda.",
+    prayerWish: "Semoga tahun yang baru membawa keberanian, kesempatan baik, dan banyak alasan untuk tersenyum.",
+    closing: "Terima kasih atas doa dan kebersamaannya. Sampai bertemu, kita rayakan bersama!",
+  },
   "serambi-pagi": {
     greeting: "Di antara doa dan rasa syukur, kami mengundang Anda untuk merayakan khitanan putra kami.",
     attendanceRequest: "Mari hadir dan berbagi hari yang hangat bersama keluarga kami.",

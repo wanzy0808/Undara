@@ -111,7 +111,7 @@ test("each categorized theme appears in exactly one of the supported event categ
       assert.equal(catalog.templatesForEvent([theme], key).length, Number(theme.eventCategories[0] === key));
     }
   }
-  assert.deepEqual(catalog.templatesForEvent(localCatalog, "BIRTHDAY").map((item) => item.key), ["confetti-club"]);
+  assert.deepEqual(catalog.templatesForEvent(localCatalog, "BIRTHDAY").map((item) => item.key), ["confetti-club", "cherry-picnic", "velvet-wish", "little-parade", "disco-bloom"]);
   assert.ok(catalog.templatesForEvent(localCatalog, "WEDDING").some((item) => item.key === "botanical-ivory"));
 });
 
@@ -334,7 +334,7 @@ test("catalog API uses renderer compatibility, regardless of designer aesthetic 
     "@/lib/templates/catalog": catalog, "@/lib/templates/design": design,
   });
   const { templates } = await (await route.GET()).json();
-  assert.deepEqual(catalog.templatesForEvent(templates, "BIRTHDAY").map((item) => item.key), ["confetti-club", "designer:001"]);
+  assert.deepEqual(catalog.templatesForEvent(templates, "BIRTHDAY").map((item) => item.key), ["confetti-club", "cherry-picnic", "velvet-wish", "little-parade", "disco-bloom", "designer:001"]);
   assert.ok(catalog.templatesForEvent(templates, "WEDDING").some((item) => item.key === "designer:002"));
   assert.ok(!catalog.templatesForEvent(templates, "WEDDING").some((item) => item.key === "designer:001"));
   assert.equal(templates.find((item) => item.key === "designer:003").ready, false);

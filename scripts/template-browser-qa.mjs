@@ -33,6 +33,8 @@ let counter = 0;
 const requests = new Map();
 const exceptions = [];
 const report = [];
+const themes = invitationTemplates.filter((t) => familyArtDirection(t.key));
+const viewports = [320, 390, 768, 1440];
 let lastExpression = "";
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function until(check, message, timeout = 30000) {
@@ -83,8 +85,7 @@ try {
   };
   await call("Page.enable");
   await call("Runtime.enable");
-  const themes = invitationTemplates.filter((t) => familyArtDirection(t.key));
-  for (const width of [320, 390, 768, 1440]) {
+  for (const width of viewports) {
     await call("Emulation.setDeviceMetricsOverride", { width, height: width < 768 ? 844 : 1024, deviceScaleFactor: 1, mobile: width < 768 });
     await call("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
     for (const theme of themes) {
@@ -95,10 +96,10 @@ try {
       const fontsReady = await evaluate("Promise.race([document.fonts.ready.then(() => true), new Promise(resolve => setTimeout(() => resolve(false), 2500))])");
       console.log("Envelope ready:", theme.key, width, "fonts settled:", fontsReady);
       await pause(200);
-      if (width === 390) {
+      if (width === 390 || (width === 1440 && theme.eventCategories[0] === "BIRTHDAY")) {
         await evaluate('document.querySelector("[role=dialog] .rf-envelope .ot-open").scrollIntoView({block:"center"})');
         const capture = await call("Page.captureScreenshot", { format: "png" });
-        await writeFile(join(output, theme.key + "-envelope.png"), Buffer.from(capture.data, "base64"));
+        await writeFile(join(output, theme.key + (width === 1440 ? "-desktop" : "") + "-envelope.png"), Buffer.from(capture.data, "base64"));
       }
       await evaluate('document.querySelector("[role=dialog] .rf-envelope .ot-open").click()');
       await until(() => evaluate('Boolean(document.querySelector("[role=dialog] .rf-cover h1"))'), "Invitation did not open: " + theme.key);
@@ -120,6 +121,7 @@ try {
           sections: [...root.querySelectorAll("[data-invitation-section]")].map(n => n.dataset.invitationSection) };
       })()`);
       assert.ok(measured.titleFits && measured.overflow <= 1 && measured.uniqueObjects, JSON.stringify({ theme: theme.key, width, ...measured }));
+      if (theme.eventCategories[0] === "BIRTHDAY") assert.equal(measured.title, "Dara", "Birthday sample must keep the canonical single name");
       const palette = invitationPalettes[theme.preset.palette];
       const hex = (rgb) => "#" + rgb.match(/[\d.]+/g).slice(0,3).map(n => Math.round(Number(n)).toString(16).padStart(2,"0")).join("");
       const surface = ["giok-abadi", "rumah-senja", "porcelain-bloom"].includes(theme.key) ? palette.surface : palette.bg;
@@ -140,13 +142,24 @@ try {
         assert.ok(measured.sections.includes(required), theme.key + " missing " + required);
       }
       report.push({ theme: theme.key, viewport: width, fontsReady, ...measured });
-      if (width === 390) {
+      if (width === 390 || (width === 1440 && theme.eventCategories[0] === "BIRTHDAY")) {
         const capture = await call("Page.captureScreenshot", { format: "png" });
-        await writeFile(join(output, theme.key + "-cover.png"), Buffer.from(capture.data, "base64"));
+        await writeFile(join(output, theme.key + (width === 1440 ? "-desktop" : "") + "-cover.png"), Buffer.from(capture.data, "base64"));
+      }
+      if (width === 390) {
         await evaluate('document.querySelector("[role=dialog] [data-invitation-section=greeting]").scrollIntoView({block:"start"})');
         await until(() => evaluate('[...document.querySelectorAll("[role=dialog] [data-invitation-section=greeting] img")].every(i => i.complete && i.naturalWidth > 0)'), "Broken greeting artwork: " + theme.key);
         const content = await call("Page.captureScreenshot", { format: "png" });
         await writeFile(join(output, theme.key + "-greeting.png"), Buffer.from(content.data, "base64"));
+        if (theme.eventCategories[0] === "BIRTHDAY") {
+          for (const section of ["identity", "dateTime", "gallery", "rsvp", "closing"]) {
+            await evaluate(`document.querySelector('[role=dialog] [data-invitation-section="${section}"]').scrollIntoView({block:"start"})`);
+            await until(() => evaluate(`[...document.querySelectorAll('[role=dialog] [data-invitation-section="${section}"] img')].every(i => i.complete && i.naturalWidth > 0)`), "Broken section image: " + theme.key + "/" + section);
+            await pause(100);
+            const body = await call("Page.captureScreenshot", { format: "png" });
+            await writeFile(join(output, theme.key + "-" + section + ".png"), Buffer.from(body.data, "base64"));
+          }
+        }
         await call("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "no-preference" }] });
         await call("Page.navigate", { url: origin + "/template-design?template=" + theme.key });
         await until(() => evaluate('Boolean(document.querySelector("[role=dialog] .rf-envelope .ot-open"))'), "Missing pointer opening control");
@@ -168,7 +181,7 @@ try {
   console.log("PASS:", report.length, "real gallery previews; envelope, cover, assets, section continuity and horizontal layout.");
 } finally {
   await writeFile(join(output, "report.json"), JSON.stringify({ report, exceptions, lastExpression }, null, 2));
-  if (report.length !== 32) console.error("Last browser expression:", lastExpression);
+  if (report.length !== themes.length * viewports.length) console.error("Last browser expression:", lastExpression);
   await writeFile(join(output, "server.log"), serverLog.join(""));
   socket?.close();
   chrome.kill();

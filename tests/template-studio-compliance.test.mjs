@@ -32,6 +32,10 @@ const genericSceneKeys = [
   "peony-silk",
   "imperial-crimson",
   "porcelain-bloom",
+  "cherry-picnic",
+  "velvet-wish",
+  "little-parade",
+  "disco-bloom",
 ];
 
 test("every active built-in template stays on the shared web-invitation renderer contract", () => {
@@ -65,6 +69,10 @@ test("every active built-in template stays on the shared web-invitation renderer
     "peony-silk",
     "imperial-crimson",
     "porcelain-bloom",
+    "cherry-picnic",
+    "velvet-wish",
+    "little-parade",
+    "disco-bloom",
   ]);
 
   const dispatcher = read("components/PublicInvitation/PublicInvitationRenderer.tsx");

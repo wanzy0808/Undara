@@ -65,6 +65,10 @@ const confettiClubPhotos: PhotoMotionMap = {
 };
 
 const photoDefaults: Record<string, PhotoMotionMap> = {
+  "cherry-picnic": { cover: { animation: "fade", animationDuration: .55 }, gallery: { animation: "tilt-in", animationDuration: .6, animationStagger: .04 } },
+  "velvet-wish": { cover: { animation: "fade", animationDuration: .6 }, gallery: { animation: "glide-left", animationDuration: .6, animationStagger: .045 } },
+  "little-parade": { cover: { animation: "rise", animationDuration: .5 }, gallery: { animation: "rise", animationDuration: .55, animationStagger: .045 } },
+  "disco-bloom": { cover: { animation: "fade", animationDuration: .5 }, gallery: { animation: "glide-right", animationDuration: .6, animationStagger: .04 } },
   "serambi-pagi": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "rise", animationDuration: .6, animationStagger: .045 } },
   "rumah-senja": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "glide-left", animationDuration: .6, animationStagger: .045 } },
   "langit-safari": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "rise", animationDuration: .6, animationStagger: .045 } },
@@ -909,6 +913,10 @@ const confettiClubNative: Record<string, TemplateNativeMotion> = {
 };
 
 const nativeDefaults: Record<string, Record<string, TemplateNativeMotion>> = {
+  "cherry-picnic": { "heading:cover": { animation: "glide-left", animationDuration: .6 } },
+  "velvet-wish": { "heading:cover": { animation: "fade", animationDuration: .65 } },
+  "little-parade": { "heading:cover": { animation: "rise", animationDuration: .55 } },
+  "disco-bloom": { "heading:cover": { animation: "glide-right", animationDuration: .6 } },
   "serambi-pagi": { "heading:cover": { animation: "rise", animationDuration: .6 } },
   "rumah-senja": { "heading:cover": { animation: "glide-left", animationDuration: .6 } },
   "langit-safari": { "heading:cover": { animation: "rise", animationDuration: .6 } },

@@ -6,6 +6,7 @@ import { OccasionOpenButton, OccasionScrollHint, useOccasionOpening } from "@/co
 import { familyArtDirection } from "@/lib/templates/family-art-directions";
 import "./occasion-themes.css";
 import "./family-stationery.css";
+import "./birthday-stationery.css";
 
 function CoverLetter({ names, date, eventLabel, className = "" }: Pick<SceneProps, "names" | "date" | "eventLabel"> & { className?: string }) {
   return <div data-studio-native-object="object:cover:title-group" className={`rf-cover-letter ${className}`}>
@@ -52,6 +53,9 @@ export default function FamilyStationeryScene(props: SceneProps) {
   const art = <FamilyStationeryArtwork theme={theme} section="cover" />;
   return <section data-invitation-section="cover" className={`rf-cover rf-cover--${direction.cover}`}>
     {direction.cover === "arched" ? <><div className="rf-cover-intro">{letter}</div>{art}</>
+      : direction.cover === "picnic" ? <><div className="rf-picnic-letter">{letter}</div>{art}</>
+      : direction.cover === "parade" ? <><div className="rf-parade-letter">{letter}</div>{art}</>
+      : direction.cover === "disco" ? <>{art}<div className="rf-disco-letter">{letter}</div></>
       : direction.cover === "editorial" ? <>{art}<div className="rf-editorial-letter">{letter}</div></>
       : direction.cover === "playful" ? <><div className="rf-playful-letter">{letter}</div>{art}</>
       : direction.cover === "porcelain" ? <>{art}<div className="rf-porcelain-letter">{letter}</div></>
