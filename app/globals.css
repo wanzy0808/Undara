@@ -63,12 +63,16 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
+/* next/font variables live on body; resolve aliases beside them, not above them. */
+body {
   --font-undara-sans: var(--font-undara-body), Arial, sans-serif;
   --font-undara-serif: var(--font-undara-display), Georgia, serif;
   --font-undara-heading: var(--font-undara-display), Georgia, serif;
   --font-undara-mono: var(--font-undara-technical), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  /* Legacy application font aliases: keep old surfaces on the Undara type system during migration. */
+}
+
+:root {
+  /* Shared application control geometry and theme tokens. */
   --undara-control-radius: 16px;
   --undara-control-menu-radius: 18px;
   --undara-control-outline: var(--primary);
