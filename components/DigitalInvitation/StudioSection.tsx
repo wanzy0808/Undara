@@ -32,13 +32,13 @@ export default function StudioSection() {
             <p className="undara-marketing-kicker">Invitation Studio</p>
           </div>
 
-          <h2 className="undara-marketing-heading mt-5 max-w-[16ch] font-[family-name:var(--font-undara-heading)] text-primary">
+          <h2 className="undara-marketing-heading mt-5 max-w-[26ch] font-[family-name:var(--font-undara-heading)] text-primary">
             {en
-              ? "A creative workspace that stays out of the way."
-              : "Ruang kreatif yang tidak ikut membuatmu pusing."}
+              ? "A personal touch, made simple."
+              : "Sentuhan personal, tanpa proses rumit."}
           </h2>
 
-          <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+          <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {en
               ? "Start from a finished theme, then personalize what matters. Studio keeps the design expressive while the event structure, RSVP, and guest flow stay connected."
               : "Mulai dari tema yang sudah selesai secara visual, lalu personalisasi bagian yang memang penting. Studio menjaga desain tetap ekspresif sementara struktur acara, RSVP, dan alur tamu tetap terhubung."}
@@ -81,7 +81,7 @@ export default function StudioSection() {
             <div className="grid h-[calc(100%-3.5rem)] grid-cols-[76px_minmax(0,1fr)] md:grid-cols-[104px_minmax(0,1fr)]">
               <div className="border-r border-primary/20 px-2 py-5 md:px-3">
                 {tools.map(([Icon, label], index) => (
-                  <div key={label} className={`mb-3 grid min-h-16 place-items-center border px-1 text-center ${index === 0 ? "border-primary/45 bg-primary/[0.07] text-primary" : "border-primary/15 text-muted-foreground"}`}>
+                  <div key={label} className={`mb-3 grid min-h-16 place-items-center rounded-xl border px-1 text-center ${index === 0 ? "border-primary/45 bg-primary/[0.07] text-primary" : "border-primary/15 text-muted-foreground"}`}>
                     <Icon className="h-4 w-4" aria-hidden="true" />
                     <span className="mt-1 text-[9px] leading-tight">{label}</span>
                   </div>
@@ -96,9 +96,9 @@ export default function StudioSection() {
                       {en ? "You are invited" : "Sebuah undangan"}
                     </p>
                     <h3 className="mt-7 font-[family-name:var(--font-undara-heading)] text-4xl leading-[0.94] text-[#3a2020]">
-                      Denny
+                      Una
                       <span className="block text-xl italic text-[#8a6966]">&amp;</span>
-                      Christine
+                      Dara
                     </h3>
                     <div className="mx-auto my-7 h-px w-12 bg-[#703b3b]/35" />
                     <p className="text-[11px] leading-5 text-[#6d5552]">
@@ -132,12 +132,7 @@ export default function StudioSection() {
             </div>
           </div>
 
-          <div className="absolute left-0 top-[14%] hidden w-[230px] border border-primary/25 bg-background/88 p-5 shadow-[0_18px_50px_rgba(58,32,32,0.11)] backdrop-blur-md md:block">
-            <p className="undara-editorial-index">{en ? "Invitation Studio" : "Studio Undangan"}</p>
-            <p className="mt-3 font-[family-name:var(--font-undara-heading)] text-xl leading-tight text-primary">
-              {en ? "Design freedom, with useful guardrails." : "Bebas mendesain, tetap punya pagar yang berguna."}
-            </p>
-          </div>
+
         </div>
       </div>
     </section>

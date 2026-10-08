@@ -1771,3 +1771,17 @@ body:has(.undara-dashboard--redesign) {
     translate: none;
   }
 }
+
+/* Digital Invitation needs airy type, without squeezing the established serif. */
+.undara-digital-page .undara-marketing-title,
+.undara-digital-page .undara-marketing-heading,
+.undara-digital-page .undara-marketing-subheading {
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .undara-digital-page [data-undara-digital-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

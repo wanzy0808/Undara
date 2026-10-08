@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import PuzzleAssemble from "@/components/DigitalInvitation/PuzzleAssemble";
-import MarketingTextReveal from "@/components/DigitalInvitation/MarketingTextReveal";
 import Navbar from "@/components/Layout/Navbar/Navbar";
 import PublicMarketingAtmosphere from "@/components/Layout/PublicMarketingAtmosphere";
 import MarketingFrameFooter from "@/components/Layout/MarketingFrameFooter";
@@ -25,25 +24,30 @@ export default function DigitalInvitationPage() {
   const [assembleReady, setAssembleReady] = useState(false);
 
   useEffect(() => {
-    // When reached through a marketing link or Pintu, assemble behind the
-    // opening veil. Direct loads and refreshes assemble immediately.
+    // Let the opening veil clear before the hero entrance, so the motion is visible.
+    // Direct loads and refreshes start immediately.
     if (document.documentElement.dataset.undaraMarketingTransition !== "1") {
       const frame = requestAnimationFrame(() => setAssembleReady(true));
       return () => cancelAnimationFrame(frame);
     }
-    const onReveal = () => setAssembleReady(true);
+    let revealTimer: number | undefined;
+    const onReveal = () => {
+      window.clearTimeout(revealTimer);
+      revealTimer = window.setTimeout(() => setAssembleReady(true), 700);
+    };
     window.addEventListener("undara-marketing-reveal", onReveal);
     const fallback = window.setTimeout(onReveal, 4300);
     return () => {
       window.removeEventListener("undara-marketing-reveal", onReveal);
       window.clearTimeout(fallback);
+      window.clearTimeout(revealTimer);
     };
   }, []);
   const copy =
     locale === "en"
       ? {
           packageEyebrow: "Per-event Invitation",
-          packageTitle: "One event. One invitation. One complete guest flow.",
+          packageTitle: "One invitation, a complete guest flow.",
           packageDescription:
             "Each purchase activates one event with one invitation template, publishing, RSVP, and guest management. Create as many events as you need and activate them separately.",
           packageNote:
@@ -58,7 +62,7 @@ export default function DigitalInvitationPage() {
         }
       : {
           packageEyebrow: "Undangan per Acara",
-          packageTitle: "Satu acara. Satu undangan. Satu alur tamu yang lengkap.",
+          packageTitle: "Satu undangan, alur tamu yang lengkap.",
           packageDescription:
             "Setiap pembelian mengaktifkan satu acara dengan satu template undangan, publikasi, RSVP, dan manajemen tamu. Buat acara sebanyak yang dibutuhkan lalu aktifkan satu per satu.",
           packageNote:
@@ -74,12 +78,12 @@ export default function DigitalInvitationPage() {
 
   return (
     <div className="relative isolate flex min-h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
-      {/* The same flowers and wind-driven petals as the landing, behind the scrolling main frame. */}
+      {/* Shared woodland atmosphere behind the persistent marketing frame. */}
       <PublicMarketingAtmosphere />
       {/* Match the approved landing frame. Only the center panel scrolls; navigation stays visible. */}
       <div data-undara-marketing-frame className="undara-marketing-frame">
         <div className="undara-marketing-frame-header">
-          <PuzzleAssemble ready={assembleReady} direction="top" delay={0.02} className="w-full"><Navbar embedded /></PuzzleAssemble>
+          <Navbar embedded />
         </div>
         <main
           ref={scrollRoot}
@@ -87,14 +91,9 @@ export default function DigitalInvitationPage() {
           aria-label={locale === "en" ? "Digital invitation page content" : "Konten halaman undangan digital"}
           className="undara-marketing-scroll focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
         >
-          <MarketingTextReveal
-            className="undara-marketing-content flex flex-col gap-24 py-8 md:gap-28 md:py-12"
-            scrollRoot={scrollRoot}
-            ready={assembleReady}
-            locale={locale}
-          >
+          <div className="undara-digital-page undara-marketing-content flex flex-col gap-12 py-8 md:gap-16 md:py-12">
             <HeroSection ready={assembleReady} />
-            <div className="undara-invitation-other-sections flex flex-col gap-24 md:gap-28">
+            <div className="undara-invitation-other-sections flex flex-col gap-12 md:gap-16">
               <PuzzleAssemble ready={assembleReady} direction="left" scrollRoot={scrollRoot} delay={0.04} className="undara-editorial-offset-left">
                 <FeatureSection />
               </PuzzleAssemble>
@@ -134,9 +133,9 @@ export default function DigitalInvitationPage() {
                 />
               </PuzzleAssemble>
             </div>
-          </MarketingTextReveal>
+          </div>
         </main>
-        <PuzzleAssemble ready={assembleReady} direction="bottom" delay={0.02} className="shrink-0"><MarketingFrameFooter /></PuzzleAssemble>
+        <MarketingFrameFooter />
       </div>
     </div>
   );

@@ -23,10 +23,10 @@ export default function ReviewsSection({
 }: ReviewsSectionProps) {
   return (
     <section className="undara-marketing-section py-14 md:py-20">
-      <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+      <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-14">
         <div className="max-w-xl">
           <p className="undara-marketing-kicker">{eyebrow}</p>
-          <h2 className="undara-marketing-heading mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-primary">
+          <h2 className="undara-marketing-heading mt-4 max-w-[24ch] font-[family-name:var(--font-undara-heading)] text-primary">
             {title}
           </h2>
           <p className="mt-6 text-base leading-7 text-muted-foreground md:text-base md:leading-8">
@@ -58,7 +58,7 @@ export default function ReviewsSection({
                     {item.name}
                   </p>
                   <span className="h-1 w-1 rounded-full bg-primary/35" aria-hidden="true" />
-                  <span className="font-[family-name:var(--font-undara-mono)] text-[9px] tracking-[0.12em] text-muted-foreground">
+                  <span className="undara-marketing-meta text-muted-foreground">
                     {item.date}
                   </span>
                 </div>
