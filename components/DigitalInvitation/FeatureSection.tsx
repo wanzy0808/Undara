@@ -7,7 +7,6 @@ type FeatureItem = {
   icon: LucideIcon;
   title: string;
   description: string;
-  note: string;
 };
 
 export default function FeatureSection() {
@@ -18,47 +17,41 @@ export default function FeatureSection() {
     ? [
         {
           icon: Palette,
-          title: "Begin with a visual direction, not a blank page.",
+          title: "Choose your theme.",
           description:
             "Choose a ready invitation theme, then shape the photos, tone, copy, music, venue, and event details around your celebration.",
-          note: "Template → personal direction",
         },
         {
           icon: Sparkles,
-          title: "Keep the creative work in one calm workspace.",
+          title: "Make it yours in Studio.",
           description:
             "Invitation content and design stay together in Studio, so every event can be refined independently without turning the setup into a complicated design tool.",
-          note: "Studio → draft → publish",
         },
         {
           icon: Users,
-          title: "Let the invitation continue into the guest flow.",
+          title: "Keep your guests connected.",
           description:
             "RSVP, plus-one information, and guest management remain scoped to the same event, so the invitation is connected to what happens after guests open it.",
-          note: "Invitation → RSVP → guests",
         },
       ]
     : [
         {
           icon: Palette,
-          title: "Mulai dari arah visual, bukan halaman kosong.",
+          title: "Pilih tema yang kamu suka.",
           description:
             "Pilih tema undangan yang sudah siap, lalu sesuaikan foto, nuansa, isi, musik, lokasi, dan detail acara agar terasa milik perayaanmu.",
-          note: "Tema → sentuhan personal",
         },
         {
           icon: Sparkles,
-          title: "Rapikan proses kreatif dalam satu ruang yang tenang.",
+          title: "Jadikan milikmu di Studio.",
           description:
             "Isi dan desain undangan tetap berada di Studio yang sama, sehingga setiap acara bisa dibentuk sendiri tanpa proses yang rumit.",
-          note: "Studio → rancangan → terbit",
         },
         {
           icon: Users,
-          title: "Biarkan undangan berlanjut sampai ke alur tamu.",
+          title: "Kelola tamu dalam satu alur.",
           description:
             "RSVP, informasi tamu tambahan, dan manajemen tamu tetap terikat pada acara yang sama, jadi undangan tidak berhenti saat tamu selesai membacanya.",
-          note: "Undangan → RSVP → tamu",
         },
       ];
 
@@ -69,10 +62,10 @@ export default function FeatureSection() {
           <p className="undara-marketing-kicker">
             {en ? "A complete invitation flow" : "Alur Undangan yang Utuh"}
           </p>
-          <h2 className="undara-marketing-heading mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-primary">
+          <h2 className="undara-marketing-heading mt-4 max-w-[26ch] font-[family-name:var(--font-undara-heading)] text-primary">
             {en
-              ? "Beautiful first. Useful all the way through."
-              : "Cantik saat dibuka. Berguna sampai acara berjalan."}
+              ? "From invitation to celebration."
+              : "Dari undangan sampai hari perayaan."}
           </h2>
           <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {en
@@ -94,7 +87,7 @@ export default function FeatureSection() {
               </div>
 
               <div>
-                <h3 className="undara-marketing-subheading mt-4 max-w-[21ch] font-[family-name:var(--font-undara-heading)] text-primary">
+                <h3 className="undara-marketing-subheading max-w-[32ch] font-[family-name:var(--font-undara-heading)] text-primary">
                   {title}
                 </h3>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">

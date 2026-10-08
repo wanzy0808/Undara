@@ -18,8 +18,8 @@ export default function HeroSection({ ready }: { ready: boolean }) {
     locale === "en"
       ? {
           eyebrow: "Digital Invitation for Every Event",
-          title: "One event, one invitation.",
-          accent: "Create as many as you need.",
+          title: "An invitation that feels like you.",
+          accent: "One event, one invitation. Create as many as you need.",
           description:
             "Build a digital invitation for weddings, anniversaries, baby showers, birthdays, or any celebration that needs RSVP and an organized guest list.",
           explore: "Explore templates",
@@ -36,10 +36,10 @@ export default function HeroSection({ ready }: { ready: boolean }) {
         }
       : {
           eyebrow: "Undangan Digital untuk Setiap Acara",
-          title: "Satu acara, satu undangan.",
-          accent: "Buat sebanyak yang kamu butuhkan.",
+          title: "Undangan yang terasa personal.",
+          accent: "Satu acara, satu undangan. Buat sebanyak yang kamu butuhkan.",
           description:
-            "Buat undangan digital untuk wedding, anniversary, baby shower, ulang tahun, atau perayaan lain yang membutuhkan RSVP dan daftar tamu yang rapi.",
+            "Buat undangan digital untuk pernikahan, ulang tahun pernikahan, syukuran kelahiran, ulang tahun, atau perayaan lain yang membutuhkan RSVP dan daftar tamu yang rapi.",
           explore: "Lihat Template",
           tags: ["Rp150.000 / acara", "RSVP termasuk", "Manajemen tamu termasuk"],
           eventName: "Nadia's 30th",
@@ -54,7 +54,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
         };
 
   return (
-    <section className="undara-marketing-section relative mx-auto grid min-h-[calc(100dvh-170px)] w-full min-w-0 items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.06fr)_minmax(420px,0.94fr)] lg:gap-14 lg:pb-16">
+    <section className="undara-marketing-section relative mx-auto grid min-h-[calc(100dvh-220px)] w-full min-w-0 items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:gap-14 lg:pb-16">
       <div className="undara-invitation-hero-copy relative z-10 min-w-0 w-full max-w-none py-8 lg:py-12">
         <PuzzleAssemble ready={ready} direction="top" delay={0.04}>
           <p className="undara-marketing-meta text-primary">
@@ -62,13 +62,13 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           </p>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="left" delay={0.12}>
-          <h1 className="undara-marketing-title mt-5 max-w-[22ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.04em] text-primary">
+          <h1 className="undara-marketing-title mt-5 max-w-[20ch] font-[family-name:var(--font-undara-heading)] tracking-normal text-primary">
             {copy.title}
-            <span className="mt-2 block text-foreground">{copy.accent}</span>
           </h1>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="right" delay={0.22}>
-          <p className="mt-7 max-w-2xl font-[family-name:var(--font-undara-body)] text-base leading-7 text-muted-foreground md:text-base md:leading-8">
+          <p className="mt-6 max-w-[42ch] text-lg leading-8 text-foreground">{copy.accent}</p>
+          <p className="mt-4 max-w-[56ch] font-[family-name:var(--font-undara-body)] text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {copy.description}
           </p>
         </PuzzleAssemble>
@@ -83,7 +83,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           </div>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="left" delay={0.38}>
-          <div className="mt-10 flex max-w-3xl flex-wrap gap-x-7 gap-y-3 pt-5 undara-marketing-meta text-muted-foreground">
+          <div className="mt-7 flex max-w-3xl flex-wrap gap-x-7 gap-y-3 undara-marketing-meta text-muted-foreground">
             {copy.tags.map((tag) => (
               <span key={tag}>{tag}</span>
             ))}
@@ -93,7 +93,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
 
       <div className="relative z-10 mx-auto w-full min-w-0 max-w-xl py-8 lg:py-10">
         <div aria-hidden="true" className="pointer-events-none absolute -right-[10%] top-[4%] h-[72%] w-[72%] rounded-full bg-[radial-gradient(circle,rgba(112,59,59,0.12),transparent_68%)] blur-3xl dark:bg-[radial-gradient(circle,rgba(214,179,140,0.10),transparent_68%)]" />
-        <PuzzleAssemble ready={ready} direction="right" delay={0.15} className="relative mx-auto w-[min(100%,340px)] lg:translate-x-[8%]">
+        <PuzzleAssemble ready={ready} direction="right" delay={0.15} className="relative mx-auto w-[min(100%,300px)]">
           <div className="relative aspect-[9/19.5] overflow-visible rounded-[42px] bg-gradient-to-br from-[#f8f8f8] via-[#a9a9aa] to-[#303032] p-[3px] shadow-[0_34px_70px_rgba(17,17,17,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] dark:from-[#e4e4e4] dark:via-[#77777a] dark:to-[#121214]">
             <div
               className="absolute -right-[4px] top-[24%] h-16 w-[4px] rounded-r-full bg-[#4a4a4c] shadow-[inset_1px_0_1px_rgba(255,255,255,0.28)] dark:bg-[#8b8b8e]"
