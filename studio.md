@@ -1,5 +1,9 @@
 # studio.md — Aturan Designer Studio & Customer Studio Undara
 
+## Chrome readability — owner correction 9 October 2026
+
+Studio headers, rail, left panel, right inspectors, toolbar, layer list, footer and status share Undara's real DM Serif Display regular headings and Roboto body/medium controls. Secondary UI text uses the solid `--undara-ui-secondary` token in Light/Dark; dense labels remain around 13–14px where space allows. Do not fade enabled controls or metadata through opacity. Contrast rules stay on chrome containers, including right inspector placeholders; they must not change invitation canvas fonts/colors, font-choice samples or final invitation preview. Disabled controls remain visually distinct. Dashboard and staff panels follow the same hierarchy while retaining Dashboard's brown group stripe/list treatment.
+
 **Status:** spesifikasi produk dan aturan implementasi, bukan klaim bahwa semua fitur di bawah telah dibuat atau diuji.
 **Cakupan:** panel desainer `/designer`, editor template, editor undangan pelanggan, renderer publik, dan alur pesanan custom. Ketentuan produk aktif tetap mengikuti `prd.md`; aturan engineering umum mengikuti `AGENTS.md`; kontrak isi dan karakter tema mengikuti `template.md`. Jika ada konflik, selaraskan persyaratan di `prd.md` lebih dahulu. Jangan mengubah landing page/Pintu atau modul lain yang tidak terkait.
 

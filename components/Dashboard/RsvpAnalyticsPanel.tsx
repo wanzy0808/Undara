@@ -373,7 +373,7 @@ export default function RsvpAnalyticsPanel({
         )}
 
         {slug && (
-          <p className="mt-3 rounded-lg bg-background px-3 py-2 font-[family-name:var(--font-undara-mono)] text-[11px] text-foreground/45">
+          <p className="mt-3 rounded-lg bg-background px-3 py-2 font-[family-name:var(--font-undara-mono)] text-[11px] text-muted-foreground">
             /invite/{slug}
           </p>
         )}
@@ -407,7 +407,7 @@ export default function RsvpAnalyticsPanel({
                 src={usherQrImageUrl(qr.token)}
               />
             </div>
-            <p className="mt-4 break-all font-[family-name:var(--font-undara-mono)] text-[11px] leading-4 text-foreground/45">
+            <p className="mt-4 break-all font-[family-name:var(--font-undara-mono)] text-[11px] leading-4 text-muted-foreground">
               {qr.token}
             </p>
           </div>

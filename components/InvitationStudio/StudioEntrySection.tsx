@@ -26,7 +26,7 @@ export default function StudioEntrySection({ events, selectedTemplate }: { event
       };
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-background px-5 py-16 text-foreground">
+    <main className="undara-studio-entry flex min-h-dvh items-center justify-center bg-background px-5 py-16 text-foreground">
       <section className="w-full max-w-2xl space-y-7 rounded-[32px] border border-primary/50 bg-card p-6 shadow-[0_18px_60px_rgba(75,35,47,0.08)] sm:p-10">
         <p className="font-[family-name:var(--font-undara-mono)] text-xs uppercase tracking-[0.18em] text-primary">
           Invitation Studio
@@ -34,7 +34,7 @@ export default function StudioEntrySection({ events, selectedTemplate }: { event
         <h1 className="font-[family-name:var(--font-undara-heading)] text-3xl font-normal text-primary sm:text-4xl">
           {copy.title}
         </h1>
-        <p className="text-sm leading-7 text-foreground/65">{copy.description}</p>
+        <p className="text-sm leading-7 text-muted-foreground">{copy.description}</p>
         {events.length ? (
           <div className="space-y-3">
             {events.map((event) => (

@@ -423,8 +423,8 @@ test("selected assets use a compact left list and right-side properties panel", 
   assert.match(styles, /\.undara-studio-layer-list \{[^}]*width: 104px/);
   assert.match(styles, /\.undara-studio-layer-side \{[^}]*position: sticky;[^}]*right: 0;[^}]*width: 236px;[^}]*max-height: calc\(100dvh - 214px\);[^}]*overflow-y: auto;[^}]*justify-self: end/);
   assert.match(styles, /\.undara-studio-section-side \{[^}]*width: 236px;[^}]*padding: 14px/);
-  assert.match(styles, /\.undara-studio-section-side-head strong \{[^}]*font-size: 15px;[^}]*font-weight: 700/);
-  assert.match(styles, /\.undara-studio-section-field \{[^}]*font-size: 12px;[^}]*font-weight: 600/);
+  assert.match(styles, /\.undara-studio-section-side-head strong \{[^}]*font-size: 15px;[^}]*font-weight: 500/);
+  assert.match(styles, /\.undara-studio-section-field \{[^}]*font-size: 12px;[^}]*font-weight: 500/);
 });
 
 
