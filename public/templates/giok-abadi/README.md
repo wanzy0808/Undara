@@ -1,4 +1,4 @@
-# Giok Abadi
+# Eternal Jade
 
 Celadon porcelain, magnolia and jade silk for a gathering of two families.
 

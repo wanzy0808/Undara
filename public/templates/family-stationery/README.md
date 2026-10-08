@@ -1,6 +1,6 @@
 # Family stationery collection — 8 October 2026
 
-Owner brief: add four Khitanan and four Sangjit themes alongside Taman Doa / Red Thread; replace the flat slide-like feel with photographic materials, believable lighting and physical stationery.
+Owner brief: add four Khitanan and four Sangjit themes alongside Prayer Garden / Red Thread; replace the flat slide-like feel with photographic materials, believable lighting and physical stationery.
 
 Audience: Indonesian families inviting guests on a phone; the first impression should feel like receiving an invitation. The public path is envelope → cover → readable event details → RSVP. This is an addition to Undara's shared invitation renderer, not a new data model.
 
@@ -8,11 +8,11 @@ Audience: Indonesian families inviting guests on a phone; the first impression s
 
 | Theme | Key | Event | Cover / envelope | Gallery | Detail section |
 | --- | --- | --- | --- | --- | --- |
-| Serambi Pagi | `serambi-pagi` | Khitanan | arched / pocket | masonry | greeting |
-| Rumah Senja | `rumah-senja` | Khitanan | editorial / wrap | filmstrip | closing |
-| Langit Safari | `langit-safari` | Khitanan | playful / sleeve | carousel | greeting |
-| Purnama Biru | `purnama-biru` | Khitanan | night / gatefold | stack | closing |
-| Giok Abadi | `giok-abadi` | Sangjit | tea / gatefold | stack | greeting |
+| Morning Courtyard | `serambi-pagi` | Khitanan | arched / pocket | masonry | greeting |
+| Twilight Home | `rumah-senja` | Khitanan | editorial / wrap | filmstrip | closing |
+| Safari Skies | `langit-safari` | Khitanan | playful / sleeve | carousel | greeting |
+| Blue Moon | `purnama-biru` | Khitanan | night / gatefold | stack | closing |
+| Eternal Jade | `giok-abadi` | Sangjit | tea / gatefold | stack | greeting |
 | Peony Silk | `peony-silk` | Sangjit | romantic / wrap | masonry | closing |
 | Imperial Crimson | `imperial-crimson` | Sangjit | ceremony / gatefold | carousel | closing |
 | Porcelain Bloom | `porcelain-bloom` | Sangjit | porcelain / sleeve | filmstrip | greeting |
@@ -27,16 +27,16 @@ The owner's 16 uploads on `main` (`355a359`) are preserved at their existing URL
 
 | Theme | Uploaded scene source | Uploaded detail source | Runtime files |
 | --- | --- | --- | --- |
-| Serambi Pagi | `/templates/moodboardoorarabic.webp` | `/templates/daunkecil.webp` | `/templates/serambi-pagi/{scene,detail}.webp` |
-| Rumah Senja | `/templates/moodboardcard.webp` | `/templates/kain.webp` | `/templates/rumah-senja/{scene,detail}.webp` |
-| Langit Safari | `/templates/moodboardbabypet.webp` | `/templates/babywoodanimal.webp` | `/templates/langit-safari/{scene,detail}.webp` |
-| Purnama Biru | `/templates/moodboardnight.webp` | `/templates/lantern.webp` | `/templates/purnama-biru/{scene,detail}.webp` |
-| Giok Abadi | Original scene already in the collection | `/templates/teacup1.webp` | `/templates/giok-abadi/{scene,detail}.webp` |
+| Morning Courtyard | `/templates/moodboardoorarabic.webp` | `/templates/daunkecil.webp` | `/templates/serambi-pagi/{scene,detail}.webp` |
+| Twilight Home | `/templates/moodboardcard.webp` | `/templates/kain.webp` | `/templates/rumah-senja/{scene,detail}.webp` |
+| Safari Skies | `/templates/moodboardbabypet.webp` | `/templates/babywoodanimal.webp` | `/templates/langit-safari/{scene,detail}.webp` |
+| Blue Moon | `/templates/moodboardnight.webp` | `/templates/lantern.webp` | `/templates/purnama-biru/{scene,detail}.webp` |
+| Eternal Jade | Original scene already in the collection | `/templates/teacup1.webp` | `/templates/giok-abadi/{scene,detail}.webp` |
 | Peony Silk | `/templates/mooboardflower.webp` | `/templates/flowerbouq.webp` | `/templates/peony-silk/{scene,detail}.webp` |
 | Imperial Crimson | `/templates/moodboardteacup.webp` | `/templates/sangjitacc.webp` | `/templates/imperial-crimson/{scene,detail}.webp` |
 | Porcelain Bloom | `/templates/moodboardpot2.webp` | `/templates/teacup.webp` | `/templates/porcelain-bloom/{scene,detail}.webp` |
 
-`/templates/moodboardpoci.webp` is a byte-identical duplicate of `/templates/moodboardcard.webp` (SHA256 `d4c94d62b03b80bbae4681105ce9ffd2065b98c7fd583894a6c8c4519214a724`). It is retained as uploaded but does not replace Giok Abadi's green tea artwork. The existing Giok scene and Porcelain detail remain complete. No uploaded source is deleted or renamed.
+`/templates/moodboardpoci.webp` is a byte-identical duplicate of `/templates/moodboardcard.webp` (SHA256 `d4c94d62b03b80bbae4681105ce9ffd2065b98c7fd583894a6c8c4519214a724`). It is retained as uploaded but does not replace Eternal Jade's green tea artwork. The existing Giok scene and Porcelain detail remain complete. No uploaded source is deleted or renamed.
 
 ## Implementation and motion
 
@@ -64,6 +64,8 @@ Observed public-gallery run: [Build Validation 37713462937](https://github.com/w
 Customer Studio Undo/Redo → save/reload/public, a real paid-event RSVP/Wishes/Maps/Gift/QR path and physical-device/audio behavior remain release QA; public-preview checks are not a substitute. See `checklist.md` and the dated PRD Appendix A entry for observed results.
 
 ## Prompt provenance
+
+Catalog display names now use English, with the same stable theme keys. The original generation prompts below retain the names used when the artwork was created.
 
 ### Serambi Pagi
 

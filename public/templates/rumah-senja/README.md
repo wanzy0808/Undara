@@ -1,8 +1,8 @@
-# Rumah Senja
+# Twilight Home
 
 Teak, batik and jasmine bring the warmth of a family veranda to a khitan invitation.
 
-- Exact event category: `KHITANAN`; original default remains Taman Doa.
+- Exact event category: `KHITANAN`; original default remains Prayer Garden.
 - Palette: #f3e6d6, #fff8ed, #563726, #874f37, #cfa680; font pair: `rufinaAverage`.
 - Visual composition: editorial cover / wrap envelope; filmstrip gallery; transparent detail in closing.
 - Artwork: `scene.webp` is a complete 1024 × 1536 photograph-style scene; `detail.webp` is a complete 960 × 640 transparent cutout. Both are original generated project artwork, not customer photos or baked UI.

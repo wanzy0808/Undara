@@ -1,8 +1,8 @@
-# Langit Safari
+# Safari Skies
 
 Wooden animal toys, linen and soft sage make a cheerful, gentle khitan celebration.
 
-- Exact event category: `KHITANAN`; original default remains Taman Doa.
+- Exact event category: `KHITANAN`; original default remains Prayer Garden.
 - Palette: #f5efdf, #eef1e5, #36472f, #46623b, #d7b98f; font pair: `youngInstrument`.
 - Visual composition: playful cover / sleeve envelope; carousel gallery; transparent detail in greeting.
 - Artwork: `scene.webp` is a complete 1024 × 1536 photograph-style scene; `detail.webp` is a complete 960 × 640 transparent cutout. Both are original generated project artwork, not customer photos or baked UI.

@@ -302,7 +302,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewImage: "/templates/gathering/preview.svg", assetPath: "/templates/gathering",
   },
   {
-    key: "taman-doa", name: "Taman Doa",
+    key: "taman-doa", name: "Prayer Garden",
     description: "Syukuran khitanan dengan taman kertas hijau, lengkung hangat, layang-layang, dan doa keluarga.",
     descriptionEn: "A khitan celebration with a green paper garden, warm arches, a kite and family wishes.",
     category: "Family", eventCategories: ["KHITANAN"], previewType: "public",
@@ -320,7 +320,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewImage: "/templates/red-thread/preview.svg", assetPath: "/templates/red-thread",
   },
   {
-    key: "serambi-pagi", name: "Serambi Pagi",
+    key: "serambi-pagi", name: "Morning Courtyard",
     description: "Syukuran khitanan di serambi batu yang terang, dengan dedaunan zaitun dan kertas katun.",
     descriptionEn: "A sunlit stone courtyard, olive branches and cotton stationery for a khitan celebration.",
     category: "Family", eventCategories: ["KHITANAN"], previewType: "public",
@@ -329,7 +329,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewImage: "/templates/serambi-pagi/scene.webp", assetPath: "/templates/serambi-pagi",
   },
   {
-    key: "rumah-senja", name: "Rumah Senja",
+    key: "rumah-senja", name: "Twilight Home",
     description: "Hangatnya beranda jati, batik, dan melati dalam undangan khitanan bernuansa rumah keluarga.",
     descriptionEn: "Teak, batik and jasmine bring the warmth of a family veranda to a khitan invitation.",
     category: "Family", eventCategories: ["KHITANAN"], previewType: "public",
@@ -338,7 +338,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewImage: "/templates/rumah-senja/scene.webp", assetPath: "/templates/rumah-senja",
   },
   {
-    key: "langit-safari", name: "Langit Safari",
+    key: "langit-safari", name: "Safari Skies",
     description: "Mainan satwa kayu, linen, dan warna sage untuk khitanan yang ceria dan lembut.",
     descriptionEn: "Wooden animal toys, linen and soft sage make a cheerful, gentle khitan celebration.",
     category: "Family", eventCategories: ["KHITANAN"], previewType: "public",
@@ -347,7 +347,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewImage: "/templates/langit-safari/scene.webp", assetPath: "/templates/langit-safari",
   },
   {
-    key: "purnama-biru", name: "Purnama Biru",
+    key: "purnama-biru", name: "Blue Moon",
     description: "Lengkung biru malam dan cahaya lentera kuningan untuk syukuran khitanan yang tenang.",
     descriptionEn: "Midnight arches and warm brass lanterns for a quiet, thoughtful khitan celebration.",
     category: "Family", eventCategories: ["KHITANAN"], previewType: "public",
@@ -356,7 +356,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewImage: "/templates/purnama-biru/scene.webp", assetPath: "/templates/purnama-biru",
   },
   {
-    key: "giok-abadi", name: "Giok Abadi",
+    key: "giok-abadi", name: "Eternal Jade",
     description: "Porselen celadon, magnolia, dan sutra hijau giok dalam pertemuan dua keluarga.",
     descriptionEn: "Celadon porcelain, magnolia and jade silk for a gathering of two families.",
     category: "Celebration", eventCategories: ["SANGJIT"], previewType: "public",

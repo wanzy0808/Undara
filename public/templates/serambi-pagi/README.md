@@ -1,8 +1,8 @@
-# Serambi Pagi
+# Morning Courtyard
 
 A sunlit stone courtyard, olive branches and cotton stationery for a khitan celebration.
 
-- Exact event category: `KHITANAN`; original default remains Taman Doa.
+- Exact event category: `KHITANAN`; original default remains Prayer Garden.
 - Palette: #f5f0e5, #fcf8ee, #304637, #45603f, #d3c4a4; font pair: `cormorantManrope`.
 - Visual composition: arched cover / pocket envelope; masonry gallery; transparent detail in greeting.
 - Artwork: `scene.webp` is a complete 1024 × 1536 photograph-style scene; `detail.webp` is a complete 960 × 640 transparent cutout. Both are original generated project artwork, not customer photos or baked UI.
