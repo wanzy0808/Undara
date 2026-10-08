@@ -70,7 +70,6 @@ test("marketing and legal surfaces have no decorative sequence labels", () => {
     "app/privacy-policy/page.tsx",
     "app/terms-and-conditions/page.tsx",
     "components/Marketing/PackageShowcase.tsx",
-    "components/EventPlanner/ServicesSection.tsx",
     "components/Guestbook/HeroSection.tsx",
     "components/Guestbook/FeatureSection.tsx",
     "components/Guestbook/ProcessSection.tsx",
@@ -107,7 +106,6 @@ test("marketing content uses space and surfaces without repeated divider rails",
 
 test("framed marketing section headings keep the stronger hierarchy", () => {
   const files = [
-    "app/event-planner/page.tsx",
     "app/guestbook/page.tsx",
     "app/undangan-fisik/page.tsx",
     "app/help/page.tsx",
@@ -115,7 +113,6 @@ test("framed marketing section headings keep the stronger hierarchy", () => {
     "components/DigitalInvitation/TemplateSection.tsx",
     "components/DigitalInvitation/StudioSection.tsx",
     "components/DigitalInvitation/ReviewsSection.tsx",
-    "components/EventPlanner/ServicesSection.tsx",
     "components/Guestbook/FeatureSection.tsx",
     "components/Guestbook/ProcessSection.tsx",
     "components/Marketing/PackageShowcase.tsx",
