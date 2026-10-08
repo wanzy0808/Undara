@@ -1,0 +1,151 @@
+/* Original photographic worlds, live typography, and section-owned physical stationery. */
+.rf-art-frame { position: relative; min-width: 0; }
+.rf-art-frame img { display: block; width: 100%; height: auto; object-fit: contain; }
+.rf-cover { position: relative; min-height: 760px; overflow: hidden; background: var(--inv-bg); color: var(--inv-ink); }
+.rf-cover-letter { position: relative; min-width: 0; padding: 32px clamp(24px,8%,48px); }
+.rf-event-label { margin: 0 0 14px; font-size: 17px; line-height: 1.5; }
+.rf-cover-name { margin: 0; font-family: var(--inv-heading); font-size: clamp(46px,12vw,74px); font-weight: 400; line-height: 1.06; letter-spacing: -.025em; overflow-wrap: anywhere; text-wrap: balance; }
+.rf-cover-date { margin: 22px 0 0; font-size: 16px; line-height: 1.6; }
+.rf-cover > .ot-scroll { padding-inline: 28px; margin: 0; padding-block: 18px 26px; background: var(--inv-bg); color: var(--inv-ink); }
+.rf-paper, .rf-editorial-letter .rf-cover-letter, .rf-porcelain-letter .rf-cover-letter { background-color: var(--inv-surface); background-image: url('/templates/family-stationery/cotton-paper.webp'); background-blend-mode: multiply; background-size: 360px; color: var(--ot-surface-ink); }
+
+/* Every image remains complete. Overprints share one grid cell and grow with real names. */
+.rf-cover--arched .rf-cover-intro { text-align: center; }
+.rf-cover--arched > .rf-art-frame { width: 88%; margin-inline: auto; }
+.rf-cover--arched .rf-cover-letter { padding-block: 48px 28px; }
+.rf-cover--arched .rf-cover-name { font-size: clamp(56px,14vw,82px); }
+.rf-cover--editorial { padding-top: 24px; }
+.rf-cover--editorial > .rf-art-frame { width: 88%; margin-left: auto; }
+.rf-editorial-letter { position: relative; width: 86%; margin: -74px 0 0 6%; padding-bottom: 20px; }
+.rf-editorial-letter .rf-cover-letter { box-shadow: 7px 18px 35px color-mix(in srgb,var(--inv-ink) 15%,transparent); padding-block: 32px; }
+.rf-editorial-letter .rf-cover-name { font-size: clamp(45px,11vw,67px); }
+.rf-cover--playful { display: flex; flex-direction: column; }
+.rf-playful-letter { padding-top: 30px; }
+.rf-playful-letter .rf-cover-letter { padding-inline: 12%; }
+.rf-playful-letter .rf-cover-name { font-size: clamp(54px,14vw,86px); }
+.rf-cover--playful > .rf-art-frame { margin-top: -22px; }
+.rf-cover--night,.rf-cover--tea,.rf-cover--romantic,.rf-cover--ceremony { display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: auto auto; }
+.rf-cover--night > .rf-art-frame,.rf-cover--tea > .rf-art-frame,.rf-cover--romantic > .rf-art-frame,.rf-cover--ceremony > .rf-art-frame { grid-area: 1 / 1; align-self: end; }
+.rf-overprint { grid-area: 1 / 1; position: relative; align-self: start; min-width: 0; padding-block: 28% 80%; }
+.rf-overprint .rf-cover-letter { background: var(--inv-bg); color: var(--inv-ink); }
+.rf-overprint--night { text-align: center; padding-block: 34% 58%; padding-inline: 12%; }
+.rf-overprint--night .rf-cover-letter { padding-inline: 14px; background: color-mix(in srgb,var(--inv-bg) 94%,transparent); }
+.rf-overprint--night .rf-cover-name { font-size: clamp(42px,10vw,66px); letter-spacing: .01em; }
+.rf-overprint--tea { text-align: center; padding-block: 18% 80%; padding-inline: 12%; }
+.rf-overprint--tea .rf-cover-letter { padding: 26px 14px; background: var(--inv-surface); color: var(--ot-surface-ink); box-shadow: 5px 14px 28px color-mix(in srgb,var(--inv-ink) 11%,transparent); }
+.rf-overprint--tea .rf-cover-name { font-size: clamp(44px,11vw,70px); max-width: 10ch; margin-inline: auto; }
+.rf-overprint--romantic { padding-block: 35% 53%; padding-left: 28%; padding-right: 6%; }
+.rf-overprint--romantic .rf-cover-letter { padding: 22px 14px; text-align: right; }
+.rf-overprint--romantic .rf-cover-name { font-size: clamp(43px,10vw,67px); max-width: 9ch; margin-left: auto; }
+.rf-overprint--ceremony { padding-block: 14% 82%; padding-inline: 7%; text-align: center; }
+.rf-overprint--ceremony .rf-cover-letter { padding: 28px 12px; }
+.rf-overprint--ceremony .rf-cover-name { font-size: clamp(52px,13vw,82px); max-width: 10ch; margin-inline: auto; }
+.rf-cover--porcelain { padding: 20px 24px 0; }
+.rf-porcelain-letter { position: relative; width: 86%; margin: -16% 0 26px auto; }
+.rf-porcelain-letter .rf-cover-letter { padding: 30px 20px; box-shadow: 6px 16px 26px color-mix(in srgb,var(--inv-ink) 12%,transparent); }
+.rf-porcelain-letter .rf-cover-name { font-size: clamp(44px,11vw,66px); }
+[data-invitation-background-override="true"] > .rf-cover { background: transparent; }
+
+/* One-time ceremonial opening: 650ms within the shared 700ms handoff.
+   Keyboard, explicit OFF and reduced motion use the shared immediate path. */
+.rf-envelope { isolation: isolate; gap: 28px; padding-block: 70px; }
+.rf-envelope-intro { position: relative; min-width: 0; max-width: 330px; }
+.rf-envelope-heading { margin: 0; max-width: 16ch; font-family: var(--inv-heading); font-size: clamp(28px,7vw,43px); font-weight: 400; line-height: 1.15; overflow-wrap: anywhere; text-wrap: balance; }
+.rf-envelope-date { margin: 16px 0 0; font-size: 15px; line-height: 1.6; }
+.rf-envelope-atmosphere { position: absolute; inset: 0; z-index: -1; opacity: .34; pointer-events: none; }
+.rf-envelope-atmosphere img { width: 100%; height: 100%; object-fit: contain; }
+.rf-stationery { position: relative; width: min(100%,330px); aspect-ratio: 330 / 380; perspective: 1100px; }
+.rf-paper-back { position: absolute; inset: 10% 0 0; box-shadow: 9px 22px 40px color-mix(in srgb,var(--inv-ink) 22%,transparent); }
+.rf-letter-flight { position: absolute; inset: 0 6% 10%; transition: transform 650ms cubic-bezier(.23,1,.32,1); }
+.rf-letter { position: relative; height: 100%; padding: 28px 18px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 16px; text-align: center; box-shadow: 0 8px 18px color-mix(in srgb,var(--inv-ink) 10%,transparent); overflow-wrap: anywhere; }
+.rf-letter .rf-letter-name { position: relative; margin: 0; font-family: var(--inv-heading); font-size: clamp(28px,7vw,40px); font-weight: 400; line-height: 1.17; text-wrap: balance; }
+.rf-letter p { position: relative; margin: 0; font-size: 15px; }
+.rf-front-flight { position: absolute; inset: 49% 0 0; transform-origin: bottom; transition: transform 600ms cubic-bezier(.23,1,.32,1), opacity 500ms cubic-bezier(.23,1,.32,1); }
+.rf-front { position: absolute; inset: 0; background-color: var(--inv-soft); box-shadow: 0 -2px 3px color-mix(in srgb,var(--inv-ink) 12%,transparent); }
+.rf-flap-flight { position: absolute; inset: 46% 0 14%; transform-origin: top; transition: transform 600ms cubic-bezier(.23,1,.32,1), opacity 500ms cubic-bezier(.23,1,.32,1); }
+.rf-flap { position: absolute; inset: 0; background-color: var(--inv-soft); clip-path: polygon(0 0,100% 0,50% 80%); }
+.rf-fold-flight { position: absolute; inset: 10% 50% 0 0; transform-origin: left; transition: transform 600ms cubic-bezier(.23,1,.32,1), opacity 500ms cubic-bezier(.23,1,.32,1); }
+.rf-fold-flight--right { inset: 10% 0 0 50%; transform-origin: right; }
+.rf-fold { position: absolute; inset: 0; background-color: var(--inv-soft); box-shadow: inset -2px 0 4px color-mix(in srgb,var(--inv-ink) 9%,transparent); }
+.rf-fold-flight--right .rf-fold { background-color: color-mix(in srgb,var(--inv-soft) 78%,var(--inv-surface)); box-shadow: inset 2px 0 4px color-mix(in srgb,var(--inv-ink) 9%,transparent); }
+.rf-band-flight { position: absolute; inset: 62% 0 26%; transition: transform 450ms cubic-bezier(.23,1,.32,1),opacity 250ms cubic-bezier(.23,1,.32,1); }
+.rf-band { position: absolute; inset: 0; background: var(--inv-accent); box-shadow: 0 3px 6px color-mix(in srgb,var(--inv-ink) 13%,transparent); }
+.rf-seal-flight { position: absolute; left: calc(50% - 25px); top: 62%; transition: transform 250ms cubic-bezier(.23,1,.32,1),opacity 200ms cubic-bezier(.23,1,.32,1); }
+.rf-seal { position: relative; width: 50px; height: 50px; border-radius: 50%; background: var(--inv-accent); box-shadow: inset 3px 3px 7px color-mix(in srgb,var(--inv-surface) 25%,transparent),inset -3px -4px 6px color-mix(in srgb,var(--inv-ink) 18%,transparent),3px 6px 8px color-mix(in srgb,var(--inv-ink) 22%,transparent); }
+.rf-envelope--pocket .rf-band-flight { display: none; }
+.rf-envelope--pocket .rf-letter { border-radius: 45% 45% 0 0; padding-top: 46px; }
+.rf-envelope--wrap .rf-front-flight { inset: 44% 0 0; }
+.rf-envelope--wrap .rf-front { clip-path: polygon(0 0,100% 15%,100% 100%,0 100%); }
+.rf-envelope--wrap .rf-band-flight { inset: 10% 43% 0; }
+.rf-envelope--sleeve .rf-stationery { aspect-ratio: 330 / 350; }
+.rf-envelope--sleeve .rf-front { border-radius: 2px; background-color: var(--inv-accent); }
+.rf-envelope--sleeve .rf-band { background: var(--inv-surface); }
+.rf-address { position: relative; width: min(100%,330px); padding: 16px 20px; margin: 0; font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
+.rf-envelope[data-opening="true"] .rf-letter-flight { transform: translateY(-28px); }
+.rf-envelope[data-opening="true"] .rf-front-flight { transform: rotateX(-105deg); opacity: 0; }
+.rf-envelope[data-opening="true"] .rf-flap-flight { transform: rotateX(160deg); opacity: 0; }
+.rf-envelope[data-opening="true"] .rf-fold-flight--left { transform: rotateY(-110deg); opacity: 0; }
+.rf-envelope[data-opening="true"] .rf-fold-flight--right { transform: rotateY(110deg); opacity: 0; }
+.rf-envelope[data-opening="true"] .rf-band-flight { transform: translateX(60px) rotate(5deg); opacity: 0; }
+.rf-envelope[data-opening="true"] .rf-seal-flight { transform: translateY(12px); opacity: 0; }
+
+/* Whole-scroll art direction. Readable forms stay on the shared business engines. */
+.family-stationery-invitation .ot-section { padding-block: 80px; }
+.family-stationery-invitation .ot-section-title { font-size: clamp(34px,8vw,49px); line-height: 1.16; }
+.family-stationery-invitation [data-studio-copy-field] { line-height: 1.9; }
+.family-stationery-invitation [data-studio-native-object="object:dateTime:panel"] { border: 0; background-image: url('/templates/family-stationery/cotton-paper.webp'); background-size: 360px; background-blend-mode: multiply; box-shadow: 6px 14px 25px color-mix(in srgb,currentColor 9%,transparent); }
+.family-stationery-invitation [data-studio-native-object="object:gift:panel"] { background-image: url('/templates/family-stationery/cotton-paper.webp'); background-size: 360px; background-blend-mode: multiply; }
+.family-stationery-invitation [data-studio-native-object="object:countdown:grid"] { border-block: 1px solid var(--ot-input-border); padding-block: 12px; }
+.family-stationery-invitation :is(button,a,input,select,textarea):focus-visible { outline-color: currentColor; }
+.family-stationery-invitation .ot-identity-photo { aspect-ratio: 4 / 5; width: min(100%,340px); }
+.family-stationery-invitation .ot-identity-name { line-height: 1.17; overflow-wrap: anywhere; }
+.family-stationery-invitation .ugc-gallery-slide { border-radius: 3px; }
+.rf-section-vignette { width: min(76%,270px); margin: 0 auto 32px; }
+.family-stationery-invitation [data-invitation-section="footer"] { padding-block: 32px; }
+.family-stationery-invitation [data-studio-native-object="object:closing:copy-group"] { max-width: 38ch; }
+.serambi-pagi-invitation :is([data-invitation-section="greeting"],[data-invitation-section="identity"],[data-invitation-section="closing"]) { text-align: center; }
+.serambi-pagi-invitation [data-studio-native-object="object:greeting:copy-group"] { margin-inline: auto; }
+.serambi-pagi-invitation .ot-identity { justify-items: center; }
+.serambi-pagi-invitation .ot-identity-photo { border-radius: 45% 45% 2px 2px; }
+.serambi-pagi-invitation [data-invitation-section="dateTime"] { padding-block: 50px 86px; }
+.rumah-senja-invitation [data-invitation-section="event"] { padding-block: 94px; }
+.rumah-senja-invitation .ot-identity { display: flex; flex-direction: column-reverse; gap: 30px; }
+.rumah-senja-invitation .ot-identity-photo { width: 88%; aspect-ratio: 4 / 3; margin-left: auto; }
+.rumah-senja-invitation .ugc-gallery-filmstrip { padding-bottom: 20px; }
+.rumah-senja-invitation .rf-section-vignette { margin-left: 0; width: 62%; }
+.langit-safari-invitation .ot-section { text-align: center; padding-block: 68px; }
+.langit-safari-invitation [data-studio-native-object="object:greeting:copy-group"] { margin-inline: auto; }
+.langit-safari-invitation .ot-identity { justify-items: center; }
+.langit-safari-invitation :is(.ot-identity-photo,[data-studio-native-object="object:dateTime:panel"],[data-studio-native-object="object:gift:panel"],input,textarea,select,.ugc-gallery-slide) { border-radius: 14px; }
+.langit-safari-invitation [data-studio-native-object="object:countdown:grid"] { border: 0; }
+.purnama-biru-invitation .ot-section-title { letter-spacing: .005em; font-size: clamp(30px,7vw,42px); }
+.purnama-biru-invitation .ot-identity-photo { border-radius: 45% 45% 0 0; padding: 6px; background: var(--inv-soft); }
+.purnama-biru-invitation [data-invitation-section="closing"] { text-align: center; }
+.purnama-biru-invitation .rf-section-vignette { width: min(65%,230px); }
+.giok-abadi-invitation .ot-section { padding-block: 78px; }
+.giok-abadi-invitation :is([data-invitation-section="greeting"],[data-invitation-section="identity"],[data-invitation-section="closing"]) { text-align: center; }
+.giok-abadi-invitation [data-studio-native-object="object:greeting:copy-group"] { margin-inline: auto; }
+.giok-abadi-invitation .ot-identity { justify-items: center; }
+.giok-abadi-invitation .ot-identity-photo { width: 80%; padding: 9px; background: var(--inv-soft); }
+.giok-abadi-invitation .ugc-gallery-slide { padding: 8px; background: var(--inv-bg); }
+.peony-silk-invitation .ot-section-title { max-width: 12ch; }
+.peony-silk-invitation [data-invitation-section="greeting"] > [data-studio-native-object="object:greeting:heading-group"] { text-align: right; }
+.peony-silk-invitation [data-invitation-section="greeting"] .ot-section-title { margin-left: auto; }
+.peony-silk-invitation .ot-identity-photo { width: 82%; border-radius: 45% 45% 3px 3px; }
+.peony-silk-invitation .ugc-gallery-masonry { column-gap: 15px; }
+.peony-silk-invitation [data-invitation-section="closing"] { padding-block: 90px 66px; }
+.imperial-crimson-invitation [data-invitation-section="identity"] { text-align: center; }
+.imperial-crimson-invitation .ot-identity { justify-items: center; }
+.imperial-crimson-invitation .ot-identity-photo { padding: 7px; background: var(--inv-accent); }
+.imperial-crimson-invitation [data-invitation-section="event"] { padding-block: 96px; }
+.imperial-crimson-invitation .ugc-gallery-slide { padding: 7px; background: var(--inv-soft); }
+.imperial-crimson-invitation .rf-section-vignette { width: min(76%,250px); margin-bottom: 40px; }
+.porcelain-bloom-invitation .ot-section { padding-block: 76px; }
+.porcelain-bloom-invitation .ot-identity { display: flex; flex-direction: column; align-items: flex-end; gap: 26px; }
+.porcelain-bloom-invitation .ot-identity-photo { width: 88%; padding: 8px; background: var(--inv-soft); }
+.porcelain-bloom-invitation [data-studio-native-object="object:identity:copy-group"] { align-self: flex-start; }
+.porcelain-bloom-invitation .rf-section-vignette { margin-left: 0; }
+
+@media (min-width: 560px) { .rf-cover-letter { padding-inline: 48px; }.family-stationery-invitation .ot-section { padding-inline: 48px; }.rumah-senja-invitation .ot-identity { flex-direction: row-reverse; align-items: center; }.rumah-senja-invitation .ot-identity-photo { width: 56%; flex-shrink: 0; } }
+@media (max-width: 360px) { .rf-cover { min-height: 700px; }.rf-envelope { padding-inline: 22px; }.rf-cover-name { font-size: 43px; }.rf-overprint--romantic { padding-left: 21%; }.family-stationery-invitation .ot-section { padding-block: 64px; }.family-stationery-invitation .ot-section-title { font-size: 32px; } }
+@media (prefers-reduced-motion: reduce) { .rf-letter-flight,.rf-front-flight,.rf-flap-flight,.rf-fold-flight,.rf-band-flight,.rf-seal-flight { transition: none; } }

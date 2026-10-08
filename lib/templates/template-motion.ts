@@ -65,6 +65,14 @@ const confettiClubPhotos: PhotoMotionMap = {
 };
 
 const photoDefaults: Record<string, PhotoMotionMap> = {
+  "serambi-pagi": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "rise", animationDuration: .6, animationStagger: .045 } },
+  "rumah-senja": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "glide-left", animationDuration: .6, animationStagger: .045 } },
+  "langit-safari": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "rise", animationDuration: .6, animationStagger: .045 } },
+  "purnama-biru": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "rise", animationDuration: .6, animationStagger: .045 } },
+  "giok-abadi": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "rise", animationDuration: .6, animationStagger: .045 } },
+  "peony-silk": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "glide-right", animationDuration: .6, animationStagger: .045 } },
+  "imperial-crimson": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "rise", animationDuration: .6, animationStagger: .045 } },
+  "porcelain-bloom": { cover: { animation: "rise", animationDuration: .55 }, gallery: { animation: "glide-left", animationDuration: .6, animationStagger: .045 } },
   "taman-doa": { gallery: { animation: "fade", animationDuration: .5, animationStagger: .04 } },
   "red-thread": { gallery: { animation: "fade", animationDuration: .5, animationStagger: .04 } },
   "little-cloud": { gallery: { animation: "fade", animationDuration: .5, animationStagger: .04 } },
@@ -901,6 +909,14 @@ const confettiClubNative: Record<string, TemplateNativeMotion> = {
 };
 
 const nativeDefaults: Record<string, Record<string, TemplateNativeMotion>> = {
+  "serambi-pagi": { "heading:cover": { animation: "rise", animationDuration: .6 } },
+  "rumah-senja": { "heading:cover": { animation: "glide-left", animationDuration: .6 } },
+  "langit-safari": { "heading:cover": { animation: "rise", animationDuration: .6 } },
+  "purnama-biru": { "heading:cover": { animation: "rise", animationDuration: .6 } },
+  "giok-abadi": { "heading:cover": { animation: "rise", animationDuration: .6 } },
+  "peony-silk": { "heading:cover": { animation: "glide-right", animationDuration: .6 } },
+  "imperial-crimson": { "heading:cover": { animation: "rise", animationDuration: .6 } },
+  "porcelain-bloom": { "heading:cover": { animation: "glide-left", animationDuration: .6 } },
   "taman-doa": { "object:cover:garden-art": { animation: "rise", animationDuration: .6 } },
   "red-thread": { "object:cover:ceremonial-knot-art": { animation: "soft-scale", animationDuration: .6 } },
   "little-cloud": { "heading:cover": { animation: "fade", animationDuration: .55 }, "object:cover:moon-mobile-art": { animation: "rise", animationDuration: .6 } },

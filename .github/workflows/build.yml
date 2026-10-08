@@ -38,3 +38,15 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Family template browser QA
+        run: node --import tsx scripts/template-browser-qa.mjs
+
+      - name: Upload template review evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: family-template-browser
+          path: artifacts/template-browser
+          if-no-files-found: ignore
+          retention-days: 7

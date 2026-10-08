@@ -138,6 +138,7 @@ const PencilReverieScene = dynamic(() => import("@/components/PublicInvitation/P
 const ZenAtelierScene = dynamic(() => import("@/components/PublicInvitation/ZenAtelierScene"));
 const SereinScene = dynamic(() => import("@/components/PublicInvitation/SereinScene"));
 const FamilyCelebrationScene = dynamic(() => import("@/components/PublicInvitation/FamilyCelebrationScene"));
+const FamilyStationeryScene = dynamic(() => import("@/components/PublicInvitation/FamilyStationeryScene"));
 const CelebrationScene = dynamic(() => import("@/components/PublicInvitation/CelebrationScene"));
 const AnniversaryScene = dynamic(() => import("@/components/PublicInvitation/AnniversaryScene"));
 const ConfettiClubScene = dynamic(() => import("@/components/PublicInvitation/ConfettiClubScene"));
@@ -154,6 +155,7 @@ const VelvetHorizonScene = dynamic(() => import("@/components/PublicInvitation/V
 export default function InvitationThemeScenes({theme,names,date,time,eventLabel,cover,focus,crop,cropEditing,onCropChange,onFinishCrop,locale,stage,onOpen,onEditPhoto,preview,allowEnvelopeOpen,isWedding,couple,hashtag,recipientLine,motionEnabled}: SceneProps) {
   const language = useInvitationLanguage();
   const tr = (text: string) => invitationText(language, text);
+  if (theme === "serambi-pagi" || theme === "rumah-senja" || theme === "langit-safari" || theme === "purnama-biru" || theme === "giok-abadi" || theme === "peony-silk" || theme === "imperial-crimson" || theme === "porcelain-bloom") return <FamilyStationeryScene {...{theme,names,date,time,eventLabel,cover,focus,crop,cropEditing,onCropChange,onFinishCrop,locale,stage,onOpen,onEditPhoto,preview,allowEnvelopeOpen,isWedding,couple,hashtag,recipientLine,motionEnabled}} />;
   if (theme === "taman-doa" || theme === "red-thread") return <FamilyCelebrationScene {...{theme,names,date,time,eventLabel,cover,focus,crop,cropEditing,onCropChange,onFinishCrop,locale,stage,onOpen,onEditPhoto,preview,allowEnvelopeOpen,isWedding,couple,hashtag,recipientLine,motionEnabled}} />;
   if (theme === "blank-canvas") {
     return (

@@ -24,7 +24,60 @@ export function availableEditableCopyFields(templateKey: string, isWedding = tru
     : [...common, "ourStory"];
 }
 
+const familyStationeryCopyDefaults: Record<string, EditableInvitationCopy> = {
+  "serambi-pagi": {
+    greeting: "Di antara doa dan rasa syukur, kami mengundang Anda untuk merayakan khitanan putra kami.",
+    attendanceRequest: "Mari hadir dan berbagi hari yang hangat bersama keluarga kami.",
+    prayerWish: "Semoga langkah kecilnya selalu dipenuhi kesehatan, kebaikan, dan kasih sayang.",
+    closing: "Terima kasih telah mengiringi hari ini dengan kehadiran dan doa yang baik.",
+  },
+  "rumah-senja": {
+    greeting: "Dengan rasa syukur, keluarga kami membuka pintu untuk berbagi kebahagiaan pada syukuran khitanan putra kami.",
+    attendanceRequest: "Luangkan waktu untuk berkumpul, berbagi cerita, dan mendoakan putra kami.",
+    prayerWish: "Semoga ia tumbuh menjadi anak yang sehat, santun, dan membawa kebaikan bagi sesama.",
+    closing: "Kehadiran Anda membuat rumah dan hati kami semakin hangat. Terima kasih atas doanya.",
+  },
+  "langit-safari": {
+    greeting: "Ada langkah baru dalam cerita si kecil. Dengan bahagia, kami mengundang Anda ke syukuran khitanannya.",
+    attendanceRequest: "Yuk, hadir untuk berbagi tawa, kebersamaan, dan doa yang baik bersama kami.",
+    prayerWish: "Semoga rasa ingin tahunya tumbuh bersama hati yang baik dan tubuh yang sehat.",
+    closing: "Terima kasih sudah ikut merayakan satu langkah kecil yang begitu berarti bagi keluarga kami.",
+  },
+  "purnama-biru": {
+    greeting: "Kami mengundang Anda untuk berbagi rasa syukur dan doa pada khitanan putra kami.",
+    attendanceRequest: "Kehadiran Anda akan menjadi bagian berharga dari hari yang kami nantikan.",
+    prayerWish: "Semoga hidupnya selalu diterangi kebaikan, kesehatan, dan doa orang-orang tersayang.",
+    closing: "Terima kasih untuk setiap doa yang mengiringi langkahnya. Kami menantikan kebersamaan dengan Anda.",
+  },
+  "giok-abadi": {
+    greeting: "Dengan penuh rasa syukur, kami mengundang Anda untuk menyaksikan pertemuan kedua keluarga dalam acara sangjit kami.",
+    attendanceRequest: "Mari berbagi kebahagiaan dan menjadi bagian dari hari yang berarti bagi kedua keluarga.",
+    prayerWish: "Semoga ikatan ini tumbuh dalam keharmonisan, saling menghormati, dan kasih yang hangat.",
+    closing: "Terima kasih telah menyertai pertemuan ini dengan kehadiran dan harapan baik Anda.",
+  },
+  "peony-silk": {
+    greeting: "Dengan hangat, kami mengundang Anda untuk merayakan ikatan kedua keluarga pada acara sangjit kami.",
+    attendanceRequest: "Kehadiran Anda akan melengkapi hari yang kami susun dengan kasih dan rasa syukur.",
+    prayerWish: "Semoga kebersamaan ini selalu dipenuhi kelembutan, pengertian, dan kasih yang terus tumbuh.",
+    closing: "Terima kasih telah berbagi kebahagiaan bersama kedua keluarga kami. Sampai bertemu.",
+  },
+  "imperial-crimson": {
+    greeting: "Dua keluarga berkumpul untuk merayakan sebuah ikatan. Dengan hormat, kami mengundang Anda ke acara sangjit kami.",
+    attendanceRequest: "Mari hadir dan berbagi hari penuh makna bersama kedua keluarga kami.",
+    prayerWish: "Semoga ikatan yang dirayakan membawa kebahagiaan, keharmonisan, dan rasa saling menjaga.",
+    closing: "Terima kasih atas kehadiran dan doa baik Anda untuk kedua keluarga kami.",
+  },
+  "porcelain-bloom": {
+    greeting: "Kami mengundang Anda untuk menjadi bagian dari pertemuan kedua keluarga pada hari sangjit kami.",
+    attendanceRequest: "Kehadiran Anda akan menambah hangat cerita yang kami rayakan bersama keluarga.",
+    prayerWish: "Semoga setiap langkah bersama selalu membawa pengertian, ketenangan, dan kasih.",
+    closing: "Terima kasih sudah menyertai hari ini dengan kehadiran dan harapan baik. Sampai bertemu bersama keluarga kami.",
+  },
+};
+
 export function invitationCopyDefaults(templateKey: string, eventDescription?: string | null): EditableInvitationCopy {
+  const familyCopy = familyStationeryCopyDefaults[templateKey];
+  if (familyCopy) return { ...familyCopy, greeting: eventDescription?.trim() || familyCopy.greeting };
   if (templateKey === "taman-doa") return {
     greeting: eventDescription?.trim() || "Dengan penuh rasa syukur, kami mengundang Anda untuk hadir pada syukuran khitanan putra kami.",
     attendanceRequest: "Mari berbagi kebahagiaan dan doa bersama keluarga kami. Kehadiran Anda akan membuat hari ini semakin berarti.",

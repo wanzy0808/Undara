@@ -8,8 +8,76 @@ type OccasionPresentation = {
   headings: Partial<Record<InvitationSectionKey, Heading>>;
 };
 
+const khitananHeadings = {
+  greeting: ["Dengan syukur dan doa", "With gratitude and prayers"],
+  identity: ["Untuk putra kami", "For our son"],
+  event: ["Hari penuh syukur", "A day of gratitude"],
+  dateTime: ["Simpan harinya", "Save the day"],
+  gallery: ["Kenangan si kecil", "Childhood memories"],
+  countdown: ["Menanti kebersamaan", "Counting down to togetherness"],
+  location: ["Tempat berbagi bahagia", "Where we share our joy"],
+  rsvp: ["Hadir bersama kami?", "Will you join us?"],
+  wishes: ["Doa untuk langkahnya", "Wishes for his journey"],
+  gift: ["Tanda kasih", "A loving gift"],
+  closing: ["Terima kasih atas doanya", "Thank you for your prayers"],
+} as const;
+
+const sangjitHeadings = {
+  greeting: ["Pertemuan dua keluarga", "A gathering of two families"],
+  identity: ["Yang merangkai ikatan", "The couple"],
+  event: ["Hari pertemuan keluarga", "A family celebration"],
+  dateTime: ["Waktu untuk berkumpul", "Time to gather"],
+  gallery: ["Kenangan dalam bingkai", "Framed memories"],
+  countdown: ["Menuju hari istimewa", "Until our special day"],
+  location: ["Tempat kita berkumpul", "Where we gather"],
+  rsvp: ["Mari berbagi bahagia", "Share our joy"],
+  wishes: ["Harapan untuk kami", "Wishes for us"],
+  gift: ["Tanda kasih", "A loving gift"],
+  closing: ["Sampai bertemu bersama keluarga", "See you with our families"],
+} as const;
+
 /** Presentation only. Event compatibility remains exclusively in catalog.ts. */
 export const occasionPresentations = {
+  "serambi-pagi": {
+    gallery: "masonry",
+    surfaceSections: ["greeting","dateTime","gallery","gift"],
+    headings: { ...khitananHeadings, greeting: ["Syukur yang tumbuh","Growing gratitude"] },
+  },
+  "rumah-senja": {
+    gallery: "filmstrip",
+    surfaceSections: ["identity","dateTime","location","wishes"],
+    headings: { ...khitananHeadings, greeting: ["Hangatnya rumah keluarga","The warmth of a family home"] },
+  },
+  "langit-safari": {
+    gallery: "carousel",
+    surfaceSections: ["greeting","identity","gallery","rsvp","gift"],
+    headings: { ...khitananHeadings, greeting: ["Satu langkah kecil","One little step"] },
+  },
+  "purnama-biru": {
+    gallery: "stack",
+    surfaceSections: ["greeting","dateTime","rsvp","wishes","gift"],
+    headings: { ...khitananHeadings, greeting: ["Doa yang mengiringi","Prayers along the way"] },
+  },
+  "giok-abadi": {
+    gallery: "stack",
+    surfaceSections: ["greeting","dateTime","gallery","wishes","gift"],
+    headings: { ...sangjitHeadings, greeting: ["Kasih dan keharmonisan","Love and harmony"] },
+  },
+  "peony-silk": {
+    gallery: "masonry",
+    surfaceSections: ["identity","dateTime","location","rsvp","gift"],
+    headings: { ...sangjitHeadings, greeting: ["Ikatan yang bersemi","A blossoming bond"] },
+  },
+  "imperial-crimson": {
+    gallery: "carousel",
+    surfaceSections: ["greeting","dateTime","location","rsvp","wishes","gift"],
+    headings: { ...sangjitHeadings, greeting: ["Hari yang penuh makna","A meaningful day"] },
+  },
+  "porcelain-bloom": {
+    gallery: "filmstrip",
+    surfaceSections: ["greeting","identity","gallery","location","gift"],
+    headings: { ...sangjitHeadings, greeting: ["Cerita kedua keluarga","The story of two families"] },
+  },
   "taman-doa": {
     gallery: "carousel",
     surfaceSections: ["greeting", "dateTime", "gallery", "location", "gift"],

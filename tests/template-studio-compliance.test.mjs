@@ -24,6 +24,14 @@ const genericSceneKeys = [
   "gathering",
   "taman-doa",
   "red-thread",
+  "serambi-pagi",
+  "rumah-senja",
+  "langit-safari",
+  "purnama-biru",
+  "giok-abadi",
+  "peony-silk",
+  "imperial-crimson",
+  "porcelain-bloom",
 ];
 
 test("every active built-in template stays on the shared web-invitation renderer contract", () => {
@@ -49,6 +57,14 @@ test("every active built-in template stays on the shared web-invitation renderer
     "gathering",
     "taman-doa",
     "red-thread",
+    "serambi-pagi",
+    "rumah-senja",
+    "langit-safari",
+    "purnama-biru",
+    "giok-abadi",
+    "peony-silk",
+    "imperial-crimson",
+    "porcelain-bloom",
   ]);
 
   const dispatcher = read("components/PublicInvitation/PublicInvitationRenderer.tsx");
