@@ -83,13 +83,13 @@ export default function TemplateCollection() {
       <div className="w-full pb-8">
         <div className="mx-auto flex w-full flex-col justify-between gap-6 sm:flex-row sm:items-end sm:gap-12">
           <div className="max-w-2xl">
-            <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.26em] text-primary">
+            <p className="undara-marketing-meta text-primary">
               {copy.eyebrow}
             </p>
-            <h2 className="mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.04] text-primary md:text-5xl lg:text-6xl">
+            <h2 className="undara-marketing-heading mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-primary">
               {copy.title}
             </h2>
-            <p className="mt-3 max-w-xl font-[family-name:var(--font-undara-body)] text-sm leading-7 text-foreground/65">
+            <p className="mt-3 max-w-xl font-[family-name:var(--font-undara-body)] text-base leading-7 text-foreground/65">
               {copy.description}
             </p>
           </div>
@@ -126,17 +126,17 @@ export default function TemplateCollection() {
             </div>
             <div className="mt-6 flex w-full max-w-[276px] flex-col items-start text-left">
               <div className="flex w-full items-center justify-between gap-4">
-                <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="undara-marketing-meta text-muted-foreground">
                   {template.category}
                 </p>
               </div>
-              <h3 className="mt-2 font-[family-name:var(--font-undara-heading)] text-xl font-normal text-primary">
+              <h3 className="undara-marketing-subheading mt-2 font-[family-name:var(--font-undara-heading)] text-primary">
                 {template.name}
               </h3>
               <p className="mt-2 text-xs leading-6 text-foreground/60">
                 {locale === "en" ? template.descriptionEn ?? template.description : template.description}
               </p>
-              <p className="mt-2 font-[family-name:var(--font-undara-mono)] text-[9px] uppercase tracking-[0.12em] text-foreground/40">
+              <p className="undara-marketing-meta mt-2 text-foreground/40">
                 {copy.ready}
               </p>
             </div>

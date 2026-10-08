@@ -32,7 +32,7 @@ export default function StudioSection() {
             <p className="undara-marketing-kicker">Invitation Studio</p>
           </div>
 
-          <h2 className="mt-5 max-w-[16ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.02] text-primary md:text-5xl lg:text-6xl">
+          <h2 className="undara-marketing-heading mt-5 max-w-[16ch] font-[family-name:var(--font-undara-heading)] text-primary">
             {en
               ? "A creative workspace that stays out of the way."
               : "Ruang kreatif yang tidak ikut membuatmu pusing."}
@@ -51,7 +51,7 @@ export default function StudioSection() {
             </Link>
           </Button>
 
-          <p className="mt-5 max-w-lg font-[family-name:var(--font-undara-mono)] text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="undara-marketing-meta mt-5 max-w-lg text-muted-foreground">
             {en
               ? "Choose a theme first — publish remains controlled from Dashboard."
               : "Pilih tema lebih dulu — publish tetap dikendalikan dari Dashboard."}
@@ -118,7 +118,7 @@ export default function StudioSection() {
                   </div>
                 </div>
 
-                <div className="absolute bottom-6 right-4 hidden w-[220px] border border-primary/30 bg-background/90 p-4 shadow-xl backdrop-blur-md md:block">
+                <div className="absolute bottom-6 right-4 hidden w-[220px] rounded-[20px] border border-primary/30 bg-background/90 p-4 shadow-xl backdrop-blur-md md:block">
                   <p className="undara-editorial-index">{en ? "Selected object" : "Objek terpilih"}</p>
                   <div className="mt-3 space-y-2">
                     <div className="h-2 w-full bg-primary/12"><div className="h-full w-[72%] bg-primary/45" /></div>

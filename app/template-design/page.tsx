@@ -273,10 +273,10 @@ export default function TemplateDesignPage() {
         >
           <section className="undara-marketing-content font-[family-name:var(--font-undara-body)]">
             <div className="undara-marketing-section relative min-h-[calc(100dvh-185px)] py-7 sm:py-8 lg:py-9 xl:py-10">
-              <aside className="relative z-20 max-w-[34rem] lg:absolute lg:-left-24 lg:top-14 lg:flex lg:h-[16rem] lg:w-[27rem] lg:-translate-x-[5cm] lg:flex-col lg:justify-between xl:-left-32 xl:top-16 xl:h-[18rem] xl:w-[29rem] 2xl:-left-40 2xl:top-18">
-                <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-semibold uppercase tracking-[0.22em] text-primary md:text-[11px]">{copy.eyebrow}</p>
+              <aside className="undara-template-intro relative z-20 max-w-[34rem] lg:absolute lg:-left-24 lg:top-14 lg:flex lg:h-[16rem] lg:w-[27rem] min-[2200px]:-translate-x-[5cm] lg:flex-col lg:justify-between xl:-left-32 xl:top-16 xl:h-[18rem] xl:w-[29rem] 2xl:-left-40 2xl:top-18">
+                <p className="undara-marketing-meta text-primary">{copy.eyebrow}</p>
                 <div>
-                  <h1 className="max-w-[10.5ch] font-[family-name:var(--font-undara-heading)] text-[clamp(2.55rem,4.65vw,5.5rem)] font-normal leading-[0.96] tracking-[-0.035em] text-primary">
+                  <h1 className="max-w-[10.5ch] font-[family-name:var(--font-undara-heading)] undara-marketing-title tracking-[-0.035em] text-primary">
                     {copy.title}
                   </h1>
                   <p className="mt-5 max-w-[30ch] text-sm font-medium leading-7 text-foreground/75 lg:hidden">{copy.description}</p>
@@ -293,7 +293,7 @@ export default function TemplateDesignPage() {
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
                       placeholder={copy.search}
-                      className="h-11 w-full rounded-[11px] border border-primary/45 bg-background/72 pl-9 pr-3 text-[15px] font-semibold text-foreground shadow-sm outline-none transition-[border-color,box-shadow] duration-150 placeholder:font-medium placeholder:text-foreground/62 focus:border-primary/80 focus:ring-2 focus:ring-primary/18"
+                      className="h-11 w-full rounded-[11px] border border-primary/45 bg-background/72 pl-9 pr-3 text-[15px] font-medium text-foreground shadow-sm outline-none transition-[border-color,box-shadow] duration-150 placeholder:font-medium placeholder:text-foreground/62 focus:border-primary/80 focus:ring-2 focus:ring-primary/18"
                     />
                   </label>
 
@@ -306,7 +306,7 @@ export default function TemplateDesignPage() {
                         setFilterOpen((open) => !open);
                         setSortOpen(false);
                       }}
-                      className={`flex h-11 items-center gap-2 rounded-[11px] border px-4 text-[15px] font-bold transition-colors ${filterOpen || photoFilter !== "all" || category !== "Semua" ? "border-primary/75 bg-primary/12 text-primary" : "border-primary/40 bg-background/60 text-foreground hover:border-primary/65 hover:text-primary"}`}
+                      className={`flex h-11 items-center gap-2 rounded-[11px] border px-4 text-[15px] font-medium transition-colors ${filterOpen || photoFilter !== "all" || category !== "Semua" ? "border-primary/75 bg-primary/12 text-primary" : "border-primary/40 bg-background/60 text-foreground hover:border-primary/65 hover:text-primary"}`}
                     >
                       <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
                       {copy.filter}
@@ -315,7 +315,7 @@ export default function TemplateDesignPage() {
                     {filterOpen && (
                       <div role="menu" aria-label={copy.filter} className="absolute left-1/2 top-[calc(100%+8px)] z-50 w-[min(86vw,330px)] -translate-x-1/2 rounded-[16px] border border-primary/20 bg-background p-4 shadow-[0_20px_55px_rgba(45,30,35,0.16)] sm:left-0 sm:translate-x-0">
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">{copy.photoType}</p>
+                          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">{copy.photoType}</p>
                           <div className="mt-2 grid grid-cols-3 gap-1.5">
                             {([
                               ["all", copy.all],
@@ -327,7 +327,7 @@ export default function TemplateDesignPage() {
                                 type="button"
                                 onClick={() => setPhotoFilter(value)}
                                 aria-pressed={photoFilter === value}
-                                className={`min-h-10 rounded-[10px] border px-2.5 text-[13px] font-semibold transition-colors ${photoFilter === value ? "border-primary bg-primary text-primary-foreground" : "border-primary/25 text-foreground/80 hover:border-primary/50 hover:text-primary"}`}
+                                className={`min-h-10 rounded-[10px] border px-2.5 text-[13px] font-medium transition-colors ${photoFilter === value ? "border-primary bg-primary text-primary-foreground" : "border-primary/25 text-foreground/80 hover:border-primary/50 hover:text-primary"}`}
                               >
                                 {label}
                               </button>
@@ -343,7 +343,7 @@ export default function TemplateDesignPage() {
                                 type="button"
                                 onClick={() => setCategory(item)}
                                 aria-pressed={category === item}
-                                className={`min-h-9 rounded-[9px] border px-3 text-[13px] font-semibold transition-colors ${category === item ? "border-primary bg-primary/12 text-primary" : "border-primary/25 text-foreground/78 hover:border-primary/50 hover:text-primary"}`}
+                                className={`min-h-9 rounded-[9px] border px-3 text-[13px] font-medium transition-colors ${category === item ? "border-primary bg-primary/12 text-primary" : "border-primary/25 text-foreground/78 hover:border-primary/50 hover:text-primary"}`}
                               >
                                 {item === "Semua" ? copy.all : item}
                               </button>
@@ -357,7 +357,7 @@ export default function TemplateDesignPage() {
                               setPhotoFilter("all");
                               setCategory("Semua");
                             }}
-                            className="mt-4 text-[13px] font-bold text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-primary"
+                            className="mt-4 text-[13px] font-medium text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-primary"
                           >
                             {copy.clearFilter}
                           </button>
@@ -376,7 +376,7 @@ export default function TemplateDesignPage() {
                         setSortOpen((open) => !open);
                         setFilterOpen(false);
                       }}
-                      className="flex h-11 items-center gap-2 rounded-[11px] border border-primary/40 bg-background/60 px-4 text-[15px] font-bold text-foreground transition-colors hover:border-primary/65 hover:text-primary"
+                      className="flex h-11 items-center gap-2 rounded-[11px] border border-primary/40 bg-background/60 px-4 text-[15px] font-medium text-foreground transition-colors hover:border-primary/65 hover:text-primary"
                     >
                       <span className="hidden sm:inline">{copy.sort}:</span>
                       <span>{sortLabel}</span>
@@ -395,7 +395,7 @@ export default function TemplateDesignPage() {
                               setSortOpen(false);
                               sortTriggerRef.current?.focus();
                             }}
-                            className={`flex min-h-10 w-full items-center rounded-[9px] px-3 text-left text-[13px] font-semibold transition-colors ${sort === option.value ? "bg-primary/12 text-primary" : "text-foreground/80 hover:bg-primary/7 hover:text-primary"}`}
+                            className={`flex min-h-10 w-full items-center rounded-[9px] px-3 text-left text-[13px] font-medium transition-colors ${sort === option.value ? "bg-primary/12 text-primary" : "text-foreground/80 hover:bg-primary/7 hover:text-primary"}`}
                           >
                             {option.label}
                           </button>
@@ -497,10 +497,10 @@ export default function TemplateDesignPage() {
 
                     {activeWheelTemplate && (
                       <div data-template-wheel-details aria-live="polite" className="mx-auto mt-4 max-w-2xl pb-1 text-center lg:mt-5 lg:pb-1">
-                        <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/65">
+                        <p className="undara-marketing-meta text-foreground/65">
                           {String(wheelIndex + 1).padStart(2, "0")} / {String(filteredTemplates.length).padStart(2, "0")} · {activeWheelTemplate.category}
                         </p>
-                        <h2 className="mt-3 font-[family-name:var(--font-undara-heading)] text-[clamp(1.95rem,3.4vw,2.95rem)] font-normal leading-tight text-primary">
+                        <h2 className="mt-3 font-[family-name:var(--font-undara-heading)] undara-marketing-heading text-primary">
                           {activeWheelTemplate.name}
                         </h2>
                         <p className="mx-auto mt-3 max-w-xl text-sm font-medium leading-7 text-foreground/75">
@@ -516,8 +516,8 @@ export default function TemplateDesignPage() {
                 )}
               </div>
 
-              <aside className="hidden lg:absolute lg:right-[-9rem] lg:top-[66%] lg:z-20 lg:flex lg:w-[33rem] lg:translate-x-[5cm] lg:-translate-y-1/2 lg:flex-col xl:right-[-12rem] xl:top-[67%] xl:w-[37rem] 2xl:right-[-14rem] 2xl:w-[39rem]">
-                <p className="ml-auto max-w-[54ch] text-right text-[15px] font-semibold leading-7 text-foreground/84">{copy.description}</p>
+              <aside className="undara-template-outro hidden lg:absolute lg:right-[-9rem] lg:top-[66%] lg:z-20 lg:flex lg:w-[33rem] min-[2200px]:translate-x-[5cm] min-[2200px]:-translate-y-1/2 lg:flex-col xl:right-[-12rem] xl:top-[67%] xl:w-[37rem] 2xl:right-[-14rem] 2xl:w-[39rem]">
+                <p className="ml-auto max-w-[54ch] text-right text-[15px] font-normal leading-7 text-foreground/84">{copy.description}</p>
                 <div
                   aria-hidden="true"
                   className="ml-auto mt-2 flex h-7 w-[250px] items-center justify-end text-primary/65 xl:w-[300px] dark:text-[#D6B38C]/72"

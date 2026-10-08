@@ -230,13 +230,13 @@ export default function TermsAndConditionsPage() {
             <header className="undara-marketing-section grid min-h-[min(56dvh,590px)] items-end gap-10 pb-14 lg:grid-cols-[1.06fr_0.94fr] lg:gap-20">
               <div>
                 <p className="undara-marketing-kicker">{en ? "Legal / Terms" : "Legal / Ketentuan"}</p>
-                <h1 className="mt-5 max-w-[13ch] font-[family-name:var(--font-undara-heading)] text-[clamp(3.2rem,6vw,6.5rem)] leading-[0.96] tracking-[-0.035em] text-primary">
+                <h1 className="undara-marketing-title mt-5 max-w-[13ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.035em] text-primary">
                   {copy.title}
                 </h1>
               </div>
 
               <div className="max-w-xl border-l border-primary/30 py-5 pl-7 md:pl-12">
-                <p className="text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                <p className="text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                   {en
                     ? "The rules that govern access to Undara, paid services, user content, transactions, and platform responsibilities."
                     : "Ketentuan yang mengatur penggunaan Undara, layanan berbayar, konten pengguna, transaksi, dan tanggung jawab platform."}
@@ -254,13 +254,13 @@ export default function TermsAndConditionsPage() {
               <div className="grid gap-8 lg:grid-cols-[0.34fr_0.66fr] lg:gap-16">
                 <div>
                   <p className="undara-marketing-kicker">{copy.introduction}</p>
-                  <h2 className="mt-4 max-w-[12ch] font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.05] tracking-[-0.025em] text-primary md:text-5xl">
+                  <h2 className="undara-marketing-heading mt-4 max-w-[12ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                     {en ? "Start with the general agreement." : "Mulai dari ketentuan umumnya."}
                   </h2>
                 </div>
                 <div className="space-y-5">
                   {copy.opening.map((paragraph, i) => (
-                    <p key={i} className="text-sm leading-8 text-foreground/82 md:text-base md:leading-8">
+                    <p key={i} className="text-base leading-8 text-foreground/82 md:text-base md:leading-8">
                       {paragraph}
                     </p>
                   ))}
@@ -279,7 +279,7 @@ export default function TermsAndConditionsPage() {
                     <div>
                       <h2
                         id={`undara-terms-section-${index}`}
-                        className="font-[family-name:var(--font-undara-heading)] text-2xl font-bold leading-[1.08] text-primary md:text-3xl lg:text-4xl"
+                        className="undara-marketing-subheading text-primary"
                       >
                         {section.title}
                       </h2>

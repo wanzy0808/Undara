@@ -38,7 +38,7 @@ export default function ReviewsGrid({ eyebrow, title, description, reviews, fram
             </div>
             <div className="mt-6 border-t border-[var(--border)] pt-4">
               <p className="text-sm font-semibold">{item.name}</p>
-              <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+              <p className="undara-marketing-meta mt-1 text-[var(--muted-foreground)]">
                 {item.date ?? item.role}
               </p>
             </div>

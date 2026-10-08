@@ -58,11 +58,11 @@ export default function ProcessSection() {
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16">
         <div>
           <p className="undara-marketing-kicker">{en ? "From list to arrival" : "Dari Daftar sampai Kedatangan"}</p>
-          <h2 className="mt-4 max-w-[17ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.04] tracking-[-0.025em] text-primary md:text-5xl lg:text-6xl">
+          <h2 className="undara-marketing-heading mt-4 max-w-[17ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
             {en ? "A clear sequence for the busiest part of the day." : "Urutan yang jelas untuk bagian hari yang paling sibuk."}
           </h2>
         </div>
-        <p className="max-w-2xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+        <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
           {en
             ? "The system follows the way guests actually arrive: prepare the data, verify access, scan at the venue, then keep the team informed."
             : "Sistem mengikuti alur kedatangan tamu: siapkan data, verifikasi akses, pindai QR di lokasi, lalu pastikan seluruh tim mendapat informasi yang sama."}
@@ -73,17 +73,17 @@ export default function ProcessSection() {
         {steps.map(({ icon: Icon, title, text }, index) => (
           <article
             key={title}
-            className={`relative grid gap-6 py-8 md:grid-cols-[84px_minmax(0,0.92fr)_minmax(0,1.08fr)] md:items-center md:gap-9 md:py-11 ${index % 2 ? "lg:pl-[6%]" : "lg:pr-[5%]"}`}
+            className={`relative max-w-4xl py-8 md:py-11 ${index % 2 ? "lg:ml-auto" : "lg:mr-auto"}`}
           >
-            <div className="relative z-10 flex items-center gap-4 md:block">
-              <span className="grid h-11 w-11 place-items-center border border-primary/35 bg-background text-primary">
+            <div className="relative z-10 mb-5 flex items-center gap-4">
+              <span className="grid h-11 w-11 place-items-center rounded-[16px] border border-primary/35 bg-background text-primary">
                 <Icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
               </span>
             </div>
-            <h3 className="max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-2xl font-bold leading-[1.08] text-primary md:text-3xl lg:text-4xl">
+            <h3 className="undara-marketing-subheading max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-primary">
               {title}
             </h3>
-            <p className="max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+            <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
               {text}
             </p>
           </article>

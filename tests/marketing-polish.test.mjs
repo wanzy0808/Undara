@@ -104,7 +104,7 @@ test("marketing content uses space and surfaces without repeated divider rails",
 });
 
 
-test("framed marketing section headings keep the stronger hierarchy", () => {
+test("framed marketing headings use restrained roles without changing invitation artwork", () => {
   const files = [
     "app/guestbook/page.tsx",
     "app/undangan-fisik/page.tsx",
@@ -120,13 +120,15 @@ test("framed marketing section headings keep the stronger hierarchy", () => {
   ];
   for (const file of files) {
     const source = read(file);
-    assert.doesNotMatch(source, /<h2 className="[^"]*font-normal/, file);
-    assert.match(source, /<h2 className="[^"]*font-bold/, file);
+    assert.match(source, /<h2 className="undara-marketing-heading/, file);
+    assert.doesNotMatch(source, /<h2 className="[^"]*font-bold/, file);
   }
 
   const styles = read("app/globals.css");
-  assert.match(styles, /\.undara-marketing-section h2 \{[\s\S]*?font-weight: 700;/);
-  assert.match(styles, /\.undara-marketing-section h3 \{[\s\S]*?font-weight: 700;/);
+  assert.match(styles, /\.undara-marketing-subheading \{[\s\S]*?font-weight: 400;/);
+  assert.match(styles, /font-synthesis: none/);
+  assert.doesNotMatch(styles, /\.undara-marketing-section h[123] \{/);
+  assert.doesNotMatch(read("components/DigitalInvitation/HeroSection.tsx"), /<h2 className="undara-marketing-heading/);
 });
 
 

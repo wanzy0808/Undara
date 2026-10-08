@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import ScrollReveal from "@/components/EventPlanner/ScrollReveal";
 import Link from "next/link";
 import { ArrowRight, CircleHelp } from "lucide-react";
 import FaqSection from "@/components/Marketing/FaqSection";
@@ -11,6 +13,7 @@ import { Button } from "@/components/ui/button";
 
 export default function HelpPage() {
   const { locale } = useLanguage();
+  const scrollRoot = useRef<HTMLElement>(null);
   const en = locale === "en";
 
   const helpFaq = en
@@ -78,8 +81,9 @@ export default function HelpPage() {
           <Navbar embedded />
         </div>
 
-        <main className="undara-marketing-scroll relative z-20">
+        <main ref={scrollRoot} tabIndex={0} aria-label={en ? "Help page content" : "Konten halaman bantuan"} className="undara-marketing-scroll relative z-20 focus-visible:outline-2 focus-visible:outline-primary">
           <div className="undara-marketing-content flex flex-col gap-24 py-8 md:gap-28 md:py-12">
+            <ScrollReveal scrollRoot={scrollRoot} lift>
             <section className="undara-marketing-section grid min-h-[min(68dvh,690px)] items-center gap-10 pb-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
               <div>
                 <div className="flex items-center gap-3">
@@ -87,7 +91,7 @@ export default function HelpPage() {
                   <p className="undara-marketing-kicker">{en ? "Undara Help" : "Bantuan Undara"}</p>
                 </div>
 
-                <h1 className="mt-5 max-w-[17ch] font-[family-name:var(--font-undara-heading)] text-[clamp(3.2rem,6vw,6.6rem)] leading-[0.96] tracking-[-0.035em] text-primary">
+                <h1 className="undara-marketing-title mt-5 max-w-[22ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.035em] text-primary">
                   {en
                     ? "Start with the question that blocks your next step."
                     : "Mulai dari pertanyaan yang menghambat langkah berikutnya."}
@@ -95,7 +99,7 @@ export default function HelpPage() {
               </div>
 
               <div className="max-w-xl border-l border-primary/30 py-6 pl-7 md:pl-12">
-                <p className="text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                <p className="text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                   {en
                     ? "A practical guide to invitations, packages, templates, publishing, RSVP, Digital Guestbook, and the main Undara workflow."
                     : "Panduan praktis mengenai undangan, paket, template, publikasi, RSVP, Guestbook Digital, dan alur utama penggunaan Undara."}
@@ -126,7 +130,9 @@ export default function HelpPage() {
                 </div>
               </div>
             </section>
+            </ScrollReveal>
 
+            <ScrollReveal scrollRoot={scrollRoot} lift>
             <section className="undara-marketing-section undara-editorial-offset-right pb-16">
               <FaqSection
                 eyebrow={en ? "Common questions" : "Pertanyaan Umum"}
@@ -141,15 +147,17 @@ export default function HelpPage() {
                 editorial
               />
             </section>
+            </ScrollReveal>
 
+            <ScrollReveal scrollRoot={scrollRoot} lift>
             <section className="undara-marketing-section undara-editorial-offset-left relative mb-4 overflow-hidden py-14 md:py-20">
               <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-16">
                 <div>
                   <p className="undara-marketing-kicker">{en ? "Next step" : "Langkah Berikutnya"}</p>
-                  <h2 className="mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.04] tracking-[-0.025em] text-primary md:text-6xl">
+                  <h2 className="undara-marketing-heading mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                     {en ? "Ready to continue your event setup?" : "Siap melanjutkan persiapan acaramu?"}
                   </h2>
-                  <p className="mt-5 max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                  <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                     {en
                       ? "Explore the available services, or sign in to continue the event you are already preparing."
                       : "Lihat layanan yang tersedia, atau masuk untuk melanjutkan event yang sedang kamu siapkan."}
@@ -169,6 +177,7 @@ export default function HelpPage() {
                 </div>
               </div>
             </section>
+            </ScrollReveal>
           </div>
         </main>
 
