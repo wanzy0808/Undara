@@ -31,6 +31,7 @@ let counter = 0;
 const requests = new Map();
 const exceptions = [];
 const report = [];
+let lastExpression = "";
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function until(check, message, timeout = 30000) {
   const deadline = Date.now() + timeout;
@@ -73,6 +74,7 @@ try {
   const { sessionId } = await send("Target.attachToTarget", { targetId, flatten: true });
   const call = (method, params) => send(method, params, sessionId);
   const evaluate = async (expression) => {
+    lastExpression = expression;
     const result = await call("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true });
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
     return result.result.value;
@@ -88,7 +90,8 @@ try {
       await until(() => evaluate('Boolean(document.querySelector("[role=dialog] .rf-envelope .ot-open"))'), "Missing envelope: " + theme.key);
       await until(() => evaluate('[...document.querySelectorAll("[role=dialog] .rf-envelope img")].every(i => i.complete && i.naturalWidth > 0)'), "Broken envelope image: " + theme.key);
       // Await layout/paint; late font loading must settle before evidence is captured.
-      await evaluate("document.fonts.ready.then(() => true)");
+      const fontsReady = await evaluate("Promise.race([document.fonts.ready.then(() => true), new Promise(resolve => setTimeout(() => resolve(false), 2500))])");
+      console.log("Envelope ready:", theme.key, width, "fonts settled:", fontsReady);
       await pause(200);
       if (width === 390) {
         await evaluate('document.querySelector("[role=dialog] .rf-envelope .ot-open").scrollIntoView({block:"center"})');
@@ -127,7 +130,7 @@ try {
       for (const required of ["cover", "greeting", "identity", "event", "dateTime", "gallery", "countdown", "location", "rsvp", "wishes", "gift", "closing", "footer"]) {
         assert.ok(measured.sections.includes(required), theme.key + " missing " + required);
       }
-      report.push({ theme: theme.key, viewport: width, ...measured });
+      report.push({ theme: theme.key, viewport: width, fontsReady, ...measured });
       if (width === 390) {
         const capture = await call("Page.captureScreenshot", { format: "png" });
         await writeFile(join(output, theme.key + "-cover.png"), Buffer.from(capture.data, "base64"));
@@ -155,7 +158,8 @@ try {
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
   console.log("PASS:", report.length, "real gallery previews; envelope, cover, assets, section continuity and horizontal layout.");
 } finally {
-  await writeFile(join(output, "report.json"), JSON.stringify({ report, exceptions }, null, 2));
+  await writeFile(join(output, "report.json"), JSON.stringify({ report, exceptions, lastExpression }, null, 2));
+  if (report.length !== 32) console.error("Last browser expression:", lastExpression);
   await writeFile(join(output, "server.log"), serverLog.join(""));
   socket?.close();
   chrome.kill();
