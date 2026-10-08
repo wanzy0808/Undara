@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowDownRight,
+  ChevronLeft,
+  ChevronRight,
   ArrowRight,
   Check,
   MessageCircle,
@@ -63,10 +65,40 @@ export default function EventPlannerPage() {
   const scrollRoot = useRef<HTMLElement>(null);
   const reduced = Boolean(useReducedMotion());
   const en = locale === "en";
+  const serviceRail = useRef<HTMLDivElement>(null);
+  const [railEdges, setRailEdges] = useState({ start: true, end: false });
+
+  useEffect(() => {
+    const rail = serviceRail.current;
+    if (!rail) return;
+    const updateEdges = () => setRailEdges({
+      start: rail.scrollLeft <= 2,
+      end: rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 2,
+    });
+    updateEdges();
+    rail.addEventListener("scroll", updateEdges, { passive: true });
+    const observer = new ResizeObserver(updateEdges);
+    observer.observe(rail);
+    return () => {
+      rail.removeEventListener("scroll", updateEdges);
+      observer.disconnect();
+    };
+  }, []);
+
+  function moveServices(direction: number, keyboard = false) {
+    const rail = serviceRail.current;
+    if (!rail) return;
+    const card = rail.querySelector<HTMLElement>("article");
+    if (!card) return;
+    rail.scrollBy({
+      left: direction * (card.offsetWidth + 24),
+      behavior: reduced || keyboard ? "instant" : "smooth",
+    });
+  }
 
   const scope = en
-    ? ["Wedding Organizer", "Wedding Planner", "Anniversary", "Baby Shower"]
-    : ["Wedding Organizer", "Wedding Planner", "Anniversary", "Baby Shower"];
+    ? ["Wedding", "Birthday", "Family Celebrations", "Corporate Events"]
+    : ["Pernikahan", "Ulang Tahun", "Perayaan Keluarga", "Acara Perusahaan"];
 
   const faqItems = plannerFaq.map((item) => ({
     question: en ? item.questionEn : item.question,
@@ -204,7 +236,7 @@ export default function EventPlannerPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot}>
-              <section className="relative mx-auto w-full max-w-4xl overflow-hidden py-12 md:py-16 lg:py-20">
+              <section className="relative mx-auto w-full max-w-[1500px] py-12 md:py-16 lg:py-20">
                 <PlannerNote
                   src="/assets/note3.webp"
                   className="-right-[5%] top-[2%] h-[64%] w-[36%] rotate-6 opacity-[0.09] lg:opacity-[0.14] dark:opacity-[0.06]"
@@ -229,34 +261,69 @@ export default function EventPlannerPage() {
                         ? "Start with the service that feels closest to your event."
                         : "Mulai dari layanan yang paling mendekati kebutuhan acaramu."}
                     </p>
-                    <p className="mt-5 max-w-2xl font-[family-name:var(--font-undara-body)] text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
-                      {en
-                        ? "You do not need to choose the final package before chatting. These categories are simply a starting point so your requirements are easier to understand."
-                        : "Kamu tidak harus menentukan paket final sebelum chat. Kategori ini hanya titik awal supaya kebutuhanmu lebih mudah dipahami."}
-                    </p>
                   </div>
                 </div>
 
-                <div className="relative z-10 mt-10 divide-y divide-primary/15">
+                <div className="relative z-10 mt-8 flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label={en ? "Previous service" : "Layanan sebelumnya"}
+                    aria-controls="planner-service-rail"
+                    disabled={railEdges.start}
+                    onClick={(event) => moveServices(-1, event.detail === 0)}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label={en ? "Next service" : "Layanan berikutnya"}
+                    aria-controls="planner-service-rail"
+                    disabled={railEdges.end}
+                    onClick={(event) => moveServices(1, event.detail === 0)}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div
+                  ref={serviceRail}
+                  id="planner-service-rail"
+                  role="region"
+                  aria-roledescription="carousel"
+                  aria-label={en ? "Event planning services" : "Pilihan layanan acara"}
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget) return;
+                    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                      event.preventDefault();
+                      moveServices(event.key === "ArrowLeft" ? -1 : 1, true);
+                    }
+                  }}
+                  className="relative z-10 mt-5 flex snap-x snap-mandatory gap-6 overflow-x-auto overscroll-x-contain rounded-2xl pb-6 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                >
                   {plannerPackages.map((item) => {
                     const features = en ? item.featuresEn : item.features;
 
                     return (
                       <article
                         key={item.key}
-                        className="flex flex-col gap-5 py-8 md:py-10 lg:py-12"
+                        role="group"
+                        aria-roledescription={en ? "slide" : "kartu"}
+                        aria-label={en ? item.nameEn : item.name}
+                        className="flex w-[88%] max-w-[440px] shrink-0 snap-start flex-col gap-5 rounded-2xl border border-primary/25 bg-background p-6 sm:w-[440px] md:p-8"
                       >
                         <div>
-                          <h3 className="max-w-3xl font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.02] text-primary md:text-4xl lg:text-[2.75rem]">
+                          <h3 className="max-w-3xl font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.08] text-primary">
                             {en ? item.nameEn : item.name}
                           </h3>
-                          <p className="mt-3 max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                          <p className="mt-3 max-w-xl text-sm leading-7 text-muted-foreground">
                             {en ? item.descriptionEn : item.description}
                           </p>
                         </div>
 
-                        <div>
-                          <ul className="grid gap-3">
+                        <div className="flex flex-1 flex-col">
+                          <ul className="mb-7 grid gap-3">
                             {features.map((feature) => (
                               <li
                                 key={feature}
@@ -268,7 +335,7 @@ export default function EventPlannerPage() {
                             ))}
                           </ul>
 
-                          <Button asChild variant="outline" size="sm" className="mt-6 w-fit">
+                          <Button asChild variant="outline" size="sm" className="mt-auto w-fit">
                             <a
                               href={consultationUrl(en ? item.waMessageEn : item.waMessage)}
                               target="_blank"
