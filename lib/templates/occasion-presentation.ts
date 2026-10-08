@@ -8,6 +8,20 @@ type OccasionPresentation = {
   headings: Partial<Record<InvitationSectionKey, Heading>>;
 };
 
+const birthdayHeadings = {
+  greeting: ["Satu hari untuk dirayakan", "A day to celebrate"],
+  identity: ["Yang berulang tahun", "The birthday star"],
+  event: ["Mari merayakan", "Let's celebrate"],
+  dateTime: ["Simpan tanggalnya", "Save the date"],
+  gallery: ["Cerita dalam foto", "Stories in pictures"],
+  countdown: ["Menuju hari bahagia", "Counting down to happiness"],
+  location: ["Sampai bertemu di sini", "Meet us here"],
+  rsvp: ["Ikut merayakan?", "Will you celebrate with us?"],
+  wishes: ["Harapan di tahun baru", "Wishes for the year ahead"],
+  gift: ["Hadiah dan kasih", "Gifts and kindness"],
+  closing: ["Sampai bertemu di pesta", "See you at the party"],
+} as const;
+
 const khitananHeadings = {
   greeting: ["Dengan syukur dan doa", "With gratitude and prayers"],
   identity: ["Untuk putra kami", "For our son"],
@@ -38,6 +52,26 @@ const sangjitHeadings = {
 
 /** Presentation only. Event compatibility remains exclusively in catalog.ts. */
 export const occasionPresentations = {
+  "cherry-picnic": {
+    gallery: "masonry",
+    surfaceSections: ["identity", "dateTime", "gallery", "wishes"],
+    headings: { ...birthdayHeadings, greeting: ["Sepotong kue, banyak cerita", "A slice of cake, a world of stories"] },
+  },
+  "velvet-wish": {
+    gallery: "filmstrip",
+    surfaceSections: ["greeting", "dateTime", "rsvp", "gift"],
+    headings: { ...birthdayHeadings, greeting: ["Harapan di bawah cahaya", "Wishes in the candlelight"] },
+  },
+  "little-parade": {
+    gallery: "carousel",
+    surfaceSections: ["greeting", "identity", "gallery", "rsvp", "gift"],
+    headings: { ...birthdayHeadings, greeting: ["Tawa kecil, bahagia besar", "Little laughs, big happiness"] },
+  },
+  "disco-bloom": {
+    gallery: "stack",
+    surfaceSections: ["identity", "dateTime", "location", "wishes"],
+    headings: { ...birthdayHeadings, greeting: ["Saatnya bersinar", "Your time to shine"] },
+  },
   "serambi-pagi": {
     gallery: "masonry",
     surfaceSections: ["greeting","dateTime","gallery","gift"],

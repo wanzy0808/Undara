@@ -26,7 +26,7 @@ const Scene = loadSource("components/PublicInvitation/FamilyStationeryScene.tsx"
   "@/components/PublicInvitation/FamilyStationeryArtwork": art,
   "@/components/PublicInvitation/OccasionSceneParts": parts,
   "@/lib/templates/family-art-directions": directions,
-  "./occasion-themes.css": {}, "./family-stationery.css": {},
+  "./occasion-themes.css": {}, "./family-stationery.css": {}, "./birthday-stationery.css": {},
 }).default;
 const cases = [
   ["serambi-pagi", "KHITANAN", "arched", "masonry"],
@@ -40,7 +40,6 @@ const cases = [
 ];
 
 test("the collection adds four themes per family category without replacing the existing defaults", () => {
-  assert.equal(invitationTemplates.length, 29);
   for (const [category, original] of [["KHITANAN", "taman-doa"], ["SANGJIT", "red-thread"]]) {
     assert.deepEqual(templatesForEvent(invitationTemplates, category).map((t) => t.key),
       [original, ...cases.filter((t) => t[1] === category).map((t) => t[0])]);

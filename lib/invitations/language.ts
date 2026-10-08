@@ -5,6 +5,22 @@ export type InvitationLanguage = "ID" | "EN";
 
 /** Text owned by the invitation product. Event data and customer-authored copy are never machine-translated. */
 const english: Record<string, string> = {
+  "Ada kue, cerita, dan satu hari ulang tahun yang ingin kami rayakan bersama Anda.": "There is cake, conversation and a birthday we would love to celebrate with you.",
+  "Mari luangkan waktu untuk menikmati perayaan kecil ini bersama orang-orang tersayang.": "Join us for a little celebration with the people we love.",
+  "Semoga tahun yang baru membawa kesehatan, hari yang hangat, dan banyak cerita baik.": "May the year ahead bring good health, warm days and wonderful stories.",
+  "Terima kasih sudah ikut merayakan. Kami menantikan tawa dan cerita Anda di pesta.": "Thank you for celebrating with us. We look forward to your laughter and stories at the party.",
+  "Satu tahun lagi, satu kesempatan untuk merayakan hidup bersama orang-orang yang berarti.": "Another year, another chance to celebrate life with the people who matter.",
+  "Kehadiran Anda akan melengkapi perayaan ulang tahun yang kami nantikan.": "Your presence will complete the birthday celebration we look forward to.",
+  "Semoga tahun ini dipenuhi ketenangan, kesehatan, dan harapan yang menemukan jalannya.": "May this year bring peace, good health and hopes that find their way.",
+  "Terima kasih untuk setiap harapan baik. Sampai bertemu di hari perayaan.": "Thank you for every kind wish. See you at the celebration.",
+  "Ada pesta kecil dengan banyak tawa! Kami mengundang Anda untuk merayakan ulang tahun si kecil bersama keluarga.": "A little party with lots of laughter! Join our family to celebrate our little one's birthday.",
+  "Yuk, datang untuk berbagi kue, bermain, dan mengisi hari ini dengan senyum.": "Come along for cake, play and a day filled with smiles.",
+  "Semoga si kecil tumbuh sehat, penuh rasa ingin tahu, dan selalu dikelilingi kasih sayang.": "May our little one grow in good health and curiosity, always surrounded by love.",
+  "Terima kasih sudah ikut menambah bahagia. Sampai bertemu di pesta kecil kami!": "Thank you for adding to our joy. See you at our little party!",
+  "Saatnya merayakan satu tahun penuh cerita. Mari berbagi musik, tawa, dan hari ulang tahun bersama kami.": "Time to celebrate a year of stories. Join us for music, laughter and a birthday together.",
+  "Datang dan ikut merayakan. Pesta ini akan terasa lebih lengkap bersama Anda.": "Come and celebrate. The party will feel complete with you here.",
+  "Semoga tahun yang baru membawa keberanian, kesempatan baik, dan banyak alasan untuk tersenyum.": "May the year ahead bring courage, good opportunities and plenty of reasons to smile.",
+  "Terima kasih atas doa dan kebersamaannya. Sampai bertemu, kita rayakan bersama!": "Thank you for your wishes and company. See you soon, let's celebrate together!",
   "Di antara doa dan rasa syukur, kami mengundang Anda untuk merayakan khitanan putra kami.": "With prayers and gratitude, we invite you to celebrate our son's khitan with us.",
   "Mari hadir dan berbagi hari yang hangat bersama keluarga kami.": "Join our family for a warm day together.",
   "Semoga langkah kecilnya selalu dipenuhi kesehatan, kebaikan, dan kasih sayang.": "May his little steps be filled with health, kindness and love.",

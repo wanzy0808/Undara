@@ -16,6 +16,7 @@ import "./serein.css";
 import "./confetti-club.css";
 import "./occasion-themes.css";
 import "./family-stationery.css";
+import "./birthday-stationery.css";
 import { familyArtDirection } from "@/lib/templates/family-art-directions";
 import { occasionPresentation, occasionSectionBackground } from "@/lib/templates/occasion-presentation";
 import "./botanical-ivory.css";

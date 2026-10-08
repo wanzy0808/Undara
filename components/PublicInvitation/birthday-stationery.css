@@ -1,0 +1,95 @@
+/* Four birthday worlds. Existing stationery, event data and shared form engines
+   remain section-owned; photographic assets never bake in a name or an age. */
+.rf-cover--picnic { display: flex; flex-direction: column; }
+.rf-picnic-letter .rf-cover-letter { padding: 48px 9% 28px; background: var(--inv-bg); color: var(--inv-ink); }
+.rf-picnic-letter .rf-cover-name { font-size: clamp(62px,16vw,94px); }
+.rf-cover--picnic > .rf-art-frame { width: 80%; max-width: 360px; margin: 0 auto; }
+.rf-cover--picnic > .ot-scroll { margin-top: auto; }
+.cherry-picnic-invitation .rf-envelope-intro { text-align: left; width: min(100%,330px); }
+.cherry-picnic-invitation .rf-paper-back { transform: rotate(-3deg); }
+.cherry-picnic-invitation .rf-letter { border-radius: 2px; padding-top: 28px; }
+.cherry-picnic-invitation .ot-identity { align-items: center; gap: 28px; }
+.cherry-picnic-invitation .ot-identity-photo { width: 86%; padding: 10px 10px 28px; background: var(--inv-bg); box-shadow: 5px 13px 25px color-mix(in srgb,var(--inv-ink) 12%,transparent); }
+.cherry-picnic-invitation [data-invitation-section="gallery"] { padding-block: 64px 88px; }
+.cherry-picnic-invitation .ugc-gallery-masonry { column-gap: 18px; }
+.cherry-picnic-invitation [data-invitation-section="closing"] { text-align: center; }
+
+.rf-cover--velvet { display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; }
+.rf-cover--velvet > .rf-art-frame { grid-area: 1 / 1; align-self: end; }
+.rf-overprint--velvet { padding: 9% 8% 74%; text-align: center; }
+.rf-overprint--velvet .rf-cover-letter { padding: 22px 12px 28px; background: var(--inv-bg); color: var(--inv-ink); }
+.rf-overprint--velvet .rf-cover-name { font-size: clamp(64px,16vw,94px); }
+.velvet-wish-invitation .rf-envelope-intro { text-align: center; }
+.velvet-wish-invitation .rf-seal { border-radius: 4px; }
+.velvet-wish-invitation .ot-section-title { font-size: clamp(34px,8vw,48px); font-weight: 400; }
+.velvet-wish-invitation .ot-identity { justify-items: center; text-align: center; gap: 32px; }
+.velvet-wish-invitation .ot-identity-photo { width: 84%; padding: 8px; background: var(--inv-accent); }
+.velvet-wish-invitation .ugc-gallery-filmstrip { padding-block: 10px 24px; }
+.velvet-wish-invitation [data-invitation-section="closing"] { text-align: center; padding-block: 100px; }
+
+.rf-cover--parade { display: flex; flex-direction: column; }
+.rf-parade-letter .rf-cover-letter { padding: 44px 9% 24px; text-align: center; background: var(--inv-bg); color: var(--inv-ink); }
+.rf-parade-letter .rf-cover-name { font-size: clamp(68px,18vw,104px); letter-spacing: -.02em; }
+.rf-cover--parade > .rf-art-frame { width: 84%; max-width: 370px; margin-inline: auto; }
+.rf-cover--parade > .ot-scroll { margin-top: auto; }
+.little-parade-invitation .rf-envelope-intro { text-align: center; }
+.little-parade-invitation .rf-paper-back,.little-parade-invitation .rf-front { border-radius: 20px 20px 4px 4px; }
+.little-parade-invitation .rf-seal { border-radius: 12px; transform: rotate(12deg); }
+.little-parade-invitation .ot-section { text-align: center; padding-block: 68px; }
+.little-parade-invitation [data-studio-native-object="object:greeting:copy-group"] { margin-inline: auto; }
+.little-parade-invitation .ot-identity { justify-items: center; }
+.little-parade-invitation .ot-identity-photo { width: 88%; border-radius: 40% 40% 10px 10px; }
+.little-parade-invitation :is([data-studio-native-object="object:dateTime:panel"],[data-studio-native-object="object:gift:panel"],.ugc-gallery-slide) { border-radius: 16px; }
+.little-parade-invitation [data-studio-native-object="object:countdown:grid"] { border: 0; }
+
+.rf-cover--disco { padding-top: 24px; }
+.rf-cover--disco > .rf-art-frame { width: 90%; margin-right: auto; }
+.rf-disco-letter { position: relative; width: 89%; margin: -28% 0 0 auto; padding-bottom: 30px; }
+.rf-disco-letter .rf-cover-letter { padding: 32px 24px; background: var(--inv-bg); color: var(--inv-ink); box-shadow: 6px 17px 29px color-mix(in srgb,var(--inv-ink) 12%,transparent); }
+.rf-disco-letter .rf-cover-name { font-size: clamp(68px,17vw,104px); font-weight: 600; letter-spacing: -.035em; }
+.disco-bloom-invitation .rf-envelope-intro { width: min(100%,330px); text-align: left; }
+.disco-bloom-invitation .rf-seal { border-radius: 2px; background: var(--inv-soft); }
+.disco-bloom-invitation .ot-section-title { font-weight: 600; max-width: 14ch; }
+.disco-bloom-invitation .ot-identity { align-items: flex-end; display: flex; flex-direction: column; gap: 26px; }
+.disco-bloom-invitation .ot-identity-photo { width: 86%; aspect-ratio: 1 / 1; padding: 8px; background: var(--inv-bg); }
+.disco-bloom-invitation [data-studio-native-object="object:identity:copy-group"] { align-self: flex-start; }
+.disco-bloom-invitation [data-invitation-section="closing"] { text-align: right; padding-block: 88px; }
+.disco-bloom-invitation [data-studio-native-object="object:closing:copy-group"] { margin-left: auto; margin-right: 0; }
+
+/* The same tactile world continues through the shared functional sections. */
+.birthday-accent { position: relative; width: 100px; margin: 0 0 28px; color: currentColor; }
+.birthday-accent svg { display: block; width: 100%; height: auto; }
+.birthday-accent--cherries { width: 82px; }
+.birthday-accent--candle { width: 94px; margin-inline: auto; }
+.birthday-accent--pennants { width: 140px; margin-inline: auto; }
+.birthday-accent--mirror { width: 102px; }
+.cherry-picnic-invitation [data-invitation-section="closing"] .birthday-accent { margin-inline: auto; }
+.disco-bloom-invitation [data-invitation-section="closing"] .birthday-accent { margin-left: auto; margin-right: 0; }
+.cherry-picnic-invitation :is([data-invitation-section="greeting"],[data-invitation-section="event"]) { padding-block: 86px 62px; }
+.cherry-picnic-invitation [data-studio-native-object="object:dateTime:panel"] { border-radius: 2px; padding-block: 36px; }
+.cherry-picnic-invitation [data-invitation-section="rsvp"] { padding-block: 88px; }
+.cherry-picnic-invitation [data-invitation-section="gift"] { text-align: right; }
+.velvet-wish-invitation [data-invitation-section="event"] { padding-block: 94px; text-align: center; }
+.velvet-wish-invitation [data-invitation-section="gallery"] { padding-block: 64px 90px; }
+.velvet-wish-invitation :is([data-studio-native-object="object:dateTime:panel"],[data-studio-native-object="object:gift:panel"]) { border-radius: 2px; padding-block: 40px; }
+.velvet-wish-invitation [data-invitation-section="location"] { text-align: center; }
+.little-parade-invitation [data-invitation-section="event"] { padding-block: 48px 72px; }
+.little-parade-invitation [data-studio-native-object="object:dateTime:panel"] { padding-block: 34px; }
+.little-parade-invitation [data-invitation-section="closing"] { padding-block: 82px; }
+.disco-bloom-invitation [data-invitation-section="event"] { padding-block: 66px 94px; text-align: right; }
+.disco-bloom-invitation [data-invitation-section="gallery"] { padding-block: 84px; }
+.disco-bloom-invitation [data-studio-native-object="object:dateTime:panel"] { border-radius: 0; padding-block: 36px; }
+.disco-bloom-invitation [data-invitation-section="rsvp"] { padding-block: 94px 72px; }
+
+/* Explicit motion defaults are supplied by Studio's existing native/photo engine.
+   These marks stay still; the one-time envelope opening carries the celebration. */
+
+@media (min-width: 560px) {
+  .cherry-picnic-invitation .ot-identity { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .cherry-picnic-invitation .ot-identity-photo { width: 100%; }
+}
+@media (max-width: 360px) {
+  .rf-picnic-letter .rf-cover-name,.rf-overprint--velvet .rf-cover-name { font-size: 57px; }
+  .rf-parade-letter .rf-cover-name,.rf-disco-letter .rf-cover-name { font-size: 62px; }
+  .rf-disco-letter .rf-cover-letter { padding-inline: 18px; }
+}

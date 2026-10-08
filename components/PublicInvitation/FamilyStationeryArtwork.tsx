@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { InvitationSectionKey } from "@/lib/templates/sections";
 import { familyArtworkUrl, familyHasSectionArtwork } from "@/lib/templates/family-art-directions";
+import BirthdayStationeryAccent from "@/components/PublicInvitation/BirthdayStationeryAccent";
 
 /** An original, text-free scene is one editable image; its frame is independent. */
 export function FamilyStationeryArtwork({ theme, section, className = "", kind = "scene" }: {
@@ -17,6 +18,6 @@ export function FamilyStationeryArtwork({ theme, section, className = "", kind =
 }
 
 export function FamilyStationerySectionArt({ theme, section }: { theme: string; section: InvitationSectionKey }) {
-  if (!familyHasSectionArtwork(theme, section)) return null;
+  if (!familyHasSectionArtwork(theme, section)) return <BirthdayStationeryAccent theme={theme} section={section} />;
   return <FamilyStationeryArtwork theme={theme} section={section} kind="detail" className="rf-section-vignette" />;
 }

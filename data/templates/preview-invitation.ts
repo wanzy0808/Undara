@@ -102,15 +102,14 @@ export const sangjitTemplateDemoInvitation: InvitationDesignerInvitation = {
 export function getTemplateDemoInvitation(templateKey: string): InvitationDesignerInvitation {
   const key = templateKey.split("::")[0];
   const category = getInvitationTemplate(key).eventCategories[0];
+  if (category === "BIRTHDAY") return birthdayTemplateDemoInvitation;
   if (category === "KHITANAN") return khitananTemplateDemoInvitation;
   if (category === "SANGJIT") return sangjitTemplateDemoInvitation;
   if (key === "little-cloud") return babyTemplateDemoInvitation;
   if (key === "gathering") return gatheringTemplateDemoInvitation;
   if (key === "silver-reverie") return silverTemplateDemoInvitation;
   if (key === "golden-keepsake") return goldenTemplateDemoInvitation;
-  return key === "confetti-club"
-    ? birthdayTemplateDemoInvitation
-    : templateDemoInvitation;
+  return templateDemoInvitation;
 }
 
 

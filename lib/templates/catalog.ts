@@ -391,6 +391,42 @@ export const invitationTemplates: InvitationTemplate[] = [
     preset: { layout: "editorial", palette: "porcelainBloom", font: "cardoHind" },
     previewImage: "/templates/porcelain-bloom/scene.webp", assetPath: "/templates/porcelain-bloom",
   },
+  {
+    key: "cherry-picnic", name: "Cherry Picnic",
+    description: "Ulang tahun di taman dengan kue ceri, linen gingham, amplop katun, dan album piknik.",
+    descriptionEn: "A garden birthday with cherry cake, gingham linen, a cotton envelope and a picnic album.",
+    category: "Birthday", eventCategories: ["BIRTHDAY"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "cherryPicnic", font: "youngInstrument" },
+    previewImage: "/templates/cherry-picnic/scene.webp", assetPath: "/templates/cherry-picnic",
+  },
+  {
+    key: "velvet-wish", name: "Velvet Wish",
+    description: "Ulang tahun elegan dalam cahaya lilin, velvet plum, folio berlipat, dan kenangan bergaya film.",
+    descriptionEn: "An elegant candlelit birthday with plum velvet, a folded folio and a cinematic memory album.",
+    category: "Birthday", eventCategories: ["BIRTHDAY"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "velvetWish", font: "bodoniManrope" },
+    previewImage: "/templates/velvet-wish/scene.webp", assetPath: "/templates/velvet-wish",
+  },
+  {
+    key: "little-parade", name: "Little Parade",
+    description: "Pesta ulang tahun ceria dengan kue lemon, kereta mainan kayu, selubung mint, dan galeri geser.",
+    descriptionEn: "A cheerful birthday party with lemon cake, a wooden toy train, a mint sleeve and a swipe gallery.",
+    category: "Birthday", eventCategories: ["BIRTHDAY"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "littleParade", font: "bubblegumOpenSans" },
+    previewImage: "/templates/little-parade/scene.webp", assetPath: "/templates/little-parade",
+  },
+  {
+    key: "disco-bloom", name: "Disco Bloom",
+    description: "Undangan ulang tahun dengan disco ball perak, kue peach, pita satin, dan tumpukan foto editorial.",
+    descriptionEn: "A birthday invitation with a silver disco ball, peach cake, satin ribbon and an editorial photo stack.",
+    category: "Birthday", eventCategories: ["BIRTHDAY"], previewType: "public",
+    usesPhotos: true, photoSlots: ["cover", "gallery"],
+    preset: { layout: "editorial", palette: "discoBloom", font: "syneInter" },
+    previewImage: "/templates/disco-bloom/scene.webp", assetPath: "/templates/disco-bloom",
+  },
 ];
 
 export function templateSupportsEventCategory(
