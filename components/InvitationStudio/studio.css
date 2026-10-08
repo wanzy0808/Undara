@@ -59,8 +59,8 @@
 
 .undara-studio-canvas-footer { position: relative; z-index: 125; display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 12px; min-height: 50px; padding: 6px 14px; border-top: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); background: var(--background); }
 .undara-studio-canvas-pages, .undara-studio-canvas-zoom { display: flex; align-items: center; gap: 5px; min-width: 0; }
-.undara-studio-canvas-page-label { min-width: 0; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--foreground); font-size: 12px; font-weight: 600; }
-.undara-studio-canvas-footer button { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 6px; border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent); border-radius: 8px; color: var(--foreground); background: var(--background); font-size: 12px; font-weight: 600; }
+.undara-studio-canvas-page-label { min-width: 0; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--foreground); font-size: 12px; font-weight: 500; }
+.undara-studio-canvas-footer button { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 6px; border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent); border-radius: 8px; color: var(--foreground); background: var(--background); font-size: 12px; font-weight: 500; }
 .undara-studio-canvas-footer button:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 12%, var(--background)); }
 .undara-studio-canvas-footer button:disabled { opacity: .4; cursor: not-allowed; }
 .undara-studio-canvas-footer button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -113,7 +113,7 @@
 .undara-studio-stage-controls { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 340px; margin: 0 auto 12px; }
 .undara-studio-stage-buttons { display: flex; flex: 1 1 auto; min-width: 0; gap: 6px; }
 .undara-studio-language-toggle { display: flex; flex: 0 0 auto; gap: 2px; padding: 3px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: var(--undara-control-radius); background: var(--background); }
-.undara-studio-stage-controls .undara-studio-language-toggle button { flex: 0 0 auto; min-width: 37px; min-height: 36px; padding: 0 5px; font-weight: 700; }
+.undara-studio-stage-controls .undara-studio-language-toggle button { flex: 0 0 auto; min-width: 37px; min-height: 36px; padding: 0 5px; font-weight: 500; }
 .undara-studio-stage-controls .undara-studio-language-toggle button[aria-pressed="true"] { color: var(--primary-foreground); background: var(--primary); box-shadow: none; }
 .undara-studio-stage-controls .undara-studio-language-toggle button[aria-pressed="false"] { color: var(--foreground); }
 .undara-studio-stage-controls button { flex: 1 1 0; min-width: 0; min-height: 44px; border-radius: var(--undara-control-radius); font-size: 12px; font-weight: 500; }
@@ -121,12 +121,12 @@
 .undara-studio-stage-controls button[aria-pressed="false"] { opacity: .7; }
 .undara-studio-stage-controls button[aria-pressed="false"]:hover { opacity: 1; }
 .undara-studio-layer-list { position: sticky; top: 0; left: 0; z-index: 100; width: 104px; max-height: calc(100vh - 220px); overflow-y: auto; justify-self: start; padding: 8px; border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent); border-radius: var(--undara-control-radius); background: color-mix(in srgb, var(--background) 96%, transparent); }
-.undara-studio-layer-list-head { margin-bottom: 6px; color: var(--muted-foreground); font-size: 12px; font-weight: 600; }
+.undara-studio-layer-list-head { margin-bottom: 6px; color: var(--muted-foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-layer-group-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin: 4px 0 7px; }
-.undara-studio-layer-group-actions button { min-height: 28px; border: 1px solid color-mix(in srgb, var(--primary) 38%, transparent); border-radius: 8px; padding: 3px 5px; color: var(--primary); background: transparent; font-size: 12px; font-weight: 700; }
+.undara-studio-layer-group-actions button { min-height: 28px; border: 1px solid color-mix(in srgb, var(--primary) 38%, transparent); border-radius: 8px; padding: 3px 5px; color: var(--primary); background: transparent; font-size: 12px; font-weight: 500; }
 .undara-studio-layer-group-actions button:hover { background: color-mix(in srgb, var(--primary) 10%, transparent); }
 .undara-studio-layer-group-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
-.undara-studio-layer-group-actions button { min-width: 28px; min-height: 28px; border: 1px solid color-mix(in srgb, var(--primary) 32%, transparent); border-radius: 8px; padding: 3px 6px; color: var(--foreground); background: transparent; font-size: 12px; font-weight: 700; }
+.undara-studio-layer-group-actions button { min-width: 28px; min-height: 28px; border: 1px solid color-mix(in srgb, var(--primary) 32%, transparent); border-radius: 8px; padding: 3px 6px; color: var(--foreground); background: transparent; font-size: 12px; font-weight: 500; }
 .undara-studio-layer-group-actions button:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--primary); }
 
 .undara-studio-layer-list-items { display: grid; gap: 4px; }
@@ -144,15 +144,15 @@
 .undara-studio-selection-stack > :is(.undara-studio-layer-side, .undara-studio-section-side) { position: static; width: 100%; max-height: none; overflow: visible; }
 .undara-studio-layer-side { position: sticky; top: 0; right: 0; z-index: 100; width: 236px; max-height: calc(100dvh - 214px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; justify-self: end; padding: 14px; border: 1px solid color-mix(in srgb, var(--primary) 36%, transparent); border-radius: var(--undara-control-radius); background: var(--background); box-shadow: 0 8px 24px rgb(0 0 0 / .07); }
 .undara-studio-layer-side-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-.undara-studio-layer-side-head strong { color: var(--primary); font-size: 14px; font-weight: 700; }
+.undara-studio-layer-side-head strong { color: var(--primary); font-size: 14px; font-weight: 500; }
 .undara-studio-layer-side-head button { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; color: var(--muted-foreground); font-size: 20px; line-height: 1; }
 .undara-studio-layer-side-head button:hover { background: color-mix(in srgb, var(--primary) 9%, transparent); color: var(--primary); }
 .undara-studio-layer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.undara-studio-layer-field, .undara-studio-layer-select, .undara-studio-layer-opacity { display: grid; gap: 6px; margin-top: 11px; color: var(--foreground); font-size: 12px; font-weight: 600; }
+.undara-studio-layer-field, .undara-studio-layer-select, .undara-studio-layer-opacity { display: grid; gap: 6px; margin-top: 11px; color: var(--foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-layer-number { display: flex; min-width: 0; align-items: center; gap: 3px; border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent); border-radius: 10px; padding-right: 6px; background: var(--background); }
-.undara-studio-layer-number input { width: 100%; min-width: 0; height: 36px; border: 0; outline: 0; background: transparent; padding: 0 6px 0 9px; color: var(--foreground); font-size: 13px; font-weight: 600; }
+.undara-studio-layer-number input { width: 100%; min-width: 0; height: 36px; border: 0; outline: 0; background: transparent; padding: 0 6px 0 9px; color: var(--foreground); font-size: 13px; font-weight: 500; }
 .undara-studio-layer-number small { color: var(--muted-foreground); font-size: 12px; font-weight: 500; }
-.undara-studio-layer-select select { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); padding: 0 30px 0 9px; color: var(--foreground); font-size: 12px; font-weight: 600; }
+.undara-studio-layer-select select { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); padding: 0 30px 0 9px; color: var(--foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-photo-editing-controls select { min-height: 44px; }
 .undara-studio-layer-opacity > span { display: flex; justify-content: space-between; gap: 8px; }
 .undara-studio-layer-opacity input { width: 100%; accent-color: var(--primary); }
@@ -160,10 +160,10 @@
 .undara-studio-layer-order button { display: grid; min-width: 0; height: 38px; place-items: center; border: 1px solid color-mix(in srgb, var(--primary) 34%, transparent); border-radius: 10px; background: var(--background); color: var(--foreground); }
 .undara-studio-layer-order button:hover:not(:disabled) { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 9%, transparent); color: var(--primary); }
 .undara-studio-layer-order button:disabled { cursor: not-allowed; opacity: .32; }
-.undara-studio-layer-reset { display: flex; width: 100%; min-height: 38px; align-items: center; justify-content: center; gap: 6px; margin-top: 12px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: var(--undara-control-radius); background: var(--background); color: var(--primary); font-size: 12px; font-weight: 700; }
+.undara-studio-layer-reset { display: flex; width: 100%; min-height: 38px; align-items: center; justify-content: center; gap: 6px; margin-top: 12px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: var(--undara-control-radius); background: var(--background); color: var(--primary); font-size: 12px; font-weight: 500; }
 .undara-studio-layer-reset:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 8%, transparent); }
 .undara-studio-native-color { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 8px; }
-.undara-studio-native-color output { min-width: 0; color: var(--muted-foreground); font-size: 12px; font-weight: 700; text-align: right; }
+.undara-studio-native-color output { min-width: 0; color: var(--muted-foreground); font-size: 12px; font-weight: 500; text-align: right; }
 .undara-studio-layer-side :is(input, select, button):focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 .undara-studio-font-choice {
   display: grid;
@@ -220,7 +220,7 @@
   display: block;
   color: var(--foreground);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 .undara-studio-text-list-item small {
   display: block;
@@ -275,7 +275,7 @@
   min-width: 0;
   color: var(--foreground);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 .undara-studio-text-counter {
   margin-top: 10px;
@@ -286,12 +286,12 @@
 .undara-studio-section-side { position: sticky; top: 0; right: 0; z-index: 100; width: 236px; max-height: calc(100dvh - 214px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; justify-self: end; padding: 14px; border: 1px solid color-mix(in srgb, var(--primary) 36%, transparent); border-radius: var(--undara-control-radius); background: var(--background); box-shadow: 0 8px 24px rgb(0 0 0 / .07); }
 .undara-studio-section-side-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
 .undara-studio-section-side-head > div { display: grid; min-width: 0; gap: 3px; }
-.undara-studio-section-side-head span { color: var(--muted-foreground); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
-.undara-studio-section-side-head strong { overflow: hidden; color: var(--primary); font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.undara-studio-section-side-head span { color: var(--muted-foreground); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; }
+.undara-studio-section-side-head strong { overflow: hidden; color: var(--primary); font-size: 15px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .undara-studio-section-side-head > button { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 9px; color: var(--muted-foreground); font-size: 20px; line-height: 1; }
 .undara-studio-section-side-head > button:hover { background: color-mix(in srgb, var(--primary) 9%, transparent); color: var(--primary); }
-.undara-studio-section-field { display: grid; gap: 6px; margin-top: 12px; color: var(--foreground); font-size: 12px; font-weight: 600; }
-.undara-studio-section-field select { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); padding: 0 30px 0 9px; color: var(--foreground); font-size: 12px; font-weight: 600; }
+.undara-studio-section-field { display: grid; gap: 6px; margin-top: 12px; color: var(--foreground); font-size: 12px; font-weight: 500; }
+.undara-studio-section-field select { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); padding: 0 30px 0 9px; color: var(--foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-section-field > input[type="range"] { width: 100%; accent-color: var(--primary); }
 .undara-studio-align-icons {
   display: grid;
@@ -335,21 +335,21 @@
   background-repeat: no-repeat;
 }
 .undara-studio-section-number { display: flex; min-width: 0; align-items: center; gap: 3px; border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent); border-radius: 10px; padding-right: 6px; background: var(--background); }
-.undara-studio-section-number input { width: 100%; min-width: 0; height: 36px; border: 0; outline: 0; background: transparent; padding: 0 6px 0 9px; color: var(--foreground); font-size: 13px; font-weight: 600; }
+.undara-studio-section-number input { width: 100%; min-width: 0; height: 36px; border: 0; outline: 0; background: transparent; padding: 0 6px 0 9px; color: var(--foreground); font-size: 13px; font-weight: 500; }
 .undara-studio-section-number small { color: var(--muted-foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-section-color { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 7px; }
 .undara-studio-section-color input[type="color"] { width: 100%; height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 36%, transparent); border-radius: 10px; background: var(--background); padding: 2px; cursor: pointer; }
-.undara-studio-section-color output { min-width: 58px; color: var(--foreground); font-size: 12px; font-weight: 600; text-align: right; }
-.undara-studio-section-reset { min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); color: var(--primary); font-size: 12px; font-weight: 700; }
+.undara-studio-section-color output { min-width: 58px; color: var(--foreground); font-size: 12px; font-weight: 500; text-align: right; }
+.undara-studio-section-reset { min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); color: var(--primary); font-size: 12px; font-weight: 500; }
 .undara-studio-section-functions { display: grid; gap: 7px; margin-top: 11px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); }
-.undara-studio-section-functions > span { color: var(--foreground); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.undara-studio-section-functions > span { color: var(--foreground); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
 .undara-studio-section-functions > div { display: flex; flex-wrap: wrap; gap: 5px; }
-.undara-studio-section-functions small { border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); border-radius: 8px; padding: 4px 6px; color: var(--foreground); font-size: 12px; font-weight: 600; }
+.undara-studio-section-functions small { border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); border-radius: 8px; padding: 4px 6px; color: var(--foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-section-functions p { color: var(--muted-foreground); font-size: 12px; font-weight: 500; line-height: 1.55; }
 .undara-studio-section-reset { display: flex; width: 100%; align-items: center; justify-content: center; gap: 5px; margin-top: 11px; }
 .undara-studio-section-reset:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
 .undara-studio-section-side :is(input, select, button):focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
-.undara-studio-rsvp-text-input { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); padding: 0 9px; color: var(--foreground); font-size: 12px; font-weight: 600; }
+.undara-studio-rsvp-text-input { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); border-radius: 10px; background: var(--background); padding: 0 9px; color: var(--foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-preview-surface [data-studio-rsvp-selected="true"] { position: relative; z-index: 40; outline: 2px solid var(--primary) !important; outline-offset: 2px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--background) 75%, transparent); }
 .undara-studio-preview-surface [data-studio-section-element-selected="true"],
 .undara-studio-preview-surface [data-studio-copy-selected="true"] {
@@ -368,9 +368,9 @@
 }
 .undara-studio-rsvp-config { display: grid; gap: 7px; margin-top: 12px; padding-top: 11px; border-top: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); }
 .undara-studio-rsvp-config-title { display: grid; gap: 2px; }
-.undara-studio-rsvp-config-title > span, .undara-studio-rsvp-fields-head > span { color: var(--primary); font-size: 12px; font-weight: 700; }
+.undara-studio-rsvp-config-title > span, .undara-studio-rsvp-fields-head > span { color: var(--primary); font-size: 12px; font-weight: 500; }
 .undara-studio-rsvp-config-title small { color: var(--muted-foreground); font-size: 12px; font-weight: 500; line-height: 1.45; }
-.undara-studio-rsvp-switch { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); border-radius: 10px; padding: 7px 9px; color: var(--foreground); font-size: 12px; font-weight: 600; }
+.undara-studio-rsvp-switch { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); border-radius: 10px; padding: 7px 9px; color: var(--foreground); font-size: 12px; font-weight: 500; }
 .undara-studio-rsvp-switch input { width: 15px; height: 15px; flex: 0 0 auto; accent-color: var(--primary); }
 .undara-studio-rsvp-switch input:disabled { opacity: .4; }
 .undara-studio-rsvp-fields { display: grid; gap: 6px; margin-top: 4px; }
@@ -384,7 +384,7 @@
 .undara-studio-rsvp-custom-field > label input { width: 13px; height: 13px; accent-color: var(--primary); }
 .undara-studio-rsvp-custom-field > button { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; color: var(--muted-foreground); font-size: 15px; }
 .undara-studio-rsvp-custom-field > button:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--primary); }
-.undara-studio-rsvp-add { min-height: 32px; border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent); border-radius: 10px; background: var(--background); color: var(--primary); font-size: 12px; font-weight: 600; }
+.undara-studio-rsvp-add { min-height: 32px; border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent); border-radius: 10px; background: var(--background); color: var(--primary); font-size: 12px; font-weight: 500; }
 .undara-studio-rsvp-add:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 8%, transparent); }
 .undara-studio-rsvp-add:disabled { cursor: not-allowed; opacity: .45; }
 .undara-studio-preview-surface [data-studio-section-selected="true"] { outline: 2px solid var(--primary); outline-offset: -2px; }
@@ -517,3 +517,30 @@
 .undara-studio-preview-surface [data-studio-native-object] {
   pointer-events: auto !important;
 }
+
+/* Strengthen editor chrome only: no text/font/token override on invitation artwork. */
+:is(.undara-studio-page-header, .undara-studio-rail, .undara-studio-inspector,
+    .undara-studio-canvas-toolbar, .undara-studio-layer-toolbar, .undara-studio-canvas-footer,
+    .undara-studio-stage-controls, .undara-studio-layer-list, .undara-studio-layer-side,
+    .undara-studio-section-side, .undara-studio-text-side, .undara-studio-status,
+    .undara-studio-mobile-view) {
+  --muted-foreground: var(--undara-ui-secondary);
+  font-family: var(--font-undara-sans);
+}
+:is(.undara-studio-page-header, .undara-studio-inspector, .undara-studio-layer-side,
+    .undara-studio-section-side, .undara-studio-text-side) :is(h1, h2, h3) {
+  font-family: var(--font-undara-heading);
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1.25;
+  letter-spacing: normal;
+}
+.undara-studio-inspector .text-xs { font-size: 13px; line-height: 1.5; }
+.undara-studio-inspector .text-sm { font-size: 14px; line-height: 1.6; }
+:is(.undara-studio-inspector, .undara-studio-layer-side, .undara-studio-section-side,
+    .undara-studio-text-side) :is(input, textarea)::placeholder {
+  color: var(--undara-ui-secondary);
+  opacity: 1;
+}
+.undara-studio-tool { font-size: 13px; }
+.undara-studio-stage-controls button[aria-pressed="false"] { opacity: 1; }

@@ -151,7 +151,7 @@ export function DashboardSectionHeader({
             {eyebrow}
           </p>
         )}
-        <h2 className={`${eyebrow ? "mt-1.5" : ""} undara-ui-title font-[family-name:var(--font-undara-heading)] text-xl font-semibold leading-tight text-primary sm:text-2xl`}>
+        <h2 className={`${eyebrow ? "mt-1.5" : ""} undara-ui-title font-[family-name:var(--font-undara-heading)] text-xl font-normal leading-tight text-primary sm:text-2xl`}>
           {title}
         </h2>
         {description && (

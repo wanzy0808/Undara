@@ -88,6 +88,7 @@ body {
   --secondary-foreground: #3A2020;
   --muted: #F7F1EB;
   --muted-foreground: rgb(58 32 32 / 64%);
+  --undara-ui-secondary: #634947;
   --accent: #703B3B;
   --accent-foreground: #FFF9F5;
   --destructive: #B42318;
@@ -120,6 +121,7 @@ body {
   --secondary-foreground: #FFF9F5;
   --muted: #653737;
   --muted-foreground: rgb(255 249 245 / 68%);
+  --undara-ui-secondary: #F1DFD6;
   --accent: #D6B38C;
   --accent-foreground: #3A2020;
   --primary: #D6B38C;
@@ -597,6 +599,8 @@ aside nav > p { font-family: var(--font-undara-heading); }
    Single source of truth for dashboard shell, surfaces, forms and tables.
    -------------------------------------------------------------------------- */
 .undara-dashboard {
+  --muted-foreground: var(--undara-ui-secondary);
+  font-family: var(--font-undara-sans);
   --undara-dashboard-canvas: #F7F1ED;
   --undara-dashboard-card: #ffffff;
   --undara-dashboard-border: #D9C3B6;
@@ -608,6 +612,8 @@ aside nav > p { font-family: var(--font-undara-heading); }
   color: var(--foreground);
 }
 .dark .undara-dashboard {
+  --muted-foreground: var(--undara-ui-secondary);
+  font-family: var(--font-undara-sans);
   --undara-dashboard-canvas: #703B3B;
   --undara-dashboard-card: #5E3131;
   --undara-dashboard-border: #9E6B6B;
@@ -657,7 +663,8 @@ aside nav > p { font-family: var(--font-undara-heading); }
   color: var(--primary);
   font-family: var(--font-undara-heading);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 400;
+  font-synthesis: none;
 }
 .undara-dashboard .undara-dashboard-header .undara-theme-toggle,
 .undara-dashboard .undara-dashboard-header .undara-language-toggle button,
@@ -704,14 +711,14 @@ aside nav > p { font-family: var(--font-undara-heading); }
   min-height: calc(100vh - 72px);
   background: var(--undara-dashboard-canvas);
   color: var(--foreground);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 .undara-dashboard main > * { min-width: 0; animation: undaraPageIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 /* Dashboard has generous workspace; avoid tiny 8–12px UI copy except where data density truly requires it. */
 .undara-dashboard main .text-xs { font-size: 0.875rem !important; line-height: 1.35rem !important; }
-.undara-dashboard main .text-sm { font-size: 0.9375rem !important; line-height: 1.5rem !important; }
+.undara-dashboard main .text-sm { font-size: 1rem !important; line-height: 1.5rem !important; }
 .undara-dashboard main [class*="text-[8px]"] { font-size: 0.6875rem !important; line-height: 1rem !important; }
 .undara-dashboard main [class*="text-[9px]"] { font-size: 0.6875rem !important; line-height: 1rem !important; }
 .undara-dashboard main [class*="text-[10px]"] { font-size: 0.75rem !important; line-height: 1.1rem !important; }
@@ -813,7 +820,7 @@ aside nav > p { font-family: var(--font-undara-heading); }
 }
 :is(.undara-dashboard, .undara-usher) textarea { padding-top: 0.7rem; padding-bottom: 0.7rem; border-radius: 10px !important; }
 :is(.undara-dashboard, .undara-usher) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"])::placeholder,
-:is(.undara-dashboard, .undara-usher) textarea::placeholder { color: color-mix(in srgb, var(--foreground) 44%, transparent); }
+:is(.undara-dashboard, .undara-usher) textarea::placeholder { color: var(--undara-ui-secondary); opacity: 1; }
 :is(.undara-dashboard, .undara-usher) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]):hover:not(:disabled):not([readonly]),
 :is(.undara-dashboard, .undara-usher) textarea:hover:not(:disabled):not([readonly]),
 :is(.undara-dashboard, .undara-usher) select:hover:not(:disabled) {
@@ -843,7 +850,7 @@ aside nav > p { font-family: var(--font-undara-heading); }
   box-shadow: none;
 }
 :is(.undara-dashboard, .undara-usher) main label > span:first-child {
-  color: color-mix(in srgb, var(--foreground) 72%, transparent);
+  color: var(--foreground);
 }
 
 /* Floating labels opt in per field; the existing control still owns input behavior. */
@@ -1788,4 +1795,39 @@ body:has(.undara-dashboard--redesign) {
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+/* Operational titles retain the real regular display face; numeric/control emphasis is Roboto. */
+.undara-dashboard :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-undara-heading);
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1.25;
+  letter-spacing: normal;
+}
+
+/* Popups are portaled outside their workspaces; retain the same readable chrome. */
+:is([data-slot="dialog-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"])
+  .text-muted-foreground:not(:where([data-studio-final-preview-device] *)) {
+  color: var(--undara-ui-secondary);
+}
+[data-slot="dialog-header"] :is(h1, h2, h3) {
+  font-family: var(--font-undara-heading);
+  font-weight: 400;
+  font-synthesis: none;
+}
+
+:is(.undara-usher, .undara-studio-entry) {
+  --muted-foreground: var(--undara-ui-secondary);
+  font-family: var(--font-undara-sans);
+}
+/* White on the selected Champagne row is too faint in Dark Mode. */
+.dark .undara-dashboard.undara-dashboard--redesign .undara-dashboard-sidebar-nav .undara-sidebar-link {
+  color: var(--foreground) !important;
+}
+.dark .undara-dashboard.undara-dashboard--redesign .undara-dashboard-sidebar-nav
+  .undara-sidebar-link:is(.is-active, [aria-current="page"]),
+.dark .undara-dashboard.undara-dashboard--redesign .undara-dashboard-sidebar-nav
+  .undara-sidebar-link:is(.is-active, [aria-current="page"]):hover {
+  color: #3A2020 !important;
 }
