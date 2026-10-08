@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { invitationTemplates } from "../lib/templates/catalog.ts";
+import { getEventCategory } from "../lib/events/catalog.ts";
+import { getTemplateDemoInvitation } from "../data/templates/preview-invitation.ts";
 
 const gallery = readFileSync(new URL("../components/Templates/TemplateGalleryCanvas.tsx", import.meta.url), "utf8");
 const page = readFileSync(new URL("../app/template-design/page.tsx", import.meta.url), "utf8");
@@ -148,10 +151,21 @@ test("Studio stage tracks opening the real envelope for every renderer", () => {
   assert.doesNotMatch(studio, /<Dialog open=\\{preview\\}|setPreview\\(true\\)/);
 });
 
-test("wedding previews retain the canonical Una & Dara sample names", () => {
-  const fixture = readFileSync(new URL("../data/templates/preview-invitation.ts", import.meta.url), "utf8");
-  assert.match(fixture, /title: "Pernikahan Una & Dara"/);
-  assert.match(fixture, /groomName: "Una"/);
-  assert.match(fixture, /brideName: "Dara"/);
-  assert.doesNotMatch(fixture, /Denny|Christine/);
+test("every catalog preview keeps the canonical identity for its event category", () => {
+  for (const theme of invitationTemplates) {
+    const category = theme.eventCategories[0];
+    const demo = getTemplateDemoInvitation(theme.key);
+    assert.equal(demo.eventCategory, category, theme.key);
+    if (getEventCategory(category).nameMode === "couple") {
+      assert.deepEqual([demo.groomName, demo.brideName], ["Una", "Dara"], theme.key);
+      assert.ok(demo.title.includes("Una & Dara"), theme.key);
+    } else {
+      assert.equal(demo.brideName, "", theme.key);
+      assert.equal(demo.groomName, category === "KHITANAN" ? "Una" : category === "OTHER" ? "" : "Dara", theme.key);
+    }
+    if (theme.previewImage.endsWith(".svg")) {
+      const thumbnail = readFileSync(new URL("../public" + theme.previewImage, import.meta.url), "utf8");
+      assert.doesNotMatch(thumbnail, />[^<]*\b(?:Aksa|Leon|Mei|Denny|Christine)\b/, theme.key);
+    }
+  }
 });

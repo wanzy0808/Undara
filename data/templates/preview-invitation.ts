@@ -88,13 +88,13 @@ export const gatheringTemplateDemoInvitation: InvitationDesignerInvitation = {
 
 export const khitananTemplateDemoInvitation: InvitationDesignerInvitation = {
   ...templateDemoInvitation, id: "khitanan-gallery-preview-only", slug: "khitanan-gallery-preview-only",
-  eventCategory: "KHITANAN", title: "Khitanan Aksa", groomName: "Aksa", brideName: "",
+  eventCategory: "KHITANAN", title: "Khitanan Una", brideName: "",
   description: null, venue: "Taman Keluarga", eventDate: "2027-07-18T10:00:00+07:00",
   ceremonyTime: "10:00", receptionTime: "END", assets: [],
 };
 export const sangjitTemplateDemoInvitation: InvitationDesignerInvitation = {
   ...templateDemoInvitation, id: "sangjit-gallery-preview-only", slug: "sangjit-gallery-preview-only",
-  eventCategory: "SANGJIT", title: "Sangjit Leon & Mei", groomName: "Leon", brideName: "Mei",
+  eventCategory: "SANGJIT", title: "Sangjit Una & Dara",
   description: null, venue: "Rumah Keluarga", eventDate: "2027-08-21T10:00:00+07:00",
   ceremonyTime: "10:00", receptionTime: "13:00", assets: [],
 };
