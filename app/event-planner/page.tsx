@@ -174,10 +174,6 @@ export default function EventPlannerPage() {
     writeServicePosition(rail.scrollLeft + direction * (card.offsetWidth + 24));
   }
 
-  const scope = en
-    ? ["Wedding", "Birthday", "Family Celebrations", "Corporate Events"]
-    : ["Pernikahan", "Ulang Tahun", "Perayaan Keluarga", "Acara Perusahaan"];
-
   const faqItems = plannerFaq.map((item) => ({
     question: en ? item.questionEn : item.question,
     answer: en ? item.answerEn : item.answer,
@@ -210,11 +206,11 @@ export default function EventPlannerPage() {
                 />
 
                 <div className="relative z-10 max-w-3xl py-8 lg:py-12">
-                  <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-semibold uppercase tracking-[0.22em] text-primary md:text-xs">
+                  <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-medium uppercase tracking-[0.22em] text-primary md:text-xs">
                     {en ? "Event Planner via Undara" : "Event Planner via Undara"}
                   </p>
 
-                  <h1 className="mt-5 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-[clamp(3rem,6vw,6.6rem)] leading-[0.94] tracking-[-0.035em] text-primary">
+                  <h1 className="mt-5 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-[clamp(2.25rem,3.6vw,3.75rem)] font-normal leading-[1.12] tracking-[-0.035em] text-primary">
                     {en ? "Need an Event Planner?" : "Butuh Event Planner?"}
                     <span className="block text-foreground">
                       {en ? "Tell us about the event first." : "Ceritakan dulu acaranya."}
@@ -228,7 +224,7 @@ export default function EventPlannerPage() {
                   </p>
 
                   <div className="mt-8 flex flex-wrap items-center gap-3">
-                    <Button asChild size="lg">
+                    <Button asChild size="lg" className="rounded-xl">
                       <a
                         href={consultationUrl(
                           en
@@ -243,7 +239,7 @@ export default function EventPlannerPage() {
                       </a>
                     </Button>
 
-                    <Button asChild size="lg" variant="outline">
+                    <Button asChild size="lg" variant="outline" className="rounded-xl">
                       <a href="#cara-mulai">
                         {en ? "See How to Start" : "Lihat Cara Mulai"}
                         <ArrowDownRight className="h-4 w-4" />
@@ -251,21 +247,11 @@ export default function EventPlannerPage() {
                     </Button>
                   </div>
 
-                  <div className="mt-10 flex max-w-3xl flex-wrap gap-x-7 gap-y-3 pt-5">
-                    {scope.map((item) => (
-                      <p
-                        key={item}
-                        className="font-[family-name:var(--font-undara-mono)] text-[9px] uppercase tracking-[0.13em] text-muted-foreground"
-                      >
-                        {item}
-                      </p>
-                    ))}
-                  </div>
                 </div>
 
                 <div className="relative z-10 min-h-[460px] lg:min-h-[680px]">
                   <motion.div
-                    className="undara-editorial-media absolute inset-[4%_0_2%_4%]"
+                    className="undara-editorial-media planner-hero-media absolute inset-[4%_0_2%_4%]"
                     initial={reduced ? false : { opacity: 0, scale: 1.025, y: 14 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
@@ -325,16 +311,16 @@ export default function EventPlannerPage() {
 
                 <div className="relative z-10 flex flex-col gap-6 md:gap-8">
                   <div>
-                    <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/80">
+                    <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-medium uppercase tracking-[0.2em] text-primary/80">
                       {en ? "Service Direction" : "Pilihan Layanan"}
                     </p>
-                    <h2 className="mt-4 max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-[clamp(2.75rem,4.8vw,5.25rem)] font-bold leading-[1.02] tracking-[-0.035em] text-primary">
+                    <h2 className="mt-4 max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-[clamp(1.875rem,2.6vw,2.75rem)] font-normal leading-[1.02] tracking-[-0.035em] text-primary">
                       {en ? "What can you ask about?" : "Apa yang bisa kamu tanyakan?"}
                     </h2>
                   </div>
 
                   <div className="max-w-3xl">
-                    <p className="font-[family-name:var(--font-undara-heading)] text-xl font-bold leading-snug text-foreground md:text-2xl">
+                    <p className="font-undara-body text-base font-normal leading-7 text-muted-foreground md:text-lg">
                       {en
                         ? "Start with the service that feels closest to your event."
                         : "Mulai dari layanan yang paling mendekati kebutuhan acaramu."}
@@ -384,7 +370,7 @@ export default function EventPlannerPage() {
                         className="undara-editorial-surface flex min-h-[360px] w-[88%] shrink-0 flex-col gap-6 rounded-[20px] p-7 font-undara-body text-foreground sm:w-[540px] md:p-9"
                       >
                         <div>
-                          <h3 className="max-w-3xl font-undara-heading text-3xl font-bold leading-[1.08] text-primary">
+                          <h3 className="max-w-3xl font-undara-heading text-2xl font-normal md:text-3xl leading-[1.08] text-primary">
                             {en ? item.nameEn : item.name}
                           </h3>
                           <p className="mt-4 max-w-xl text-[15px] leading-7 opacity-80">
@@ -428,7 +414,7 @@ export default function EventPlannerPage() {
                   <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.2em] text-primary">
                     {en ? "Already using Undara?" : "Sudah pakai Undara?"}
                   </p>
-                  <h2 className="mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.04] tracking-[-0.025em] text-primary md:text-5xl">
+                  <h2 className="mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.04] tracking-[-0.025em] text-primary md:text-4xl">
                     {en ? "Digital invitations can stay separate." : "Undangan Digital tetap bisa dipakai terpisah."}
                   </h2>
                 </div>
@@ -439,7 +425,7 @@ export default function EventPlannerPage() {
                       ? "If you need RSVP and guest management, Undara Digital Invitations can be used independently from the Event Planner consultation."
                       : "Kalau kamu membutuhkan RSVP dan manajemen tamu, Undangan Digital Undara tetap bisa digunakan terpisah dari konsultasi Event Planner."}
                   </p>
-                  <Button asChild variant="outline" className="w-fit">
+                  <Button asChild variant="outline" className="w-fit rounded-xl">
                     <Link href="/d-invitation">
                       {en ? "Explore Digital Invitations" : "Lihat Undangan Digital"}
                       <ArrowRight className="h-4 w-4" />
@@ -473,7 +459,7 @@ export default function EventPlannerPage() {
                     <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.2em] text-primary">
                       {en ? "Start here" : "Mulai dari sini"}
                     </p>
-                    <h2 className="mt-3 max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.03] tracking-[-0.025em] text-primary md:text-6xl">
+                    <h2 className="mt-3 max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.03] tracking-[-0.025em] text-primary md:text-4xl">
                       {en ? "Send the event details you already have." : "Kirim detail acara yang sudah kamu punya."}
                     </h2>
                     <p className="mt-5 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
@@ -483,7 +469,7 @@ export default function EventPlannerPage() {
                     </p>
                   </div>
 
-                  <Button asChild size="lg" className="w-fit">
+                  <Button asChild size="lg" className="w-fit rounded-xl">
                     <a
                       href={consultationUrl(
                         en

@@ -11,7 +11,7 @@ export default function ServicesSection({ locale }: { locale: "id" | "en" }) {
           <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.2em] text-primary">
             {en ? "Before we connect you" : "Sebelum kami hubungkan"}
           </p>
-          <h2 className="mt-4 max-w-[19ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.04] tracking-[-0.025em] text-primary md:text-5xl">
+          <h2 className="mt-4 max-w-[19ch] font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.04] tracking-[-0.025em] text-primary md:text-4xl">
             {en ? "Four things are enough to get started." : "Empat hal sederhana sudah cukup untuk mulai."}
           </h2>
         </div>
@@ -31,14 +31,14 @@ export default function ServicesSection({ locale }: { locale: "id" | "en" }) {
           <article
             key={service.title}
             style={{ gridRow: index + 1 }}
-            className={`relative z-10 min-w-0 border border-primary/20 bg-background/25 p-6 backdrop-blur-[1px] sm:p-8 md:px-9 md:py-10 ${index % 2 ? "md:col-start-2" : "md:col-start-1"}`}
+            className={`relative z-10 min-w-0 rounded-[20px] border border-primary/20 bg-background/25 p-6 backdrop-blur-[1px] sm:p-8 md:px-9 md:py-10 ${index % 2 ? "md:col-start-2" : "md:col-start-1"}`}
           >
             <div className="flex items-center gap-4 font-[family-name:var(--font-undara-mono)] text-xs tracking-[0.2em] text-primary/70">
-              <span className="h-1.5 w-1.5 bg-primary" />
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               <span className="h-px flex-1 bg-primary/20" />
             </div>
 
-            <h3 className="mt-10 max-w-[17ch] font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-tight text-primary md:text-4xl">
+            <h3 className="mt-10 max-w-[17ch] font-[family-name:var(--font-undara-heading)] text-2xl font-normal leading-tight text-primary md:text-3xl">
               {en ? service.titleEn : service.title}
             </h3>
 
