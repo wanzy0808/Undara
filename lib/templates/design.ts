@@ -32,6 +32,14 @@ export const invitationPalettes = {
   confetti: { name: "Confetti Club", bg: "#fff6e5", surface: "#fffcf5", ink: "#222c51", accent: "#2445ae", soft: "#f77959" },
   tamanDoa: { name: "Taman Doa", bg: "#f7f1e4", surface: "#eef1e5", ink: "#284332", accent: "#315c45", soft: "#d9cfb4" },
   redThread: { name: "Red Thread", bg: "#7c242d", surface: "#fff3da", ink: "#fff3da", accent: "#d8af69", soft: "#b84f4a" },
+  serambiPagi: { name: "Serambi Pagi", bg: "#f5f0e5", surface: "#fcf8ee", ink: "#304637", accent: "#45603f", soft: "#d3c4a4" },
+  rumahSenja: { name: "Rumah Senja", bg: "#f3e6d6", surface: "#fff8ed", ink: "#563726", accent: "#874f37", soft: "#cfa680" },
+  langitSafari: { name: "Langit Safari", bg: "#f5efdf", surface: "#eef1e5", ink: "#36472f", accent: "#46623b", soft: "#d7b98f" },
+  purnamaBiru: { name: "Purnama Biru", bg: "#101f35", surface: "#f8efdf", ink: "#f8efdf", accent: "#d1b27f", soft: "#304765" },
+  giokAbadi: { name: "Giok Abadi", bg: "#e8ede4", surface: "#f9f5e8", ink: "#284438", accent: "#36594d", soft: "#b5c5a9" },
+  peonySilk: { name: "Peony Silk", bg: "#f2e3dc", surface: "#fff7ec", ink: "#643947", accent: "#8a4a60", soft: "#d8b2ba" },
+  imperialCrimson: { name: "Imperial Crimson", bg: "#4a0d15", surface: "#fff0d4", ink: "#fff0d4", accent: "#dfb873", soft: "#8e3036" },
+  porcelainBloom: { name: "Porcelain Bloom", bg: "#f5f2e8", surface: "#fffcf5", ink: "#203b63", accent: "#2a4e80", soft: "#b6c6d6" },
 } as const;
 
 export const invitationFonts = {

@@ -190,7 +190,12 @@ for (const category of ["SILVER_WEDDING", "GOLDEN_WEDDING", "BABY_SHOWER", "KHIT
   test(`${category} does not borrow Wedding/Birthday defaults or catalog cards`, () => {
     const expected = { SILVER_WEDDING: "silver-reverie", GOLDEN_WEDDING: "golden-keepsake", BABY_SHOWER: "little-cloud", KHITANAN: "taman-doa", SANGJIT: "red-thread", OTHER: "gathering" }[category];
     if (expected) {
-      assert.deepEqual(catalog.templatesForEvent(localCatalog, category).map((item) => item.key), [expected]);
+      const expectedThemes = category === "KHITANAN"
+        ? ["taman-doa", "serambi-pagi", "rumah-senja", "langit-safari", "purnama-biru"]
+        : category === "SANGJIT"
+          ? ["red-thread", "giok-abadi", "peony-silk", "imperial-crimson", "porcelain-bloom"]
+          : [expected];
+      assert.deepEqual(catalog.templatesForEvent(localCatalog, category).map((item) => item.key), expectedThemes);
       assert.equal(catalog.defaultInvitationTemplateForEvent(category).key, expected);
       assert.equal(eventInvitationDesignFromKey("", category, "").template, expected);
     } else {

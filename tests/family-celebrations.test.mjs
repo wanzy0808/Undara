@@ -40,7 +40,10 @@ for (const [key, category, paletteKey, couple] of cases) {
     assert.equal(buildEventTitle(category, "Aksa", "Mei"), couple ? "Sangjit Aksa & Mei" : "Khitanan Aksa");
     assert.deepEqual(theme.eventCategories, [category]);
     assert.equal(defaultInvitationTemplateForEvent(category), theme);
-    assert.deepEqual(templatesForEvent(invitationTemplates, category), [theme]);
+    const familyTemplates = templatesForEvent(invitationTemplates, category);
+    assert.equal(familyTemplates.length, 5);
+    assert.equal(familyTemplates[0], theme, "the existing default stays first");
+    assert.ok(familyTemplates.every((item) => item.eventCategories[0] === category));
     assert.equal(isInvitationTemplateCompatible(design, category), true);
     for (const row of eventCategoryOptions.filter((row) => row.key !== category)) {
       assert.equal(isInvitationTemplateCompatible(design, row.key), false);

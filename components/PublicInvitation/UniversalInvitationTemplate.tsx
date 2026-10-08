@@ -15,6 +15,8 @@ import "./pencil-reverie.css";
 import "./serein.css";
 import "./confetti-club.css";
 import "./occasion-themes.css";
+import "./family-stationery.css";
+import { familyArtDirection } from "@/lib/templates/family-art-directions";
 import { occasionPresentation, occasionSectionBackground } from "@/lib/templates/occasion-presentation";
 import "./botanical-ivory.css";
 import "./eternal-blossom.css";
@@ -73,6 +75,7 @@ const BotanicalIvoryGallery = dynamic(() => import("@/components/PublicInvitatio
 const BotanicalSectionArt = dynamic(() => import("@/components/PublicInvitation/BotanicalIvoryArtwork").then((module) => module.BotanicalSectionArt));
 const BotanicalIdentity = dynamic(() => import("@/components/PublicInvitation/BotanicalIvoryArtwork").then((module) => module.BotanicalIdentity));
 const FamilyCelebrationSectionArt = dynamic(() => import("@/components/PublicInvitation/FamilyCelebrationArtwork").then((module) => module.FamilyCelebrationSectionArt));
+const FamilyStationerySectionArt = dynamic(() => import("@/components/PublicInvitation/FamilyStationeryArtwork").then((module) => module.FamilyStationerySectionArt));
 const ModernMaroonSectionArt = dynamic(() => import("@/components/PublicInvitation/ModernMaroonArtwork"));
 const GardenLightSectionArt = dynamic(() => import("@/components/PublicInvitation/GardenLightArtwork").then((module) => module.GardenLightSectionArt));
 const GardenLightGallery = dynamic(() => import("@/components/PublicInvitation/GardenLightGallery"));
@@ -288,6 +291,7 @@ export default function UniversalInvitationTemplate({
   const layout = template.preset.layout;
   const usesPhotos = template.usesPhotos;
   const occasion = occasionPresentation(key);
+  const familyStationery = familyArtDirection(key);
   const isInkTheme = key === "midnight-romance" || key === "celestial-ink" || key === "golden-art-deco";
   const sections = sectionOverride ?? parseInvitationSections(activeDesignKey);
   const sectionStyles = useMemo(() => parseInvitationSectionStyles(activeDesignKey), [activeDesignKey]);
@@ -579,7 +583,7 @@ export default function UniversalInvitationTemplate({
       <section data-invitation-section={keyName} data-premium-timeline={sectionHasPremiumTimeline ? "true" : undefined} className={`relative overflow-hidden px-6 sm:px-9 ${occasion ? "ot-section" : confetti ? "cc-section" : zen ? "zen-section" : pencil ? "pr-section" : serein ? "serein-section" : botanical ? "bi-section" : blossom ? "eb-section" : garden ? "gl-section" : midnight ? "mr-section" : classic ? "cp-section" : golden ? "gd-section" : celestial ? "ci-section" : velvet ? "vh-section" : paper ? "pcb-section" : modern ? `mm-section mm-${keyName}` : "py-16"} ${occasion || confetti || left || pencil || serein || botanical || blossom || garden || midnight || classic || golden || paper || modern ? "text-left" : "text-center"}`}
         style={{ ...(confetti ? { "--cc-section-heading": readableInk(sectionStyle?.background || (index % 2 ? palette.surface : palette.bg), palette.accent) } as CSSProperties : {}), backgroundColor: backdrop, color, backgroundImage: zen ? "radial-gradient(circle at 10% 40%,rgba(112,100,81,.055),transparent 42%)" : undefined, ...invitationSectionStyleCss(sectionStyle) }}
       >
-        {occasion && (key === "taman-doa" || key === "red-thread" ? <FamilyCelebrationSectionArt theme={key} section={keyName} /> : key === "little-cloud" || key === "gathering" ? <CelebrationSectionArt theme={key} section={keyName} /> : <AnniversarySectionArt theme={key} section={keyName} />)}
+        {occasion && (familyStationery ? <FamilyStationerySectionArt theme={key} section={keyName} /> : key === "taman-doa" || key === "red-thread" ? <FamilyCelebrationSectionArt theme={key} section={keyName} /> : key === "little-cloud" || key === "gathering" ? <CelebrationSectionArt theme={key} section={keyName} /> : <AnniversarySectionArt theme={key} section={keyName} />)}
         {confetti && <ConfettiClubSectionArt section={keyName} />}
         {botanical && <BotanicalSectionArt section={keyName} />}
         {blossom && <BlossomSectionArt section={keyName} />}
@@ -630,7 +634,7 @@ export default function UniversalInvitationTemplate({
     <main
       ref={rootRef}
       data-studio-preview-root={editorPreview ? "true" : undefined}
-      className={`relative isolate ${nativeVisualScopeClass(activeDesignKey)} mx-auto min-h-[760px] w-full max-w-2xl ${editorPreview ? "overflow-visible" : "overflow-hidden"} border border-[var(--inv-soft)] text-[var(--inv-ink)] ${panel} ${occasion ? `occasion-invitation ${key}-invitation` : key === "confetti-club" ? "confetti-club-invitation" : key === "zen-atelier" ? "zen-invitation" : key === "pencil-reverie" ? "pr-invitation" : key === "serein" ? "serein-invitation" : key === "botanical-ivory" ? "botanical-invitation" : key === "eternal-blossom" ? "eternal-invitation" : key === "modern-maroon" ? "modern-maroon-invitation" : key === "garden-light" ? "garden-light-invitation" : key === "midnight-romance" ? "midnight-romance-invitation" : key === "classic-pearl" ? "classic-pearl-invitation" : key === "golden-art-deco" ? "golden-art-deco-invitation" : key === "celestial-ink" ? "celestial-ink-invitation" : key === "velvet-horizon" ? "velvet-horizon-invitation" : key === "paper-cut-botanical" ? "paper-cut-botanical-invitation" : ""}`}
+      className={`relative isolate ${nativeVisualScopeClass(activeDesignKey)} mx-auto min-h-[760px] w-full max-w-2xl ${editorPreview ? "overflow-visible" : "overflow-hidden"} border border-[var(--inv-soft)] text-[var(--inv-ink)] ${panel} ${occasion ? `occasion-invitation ${key}-invitation ${familyStationery ? "family-stationery-invitation" : ""}` : key === "confetti-club" ? "confetti-club-invitation" : key === "zen-atelier" ? "zen-invitation" : key === "pencil-reverie" ? "pr-invitation" : key === "serein" ? "serein-invitation" : key === "botanical-ivory" ? "botanical-invitation" : key === "eternal-blossom" ? "eternal-invitation" : key === "modern-maroon" ? "modern-maroon-invitation" : key === "garden-light" ? "garden-light-invitation" : key === "midnight-romance" ? "midnight-romance-invitation" : key === "classic-pearl" ? "classic-pearl-invitation" : key === "golden-art-deco" ? "golden-art-deco-invitation" : key === "celestial-ink" ? "celestial-ink-invitation" : key === "velvet-horizon" ? "velvet-horizon-invitation" : key === "paper-cut-botanical" ? "paper-cut-botanical-invitation" : ""}`}
       style={css}
     >
       <style>{nativeVisualStyleSheet(activeDesignKey)}</style>
@@ -708,7 +712,7 @@ export default function UniversalInvitationTemplate({
           ), 1)}
 
           {section("identity", occasion ? (
-            <div data-studio-native-object="object:identity:hosts-group" className={`ot-identity ${key === "taman-doa" ? "td-identity" : key === "red-thread" ? "rt-identity" : key === "silver-reverie" ? "sv-identity" : key === "little-cloud" ? "lc-identity" : key === "gathering" ? "gt-identity" : "gk-identity"}`}>
+            <div data-studio-native-object="object:identity:hosts-group" className={`ot-identity ${familyStationery ? "rf-identity" : key === "taman-doa" ? "td-identity" : key === "red-thread" ? "rt-identity" : key === "silver-reverie" ? "sv-identity" : key === "little-cloud" ? "lc-identity" : key === "gathering" ? "gt-identity" : "gk-identity"}`}>
               {media.cover && <div data-studio-native-object="object:identity:photo-frame" className="ot-identity-photo">
                 <div data-invitation-photo-slot="cover" className="relative h-full overflow-hidden">
                   <img src={media.cover} alt={tr("Foto") + " " + names} loading="lazy" decoding="async" style={photoCropStyle(media.assignment, "cover")} />

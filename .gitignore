@@ -53,3 +53,6 @@ next-env.d.ts
 # private/runtime media (customer uploads must never enter Git/web root)
 /.undara-data/
 /public/uploads/
+
+# Disposable public-gallery browser QA evidence
+/artifacts/template-browser/

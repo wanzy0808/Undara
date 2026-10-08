@@ -1,4 +1,5 @@
 import type { InvitationDesignerInvitation } from "@/components/InvitationStudio/designer-types";
+import { getInvitationTemplate } from "@/lib/templates/catalog";
 
 /**
  * Isolated gallery/master/QA fixture. Never read from or write to a customer's invitation.
@@ -100,8 +101,9 @@ export const sangjitTemplateDemoInvitation: InvitationDesignerInvitation = {
 
 export function getTemplateDemoInvitation(templateKey: string): InvitationDesignerInvitation {
   const key = templateKey.split("::")[0];
-  if (key === "taman-doa") return khitananTemplateDemoInvitation;
-  if (key === "red-thread") return sangjitTemplateDemoInvitation;
+  const category = getInvitationTemplate(key).eventCategories[0];
+  if (category === "KHITANAN") return khitananTemplateDemoInvitation;
+  if (category === "SANGJIT") return sangjitTemplateDemoInvitation;
   if (key === "little-cloud") return babyTemplateDemoInvitation;
   if (key === "gathering") return gatheringTemplateDemoInvitation;
   if (key === "silver-reverie") return silverTemplateDemoInvitation;
