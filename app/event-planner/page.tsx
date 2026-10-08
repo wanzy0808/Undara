@@ -8,6 +8,8 @@ import {
   ArrowDownRight,
   ChevronLeft,
   ChevronRight,
+  Pause,
+  Play,
   ArrowRight,
   Check,
   MessageCircle,
@@ -66,6 +68,8 @@ export default function EventPlannerPage() {
   const reduced = Boolean(useReducedMotion());
   const en = locale === "en";
   const serviceRail = useRef<HTMLDivElement>(null);
+  const servicePauseUntil = useRef(0);
+  const [servicesPlaying, setServicesPlaying] = useState(true);
   const [railEdges, setRailEdges] = useState({ start: true, end: false });
 
   useEffect(() => {
@@ -85,7 +89,54 @@ export default function EventPlannerPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const rail = serviceRail.current;
+    if (!rail || reduced || !servicesPlaying) return;
+    let frame = 0;
+    let previousTime = 0;
+    let direction = 1;
+    let hovered = window.matchMedia("(hover: hover)").matches && rail.matches(":hover");
+    let focused = rail.contains(document.activeElement);
+    const pauseInteraction = () => { servicePauseUntil.current = performance.now() + 4000; };
+    const enter = (event: PointerEvent) => { if (event.pointerType === "mouse") hovered = true; };
+    const leave = () => { hovered = false; };
+    const focus = () => { focused = true; };
+    const blur = (event: FocusEvent) => { focused = rail.contains(event.relatedTarget as Node | null); };
+    const animate = (time: number) => {
+      const elapsed = previousTime ? Math.min(time - previousTime, 40) : 0;
+      previousTime = time;
+      if (!document.hidden && !hovered && !focused && time >= servicePauseUntil.current) {
+        const max = rail.scrollWidth - rail.clientWidth;
+        if (max > 0) {
+          if (rail.scrollLeft >= max - 1) direction = -1;
+          else if (rail.scrollLeft <= 1) direction = 1;
+          rail.scrollLeft += direction * elapsed * 0.024;
+        }
+      }
+      frame = requestAnimationFrame(animate);
+    };
+    rail.addEventListener("pointerenter", enter);
+    rail.addEventListener("pointerleave", leave);
+    rail.addEventListener("pointerdown", pauseInteraction);
+    rail.addEventListener("wheel", pauseInteraction, { passive: true });
+    rail.addEventListener("keydown", pauseInteraction);
+    rail.addEventListener("focusin", focus);
+    rail.addEventListener("focusout", blur);
+    frame = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(frame);
+      rail.removeEventListener("pointerenter", enter);
+      rail.removeEventListener("pointerleave", leave);
+      rail.removeEventListener("pointerdown", pauseInteraction);
+      rail.removeEventListener("wheel", pauseInteraction);
+      rail.removeEventListener("keydown", pauseInteraction);
+      rail.removeEventListener("focusin", focus);
+      rail.removeEventListener("focusout", blur);
+    };
+  }, [reduced, servicesPlaying]);
+
   function moveServices(direction: number, keyboard = false) {
+    servicePauseUntil.current = performance.now() + 4000;
     const rail = serviceRail.current;
     if (!rail) return;
     const card = rail.querySelector<HTMLElement>("article");
@@ -265,6 +316,16 @@ export default function EventPlannerPage() {
                 </div>
 
                 <div className="relative z-10 mt-8 flex justify-end gap-3">
+                  {!reduced && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setServicesPlaying((playing) => !playing)}
+                      aria-controls="planner-service-rail"
+                    >
+                      {servicesPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      {servicesPlaying ? (en ? "Pause" : "Jeda") : (en ? "Play" : "Putar")}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="icon"
@@ -300,7 +361,7 @@ export default function EventPlannerPage() {
                       moveServices(event.key === "ArrowLeft" ? -1 : 1, true);
                     }
                   }}
-                  className="relative z-10 mt-5 flex snap-x snap-mandatory gap-6 overflow-x-auto overscroll-x-contain rounded-2xl pb-6 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                  className="relative z-10 mt-5 flex gap-6 overflow-x-auto overscroll-x-contain rounded-[24px] pb-6 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                 >
                   {plannerPackages.map((item) => {
                     const features = en ? item.featuresEn : item.features;
@@ -311,7 +372,7 @@ export default function EventPlannerPage() {
                         role="group"
                         aria-roledescription={en ? "slide" : "kartu"}
                         aria-label={en ? item.nameEn : item.name}
-                        className="flex w-[88%] max-w-[440px] shrink-0 snap-start flex-col gap-5 rounded-2xl border border-primary/25 bg-background p-6 sm:w-[440px] md:p-8"
+                        className="flex w-[88%] max-w-[440px] shrink-0 flex-col gap-5 rounded-[24px] border border-primary/25 bg-background p-6 sm:w-[440px] md:p-8"
                       >
                         <div>
                           <h3 className="max-w-3xl font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.08] text-primary">

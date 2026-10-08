@@ -1217,7 +1217,7 @@ Layanan konsultasi:
 - Acara Perusahaan;
 - Perayaan Lainnya.
 
-Bagian **Pilihan Layanan / Apa yang bisa kamu tanyakan?** memakai carousel horizontal bergaya business card, berurutan kiri ke kanan. Judul dan pengantar tetap di atas; setiap kartu memuat nama, ringkasan, poin kebutuhan dan CTA WhatsApp ke Undara. Pilihan mencakup Wedding Organizer, Wedding Planner, Silver / Golden Wedding, Baby Shower, Sangjit, Ulang Tahun, Khitanan, Acara Perusahaan dan Perayaan Lainnya. Mendukung swipe/native horizontal scroll, tombol sebelumnya/berikutnya dengan batas disabled dan keyboard. Tidak autoplay; reduced motion memakai perpindahan langsung. Ini jalur konsultasi, bukan janji paket/harga atau ketersediaan pasti.
+Bagian **Pilihan Layanan / Apa yang bisa kamu tanyakan?** memakai carousel horizontal bergaya business card, berurutan kiri ke kanan. Judul dan pengantar tetap di atas; setiap kartu memuat nama, ringkasan, poin kebutuhan dan CTA WhatsApp ke Undara. Pilihan mencakup Wedding Organizer, Wedding Planner, Silver / Golden Wedding, Baby Shower, Sangjit, Ulang Tahun, Khitanan, Acara Perusahaan dan Perayaan Lainnya. Mendukung swipe/native horizontal scroll, tombol sebelumnya/berikutnya dengan batas disabled dan keyboard. Scroll otomatis bergerak pelan bolak-balik pada batas rail; tersedia Jeda/Putar. Gerak berhenti saat hover/fokus, sementara sesudah interaksi manual, dan saat tab tersembunyi. Reduced motion menonaktifkan scroll otomatis dan memakai perpindahan langsung. Sudut kartu membulat 24px. Ini jalur konsultasi, bukan janji paket/harga atau ketersediaan pasti.
 
 CTA: **Konsultasi** ke WhatsApp `+62 821-2478-6516`.
 
@@ -3570,3 +3570,11 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Implementation:** Horizontal snap rail in `app/event-planner/page.tsx`, native touch scrolling, bounded arrow controls and keyboard navigation; reduced-motion handling and no autoplay. Expanded bilingual consultation data/FAQ in `data/services/event-planner.ts`; shared brand tokens and Undara WhatsApp handoff retained. No price/availability or execution claims added.
 
 **Commit / validation:** `feat(event-planner): add business card service carousel` (this implementation commit). Observed validation: 974/974 regression tests PASS via node --import tsx --test (the pnpm test launcher encountered a runtime IPC restriction); targeted Event Planner 4/4 PASS after final copy/layout adjustments; targeted ESLint, tsc --noEmit, pnpm build and git diff --check PASS. Browser visual/interaction QA and production deployment have not been observed. No database migration is required.
+
+### 2026-10-08 — Event Planner automatic scrolling and rounded cards
+
+**Owner request:** Add visible scrolling animation and soften the business card corners.
+
+**Implementation:** In `app/event-planner/page.tsx`, a time-based native horizontal scroll at 24px/second reverses at the ends without jumping. Hover/focus/manual interaction pause it; Jeda/Putar gives explicit control, hidden tabs do not move and reduced motion disables autoplay. Remove snap constraints that prevent incremental scrolling; preserve swipe/keyboard/arrows/Undara WhatsApp. Card corners use 24px.
+
+**Commit / validation:** `fix(event-planner): animate service scrolling and round cards` (this implementation commit). Targeted ESLint, Event Planner regressions 4/4, git diff --check and production build (including TypeScript) PASS. Browser QA was attempted but the runtime has no Chromium executable; actual visual/interaction verification and deployment remain unverified.
