@@ -292,8 +292,8 @@ Title predefined category dapat digenerate dari category + identity, misalnya:
 - `Silver Wedding Budi & Ani`;
 - `Ulang Tahun Olivia`;
 - `Baby Shower Keluarga Wijaya`;
-- `Khitanan Aksa`;
-- `Sangjit Leon & Mei`.
+- `Khitanan Una`;
+- `Sangjit Una & Dara`.
 
 Khitanan dan Sangjit mempunyai kategori/template terpisah, masing-masing lima tema READY: satu tema ilustratif existing dan empat tema tambahan dengan dunia fotografis, tekstur kertas/kain/porselen, serta komposisi amplop/sampul/isi yang berbeda. Gunakan field nama dan jadwal existing; tidak membuat model tamu, pipeline foto, RSVP, QR, atau pembayaran kedua. Foto customer opsional pada Identity/Gallery; nama, tanggal, dan seluruh teks tetap DOM hidup, tidak dibakar ke aset. Tema tetap lengkap dengan 15 kontrol Studio dan perlindungan mode contoh.
 
@@ -957,7 +957,7 @@ Penambahan template baru idealnya tidak menyentuh Prisma schema, core RSVP/Wishe
 
 ### 7.2.9 Standard template preview and QA data
 
-Undara harus memiliki standard demo/dummy invitation data yang reusable untuk preview dan QA template baru. Demo data tidak boleh bercampur dengan production customer data. Fixture dipilih sesuai kategori tema: tema pernikahan memakai Una & Dara, sedangkan Confetti Club memakai fixture birthday dengan satu nama melalui `getTemplateDemoInvitation`; fixture tidak mengubah data acara ketika pemilik memilih template.
+Undara harus memiliki standard demo/dummy invitation data yang reusable untuk preview dan QA template baru. Demo data tidak boleh bercampur dengan production customer data. **Nama contoh baku semua kategori pasangan adalah Una & Dara**: Wedding, Silver Wedding, Golden Wedding dan Sangjit, termasuk seluruh tema baru. Fixture tunggal `data/templates/preview-invitation.ts` dan `getTemplateDemoInvitation` mengatur nama, judul dan kategori untuk kartu katalog, popup contoh serta master Studio tanpa acara customer. Khitanan memakai satu nama **Una**; Birthday/Baby Shower memakai **Dara** tanpa nama kedua; Other boleh tanpa nama host. Jangan mengarang nama contoh berbeda per tema/kategori, dan samakan thumbnail fallback dengan fixture. Nama contoh tidak boleh menjadi fallback atau menimpa data customer/custom Studio, undangan tersimpan/publik/personal atau API acara. Aturan ini mengukuhkan keputusan Una & Dara pada 30 September dan dikonfirmasi ulang owner pada 8 Oktober 2026; wording lama Denny & Christine pada panduan template sudah tidak berlaku.
 
 Template baru minimal diuji terhadap variasi:
 - identity pendek dan panjang;
@@ -3505,3 +3505,11 @@ Shared `InvitationPreview`, `RomanticRoseTemplate.tsx` dan `UniversalInvitationT
 **Owner-upload continuation (8 October 2026):** Resume PR #76 after the owner uploaded original artwork. Merge source-upload commits `813bc77` / `355a359` without deleting or renaming files, retain the optimized theme-owned artwork already used by the catalog/Studio/public engine, and recover the unpushed name-contrast/font/pocket-band corrections from the preceding local commit `d812558`. The asset brief now maps all 16 source uploads to the actual theme derivatives and records the byte-identical `moodboardpoci` / `moodboardcard` duplicate; Giok Abadi keeps its original green tea scene. This is completion of the existing collection, not a redesign of unrelated pages or a claim that signed-in release QA has passed. Final validation and merge are observed against PR #76 before reporting completion.
 
 **Continuation validation / commit:** `fix(templates): finish photographic family collection` completes the outstanding correction and provenance audit. Fresh full local regression **957/957 PASS** (zero failures/skips), standalone TypeScript PASS, scoped ESLint for the scene/catalog/browser-QA script PASS (zero diagnostics), and `git diff --check` PASS. The previous browser run above is directly observed; production build and browser confirmation for the corrected PR head are validated in GitHub CI before merge, with final status in PR #76.
+
+### 2026-10-08 — Restore canonical Una & Dara sample identities
+
+**Owner correction / rationale:** The owner reconfirmed the 30 September rule: sample couple names must be Una & Dara. The Sangjit fixture had incorrectly introduced Leon & Mei, the Khitanan sample had introduced Aksa, and `template.md` still contained superseded Denny & Christine wording. The existing catalog-name regression only searched the wedding fixture source, so it did not catch category overrides.
+
+**Implementation / affected files:** `data/templates/preview-invitation.ts` now inherits Una/Dara from the existing common fixture for Sangjit and Una for the single-child Khitanan example. `public/templates/{taman-doa,red-thread}/preview.svg` matches those names. PRD §7.2.9, `template.md` §4 and the reusable `AGENTS.md` guard are aligned: couple categories use Una & Dara; Khitanan uses Una; Birthday/Baby Shower retain Dara; Other may omit a host. This only changes isolated catalog/master examples and fallback thumbnails; real customer identity/data/API behavior is unchanged. No schema, layout, palette, typography, motion or media-pipeline change.
+
+**Regression / validation / commit:** Strengthened the existing `tests/template-card-cover.test.mjs` identity test to resolve all 29 catalog fixtures, verify couple/single identity and titles, and reject old names in SVG fallback thumbnails. Relevant catalog/family/occasion/event-handler suites **146/146 PASS** (zero failures/skips); standalone TypeScript, scoped source/test ESLint (zero diagnostics) and `git diff --check` PASS. Commit: `fix(templates): restore canonical sample names`. Full GitHub regression/build and the existing 32-view public-gallery browser confirmation are observed before merge; these preview checks do not claim signed-in customer or production deployment QA.
