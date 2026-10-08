@@ -65,7 +65,7 @@ export default function EventPlannerPage() {
   const reduced = Boolean(useReducedMotion());
   const en = locale === "en";
   const serviceRail = useRef<HTMLDivElement>(null);
-  const serviceMotion = useRef({ position: 0, cycle: 0, pauseUntil: 0, suppressClickUntil: 0 });
+  const serviceMotion = useRef({ position: 0, cycle: 0, pauseUntil: 0, suppressClickUntil: 0, renderedScroll: 0, pendingWheel: 0 });
   const serviceDrag = useRef<{ id: number; startX: number; lastX: number; moved: boolean } | null>(null);
   const servicesInView = useInView(serviceRail, { root: scrollRoot, amount: 0.15 });
 
@@ -83,6 +83,7 @@ export default function EventPlannerPage() {
     if (!rail) return;
     serviceMotion.current.position = loopPosition(position);
     rail.scrollLeft = serviceMotion.current.position;
+    serviceMotion.current.renderedScroll = rail.scrollLeft;
   }, [loopPosition]);
 
   useEffect(() => {
@@ -106,13 +107,21 @@ export default function EventPlannerPage() {
       const unit = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? rail.clientWidth : 1;
       event.preventDefault();
       pauseServices();
-      writeServicePosition(rail.scrollLeft + delta * unit * 2.4);
+      if (reduced) writeServicePosition(serviceMotion.current.position + delta * unit * 2.4);
+      else {
+        const state = serviceMotion.current;
+        // Reversing the wheel responds immediately instead of fighting old momentum.
+        if (Math.sign(delta) !== Math.sign(state.pendingWheel)) state.pendingWheel = 0;
+        state.pendingWheel += delta * unit * 2.4;
+      }
     };
     const scroll = () => {
       const wrapped = loopPosition(rail.scrollLeft);
       if (Math.abs(wrapped - rail.scrollLeft) > 1) writeServicePosition(wrapped);
-      else if (!serviceDrag.current && performance.now() < serviceMotion.current.pauseUntil) {
-        serviceMotion.current.position = rail.scrollLeft;
+      else if (Math.abs(rail.scrollLeft - serviceMotion.current.renderedScroll) > 1) {
+        // Native touch/keyboard scrolling owns its position; discard only its old remainder.
+        serviceMotion.current.pendingWheel = 0;
+        writeServicePosition(rail.scrollLeft);
       }
     };
     measure();
@@ -132,16 +141,26 @@ export default function EventPlannerPage() {
     if (!rail || !serviceMotion.current.cycle) return;
     const state = serviceMotion.current;
     const keyboardFocus = rail.matches(":focus-visible") || rail.querySelector(":focus-visible");
-    if (reduced || !servicesInView || document.hidden || keyboardFocus || serviceDrag.current || performance.now() < state.pauseUntil) {
-      state.position = rail.scrollLeft;
+    if (reduced || !servicesInView || document.hidden || serviceDrag.current) return;
+    const elapsed = Math.min(delta, 40);
+    if (Math.abs(state.pendingWheel) > 0.1) {
+      const movement = state.pendingWheel * (1 - Math.exp(-elapsed / 110));
+      state.pendingWheel -= movement;
+      writeServicePosition(state.position + movement);
       return;
     }
-    // Fractional progress survives DOM rounding; wrap into the identical middle copy.
-    writeServicePosition(state.position + Math.min(delta, 40) * 0.04);
+    if (state.pendingWheel) {
+      writeServicePosition(state.position + state.pendingWheel);
+      state.pendingWheel = 0;
+    }
+    if (keyboardFocus || performance.now() < state.pauseUntil) return;
+    // Preserve the existing 40px/s autoplay; smoothing applies only to wheel input.
+    writeServicePosition(state.position + elapsed * 0.04);
   });
 
   function startServiceDrag(event: ReactPointerEvent<HTMLDivElement>) {
     pauseServices();
+    serviceMotion.current.pendingWheel = 0;
     if (event.pointerType !== "mouse" || event.button !== 0) return;
     serviceDrag.current = { id: event.pointerId, startX: event.clientX, lastX: event.clientX, moved: false };
   }
@@ -168,6 +187,7 @@ export default function EventPlannerPage() {
 
   function moveServices(direction: number) {
     pauseServices();
+    serviceMotion.current.pendingWheel = 0;
     const rail = serviceRail.current;
     const card = rail?.querySelector<HTMLElement>("article");
     if (!rail || !card) return;
