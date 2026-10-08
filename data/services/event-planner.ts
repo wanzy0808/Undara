@@ -4,21 +4,11 @@ export const plannerPackages = [
     name: "Wedding Organizer",
     nameEn: "Wedding Organizer",
     description:
-      "Untuk pasangan yang sebagian besar persiapannya sudah berjalan dan membutuhkan bantuan koordinasi menjelang serta pada hari acara.",
+      "Persiapan sudah berjalan? Bahas koordinasi keluarga, penyedia jasa, dan jalannya hari pernikahan.",
     descriptionEn:
-      "For couples whose preparation is mostly underway and who need coordination support leading up to and during the event day.",
-    features: [
-      "Finalisasi susunan acara dan rapat teknis",
-      "Koordinasi penyedia jasa, lokasi, keluarga, dan penanggung jawab",
-      "Kebutuhan tim operasional hari acara",
-      "Alur tamu, petunjuk acara, dan rencana cadangan",
-    ],
-    featuresEn: [
-      "Final rundown & technical meeting",
-      "Vendor, venue, family & PIC coordination",
-      "Event-day operational team needs",
-      "Guest flow, event cues & contingency plan",
-    ],
+      "Already preparing your wedding? Discuss family, vendor, and event-day coordination.",
+    features: ["Susunan acara dan rapat teknis", "Koordinasi keluarga dan penyedia jasa", "Alur tamu, tim acara, dan rencana cadangan"],
+    featuresEn: ["Rundown and technical meeting", "Family and vendor coordination", "Guest flow, event team, and contingency plan"],
     waMessage: "Halo, aku ingin tanya mengenai kebutuhan Wedding Organizer.",
     waMessageEn: "Hi, I would like to ask about Wedding Organizer support.",
   },
@@ -27,21 +17,11 @@ export const plannerPackages = [
     name: "Wedding Planner",
     nameEn: "Wedding Planner",
     description:
-      "Untuk pasangan yang ingin pendampingan lebih awal, mulai dari konsep, anggaran, penyedia jasa, jadwal, sampai persiapan hari acara.",
+      "Rencanakan pernikahan dari awal: konsep, prioritas anggaran, penyedia jasa, hingga hari acara.",
     descriptionEn:
-      "For couples who want support from an earlier stage, covering concept, budget, vendors, timeline, and event-day preparation.",
-    features: [
-      "Konsep dan prioritas anggaran",
-      "Pilihan serta koordinasi penyedia jasa",
-      "Jadwal utama dan rapat perkembangan",
-      "Persiapan eksekusi hari acara",
-    ],
-    featuresEn: [
-      "Concept & budget priorities",
-      "Vendor shortlist & coordination",
-      "Master timeline & progress meetings",
-      "Event-day execution preparation",
-    ],
+      "Plan your wedding from the start: concept, budget priorities, vendors, and event-day preparation.",
+    features: ["Konsep dan prioritas anggaran", "Pemilihan serta koordinasi penyedia jasa", "Jadwal persiapan dan pelaksanaan"],
+    featuresEn: ["Concept and budget priorities", "Vendor selection and coordination", "Preparation and execution timeline"],
     waMessage: "Halo, aku ingin tanya mengenai kebutuhan Wedding Planner.",
     waMessageEn: "Hi, I would like to ask about Wedding Planner support.",
   },
@@ -50,21 +30,11 @@ export const plannerPackages = [
     name: "Silver / Golden Wedding",
     nameEn: "Silver / Golden Wedding",
     description:
-      "Untuk perayaan ulang tahun pernikahan ke-25 atau ke-50 yang membutuhkan konsep, koordinasi keluarga, penyedia jasa, dan susunan acara yang lebih terarah.",
+      "Rayakan 25 atau 50 tahun kebersamaan lewat momen hangat yang menyatukan cerita dan keluarga.",
     descriptionEn:
-      "For 25th or 50th anniversary celebrations that need support with concept, family coordination, vendors, and event flow.",
-    features: [
-      "Konsep hari jadi dan cerita keluarga",
-      "Momen pembaruan janji dan alur prosesi",
-      "Dekorasi, hiburan, dan penyedia jasa",
-      "Alur tamu lintas generasi",
-    ],
-    featuresEn: [
-      "Anniversary concept & family story",
-      "Renewal moment / ceremony flow",
-      "Decor, entertainment & vendors",
-      "Guest flow across generations",
-    ],
+      "Celebrate 25 or 50 years together with a warm gathering of family and shared stories.",
+    features: ["Konsep hari jadi dan cerita keluarga", "Prosesi serta koordinasi keluarga", "Dekorasi, hiburan, dan alur tamu"],
+    featuresEn: ["Anniversary concept and family story", "Ceremony and family coordination", "Decor, entertainment, and guest flow"],
     waMessage: "Halo, aku ingin tanya mengenai kebutuhan Silver / Golden Wedding.",
     waMessageEn: "Hi, I would like to ask about Silver / Golden Wedding support.",
   },
@@ -76,18 +46,8 @@ export const plannerPackages = [
       "Menyambut calon buah hati lewat perayaan hangat bersama keluarga dan sahabat, dengan tema dan aktivitas yang sesuai.",
     descriptionEn:
       "For baby showers that need support with theme, activities, vendors, catering, and event-day requirements.",
-    features: [
-      "Konsep tema dan penataan",
-      "Susunan acara, permainan, dan aktivitas",
-      "Penyedia jasa, dekorasi, dan konsumsi",
-      "Dokumentasi & kebutuhan hari acara",
-    ],
-    featuresEn: [
-      "Theme concept & styling",
-      "Rundown, games & activities",
-      "Vendors, decor & catering",
-      "Documentation & event-day needs",
-    ],
+    features: ["Tema dan penataan tempat", "Permainan serta susunan acara", "Konsumsi, penyedia jasa, dan dokumentasi"],
+    featuresEn: ["Theme and venue styling", "Games and event flow", "Catering, vendors, and photography"],
     waMessage: "Halo, aku ingin tanya mengenai kebutuhan Baby Shower.",
     waMessageEn: "Hi, I would like to ask about Baby Shower support.",
   },
@@ -132,7 +92,7 @@ export const plannerPackages = [
     descriptionEn: "Gatherings, product launches, or milestone celebrations. Start with the event's purpose and the impression you want guests to take home.",
     features: ["Konsep dan susunan acara", "Kebutuhan panggung, audio, dan visual", "Registrasi tamu dan koordinasi penyedia jasa"],
     featuresEn: ["Event concept and rundown", "Stage, audio, and visual requirements", "Guest registration and vendor coordination"],
-    waMessage: "Halo Undara, aku ingin konsultasi untuk acara Acara Perusahaan.",
+    waMessage: "Halo Undara, aku ingin konsultasi untuk acara perusahaan.",
     waMessageEn: "Hi Undara, I would like to discuss Corporate Events planning.",
   },
   {
