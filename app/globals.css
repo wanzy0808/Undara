@@ -275,6 +275,10 @@
 /* The frame remains legible while ambience continues through its light surface.
    Only the inner scrollport clips content; decoration lives behind the frame. */
 .undara-marketing-frame {
+  --font-undara-sans: var(--font-undara-body), Arial, sans-serif;
+  --font-undara-serif: var(--font-undara-display), Georgia, serif;
+  --font-undara-heading: var(--font-undara-display), Georgia, serif;
+  --font-undara-mono: var(--font-undara-technical), ui-monospace, monospace;
   position: relative;
   z-index: 10;
   display: flex;
@@ -296,6 +300,7 @@
   background: transparent;
 }
 .undara-marketing-scroll {
+  font-family: var(--font-undara-body), Arial, sans-serif;
   min-width: 0;
   min-height: 0;
   flex: 1 1 0;
@@ -449,6 +454,7 @@ aside nav > p { font-family: var(--font-undara-heading); }
    Shared rhythm only: each service keeps its own art direction and content.
    -------------------------------------------------------------------------- */
 .undara-marketing-content {
+  font-family: var(--font-undara-body), Arial, sans-serif;
   width: 100%;
   max-width: 1560px;
   margin-inline: auto;
@@ -460,32 +466,54 @@ aside nav > p { font-family: var(--font-undara-heading); }
   border-color: color-mix(in srgb, var(--primary) 24%, transparent);
 }
 .undara-marketing-kicker {
-  font-family: var(--font-undara-mono);
-  font-size: 0.625rem;
-  line-height: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  font-family: var(--font-undara-body), Arial, sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: normal;
   color: var(--primary);
 }
 .undara-marketing-display {
   max-width: 19ch;
   font-family: var(--font-undara-heading);
-  font-size: clamp(2.65rem, 5.5vw, 6rem);
-  font-weight: 700;
-  line-height: 0.98;
+  font-size: clamp(2.25rem, 3.6vw, 3.75rem);
+  font-weight: 400;
+  line-height: 1.12;
   letter-spacing: -0.035em;
   color: var(--primary);
 }
 
-/* Marketing headings should scan decisively across all framed public pages.
-   Kicker/body copy remain lighter so section hierarchy is immediately obvious. */
-.undara-marketing-section h2 {
-  font-weight: 700;
+/* Explicit roles keep template previews and the protected wordmark isolated. */
+.undara-marketing-title,
+.undara-marketing-heading,
+.undara-marketing-subheading {
+  font-family: var(--font-undara-heading), Georgia, serif;
+  font-weight: 400;
+  font-synthesis: none;
+  text-wrap: pretty;
   letter-spacing: -0.025em;
 }
-.undara-marketing-section h3 {
-  font-weight: 700;
+.undara-marketing-title {
+  font-size: clamp(2.25rem, 3.6vw, 3.75rem);
+  line-height: 1.12;
+}
+.undara-marketing-heading {
+  font-size: clamp(1.875rem, 2.6vw, 2.75rem);
+  line-height: 1.15;
+}
+.undara-marketing-subheading {
+  font-size: clamp(1.5rem, 2vw, 1.875rem);
+  line-height: 1.2;
+}
+.undara-marketing-meta {
+  font-family: var(--font-undara-body), Arial, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: normal;
+}
+.undara-marketing-frame main .undara-app-button {
+  border-radius: 12px;
 }
 .undara-marketing-copy {
   max-width: 42rem;
@@ -495,6 +523,7 @@ aside nav > p { font-family: var(--font-undara-heading); }
   color: var(--muted-foreground);
 }
 .undara-editorial-surface {
+  border-radius: 20px;
   border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
   background: color-mix(in srgb, var(--background) 30%, transparent);
   box-shadow: 0 28px 90px rgb(58 32 32 / 8%);
@@ -503,15 +532,15 @@ aside nav > p { font-family: var(--font-undara-heading); }
 .undara-editorial-media {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
-  border-radius: 48px 8px 48px 8px;
+  border-radius: 20px;
   background: var(--card);
   box-shadow: 0 30px 90px rgb(58 32 32 / 12%);
 }
 .undara-editorial-index {
-  font-family: var(--font-undara-mono);
-  font-size: 0.625rem;
-  line-height: 1rem;
-  letter-spacing: 0.16em;
+  font-family: var(--font-undara-body);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  letter-spacing: normal;
   color: color-mix(in srgb, var(--primary) 70%, transparent);
 }
 
@@ -1693,5 +1722,52 @@ body:has(.undara-dashboard--redesign) {
 @media (prefers-reduced-motion: reduce) {
   .undara-dashboard.undara-dashboard--redesign .undara-dashboard-scroll {
     scroll-behavior: auto;
+  }
+}
+
+/* Small hover feedback only on a mouse; no decorative movement on touch. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .undara-marketing-hover-icon {
+    transition: transform 180ms ease;
+  }
+  .group:hover .undara-marketing-hover-icon {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes undaraMarketingDetailIn {
+  from { opacity: 0.65; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.undara-marketing-detail-in {
+  animation: undaraMarketingDetailIn 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .undara-marketing-detail-in { animation: none; }
+}
+
+/* Side copy needs its own reading space before the very-wide gallery layout fits. */
+@media (min-width: 1024px) and (max-width: 2199px) {
+  .undara-template-intro {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 42rem;
+    margin-bottom: 2rem;
+    transform: none;
+    translate: none;
+  }
+  .undara-template-intro h1 { max-width: 22ch; }
+  .undara-template-outro {
+    position: relative;
+    inset: auto;
+    width: auto;
+    max-width: 34rem;
+    margin-top: 3rem;
+    margin-left: auto;
+    transform: none;
+    translate: none;
   }
 }

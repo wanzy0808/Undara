@@ -53,13 +53,13 @@ export default function PrivacyPolicyPage() {
             <header className="undara-marketing-section grid min-h-[min(52dvh,560px)] items-end gap-10 pb-14 lg:grid-cols-[1.06fr_0.94fr] lg:gap-20">
               <div>
                 <p className="undara-marketing-kicker">{en ? "Legal / Privacy" : "Legal / Privasi"}</p>
-                <h1 className="mt-5 max-w-[13ch] font-[family-name:var(--font-undara-heading)] text-[clamp(3.2rem,6vw,6.5rem)] leading-[0.96] tracking-[-0.035em] text-primary">
+                <h1 className="undara-marketing-title mt-5 max-w-[13ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.035em] text-primary">
                   {content.title}
                 </h1>
               </div>
 
               <div className="max-w-xl border-l border-primary/30 py-5 pl-7 md:pl-12">
-                <p className="text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                <p className="text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                   {en
                     ? "How Undara handles personal information and technical data when you use the website and its services."
                     : "Penjelasan mengenai cara Undara memproses informasi pribadi dan data teknis saat kamu menggunakan website serta layanannya."}
@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
                     key={index}
                     className={`py-8 md:py-10 ${index % 2 ? "lg:pl-[6%]" : "lg:pr-[4%]"}`}
                   >
-                    <p className="max-w-4xl font-[family-name:var(--font-undara-body)] text-sm leading-8 text-foreground/82 md:text-base md:leading-8">
+                    <p className="max-w-4xl font-[family-name:var(--font-undara-body)] text-base leading-8 text-foreground/82 md:text-base md:leading-8">
                       {paragraph}
                     </p>
                   </div>

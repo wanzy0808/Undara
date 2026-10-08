@@ -64,17 +64,17 @@ export default function FeatureSection() {
 
   return (
     <section id="fitur" className="undara-marketing-section scroll-mt-24 py-14 md:py-20">
-      <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
-        <div className="lg:sticky lg:top-8 lg:self-start">
+      <div className="space-y-10 md:space-y-14">
+        <div className="max-w-3xl">
           <p className="undara-marketing-kicker">
             {en ? "A complete invitation flow" : "Alur Undangan yang Utuh"}
           </p>
-          <h2 className="mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.02] text-primary md:text-5xl lg:text-6xl">
+          <h2 className="undara-marketing-heading mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-primary">
             {en
               ? "Beautiful first. Useful all the way through."
               : "Cantik saat dibuka. Berguna sampai acara berjalan."}
           </h2>
-          <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+          <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {en
               ? "Undara connects the visual invitation with the practical event flow without making the experience feel like an admin dashboard."
               : "Undara menghubungkan pengalaman visual undangan dengan kebutuhan acara yang praktis, tanpa membuat tamu maupun pemilik acara merasa sedang membuka dashboard admin."}
@@ -82,25 +82,22 @@ export default function FeatureSection() {
         </div>
 
         <div>
-          {features.map(({ icon: Icon, title, description, note }, index) => (
+          {features.map(({ icon: Icon, title, description }, index) => (
             <article
               key={title}
-              className={`group grid gap-6 py-8 md:grid-cols-[84px_minmax(0,1fr)] md:gap-9 md:py-10 lg:py-12 ${index % 2 ? "lg:pl-[7%]" : "lg:pr-[5%]"}`}
+              className={`group flex max-w-4xl gap-5 py-8 md:gap-8 md:py-10 ${index % 2 ? "lg:ml-auto" : "lg:mr-auto"}`}
             >
-              <div className="flex items-start md:block">
-                <span className="grid h-11 w-11 place-items-center border border-primary/35 text-primary transition-transform duration-300 group-hover:-translate-y-1">
+              <div className="flex shrink-0 items-start">
+                <span className="grid h-11 w-11 place-items-center rounded-[16px] border border-primary/35 text-primary undara-marketing-hover-icon">
                   <Icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
                 </span>
               </div>
 
               <div>
-                <p className="font-[family-name:var(--font-undara-mono)] text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
-                  {note}
-                </p>
-                <h3 className="mt-4 max-w-[21ch] font-[family-name:var(--font-undara-heading)] text-2xl font-bold leading-[1.08] text-primary md:text-3xl lg:text-4xl">
+                <h3 className="undara-marketing-subheading mt-4 max-w-[21ch] font-[family-name:var(--font-undara-heading)] text-primary">
                   {title}
                 </h3>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                   {description}
                 </p>
               </div>

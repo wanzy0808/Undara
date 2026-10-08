@@ -9,16 +9,16 @@ export default function SectionHeading({
   eyebrow,
   title,
   description,
-  align = "center",
+  align = "left",
 }: SectionHeadingProps) {
   const centered = align === "center";
 
   return (
     <div className={`${centered ? "mx-auto text-center" : "text-left"} max-w-3xl space-y-3`}>
-      <p className="text-xs font-mono font-semibold uppercase tracking-[0.24em] text-[var(--primary)]">
-        [ {eyebrow} ]
+      <p className="undara-marketing-meta text-[var(--primary)]">
+        {eyebrow}
       </p>
-      <h2 className="font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.04] tracking-[-0.025em] md:text-4xl lg:text-5xl">
+      <h2 className="undara-marketing-heading font-[family-name:var(--font-undara-heading)] tracking-[-0.025em]">
         {title}
       </h2>
       {description ? (

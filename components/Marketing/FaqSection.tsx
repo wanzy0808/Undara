@@ -32,7 +32,7 @@ export default function FaqSection({
         eyebrow={eyebrow}
         title={title}
         description={description}
-        align={editorial ? "left" : "center"}
+        align="left"
       />
       <div className={editorial ? "space-y-3" : "space-y-4"}>
         {items.map((item, index) => {
@@ -57,7 +57,7 @@ export default function FaqSection({
                     : `h-auto min-h-11 w-full min-w-0 justify-between border-0 px-5 py-4 text-left text-sm md:px-6 md:text-base ${isOpen ? "rounded-t-[28px] rounded-b-none md:rounded-t-[32px]" : "rounded-[28px] md:rounded-[32px]"}`
                 }
               >
-                <span className="font-[family-name:var(--font-undara-heading)] font-semibold">
+                <span className="min-w-0 flex-1 whitespace-normal break-words pr-4 font-undara-body font-medium">
                   {item.question}
                 </span>
                 <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />

@@ -118,10 +118,10 @@ export default function FeatureSection() {
       <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
         <div>
           <p className="undara-marketing-kicker">{en ? "Guest Arrival System" : "Sistem Kedatangan Tamu"}</p>
-          <h2 className="mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.03] tracking-[-0.025em] text-primary md:text-5xl lg:text-6xl">
+          <h2 className="undara-marketing-heading mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
             {en ? "One reception flow. Less room for confusion." : "Satu alur penerimaan. Lebih sedikit ruang untuk bingung."}
           </h2>
-          <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+          <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {en
               ? "Digital Guestbook is designed around what the reception team actually needs on the event day: verify, check in, seat, and monitor."
               : "Buku Tamu Digital dirancang untuk tim penerima tamu saat hari acara: verifikasi, catat kedatangan, arahkan ke meja, dan pantau kehadiran."}
@@ -134,7 +134,7 @@ export default function FeatureSection() {
                 type="button"
                 onClick={() => setActive(index)}
                 aria-pressed={active === index}
-                className={`group flex w-full items-center gap-4 py-5 text-left transition-colors duration-200 ${active === index ? "text-primary" : "text-foreground/65 hover:text-primary"}`}
+                className={`group flex w-full items-center gap-4 rounded-[16px] px-3 py-5 text-left transition-colors duration-200 ${active === index ? "text-primary" : "text-foreground/65 hover:text-primary"}`}
               >
                 <span className="flex-1 font-[family-name:var(--font-undara-heading)] text-xl leading-tight md:text-2xl">
                   {feature.title}
@@ -151,18 +151,18 @@ export default function FeatureSection() {
               aria-hidden="true"
               className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(112,59,59,0.12),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(214,179,140,0.10),transparent_70%)]"
             />
-            <div className="relative z-10">
+            <div key={selected.title} className="undara-marketing-detail-in relative z-10">
               <div className="flex items-center justify-between gap-5">
                 <span className="undara-marketing-kicker">{selected.badge}</span>
                 <selected.icon className="h-6 w-6 text-primary" strokeWidth={1.5} aria-hidden="true" />
               </div>
-              <h3 className="mt-8 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-3xl font-bold leading-[1.05] text-primary md:text-5xl">
+              <h3 className="undara-marketing-subheading mt-8 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-primary">
                 {selected.title}
               </h3>
-              <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+              <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                 {selected.description}
               </p>
-              <ul className="mt-9 grid gap-3 pt-6 sm:grid-cols-3">
+              <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-3 pt-6">
                 {selected.highlights.map((item) => (
                   <li key={item} className="border-l border-primary/25 pl-4 text-sm leading-6 text-foreground/80">
                     {item}

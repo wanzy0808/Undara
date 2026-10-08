@@ -57,18 +57,18 @@ export default function HeroSection({ ready }: { ready: boolean }) {
     <section className="undara-marketing-section relative mx-auto grid min-h-[calc(100dvh-170px)] w-full min-w-0 items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.06fr)_minmax(420px,0.94fr)] lg:gap-14 lg:pb-16">
       <div className="undara-invitation-hero-copy relative z-10 min-w-0 w-full max-w-none py-8 lg:py-12">
         <PuzzleAssemble ready={ready} direction="top" delay={0.04}>
-          <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.28em] text-primary">
+          <p className="undara-marketing-meta text-primary">
             {copy.eyebrow}
           </p>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="left" delay={0.12}>
-          <h1 className="mt-5 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-[clamp(3.2rem,6vw,6.8rem)] font-normal leading-[0.94] tracking-[-0.04em] text-primary">
+          <h1 className="undara-marketing-title mt-5 max-w-[22ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.04em] text-primary">
             {copy.title}
             <span className="mt-2 block text-foreground">{copy.accent}</span>
           </h1>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="right" delay={0.22}>
-          <p className="mt-7 max-w-2xl font-[family-name:var(--font-undara-body)] text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+          <p className="mt-7 max-w-2xl font-[family-name:var(--font-undara-body)] text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {copy.description}
           </p>
         </PuzzleAssemble>
@@ -83,7 +83,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           </div>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="left" delay={0.38}>
-          <div className="mt-10 flex max-w-3xl flex-wrap gap-x-7 gap-y-3 pt-5 font-[family-name:var(--font-undara-mono)] text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="mt-10 flex max-w-3xl flex-wrap gap-x-7 gap-y-3 pt-5 undara-marketing-meta text-muted-foreground">
             {copy.tags.map((tag) => (
               <span key={tag}>{tag}</span>
             ))}

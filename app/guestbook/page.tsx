@@ -44,23 +44,23 @@ export default function GuestbookPage() {
             ready
             locale={locale}
           >
-            <ScrollReveal scrollRoot={scrollRoot}>
+            <ScrollReveal scrollRoot={scrollRoot} lift>
               <HeroSection />
             </ScrollReveal>
 
-            <ScrollReveal scrollRoot={scrollRoot}>
+            <ScrollReveal scrollRoot={scrollRoot} lift>
               <div className="undara-editorial-offset-left">
                 <FeatureSection />
               </div>
             </ScrollReveal>
 
-            <ScrollReveal scrollRoot={scrollRoot}>
+            <ScrollReveal scrollRoot={scrollRoot} lift>
               <div className="undara-editorial-offset-right">
                 <ProcessSection />
               </div>
             </ScrollReveal>
 
-            <ScrollReveal scrollRoot={scrollRoot}>
+            <ScrollReveal scrollRoot={scrollRoot} lift>
               <div className="undara-editorial-offset-left">
               <PackageShowcase
                 eyebrow={en ? "Digital Guestbook" : "Buku Tamu Digital"}
@@ -86,15 +86,15 @@ export default function GuestbookPage() {
               </div>
             </ScrollReveal>
 
-            <ScrollReveal scrollRoot={scrollRoot}>
+            <ScrollReveal scrollRoot={scrollRoot} lift>
               <section className="undara-marketing-section undara-editorial-offset-right grid gap-8 pb-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16">
                 <div>
                   <p className="undara-marketing-kicker">{en ? "One event, one source" : "Satu Acara, Satu Sumber Data"}</p>
-                  <h2 className="mt-4 max-w-[17ch] font-[family-name:var(--font-undara-heading)] text-4xl font-bold leading-[1.04] tracking-[-0.025em] text-primary md:text-5xl lg:text-6xl">
+                  <h2 className="undara-marketing-heading mt-4 max-w-[17ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                     {en ? "One guest list for the whole reception team." : "Satu daftar tamu untuk seluruh tim penerima."}
                   </h2>
                 </div>
-                <p className="max-w-2xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                   {en
                     ? "The usher verifies arrivals and scans valid QR codes while the event team follows attendance and seating from the same event-scoped data."
                     : "Petugas penerima tamu memverifikasi kedatangan dan memindai QR yang valid, sementara tim acara memantau kehadiran dan meja dari data acara yang sama."}
@@ -102,7 +102,7 @@ export default function GuestbookPage() {
               </section>
             </ScrollReveal>
 
-            <ScrollReveal scrollRoot={scrollRoot}>
+            <ScrollReveal scrollRoot={scrollRoot} lift>
               <div className="undara-editorial-offset-left">
               <FaqSection
                 eyebrow={en ? "Before event day" : "Sebelum Hari Acara"}

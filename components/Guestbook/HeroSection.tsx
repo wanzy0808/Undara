@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowDownRight, ArrowRight, Armchair, BarChart3, ScanLine, Users } from "lucide-react";
+import { ArrowDownRight, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 import { Button } from "@/components/ui/button";
 
@@ -17,14 +17,14 @@ export default function HeroSection() {
           {en ? "Digital Guestbook / Event Day" : "Buku Tamu Digital / Hari Acara"}
         </p>
 
-        <h1 className="mt-5 max-w-[14ch] font-[family-name:var(--font-undara-heading)] text-[clamp(3.2rem,6vw,6.8rem)] leading-[0.94] tracking-[-0.04em] text-primary">
+        <h1 className="undara-marketing-title mt-5 max-w-[22ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.04em] text-primary">
           {en ? "Welcome every guest." : "Sambut setiap tamu."}
           <span className="block text-foreground">
             {en ? "Keep every arrival clear." : "Buat setiap kedatangan terasa jelas."}
           </span>
         </h1>
 
-        <p className="mt-7 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+        <p className="mt-7 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
           {en
             ? "Bring guest verification, official QR check-in, seating, and live attendance into one calm event-day flow for the reception team."
             : "Satukan verifikasi tamu, pemindaian QR resmi, pengaturan meja, dan pemantauan kehadiran langsung dalam satu alur untuk tim penerima tamu."}
@@ -45,24 +45,7 @@ export default function HeroSection() {
           </Button>
         </div>
 
-        <div className="mt-10 grid max-w-2xl grid-cols-2 gap-5 pt-5 sm:grid-cols-4">
-          {[
-            [ScanLine, en ? "Official QR" : "QR Resmi"],
-            [Users, en ? "Guest verification" : "Verifikasi Tamu"],
-            [Armchair, en ? "Seating" : "Meja"],
-            [BarChart3, en ? "Live attendance" : "Kehadiran"],
-          ].map(([Icon, label]) => {
-            const ItemIcon = Icon as typeof ScanLine;
-            return (
-              <div key={String(label)} className="flex items-center gap-2 text-muted-foreground">
-                <ItemIcon className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
-                <span className="font-[family-name:var(--font-undara-mono)] text-[9px] uppercase tracking-[0.12em]">
-                  {String(label)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+
       </div>
 
       <div className="relative z-10 min-h-[470px] lg:min-h-[690px]">
@@ -81,7 +64,7 @@ export default function HeroSection() {
           />
           <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(30,18,16,0.82)_0%,rgba(30,18,16,0.18)_48%,transparent_72%)]" />
           <div className="absolute bottom-7 left-7 right-7 text-white md:bottom-10 md:left-10 md:right-10">
-            <p className="font-[family-name:var(--font-undara-mono)] text-[9px] uppercase tracking-[0.17em] text-white/65">
+            <p className="undara-marketing-meta text-white/65">
               {en ? "Arrival experience" : "Pengalaman Kedatangan"}
             </p>
             <p className="mt-2 max-w-lg font-[family-name:var(--font-undara-heading)] text-2xl leading-tight md:text-3xl lg:text-4xl">
@@ -92,7 +75,7 @@ export default function HeroSection() {
           </div>
         </div>
 
-        <div className="absolute left-0 top-[16%] hidden w-[220px] border border-primary/25 bg-background/88 p-5 shadow-[0_18px_50px_rgba(58,32,32,0.11)] backdrop-blur-md md:block">
+        <div className="absolute left-0 top-[16%] hidden w-[220px] rounded-[20px] border border-primary/25 bg-background/88 p-5 shadow-[0_18px_50px_rgba(58,32,32,0.11)] backdrop-blur-md md:block">
           <p className="undara-editorial-index">{en ? "Guest arrival" : "Kedatangan Tamu"}</p>
           <p className="mt-3 font-[family-name:var(--font-undara-heading)] text-xl leading-tight text-primary">
             {en ? "Verify first. Check in with confidence." : "Verifikasi dulu. Catat kedatangan dengan yakin."}
