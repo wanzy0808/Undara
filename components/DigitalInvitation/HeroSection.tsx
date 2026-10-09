@@ -18,15 +18,41 @@ export default function HeroSection({ ready }: { ready: boolean }) {
   const measureInvitation = useCallback((content: HTMLDivElement | null) => {
     const frame = content?.parentElement;
     if (!frame || !content) return;
-    const measure = () => frame.style.setProperty(
-      "--invitation-scroll-distance",
-      `${Math.max(0, content.offsetHeight - frame.clientHeight)}px`,
-    );
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let animation: Animation | undefined;
+    let travel = -1;
+    const measure = () => {
+      const distance = Math.max(0, content.offsetHeight - frame.clientHeight);
+      if (reducedMotion.matches || distance === 0) {
+        animation?.cancel();
+        animation = undefined;
+        travel = -1;
+        return;
+      }
+      if (distance === travel) return;
+      const elapsed = animation?.currentTime;
+      animation?.cancel();
+      // Resolve pixel endpoints before starting: no initial zero-distance loop
+      // or inherited custom-property dependency on the animated element.
+      const bottom = `translateY(-${distance}px)`;
+      animation = content.animate([
+        { transform: "translateY(0)", offset: 0 },
+        { transform: bottom, offset: 0.92 },
+        { transform: bottom, offset: 1 },
+      ], { duration: 20000, iterations: Infinity, easing: "linear" });
+      if (typeof elapsed === "number") animation.currentTime = elapsed % 20000;
+      travel = distance;
+    };
     const observer = new ResizeObserver(measure);
     observer.observe(frame);
     observer.observe(content);
+    reducedMotion.addEventListener("change", measure);
     measure();
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      reducedMotion.removeEventListener("change", measure);
+      animation?.cancel();
+    };
   }, []);
   const copy =
     locale === "en"
@@ -236,27 +262,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
         </PuzzleAssemble>
       </div>
 
-      <style jsx>{`
-        .invitation-phone-scroll {
-          animation: invitation-phone-scroll 22s linear infinite;
-          will-change: transform;
-        }
 
-        @keyframes invitation-phone-scroll {
-          0%, 8% {
-            transform: translateY(0);
-          }
-          90%, 100% {
-            transform: translateY(calc(-1 * var(--invitation-scroll-distance, 0px)));
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .invitation-phone-scroll {
-            animation: none;
-          }
-        }
-      `}</style>
     </section>
   );
 }
