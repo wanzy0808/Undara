@@ -29,7 +29,6 @@ export default function StudioDemo({ en }: { en: boolean }) {
   const edited = step >= 3;
   const activeTool = step === 0 ? 1 : 2;
   const title = edited ? (en ? "Our Happy Day" : "Hari Bahagia Kami") : (en ? "You Are Invited" : "Kabar Bahagia");
-  const stages = en ? ["Choose the content", "Select a text", "Edit the title", "See the change", "Save the design"] : ["Pilih isi undangan", "Pilih teks", "Ubah judul", "Lihat perubahan", "Simpan desain"];
 
   useEffect(() => {
     const onVisibility = () => setHidden(document.hidden);
@@ -78,15 +77,18 @@ export default function StudioDemo({ en }: { en: boolean }) {
               </div>
               <p className={styles.greeting}>{en ? "A new chapter, together." : "Bab baru, bersama."}</p>
             </div>
-            <div className={styles.status}>{step === 4 ? <><Check size={12} />{en ? "Design saved" : "Desain tersimpan"}</> : <><span />{en ? "Invitation preview" : "Preview undangan"}</>}</div>
+            <div className={styles.status}>{step === 4 ? <><Check size={12} />{en ? "Design saved" : "Desain tersimpan"}</> : null}</div>
           </div>
           <div className={styles.cursor} style={{ transform: cursorPositions[step] }} data-motion={!reduced}><MousePointer2 size={21} fill="var(--primary)" /></div>
         </div>
       </div>
-      <figcaption className="mt-4 flex items-center justify-between gap-3 text-[13px] text-muted-foreground">
-        <span>{en ? "Studio demo" : "Demo Studio"}<span aria-hidden="true"> · {reduced ? (en ? "Personalize & save" : "Personalisasi & simpan") : stages[step]}</span></span>
-        {!reduced && <button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? (en ? "Play Studio demo" : "Putar demo Studio") : (en ? "Pause Studio demo" : "Jeda demo Studio")} aria-pressed={paused} className="flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{paused ? <Play size={14} /> : <Pause size={14} />}{paused ? (en ? "Play" : "Putar") : (en ? "Pause" : "Jeda")}</button>}
-      </figcaption>
+      <figcaption className="sr-only">{en ? "Illustrative invitation editor using Una & Dara sample content" : "Ilustrasi editor undangan dengan contoh Una & Dara"}</figcaption>
+      {!reduced && <div className="mt-2 flex justify-end">
+        <button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? (en ? "Play Studio demo" : "Putar demo Studio") : (en ? "Pause Studio demo" : "Jeda demo Studio")} aria-pressed={paused} className="grid size-11 place-items-center rounded-full text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+          {paused ? <Play size={16} /> : <Pause size={16} />}
+        </button>
+      </div>}
+
     </figure>
   );
 }

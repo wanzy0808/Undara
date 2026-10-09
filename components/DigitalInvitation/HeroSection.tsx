@@ -23,7 +23,6 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           description:
             "Build a digital invitation for weddings, anniversaries, baby showers, birthdays, or any celebration that needs RSVP and an organized guest list.",
           explore: "Explore templates",
-          tags: ["Rp150,000 / event", "RSVP included", "Guest management included"],
           eventName: "Nadia's 30th",
           date: "Saturday, 18 October 2026",
           venue: "The Garden, Jakarta",
@@ -41,7 +40,6 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           description:
             "Buat undangan digital untuk pernikahan, ulang tahun pernikahan, syukuran kelahiran, ulang tahun, atau perayaan lain yang membutuhkan RSVP dan daftar tamu yang rapi.",
           explore: "Lihat Template",
-          tags: ["Rp150.000 / acara", "RSVP termasuk", "Manajemen tamu termasuk"],
           eventName: "Nadia's 30th",
           date: "Sabtu, 18 Oktober 2026",
           venue: "The Garden, Jakarta",
@@ -80,13 +78,6 @@ export default function HeroSection({ ready }: { ready: boolean }) {
                 <ArrowUpRight className="h-4 w-4" />
               </Link>
             </Button>
-          </div>
-        </PuzzleAssemble>
-        <PuzzleAssemble ready={ready} direction="left" delay={0.38}>
-          <div className="mt-7 flex max-w-3xl flex-wrap gap-x-7 gap-y-3 undara-marketing-meta text-muted-foreground">
-            {copy.tags.map((tag) => (
-              <span key={tag}>{tag}</span>
-            ))}
           </div>
         </PuzzleAssemble>
       </div>

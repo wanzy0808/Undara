@@ -67,7 +67,6 @@ export default function TemplateCollection() {
           description: "A small selection to get you started. Explore the full collection and preview any design without signing in.",
           all: "Explore all templates",
           preview: "View preview",
-          ready: "Available in Studio",
         }
       : {
           eyebrow: "Koleksi Template",
@@ -75,7 +74,6 @@ export default function TemplateCollection() {
           description: "Tiga pilihan untuk inspirasi awal. Jelajahi koleksi lengkap dan lihat pratinjau tanpa login.",
           all: "Lihat semua template",
           preview: "Lihat pratinjau",
-          ready: "Tersedia di Studio",
         };
 
   return (
@@ -135,9 +133,6 @@ export default function TemplateCollection() {
               </h3>
               <p className="mt-2 text-xs leading-6 text-foreground/60">
                 {locale === "en" ? template.descriptionEn ?? template.description : template.description}
-              </p>
-              <p className="undara-marketing-meta mt-2 text-foreground/40">
-                {copy.ready}
               </p>
             </div>
           </article>

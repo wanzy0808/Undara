@@ -38,11 +38,6 @@ export default function StudioSection() {
             </Link>
           </Button>
 
-          <p className="undara-marketing-meta mt-5 max-w-lg text-muted-foreground">
-            {en
-              ? "Choose a theme first — publish remains controlled from Dashboard."
-              : "Pilih tema lebih dulu — publish tetap dikendalikan dari Dashboard."}
-          </p>
         </div>
 
         <StudioDemo en={en} />

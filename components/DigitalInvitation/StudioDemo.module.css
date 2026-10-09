@@ -30,7 +30,6 @@
 .art { position: relative; height: 105px; margin-top: 14px; }
 .greeting { margin-top: 10px; font-size: 9px; }
 .status { display: flex; align-items: center; justify-content: center; gap: 5px; min-height: 18px; font-size: 10px; color: var(--muted-foreground); }
-.status > span { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
 .cursor { position: absolute; inset: 0; color: var(--primary); pointer-events: none; transition: transform 250ms cubic-bezier(0.23, 1, 0.32, 1); }
 .cursor[data-motion=false] { visibility: hidden; transition: none; }
 @media (max-width: 639px) {
