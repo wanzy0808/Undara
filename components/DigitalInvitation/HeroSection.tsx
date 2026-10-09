@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback } from "react";
 import {
   ArrowUpRight,
   CalendarDays,
@@ -14,6 +15,19 @@ import PuzzleAssemble from "@/components/DigitalInvitation/PuzzleAssemble";
 
 export default function HeroSection({ ready }: { ready: boolean }) {
   const { locale } = useLanguage();
+  const measureInvitation = useCallback((content: HTMLDivElement | null) => {
+    const frame = content?.parentElement;
+    if (!frame || !content) return;
+    const measure = () => frame.style.setProperty(
+      "--invitation-scroll-distance",
+      `${Math.max(0, content.offsetHeight - frame.clientHeight)}px`,
+    );
+    const observer = new ResizeObserver(measure);
+    observer.observe(frame);
+    observer.observe(content);
+    measure();
+    return () => observer.disconnect();
+  }, []);
   const copy =
     locale === "en"
       ? {
@@ -23,14 +37,14 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           description:
             "Build a digital invitation for weddings, anniversaries, baby showers, birthdays, or any celebration that needs RSVP and an organized guest list.",
           explore: "Explore templates",
-          eventName: "Nadia's 30th",
-          date: "Saturday, 18 October 2026",
+          eventName: "Dara's 30th",
+          date: "Sunday, 18 October 2026",
           venue: "The Garden, Jakarta",
           greeting: "You're invited",
           invitation:
             "Join us for an evening of dinner, music, and celebration",
           countdown: "Until the celebration",
-          signoff: "See you there — Nadia",
+          signoff: "See you there — Dara",
           rsvp: "RSVP",
         }
       : {
@@ -40,14 +54,14 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           description:
             "Buat undangan digital untuk pernikahan, ulang tahun pernikahan, syukuran kelahiran, ulang tahun, atau perayaan lain yang membutuhkan RSVP dan daftar tamu yang rapi.",
           explore: "Lihat Template",
-          eventName: "Nadia's 30th",
-          date: "Sabtu, 18 Oktober 2026",
+          eventName: "Dara's 30th",
+          date: "Minggu, 18 Oktober 2026",
           venue: "The Garden, Jakarta",
           greeting: "Kamu diundang",
           invitation:
             "Rayakan malam penuh makan malam, musik, dan cerita bersama kami",
           countdown: "Menuju acara",
-          signoff: "Sampai bertemu — Nadia",
+          signoff: "Sampai bertemu — Dara",
           rsvp: "RSVP",
         };
 
@@ -108,7 +122,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
                 className="pointer-events-none absolute inset-[7px] z-20 rounded-[33px] border border-white/10"
                 aria-hidden="true"
               />
-              <div className="relative h-full overflow-hidden rounded-[32px] bg-[#f8f4f1] shadow-[inset_0_0_18px_rgba(0,0,0,0.18)] dark:bg-[#111111]">
+              <div data-invitation-viewport className="relative h-full overflow-hidden rounded-[32px] bg-[#f8f4f1] shadow-[inset_0_0_18px_rgba(0,0,0,0.18)] dark:bg-[#111111]">
                 <div
                   className="absolute left-1/2 top-2.5 z-30 h-7 w-[34%] -translate-x-1/2 rounded-full bg-black shadow-[inset_0_1px_1px_rgba(255,255,255,0.08),0_1px_4px_rgba(0,0,0,0.4)]"
                   aria-hidden="true"
@@ -116,7 +130,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
                   <div className="absolute right-2 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[#151515] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" />
                 </div>
 
-                <div className="invitation-phone-scroll absolute inset-x-0 top-0 w-full">
+                <div ref={measureInvitation} data-invitation-scroll className="invitation-phone-scroll absolute inset-x-0 top-0 w-full">
                   <article className="min-h-full bg-[#f8f4f1] px-7 pb-16 pt-12 text-[#2a2220] dark:bg-[#111111] dark:text-white">
                     <div className="mx-auto max-w-[250px] text-center">
                       <p className="font-[family-name:var(--font-undara-mono)] text-[7px] uppercase tracking-[0.28em] text-[#8b5d62] dark:text-primary">
@@ -224,22 +238,16 @@ export default function HeroSection({ ready }: { ready: boolean }) {
 
       <style jsx>{`
         .invitation-phone-scroll {
-          animation: invitation-phone-scroll 18s ease-in-out infinite;
+          animation: invitation-phone-scroll 22s linear infinite;
           will-change: transform;
         }
 
         @keyframes invitation-phone-scroll {
-          0%,
-          12% {
+          0%, 8% {
             transform: translateY(0);
           }
-          44%,
-          56% {
-            transform: translateY(-38%);
-          }
-          88%,
-          100% {
-            transform: translateY(0);
+          90%, 100% {
+            transform: translateY(calc(-1 * var(--invitation-scroll-distance, 0px)));
           }
         }
 

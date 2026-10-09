@@ -27,8 +27,8 @@ export default function StudioSection() {
 
           <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {en
-              ? "Start from a finished theme, then personalize what matters. Studio keeps the design expressive while the event structure, RSVP, and guest flow stay connected."
-              : "Mulai dari tema yang sudah selesai secara visual, lalu personalisasi bagian yang memang penting. Studio menjaga desain tetap ekspresif sementara struktur acara, RSVP, dan alur tamu tetap terhubung."}
+              ? "Pick a theme, add your story, then adjust the design directly on the canvas. Your event details and RSVP stay connected."
+              : "Pilih tema, isi ceritamu, lalu sesuaikan desain langsung di kanvas. Detail acara dan RSVP tetap terhubung."}
           </p>
 
           <Button asChild size="lg" className="mt-8">
