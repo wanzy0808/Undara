@@ -25,14 +25,14 @@ export default function StudioSection() {
 
   return (
     <section className="undara-marketing-section py-14 md:py-20">
-      <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-20">
-        <div className="max-w-2xl">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-center lg:gap-20">
+        <div className="min-w-0 w-full">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
             <p className="undara-marketing-kicker">Invitation Studio</p>
           </div>
 
-          <h2 className="undara-marketing-heading mt-5 max-w-[26ch] font-[family-name:var(--font-undara-heading)] text-primary">
+          <h2 className="undara-marketing-heading mt-5 font-[family-name:var(--font-undara-heading)] text-primary">
             {en
               ? "A personal touch, made simple."
               : "Sentuhan personal, tanpa proses rumit."}

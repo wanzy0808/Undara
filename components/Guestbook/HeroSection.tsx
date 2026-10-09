@@ -11,13 +11,13 @@ export default function HeroSection() {
   const en = locale === "en";
 
   return (
-    <section className="undara-marketing-section relative grid min-h-[calc(100dvh-170px)] items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:pb-16">
-      <div className="relative z-10 max-w-3xl py-8 lg:py-12">
+    <section className="undara-marketing-section relative grid min-h-[calc(100dvh-170px)] items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] lg:gap-16 lg:pb-16">
+      <div className="relative z-10 min-w-0 w-full py-8 lg:py-12">
         <p className="undara-marketing-kicker">
           {en ? "Digital Guestbook / Event Day" : "Buku Tamu Digital / Hari Acara"}
         </p>
 
-        <h1 className="undara-marketing-title mt-5 max-w-[22ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.04em] text-primary">
+        <h1 className="undara-marketing-title mt-5 font-[family-name:var(--font-undara-heading)] tracking-[-0.04em] text-primary">
           {en ? "Welcome every guest." : "Sambut setiap tamu."}
           <span className="block text-foreground">
             {en ? "Keep every arrival clear." : "Buat setiap kedatangan terasa jelas."}

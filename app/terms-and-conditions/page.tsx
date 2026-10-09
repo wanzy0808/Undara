@@ -227,15 +227,15 @@ export default function TermsAndConditionsPage() {
           className="undara-marketing-scroll relative z-20 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
         >
           <article className="undara-marketing-content flex flex-col gap-16 pb-16 pt-8 md:gap-20 md:pb-24 md:pt-12">
-            <header className="undara-marketing-section grid min-h-[min(56dvh,590px)] items-end gap-10 pb-14 lg:grid-cols-[1.06fr_0.94fr] lg:gap-20">
+            <header className="undara-marketing-section grid items-end gap-10 pb-14 ">
               <div>
                 <p className="undara-marketing-kicker">{en ? "Legal / Terms" : "Legal / Ketentuan"}</p>
-                <h1 className="undara-marketing-title mt-5 max-w-[13ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.035em] text-primary">
+                <h1 className="undara-marketing-title mt-5 font-[family-name:var(--font-undara-heading)] tracking-[-0.035em] text-primary">
                   {copy.title}
                 </h1>
               </div>
 
-              <div className="max-w-xl border-l border-primary/30 py-5 pl-7 md:pl-12">
+              <div className="max-w-[70ch]">
                 <p className="text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                   {en
                     ? "The rules that govern access to Undara, paid services, user content, transactions, and platform responsibilities."
@@ -251,10 +251,10 @@ export default function TermsAndConditionsPage() {
             </header>
 
             <section className="undara-marketing-section undara-editorial-offset-left py-12 md:py-16">
-              <div className="grid gap-8 lg:grid-cols-[0.34fr_0.66fr] lg:gap-16">
+              <div className="grid gap-8 ">
                 <div>
                   <p className="undara-marketing-kicker">{copy.introduction}</p>
-                  <h2 className="undara-marketing-heading mt-4 max-w-[12ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                  <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                     {en ? "Start with the general agreement." : "Mulai dari ketentuan umumnya."}
                   </h2>
                 </div>

@@ -58,11 +58,11 @@ export default function FeatureSection() {
   return (
     <section id="fitur" className="undara-marketing-section scroll-mt-24 py-14 md:py-20">
       <div className="space-y-10 md:space-y-14">
-        <div className="max-w-3xl">
+        <div className="w-full">
           <p className="undara-marketing-kicker">
             {en ? "A complete invitation flow" : "Alur Undangan yang Utuh"}
           </p>
-          <h2 className="undara-marketing-heading mt-4 max-w-[26ch] font-[family-name:var(--font-undara-heading)] text-primary">
+          <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] text-primary">
             {en
               ? "From invitation to celebration."
               : "Dari undangan sampai hari perayaan."}
@@ -87,7 +87,7 @@ export default function FeatureSection() {
               </div>
 
               <div>
-                <h3 className="undara-marketing-subheading max-w-[32ch] font-[family-name:var(--font-undara-heading)] text-primary">
+                <h3 className="undara-marketing-subheading font-[family-name:var(--font-undara-heading)] text-primary">
                   {title}
                 </h3>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">

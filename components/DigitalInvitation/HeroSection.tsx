@@ -54,7 +54,7 @@ export default function HeroSection({ ready }: { ready: boolean }) {
         };
 
   return (
-    <section className="undara-marketing-section relative mx-auto grid min-h-[calc(100dvh-220px)] w-full min-w-0 items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:gap-14 lg:pb-16">
+    <section className="undara-marketing-section relative mx-auto grid min-h-[calc(100dvh-220px)] w-full min-w-0 items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.8fr)] lg:gap-14 lg:pb-16">
       <div className="undara-invitation-hero-copy relative z-10 min-w-0 w-full max-w-none py-8 lg:py-12">
         <PuzzleAssemble ready={ready} direction="top" delay={0.04}>
           <p className="undara-marketing-meta text-primary">
@@ -62,12 +62,12 @@ export default function HeroSection({ ready }: { ready: boolean }) {
           </p>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="left" delay={0.12}>
-          <h1 className="undara-marketing-title mt-5 max-w-[20ch] font-[family-name:var(--font-undara-heading)] tracking-normal text-primary">
+          <h1 className="undara-marketing-title mt-5 font-[family-name:var(--font-undara-heading)] tracking-normal text-primary">
             {copy.title}
           </h1>
         </PuzzleAssemble>
         <PuzzleAssemble ready={ready} direction="right" delay={0.22}>
-          <p className="mt-6 max-w-[42ch] text-lg leading-8 text-foreground">{copy.accent}</p>
+          <p className="mt-6 max-w-[60ch] text-lg leading-8 text-foreground">{copy.accent}</p>
           <p className="mt-4 max-w-[56ch] font-[family-name:var(--font-undara-body)] text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {copy.description}
           </p>

@@ -14,7 +14,7 @@ export default function SectionHeading({
   const centered = align === "center";
 
   return (
-    <div className={`${centered ? "mx-auto text-center" : "text-left"} max-w-3xl space-y-3`}>
+    <div className={`${centered ? "mx-auto text-center" : "text-left"} w-full space-y-3`}>
       <p className="undara-marketing-meta text-[var(--primary)]">
         {eyebrow}
       </p>

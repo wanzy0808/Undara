@@ -116,18 +116,20 @@ export default function FeatureSection() {
   return (
     <section id="fitur-guestbook" className="undara-marketing-section scroll-mt-24 py-14 md:py-20">
       <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
-        <div>
+        <div className="lg:col-span-2">
           <p className="undara-marketing-kicker">{en ? "Guest Arrival System" : "Sistem Kedatangan Tamu"}</p>
-          <h2 className="undara-marketing-heading mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+          <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
             {en ? "One reception flow. Less room for confusion." : "Satu alur penerimaan. Lebih sedikit ruang untuk bingung."}
           </h2>
-          <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
+          <p className="mt-6 max-w-[70ch] text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {en
               ? "Digital Guestbook is designed around what the reception team actually needs on the event day: verify, check in, seat, and monitor."
               : "Buku Tamu Digital dirancang untuk tim penerima tamu saat hari acara: verifikasi, catat kedatangan, arahkan ke meja, dan pantau kehadiran."}
           </p>
 
-          <div className="mt-10">
+        </div>
+        <div>
+          <div>
             {features.map((feature, index) => (
               <button
                 key={feature.title}
@@ -156,10 +158,10 @@ export default function FeatureSection() {
                 <span className="undara-marketing-kicker">{selected.badge}</span>
                 <selected.icon className="h-6 w-6 text-primary" strokeWidth={1.5} aria-hidden="true" />
               </div>
-              <h3 className="undara-marketing-subheading mt-8 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-primary">
+              <h3 className="undara-marketing-subheading mt-8 font-[family-name:var(--font-undara-heading)] text-primary">
                 {selected.title}
               </h3>
-              <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
+              <p className="mt-6 max-w-[70ch] text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                 {selected.description}
               </p>
               <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-3 pt-6">

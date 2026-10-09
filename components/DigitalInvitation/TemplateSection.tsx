@@ -86,7 +86,7 @@ export default function TemplateCollection() {
             <p className="undara-marketing-meta text-primary">
               {copy.eyebrow}
             </p>
-            <h2 className="undara-marketing-heading mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-primary">
+            <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] text-primary">
               {copy.title}
             </h2>
             <p className="mt-3 max-w-xl font-[family-name:var(--font-undara-body)] text-base leading-7 text-foreground/65">

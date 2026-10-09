@@ -76,13 +76,13 @@ export default function UndanganFisikPage() {
         >
           <div className="undara-marketing-content flex flex-col gap-24 py-8 md:gap-28 md:py-12">
             <ScrollReveal scrollRoot={scrollRoot} lift>
-              <section className="undara-marketing-section grid min-h-[calc(100dvh-170px)] items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:pb-16">
-                <div className="relative z-10 max-w-3xl py-8 lg:py-12">
+              <section className="undara-marketing-section grid min-h-[calc(100dvh-170px)] items-center gap-12 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] lg:gap-16 lg:pb-16">
+                <div className="relative z-10 min-w-0 w-full py-8 lg:py-12">
                   <p className="undara-marketing-kicker">
                     {en ? "Printed Invitations / Undara" : "Undangan Fisik / Undara"}
                   </p>
 
-                  <h1 className="undara-marketing-title mt-5 max-w-[22ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.04em] text-primary">
+                  <h1 className="undara-marketing-title mt-5 font-[family-name:var(--font-undara-heading)] tracking-[-0.04em] text-primary">
                     {en ? "A keepsake in every detail." : "Kabar bahagia yang bisa disimpan."}
                     <span className="block text-foreground">
                       {en ? "Made to be held." : "Terasa hingga di tangan."}
@@ -145,10 +145,10 @@ export default function UndanganFisikPage() {
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
               <section className="undara-marketing-section undara-editorial-offset-right py-14 md:py-20">
-                <div className="grid gap-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-end lg:gap-16">
+                <div className="grid gap-8 ">
                   <div>
                     <p className="undara-marketing-kicker">{en ? "Tactile direction" : "Arah Material"}</p>
-                    <h2 className="undara-marketing-heading mt-4 max-w-[16ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                    <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                       {en ? "The design is not only what guests see." : "Desainnya bukan hanya apa yang tamu lihat."}
                     </h2>
                   </div>
@@ -182,10 +182,10 @@ export default function UndanganFisikPage() {
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
               <section id="proses" className="undara-marketing-section undara-editorial-offset-left scroll-mt-24 py-14 md:py-20">
-                <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16">
+                <div className="grid gap-8 ">
                   <div>
                     <p className="undara-marketing-kicker">{en ? "From idea to delivery" : "Dari Ide hingga Diterima"}</p>
-                    <h2 className="undara-marketing-heading mt-4 max-w-[17ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                    <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                       {en ? "A slower process, for a more considered object." : "Proses yang lebih pelan untuk hasil yang lebih dipikirkan."}
                     </h2>
                   </div>
@@ -200,9 +200,9 @@ export default function UndanganFisikPage() {
                   {steps.map(([title, detail], index) => (
                     <article
                       key={title}
-                      className={`grid gap-6 py-8 md:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] md:items-center md:gap-9 md:py-11 ${index % 2 ? "lg:pl-[6%]" : "lg:pr-[5%]"}`}
+                      className={`grid gap-6 py-8  md:py-11 ${index % 2 ? "lg:pl-[6%]" : "lg:pr-[5%]"}`}
                     >
-                      <h3 className="undara-marketing-subheading max-w-[17ch] font-[family-name:var(--font-undara-heading)] text-primary">
+                      <h3 className="undara-marketing-subheading font-[family-name:var(--font-undara-heading)] text-primary">
                         {title}
                       </h3>
                       <p className="flex max-w-xl gap-3 text-base leading-7 text-muted-foreground md:text-base md:leading-8">
@@ -218,7 +218,7 @@ export default function UndanganFisikPage() {
             <ScrollReveal scrollRoot={scrollRoot} lift>
               <section className="undara-marketing-section undara-editorial-offset-right pb-14">
                 <p className="undara-marketing-kicker">{en ? "Ways to order" : "Pilihan Pemesanan"}</p>
-                <h2 className="undara-marketing-heading mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                   {en ? "A few keepsakes or a full print run." : "Beberapa untuk disimpan, atau satu produksi penuh."}
                 </h2>
                 <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
@@ -268,7 +268,7 @@ export default function UndanganFisikPage() {
                 <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-16">
                   <div>
                     <p className="undara-marketing-kicker">{en ? "Start with the specification" : "Mulai dari Spesifikasinya"}</p>
-                    <h2 className="undara-marketing-heading mt-4 max-w-[20ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                    <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                       {en ? "Tell us what you want guests to hold." : "Ceritakan apa yang ingin kamu letakkan di tangan tamu."}
                     </h2>
                     <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">

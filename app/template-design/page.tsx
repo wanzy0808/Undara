@@ -276,7 +276,7 @@ export default function TemplateDesignPage() {
               <aside className="undara-template-intro relative z-20 max-w-[34rem] lg:absolute lg:-left-24 lg:top-14 lg:flex lg:h-[16rem] lg:w-[27rem] min-[2200px]:-translate-x-[5cm] lg:flex-col lg:justify-between xl:-left-32 xl:top-16 xl:h-[18rem] xl:w-[29rem] 2xl:-left-40 2xl:top-18">
                 <p className="undara-marketing-meta text-primary">{copy.eyebrow}</p>
                 <div>
-                  <h1 className="max-w-[10.5ch] font-[family-name:var(--font-undara-heading)] undara-marketing-title tracking-[-0.035em] text-primary">
+                  <h1 className="font-[family-name:var(--font-undara-heading)] undara-marketing-title tracking-[-0.035em] text-primary">
                     {copy.title}
                   </h1>
                   <p className="mt-5 max-w-[30ch] text-sm font-medium leading-7 text-foreground/75 lg:hidden">{copy.description}</p>
