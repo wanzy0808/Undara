@@ -108,7 +108,7 @@ test("marketing content uses space and surfaces without repeated divider rails",
 
 test("framed marketing headings use restrained roles without changing invitation artwork", () => {
   const files = [
-    "app/guestbook/page.tsx",
+    "components/Guestbook/PackageSection.tsx",
     "app/undangan-fisik/page.tsx",
     "app/help/page.tsx",
     "components/DigitalInvitation/FeatureSection.tsx",
