@@ -12,6 +12,7 @@ import {
 import Navbar from "@/components/Layout/Navbar/Navbar";
 import PublicMarketingAtmosphere from "@/components/Layout/PublicMarketingAtmosphere";
 import MarketingFrameFooter from "@/components/Layout/MarketingFrameFooter";
+import PhotoAlbum from "@/components/PrintedInvitation/PhotoAlbum";
 import StationeryNote from "@/components/PrintedInvitation/StationeryNote";
 import ScrollReveal from "@/components/EventPlanner/ScrollReveal";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
@@ -142,20 +143,14 @@ export default function UndanganFisikPage() {
                 <p className="undara-marketing-kicker">{en ? "Printed design inspiration" : "Inspirasi Undangan Cetak"}</p>
                 <h2 className="undara-marketing-heading mt-4 text-primary">{en ? "Two ways to tell Una & Dara’s story." : "Dua cara membawa cerita Una & Dara."}</h2>
                 <p className="mt-5 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Illustrative designs. Shapes, colors, and print details can be discussed for your event." : "Contoh ilustrasi desain. Bentuk, warna, dan detail cetak bisa dibicarakan untuk acaramu."}</p>
-                <div className="mt-9 flex w-full max-w-3xl flex-col gap-10 md:gap-14">
-                  <figure data-physical-sample className="min-w-0 w-full">
-                    <div className="relative aspect-[3/2] overflow-hidden rounded-[20px]">
-                      <Image src="/assets/marketing/physical-invitation/sample-ivory-una-dara.webp" alt={en ? "Una & Dara ivory arch printed invitation set" : "Set undangan cetak Una & Dara berbentuk lengkung warna ivory"} fill sizes="(max-width: 1023px) 90vw, 768px" className="object-cover" />
-                    </div>
-                    <figcaption className="mt-5"><h3 className="undara-marketing-subheading text-primary">{en ? "Ivory arch" : "Lengkung Ivory"}</h3><p className="mt-2 text-base text-muted-foreground">{en ? "Soft tones, a gentle silhouette." : "Warna lembut, bentuk yang hangat."}</p></figcaption>
-                  </figure>
-                  <figure data-physical-sample className="min-w-0 w-full">
-                    <div className="relative aspect-[3/2] overflow-hidden rounded-[20px]">
-                      <Image src="/assets/marketing/physical-invitation/sample-brown-una-dara.webp" alt={en ? "Una & Dara brown folded printed invitation set" : "Set undangan cetak lipat Una & Dara berwarna coklat"} fill sizes="(max-width: 1023px) 90vw, 768px" className="object-cover" />
-                    </div>
-                    <figcaption className="mt-5"><h3 className="undara-marketing-subheading text-primary">{en ? "Brown fold" : "Lipatan Coklat"}</h3><p className="mt-2 text-base text-muted-foreground">{en ? "Warm paper, champagne accents." : "Kertas hangat, aksen champagne."}</p></figcaption>
-                  </figure>
-                </div>
+                <PhotoAlbum
+                  kind="sample"
+                  label={en ? "Choose a printed design" : "Pilih contoh desain cetak"}
+                  photos={[
+                    { asset: "sample-ivory-una-dara", title: en ? "Ivory arch" : "Lengkung Ivory", detail: en ? "Soft tones, a gentle silhouette." : "Warna lembut, bentuk yang hangat.", alt: en ? "Una & Dara ivory arch printed invitation set" : "Set undangan cetak Una & Dara berbentuk lengkung warna ivory" },
+                    { asset: "sample-brown-una-dara", title: en ? "Brown fold" : "Lipatan Coklat", detail: en ? "Warm paper, champagne accents." : "Kertas hangat, aksen champagne.", alt: en ? "Una & Dara brown folded printed invitation set" : "Set undangan cetak lipat Una & Dara berwarna coklat" },
+                  ]}
+                />
               </section>
             </ScrollReveal>
 
@@ -176,19 +171,11 @@ export default function UndanganFisikPage() {
                 </div>
 
                 <p className="undara-marketing-meta mt-5 text-muted-foreground">{en ? "Design illustrations · final specifications agreed through consultation" : "Ilustrasi desain · spesifikasi akhir melalui konsultasi"}</p>
-                <div className="mt-10 w-full max-w-3xl space-y-10 md:space-y-14">
-                  {materials.map(([asset, title, detail, alt]) => (
-                    <article key={asset} data-physical-material className="flex w-full min-w-0 flex-col gap-5">
-                      <figure className="group relative aspect-[3/2] w-full overflow-hidden rounded-[20px]">
-                        <Image src={`/assets/marketing/physical-invitation/${asset}.webp`} alt={alt} fill sizes="(max-width: 1023px) 90vw, 768px" className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.025] motion-reduce:transition-none" />
-                      </figure>
-                      <div className="min-w-0">
-                        <h3 className="undara-marketing-subheading text-primary">{title}</h3>
-                        <p className="mt-2 max-w-[70ch] text-base leading-8 text-muted-foreground">{detail}</p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+                <PhotoAlbum
+                  kind="material"
+                  label={en ? "Choose a material detail" : "Pilih detail material"}
+                  photos={materials.map(([asset, title, detail, alt]) => ({ asset, title, detail, alt }))}
+                />
               </section>
             </ScrollReveal>
 
