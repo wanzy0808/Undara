@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useInView } from "motion/react";
 import Image from "next/image";
-import { Check, ImagePlus, Layers3, LayoutTemplate, MousePointer2, Music2, Pause, Play, Redo2, RotateCcw, Save, SlidersHorizontal, Type, Undo2 } from "lucide-react";
+import { Check, ImagePlus, Layers3, LayoutTemplate, MousePointer2, Music2, Redo2, RotateCcw, Save, SlidersHorizontal, Type, Undo2 } from "lucide-react";
 import BrandWordmark from "@/components/Brand/BrandWordmark";
 import styles from "./StudioDemo.module.css";
 
@@ -27,7 +27,6 @@ export default function StudioDemo({ en }: { en: boolean }) {
   const visible = useInView(root, { amount: 0.25 });
   const reduced = useSyncExternalStore(subscribeToMotion, motionSnapshot, staticServerSnapshot);
   const [step, setStep] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [hidden, setHidden] = useState(false);
   const labels = en ? ["Catalog", "Content", "Text", "Photos", "Assets", "Music"] : ["Katalog", "Isi", "Teks", "Foto", "Asset", "Musik"];
   const edited = step >= 2;
@@ -42,13 +41,13 @@ export default function StudioDemo({ en }: { en: boolean }) {
   }, []);
 
   useEffect(() => {
-    if (!visible || paused || hidden || reduced) return;
-    const timer = window.setInterval(() => setStep(previous => (previous + 1) % 5), 2000);
+    if (!visible || hidden || reduced) return;
+    const timer = window.setInterval(() => setStep(previous => (previous + 1) % 5), 1600);
     return () => window.clearInterval(timer);
-  }, [visible, paused, hidden, reduced]);
+  }, [visible, hidden, reduced]);
 
   return (
-    <figure ref={root} data-studio-demo data-step={step} data-paused={paused || Boolean(reduced)} className="min-w-0">
+    <figure ref={root} data-studio-demo data-step={step} data-static={reduced} className="min-w-0">
       <div className={styles.frame} aria-hidden="true">
         <header className={styles.header}>
           <BrandWordmark size="mobile" />
@@ -98,11 +97,7 @@ export default function StudioDemo({ en }: { en: boolean }) {
         </div>
       </div>
       <figcaption className="sr-only">{en ? "Illustrative invitation editor using Una & Dara sample content" : "Ilustrasi editor undangan dengan contoh Una & Dara"}</figcaption>
-      {!reduced && <div className="mt-2 flex justify-end">
-        <button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? (en ? "Play Studio demo" : "Putar demo Studio") : (en ? "Pause Studio demo" : "Jeda demo Studio")} aria-pressed={paused} className="grid size-11 place-items-center rounded-full text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-          {paused ? <Play size={16} /> : <Pause size={16} />}
-        </button>
-      </div>}
+
 
     </figure>
   );

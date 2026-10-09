@@ -568,3 +568,8 @@ Owner rejects the Digital Invitation hero's repeated “Rp150.000 / acara”, �
 ### 2026-10-09 — Make Studio demo edits visible on the canvas
 
 Owner finds the demo's canvas change too subtle and asks to show actual visible edits rather than just tools. Synchronize the edited title in the field and canvas at stage 2, enlarge it from 10px to 13px within fixed title space, then show the Foto panel and select a different existing Botanical Ivory illustration at stage 3. Crossfade two mounted canvas images over 250ms; mark the selected image and retain the resulting title/image through the save stage. No visible narration, helper tags or new assets. Preserve pause, visibility gating, static reduced motion, ID/EN, marketing CTA and real editor/backend isolation. Source: StudioDemo and scoped CSS.
+
+
+### 2026-10-09 — Faster Studio demo without playback buttons
+
+Owner explicitly removes the demo pause button and asks for a slightly quicker sequence. Remove playback controls and pause state from StudioDemo; shorten each stage from 2000ms to 1600ms (20% shorter), keeping the existing 250ms cursor/artwork transitions. Preserve synchronized canvas edits, offscreen/tab-hidden gating, hydration-safe static reduced motion and ID/EN. This supersedes prior visible pause/play requirements for this marketing illustration only. Source: DigitalInvitation StudioDemo; actual editor behavior is unchanged.
