@@ -1,6 +1,7 @@
 "use client";
 
 import { Palette, Sparkles, Users, type LucideIcon } from "lucide-react";
+import DigitalNote from "./DigitalNote";
 import { useLanguage } from "@/components/I18n/LanguageProvider";
 
 type FeatureItem = {
@@ -25,13 +26,13 @@ export default function FeatureSection() {
           icon: Sparkles,
           title: "Make it yours in Studio.",
           description:
-            "Invitation content and design stay together in Studio, so every event can be refined independently without turning the setup into a complicated design tool.",
+            "Edit your text, photos and event details in one place. See each change directly on your invitation.",
         },
         {
           icon: Users,
           title: "Keep your guests connected.",
           description:
-            "RSVP, plus-one information, and guest management remain scoped to the same event, so the invitation is connected to what happens after guests open it.",
+            "Collect RSVPs, keep your guest list organized, and plan tables and seats for the day.",
         },
       ]
     : [
@@ -45,13 +46,13 @@ export default function FeatureSection() {
           icon: Sparkles,
           title: "Jadikan milikmu di Studio.",
           description:
-            "Isi dan desain undangan tetap berada di Studio yang sama, sehingga setiap acara bisa dibentuk sendiri tanpa proses yang rumit.",
+            "Ubah teks, foto, dan detail acara di satu tempat. Lihat setiap perubahan langsung pada undanganmu.",
         },
         {
           icon: Users,
           title: "Kelola tamu dalam satu alur.",
           description:
-            "RSVP, informasi tamu tambahan, dan manajemen tamu tetap terikat pada acara yang sama, jadi undangan tidak berhenti saat tamu selesai membacanya.",
+            "Terima RSVP, rapikan daftar tamu, lalu atur meja dan tempat duduk untuk hari acara.",
         },
       ];
 
@@ -69,8 +70,8 @@ export default function FeatureSection() {
           </h2>
           <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
             {en
-              ? "Undara connects the visual invitation with the practical event flow without making the experience feel like an admin dashboard."
-              : "Undara menghubungkan pengalaman visual undangan dengan kebutuhan acara yang praktis, tanpa membuat tamu maupun pemilik acara merasa sedang membuka dashboard admin."}
+              ? "Choose a theme, make it personal, and welcome your guests. Everything stays connected to your event."
+              : "Pilih tema, beri sentuhan personal, lalu sambut tamumu. Semuanya terhubung dalam satu acara."}
           </p>
         </div>
 
@@ -78,21 +79,24 @@ export default function FeatureSection() {
           {features.map(({ icon: Icon, title, description }, index) => (
             <article
               key={title}
-              className={`group flex max-w-4xl gap-5 py-8 md:gap-8 md:py-10 ${index % 2 ? "lg:ml-auto" : "lg:mr-auto"}`}
+              className="group relative py-8 md:py-10"
             >
-              <div className="flex shrink-0 items-start">
-                <span className="grid h-11 w-11 place-items-center rounded-[16px] border border-primary/35 text-primary undara-marketing-hover-icon">
-                  <Icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
-                </span>
-              </div>
+              <DigitalNote index={index} className={index % 2 ? "right-0 lg:left-0 lg:right-auto" : "right-0"} />
+              <div className={`relative z-10 flex flex-col gap-5 sm:flex-row md:gap-8 lg:w-[72%] ${index % 2 ? "lg:ml-auto lg:flex-row-reverse lg:text-right" : "lg:mr-auto"}`}>
+                <div className="flex shrink-0 items-start">
+                  <span className="grid h-11 w-11 place-items-center rounded-[16px] border border-primary/35 text-primary undara-marketing-hover-icon">
+                    <Icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+                  </span>
+                </div>
 
-              <div>
-                <h3 className="undara-marketing-subheading font-[family-name:var(--font-undara-heading)] text-primary">
-                  {title}
-                </h3>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
-                  {description}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="undara-marketing-subheading font-[family-name:var(--font-undara-heading)] text-primary">
+                    {title}
+                  </h3>
+                  <p className={`mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8 ${index % 2 ? "lg:ml-auto" : ""}`}>
+                    {description}
+                  </p>
+                </div>
               </div>
             </article>
           ))}

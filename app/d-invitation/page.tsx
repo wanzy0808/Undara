@@ -82,16 +82,16 @@ export default function DigitalInvitationPage() {
           <div className="undara-digital-page undara-marketing-content flex flex-col gap-12 py-8 md:gap-16 md:py-12">
             <HeroSection ready={assembleReady} />
             <div className="undara-invitation-other-sections flex flex-col gap-12 md:gap-16">
-              <PuzzleAssemble ready={assembleReady} direction="left" scrollRoot={scrollRoot} delay={0.04} className="undara-editorial-offset-left">
+              <PuzzleAssemble ready={assembleReady} direction="left" scrollRoot={scrollRoot} delay={0.04} className="w-full">
                 <FeatureSection />
               </PuzzleAssemble>
-              <PuzzleAssemble ready={assembleReady} direction="right" scrollRoot={scrollRoot} delay={0.07} className="mx-auto w-full max-w-[1100px]">
+              <PuzzleAssemble ready={assembleReady} direction="right" scrollRoot={scrollRoot} delay={0.07} className="w-full">
                 <TemplateCollection />
               </PuzzleAssemble>
-              <PuzzleAssemble ready={assembleReady} direction="bottom" scrollRoot={scrollRoot} delay={0.07} className="undara-editorial-offset-right">
+              <PuzzleAssemble ready={assembleReady} direction="bottom" scrollRoot={scrollRoot} delay={0.07} className="w-full">
                 <CtaStudioSection />
               </PuzzleAssemble>
-              <PuzzleAssemble ready={assembleReady} direction="left" scrollRoot={scrollRoot} delay={0.07} className="undara-editorial-offset-left">
+              <PuzzleAssemble ready={assembleReady} direction="left" scrollRoot={scrollRoot} delay={0.07} className="w-full">
                 <PackageShowcase
                   eyebrow=""
                   title=""
@@ -100,7 +100,7 @@ export default function DigitalInvitationPage() {
                   compact
                 />
               </PuzzleAssemble>
-              <PuzzleAssemble ready={assembleReady} direction="right" scrollRoot={scrollRoot} delay={0.07} className="undara-editorial-offset-right">
+              <PuzzleAssemble ready={assembleReady} direction="right" scrollRoot={scrollRoot} delay={0.07} className="w-full">
                 <ReviewsGrid
                   eyebrow={copy.reviewEyebrow}
                   title={copy.reviewTitle}
@@ -108,7 +108,7 @@ export default function DigitalInvitationPage() {
                   reviews={digitalInvitationReviews[locale]}
                 />
               </PuzzleAssemble>
-              <PuzzleAssemble ready={assembleReady} direction="bottom" scrollRoot={scrollRoot} delay={0.07} className="undara-editorial-offset-left">
+              <PuzzleAssemble ready={assembleReady} direction="bottom" scrollRoot={scrollRoot} delay={0.07} className="w-full">
                 <FaqSection
                   wide
                   editorial
