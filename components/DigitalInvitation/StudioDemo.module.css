@@ -1,0 +1,45 @@
+.frame { overflow: hidden; border: 1px solid var(--primary); border-radius: 22px 22px 22px 6px; background: var(--background); color: var(--foreground); box-shadow: 0 18px 48px rgb(58 32 32 / 8%); }
+.header { display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); font-size: 12px; }
+.header > span:first-child { margin-right: auto; }
+.draft { color: var(--muted-foreground); font-size: 11px; }
+.workspace { position: relative; display: grid; grid-template-columns: 52px minmax(100px, 136px) minmax(0, 1fr); min-height: 390px; }
+.rail { display: flex; flex-direction: column; gap: 10px; padding: 12px 4px; background: #703b3b; color: #ede3d8; }
+.tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 48px; border-radius: 8px; font-size: 9px; }
+.tool[data-active=true] { background: #ede3d8; color: #703b3b; }
+.inspector { padding: 16px 10px; border-right: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); }
+.panelTitle { margin-bottom: 20px; color: var(--primary); font-size: 16px; font-family: var(--font-undara-heading); }
+.fieldLabel { margin: 18px 0 6px; font-size: 10px; }
+.field { min-height: 34px; padding: 8px; border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent); border-radius: 8px; font-size: 10px; line-height: 1.6; }
+.field[data-editing=true] { border-color: var(--primary); }
+.caret { display: none; width: 1px; height: 11px; margin-left: 2px; vertical-align: middle; background: var(--primary); }
+.caret[data-active=true] { display: inline-block; }
+.sections { display: flex; flex-direction: column; gap: 18px; font-size: 11px; }
+.sections > div { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.canvas { display: flex; flex-direction: column; align-items: center; gap: 16px; min-width: 0; padding: 0 12px 14px; background: color-mix(in srgb, var(--primary) 4%, var(--background)); }
+.toolbar { display: flex; align-items: center; gap: 9px; width: calc(100% + 24px); min-height: 42px; padding: 8px 10px; border-bottom: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); font-size: 10px; }
+.toolbar > span:first-child { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.toolbar > svg { flex-shrink: 0; }
+.save { display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px; color: var(--primary); }
+.save[data-active=true] { background: var(--primary); color: var(--background); }
+.paper { width: 100%; max-width: 188px; min-height: 286px; padding: 24px 12px 18px; border-radius: 8px; background: #fbf5ef; color: #703b3b; text-align: center; box-shadow: 0 8px 20px rgb(58 32 32 / 10%); }
+.invitationTitle { position: relative; padding: 4px 0; font-size: 10px; font-family: var(--font-undara-heading); outline: 1px solid transparent; }
+.invitationTitle[data-selected=true] { outline-color: #703b3b; }
+.invitationTitle[data-selected=true]::after { position: absolute; right: -3px; bottom: -3px; width: 6px; height: 6px; content: ""; border: 1px solid #703b3b; background: #fbf5ef; }
+.paper h3 { margin-top: 18px; color: #703b3b; font-family: var(--font-undara-heading); font-size: 27px; line-height: 1.2; }
+.paper h3 span { display: block; font-size: 15px; }
+.art { position: relative; height: 105px; margin-top: 14px; }
+.greeting { margin-top: 10px; font-size: 9px; }
+.status { display: flex; align-items: center; justify-content: center; gap: 5px; min-height: 18px; font-size: 10px; color: var(--muted-foreground); }
+.status > span { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
+.cursor { position: absolute; inset: 0; color: var(--primary); pointer-events: none; transition: transform 250ms cubic-bezier(0.23, 1, 0.32, 1); }
+.cursor[data-motion=false] { visibility: hidden; transition: none; }
+@media (max-width: 639px) {
+  .workspace { grid-template-columns: 44px 100px minmax(0, 1fr); min-height: 380px; }
+  .header { padding: 12px; gap: 8px; }
+  .canvas { padding-inline: 8px; }
+  .toolbar { width: calc(100% + 16px); gap: 5px; padding-inline: 6px; }
+  .toolbar > svg { display: none; }
+  .paper { padding-inline: 8px; }
+  .paper h3 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) { .cursor { visibility: hidden; transition: none; } }
