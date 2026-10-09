@@ -39,8 +39,8 @@ export default function HeroSection({ ready }: { ready: boolean }) {
         { transform: "translateY(0)", offset: 0 },
         { transform: bottom, offset: 0.92 },
         { transform: bottom, offset: 1 },
-      ], { duration: 20000, iterations: Infinity, easing: "linear" });
-      if (typeof elapsed === "number") animation.currentTime = elapsed % 20000;
+      ], { duration: 18000, iterations: Infinity, easing: "linear" });
+      if (typeof elapsed === "number") animation.currentTime = elapsed % 18000;
       travel = distance;
     };
     const observer = new ResizeObserver(measure);
