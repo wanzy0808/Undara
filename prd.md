@@ -3690,3 +3690,11 @@ Owner requests that policies live within Help and follow current product behavio
 
 
 **Implementation / validation:** Help now contains current getting-started guidance, nine FAQ topics, existing legal protections with four current product-scope topics, seven privacy topics and the existing support contact. Prices in FAQ come from the shared package catalog. Policy disclosures support native keyboard operation. Hash navigation corrects the actual inner scroll position after fonts load, including both legacy route redirects. Production build/TypeScript and 974 regression tests pass; scoped ESLint and diff check pass. Chromium verifies both legacy redirects and keyboard disclosures at 1280px Light / 390px Dark in ID/EN (eight redirect cases), correct section positioning, no page errors or document overflow; desktop/mobile screenshots inspected. No auth, package, payment, QR or data processing behavior changed; no deployment or legal-compliance claim.
+
+
+### 2026-10-09 — Concise Help, details on demand
+
+Owner finds the expanded Help page overwhelming. Keep its initial reading short: concise headings, six short FAQ topics closed initially, a collapsed four-step guide, and brief policy introductions. Full terms/privacy remain accessible through disclosures and open on their existing hash/legacy links; do not discard their full content. Keep ID/EN parity, available heading width, readable text sizes, and support contact.
+
+
+**Validation:** Production build/TypeScript, scoped ESLint, 16 marketing/continuity/Event Planner tests and git diff --check pass. Chromium ID/EN at 1280px Light and 390px Dark confirms initially closed guide, FAQ and policies; old legal/hash links open the relevant full policy, nested topic disclosures work with mouse/keyboard, and all eight redirect cases have correct section positioning without document overflow or page errors. Desktop/mobile screenshots inspected. The shared FAQ optional initial-state prop keeps its existing open-first default on all other pages. Full legal content remains unchanged; no deployment claim.

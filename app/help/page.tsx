@@ -33,6 +33,7 @@ export default function HelpPage() {
       const target = document.getElementById(window.location.hash.slice(1));
       const panel = scrollRoot.current;
       if (!active || !target || !panel?.contains(target)) return;
+      target.querySelector<HTMLDetailsElement>("details[data-policy]")?.setAttribute("open", "");
       panel.scrollTo({ top: panel.scrollTop + target.getBoundingClientRect().top - panel.getBoundingClientRect().top - 32, behavior: "instant" });
     };
     const frame = requestAnimationFrame(jump);
@@ -42,25 +43,19 @@ export default function HelpPage() {
   }, []);
 
   const faq = en ? [
-    { question: "Does one package cover every event in my account?", answer: `No. Digital Invitation (${price("INVITATION_BASIC")}) covers one event. You can prepare multiple events; each needs its own access before publication. Digital Guestbook (${price("GUESTBOOK_DIGITAL")}) includes Digital Invitation for that same event.` },
-    { question: "What is the difference between Save and Publish?", answer: "Save in Studio stores your draft. Publish from Dashboard when the event has active access and the required details are complete. RSVP and Guest Management can be prepared before publishing. Check Event Setup carefully: published event details are locked for users." },
-    { question: "Can I use two sessions or two event dates?", answer: "Two sessions on the same date can belong to one event, with their own time and venue. Different dates require separate events and package access. Personal invitations and RSVP follow the sessions assigned to each guest." },
-    { question: "Does scanning an invitation QR record a guest’s arrival?", answer: "The invitation QR opens the event invitation. A personal guest QR is different: authorized reception staff scan it to verify the guest and record arrival for the appropriate event/session. A general invitation QR does not identify every visitor as an attending guest." },
-    { question: "Are guest lists and seating managed separately?", answer: "Personal Invitations and Table Settings use the same event guest list. Search existing guests rather than entering duplicates. Party size determines the seats needed; assigned guests stay within the selected table’s capacity." },
-    { question: "Is WhatsApp delivery included?", answer: `You can share personal invitations manually. Paid WA Blast uses event-specific credits; ${price("WA_BLAST_50")} adds 50 credits to an event with active Digital Invitation access. Additional credits can be purchased again. Verify recipient numbers before sending.` },
-    { question: "Can I preview templates and change the invitation design?", answer: "Browse real template previews before buying. Choose a theme that supports your event category and edit the available content in Studio. Saving your invitation does not change the master template or another customer’s invitation." },
-    { question: "How do Printed Invitation and Event Planner orders work?", answer: "Printed invitations combined with Digital Invitation can be ordered individually; separate or bulk custom printing has a 300-piece minimum, with prices agreed through consultation. Undara’s Event Planner service connects you with providers after discussing your needs; it is not automatically included in the invitation package." },
-    { question: "My access, payment, or QR is not appearing. What should I send support?", answer: "Check the selected event and account first. Send the event name, relevant invoice/reference, error message, and screenshot to Undara. Do not send passwords or OTPs. A package for a different event does not unlock the event you are viewing." },
+    { question: "Packages & event dates", answer: `Digital Invitation: ${price("INVITATION_BASIC")} per event. Digital Guestbook: ${price("GUESTBOOK_DIGITAL")}, including the invitation for that event. Same-day sessions can share one event; different dates need separate events and access.` },
+    { question: "Save & Publish", answer: "Save keeps your Studio draft. Publish from Dashboard after event access is active. Prepare guests before publishing; check event details carefully because they lock after Publish." },
+    { question: "Invitation QR & guest QR", answer: "Invitation QR opens the invitation. Personal guest QR lets authorized staff verify guests and record arrival for the right event/session. A general invitation QR does not record each visitor as attending." },
+    { question: "Guest lists & seating", answer: "Personal Invitations and Table Settings share one guest list. Search existing guests to avoid duplicates; party size and table capacity determine seating." },
+    { question: "WhatsApp delivery", answer: `Share personal links manually, or buy WA Blast credits: ${price("WA_BLAST_50")} for 50 sends, tied to one event with active Digital Invitation. Check recipient numbers before sending.` },
+    { question: "Printing & Event Planner", answer: "Printing with Digital Invitation can be ordered individually; separate or bulk custom orders start at 300 pieces. Prices are agreed through consultation. Event Planner connects you with providers and is a separate service." },
   ] : [
-    { question: "Apakah satu paket berlaku untuk semua acara di akun saya?", answer: `Tidak. Undangan Digital (${price("INVITATION_BASIC")}) berlaku untuk satu acara. Kamu dapat menyiapkan beberapa acara; masing-masing memerlukan akses sebelum diterbitkan. Buku Tamu Digital (${price("GUESTBOOK_DIGITAL")}) sudah termasuk Undangan Digital untuk acara yang sama.` },
-    { question: "Apa bedanya Simpan dan Publish?", answer: "Simpan di Studio menyimpan draft. Publish dilakukan melalui Dashboard setelah akses acara aktif dan detail wajib lengkap. RSVP dan Manajemen Tamu bisa disiapkan sebelum publikasi. Periksa Rangkaian Acara dengan teliti karena detail acara yang sudah terbit terkunci untuk pengguna." },
-    { question: "Bisa memakai dua sesi atau dua tanggal acara?", answer: "Dua sesi pada tanggal yang sama dapat berada dalam satu acara, dengan waktu dan lokasi masing-masing. Tanggal berbeda memerlukan acara dan akses paket tersendiri. Undangan personal dan RSVP mengikuti sesi yang diundangkan kepada tiap tamu." },
-    { question: "Apakah scan QR undangan langsung mencatat tamu hadir?", answer: "QR undangan membuka halaman undangan acara. QR personal tamu berbeda: petugas penerima tamu yang berwenang memindainya untuk memverifikasi tamu dan mencatat kedatangan pada acara/sesi yang sesuai. QR undangan umum tidak otomatis mengenali setiap pengunjung sebagai tamu hadir." },
-    { question: "Apakah daftar tamu dan pengaturan meja terpisah?", answer: "Undangan Personal dan Pengaturan Meja memakai daftar tamu acara yang sama. Cari tamu tersimpan supaya tidak membuat data ganda. Jumlah anggota rombongan menentukan kebutuhan kursi; penempatan tamu tetap mengikuti kapasitas meja yang dipilih." },
-    { question: "Apakah pengiriman WhatsApp sudah termasuk?", answer: `Undangan personal dapat dibagikan manual. WA Blast berbayar memakai kuota per acara; ${price("WA_BLAST_50")} menambah 50 kuota untuk acara dengan Undangan Digital aktif. Kuota bisa dibeli lagi sesuai kebutuhan. Periksa nomor penerima sebelum mengirim.` },
-    { question: "Bisa melihat template dan mengubah desain undangan?", answer: "Lihat pratinjau template sebelum membeli. Pilih tema yang mendukung kategori acaramu, lalu edit konten yang tersedia di Studio. Menyimpan undanganmu tidak mengubah template utama atau undangan pelanggan lain." },
-    { question: "Bagaimana pemesanan Undangan Fisik dan Event Planner?", answer: "Undangan Fisik yang digabung dengan Undangan Digital dapat dipesan satuan; pesanan cetak terpisah atau bulk custom minimum 300 pcs, dengan harga melalui konsultasi. Event Planner melalui Undara menghubungkanmu dengan penyedia layanan setelah kebutuhan dibahas; tidak otomatis termasuk paket undangan." },
-    { question: "Akses, pembayaran, atau QR belum muncul. Apa yang perlu dikirim ke bantuan?", answer: "Periksa akun dan acara yang dipilih terlebih dahulu. Kirim nama acara, nomor invoice/referensi terkait, pesan kesalahan, dan tangkapan layar kepada Undara. Jangan kirim kata sandi atau OTP. Paket untuk acara lain tidak membuka akses acara yang sedang kamu lihat." },
+    { question: "Paket & tanggal acara", answer: `Undangan Digital: ${price("INVITATION_BASIC")} per acara. Buku Tamu Digital: ${price("GUESTBOOK_DIGITAL")}, termasuk undangan untuk acara yang sama. Sesi di tanggal yang sama bisa dalam satu acara; tanggal berbeda perlu acara dan akses tersendiri.` },
+    { question: "Simpan & Publish", answer: "Simpan menyimpan draft Studio. Publish melalui Dashboard setelah akses acara aktif. Tamu bisa disiapkan sebelum publikasi; periksa detail acara karena terkunci setelah Publish." },
+    { question: "QR undangan & QR tamu", answer: "QR undangan membuka undangan. QR personal tamu dipindai petugas untuk verifikasi dan mencatat kedatangan pada acara/sesi yang sesuai. QR umum tidak otomatis mencatat setiap pengunjung hadir." },
+    { question: "Daftar tamu & meja", answer: "Undangan Personal dan Pengaturan Meja memakai satu daftar tamu. Cari tamu tersimpan agar tidak ganda; jumlah rombongan dan kapasitas meja menentukan penempatan kursi." },
+    { question: "Pengiriman WhatsApp", answer: `Bagikan tautan personal secara manual, atau beli kuota WA Blast: ${price("WA_BLAST_50")} untuk 50 pengiriman pada satu acara dengan Undangan Digital aktif. Periksa nomor penerima sebelum mengirim.` },
+    { question: "Undangan Fisik & Event Planner", answer: "Cetak bersama Undangan Digital bisa satuan; cetak terpisah atau bulk custom minimum 300 pcs. Harga melalui konsultasi. Event Planner menghubungkanmu dengan penyedia layanan dan merupakan layanan terpisah." },
   ];
 
   return (
@@ -69,34 +64,37 @@ export default function HelpPage() {
       <div data-undara-marketing-frame className="undara-marketing-frame">
         <div className="undara-marketing-frame-header"><Navbar embedded /></div>
         <main ref={scrollRoot} tabIndex={0} aria-label={en ? "Help page content" : "Konten halaman bantuan"} className="undara-marketing-scroll relative z-20 focus-visible:outline-2 focus-visible:outline-primary">
-          <div className="undara-marketing-content flex flex-col gap-20 py-8 md:gap-24 md:py-12">
+          <div className="undara-marketing-content flex flex-col gap-12 py-8 md:gap-16 md:py-12">
             <header className="undara-marketing-section">
               <div className="flex items-center gap-3"><CircleHelp className="h-4 w-4 text-primary" aria-hidden="true" /><p className="undara-marketing-kicker">{en ? "Undara Help" : "Bantuan Undara"}</p></div>
-              <h1 className="undara-marketing-title mt-5 text-primary">{en ? "Everything you need to continue." : "Semua yang kamu perlukan untuk lanjut."}</h1>
-              <p className="mt-6 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Find the event guide, package answers, service terms, and privacy information in one place." : "Temukan panduan acara, jawaban soal paket, ketentuan layanan, dan informasi privasi dalam satu tempat."}</p>
+              <h1 className="undara-marketing-title mt-5 text-primary">{en ? "How can we help?" : "Perlu bantuan apa?"}</h1>
+              <p className="mt-6 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Choose a topic. Read the details when you need them." : "Pilih topik, lalu buka penjelasannya saat kamu perlu."}</p>
               <nav aria-label={en ? "Help topics" : "Topik bantuan"} className="mt-8 flex flex-wrap gap-3">{links.map(([id,label]) => <a key={id} href={`#${id}`} className="rounded-[12px] border border-primary/30 px-4 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{label}</a>)}</nav>
             </header>
 
             <section id="mulai" className="undara-marketing-section scroll-mt-8">
-              <h2 className="undara-marketing-heading text-primary">{en ? "From your first draft to your guests’ arrival." : "Dari draft pertama sampai tamu datang."}</h2>
-              <ol className="mt-8 space-y-8">
-                {[
-                  [en ? "Prepare your event" : "Siapkan acaramu", en ? "Sign in, create an event, and check the category, date, sessions, and venue." : "Masuk, buat acara, lalu periksa kategori, tanggal, sesi, dan lokasi."],
-                  [en ? "Design and save" : "Desain dan simpan", en ? "Choose a suitable template, edit your content in Studio, and save your draft. Prepare guests and seating in Dashboard." : "Pilih template yang sesuai, edit isi melalui Studio, lalu simpan draft. Siapkan tamu dan meja di Dashboard."],
-                  [en ? "Activate and publish" : "Aktifkan dan terbitkan", en ? "Activate the package for that event, review the invitation, and Publish from Dashboard." : "Aktifkan paket untuk acara tersebut, periksa undangannya, lalu Publish melalui Dashboard."],
-                  [en ? "Share and welcome guests" : "Bagikan dan sambut tamu", en ? "Share personal links, monitor RSVP, and use personal guest QR check-in with Digital Guestbook." : "Bagikan tautan personal, pantau RSVP, dan gunakan pemindaian QR personal tamu melalui Buku Tamu Digital."],
-                ].map(([title,body]) => <li key={title}><h3 className="undara-marketing-subheading text-primary">{title}</h3><p className="mt-3 max-w-[70ch] text-base leading-8 text-muted-foreground">{body}</p></li>)}
-              </ol>
-              <div className="mt-8 flex flex-wrap gap-5"><Link href="/template-design" className="inline-flex items-center gap-2 text-primary hover:underline">{en ? "Explore templates" : "Lihat template"}<ArrowRight className="h-4 w-4" /></Link><Link href="/dashboard" className="inline-flex items-center gap-2 text-primary hover:underline">Dashboard<ArrowRight className="h-4 w-4" /></Link></div>
+              <details className="rounded-[16px] bg-primary/[0.045] px-5 py-5 md:px-7">
+                <summary className="cursor-pointer text-base font-medium text-primary">{en ? "New here? Start with these four steps." : "Baru mulai? Ikuti empat langkah ini."}</summary>
+                <ol className="mt-5 max-w-[70ch] list-decimal space-y-3 pl-5 text-base leading-7 text-muted-foreground">
+                  <li>{en ? "Create an event; check its date, sessions, and venue." : "Buat acara; periksa tanggal, sesi, dan lokasi."}</li>
+                  <li>{en ? "Preview a suitable template, edit in Studio, and save." : "Lihat template yang sesuai, edit di Studio, lalu simpan."}</li>
+                  <li>{en ? "Activate access for that event, review, then Publish from Dashboard." : "Aktifkan akses acara tersebut, periksa, lalu Publish di Dashboard."}</li>
+                  <li>{en ? "Share personal links, monitor RSVP, and prepare guest reception." : "Bagikan tautan personal, pantau RSVP, dan siapkan penerimaan tamu."}</li>
+                </ol>
+                <div className="mt-5 flex flex-wrap gap-5"><Link href="/template-design" className="text-primary hover:underline">{en ? "Explore templates" : "Lihat template"}</Link><Link href="/dashboard" className="text-primary hover:underline">Dashboard</Link></div>
+              </details>
             </section>
 
-            <section id="faq" className="undara-marketing-section scroll-mt-8"><FaqSection eyebrow={en ? "Questions & answers" : "Tanya jawab"} title={en ? "Clear answers for your event." : "Jawaban yang jelas untuk acaramu."} description={en ? "Packages, publishing, guests, QR codes, and other services." : "Paket, publikasi, tamu, kode QR, dan layanan lainnya."} items={faq} wide editorial /></section>
+            <section id="faq" className="undara-marketing-section scroll-mt-8"><FaqSection eyebrow={en ? "Questions & answers" : "Tanya jawab"} title={en ? "Common questions" : "Pertanyaan umum"} description={en ? "Packages, publishing, guests, QR codes, and other services." : "Paket, publikasi, tamu, kode QR, dan layanan lainnya."} items={faq} defaultOpen={null} wide editorial /></section>
 
             <section id="terms" className="undara-marketing-section scroll-mt-8" aria-labelledby="terms-title">
               <p className="undara-marketing-kicker">{en ? "Updated 9 October 2026" : "Diperbarui 9 Oktober 2026"}</p>
               <h2 id="terms-title" className="undara-marketing-heading mt-4 text-primary">{copy.title}</h2>
-              <div className="mt-6 max-w-[75ch] space-y-4 text-base leading-8 text-muted-foreground">{copy.opening.map(p => <p key={p}>{p}</p>)}</div>
-              <PolicyTopics sections={[...productTerms[locale], ...copy.sections]} />
+              <p className="mt-4 max-w-[70ch] text-base leading-7 text-muted-foreground">{en ? "Packages apply per event. Review your details before Publish and use content you have permission to share." : "Paket berlaku per acara. Periksa detail sebelum Publish dan gunakan konten yang kamu punya izin untuk membagikannya."}</p>
+              <details data-policy className="mt-5 rounded-[16px] bg-primary/[0.045] px-5 py-5 md:px-7">
+                <summary className="cursor-pointer text-base font-medium text-primary">{en ? "Read the full terms" : "Baca ketentuan lengkap"}</summary>
+                <PolicyTopics sections={[{ title: copy.introduction, points: copy.opening }, ...productTerms[locale], ...copy.sections]} />
+              </details>
               <a href="#privacy" className="mt-6 inline-flex text-primary hover:underline">{copy.privacy}</a>
             </section>
 
@@ -104,12 +102,15 @@ export default function HelpPage() {
               <p className="undara-marketing-kicker">{en ? "Updated 9 October 2026" : "Diperbarui 9 Oktober 2026"}</p>
               <h2 id="privacy-title" className="undara-marketing-heading mt-4 text-primary">{en ? "Privacy Policy" : "Kebijakan Privasi"}</h2>
               <p className="mt-6 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "How account, event, and guest information is used when you use Undara." : "Cara informasi akun, acara, dan tamu digunakan saat kamu memakai Undara."}</p>
-              <PolicyTopics sections={privacySections[locale]} />
+              <details data-policy className="mt-5 rounded-[16px] bg-primary/[0.045] px-5 py-5 md:px-7">
+                <summary className="cursor-pointer text-base font-medium text-primary">{en ? "Read the privacy policy" : "Baca kebijakan privasi"}</summary>
+                <PolicyTopics sections={privacySections[locale]} />
+              </details>
             </section>
 
             <section id="kontak" className="undara-marketing-section scroll-mt-8 pb-12">
               <h2 className="undara-marketing-heading text-primary">{en ? "Still need a hand?" : "Masih perlu bantuan?"}</h2>
-              <p className="mt-5 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Send your event name and the issue you encountered. For personal-data requests, explain which account or event the request concerns." : "Kirim nama acara dan kendala yang kamu temui. Untuk permintaan terkait data pribadi, jelaskan akun atau acara yang dimaksud."}</p>
+              <p className="mt-5 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Send your event name, issue, and screenshot. Never share passwords or OTPs." : "Kirim nama acara, kendala, dan tangkapan layar. Jangan kirim kata sandi atau OTP."}</p>
               <Button asChild size="lg" className="mt-7"><a href="https://wa.me/6282124786516" target="_blank" rel="noopener noreferrer">{en ? "Contact Undara" : "Hubungi Undara"}<ArrowRight className="h-4 w-4" /></a></Button>
             </section>
           </div>

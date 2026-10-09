@@ -525,3 +525,8 @@ Untuk template ilustrasi/scrapbook Undara, lihat dan audit aset asli terlebih da
 ### 2026-10-09 — Help owns guides, terms and privacy
 
 Owner requests that policies live within Help and follow current product behavior. `/help` is the canonical ID/EN home for getting started, event-scoped packages, Save/Publish, same-day sessions, guest/seating data, the distinct invitation/guest QR purposes, WA Blast, printed orders, support, Terms & Conditions and Privacy Policy. Footer links target `/help#terms` / `/help#privacy`; old legal routes redirect to those sections so existing registration consent links keep working without changing auth styling or consent behavior. Legal sections use readable measures and accessible topic disclosures; hash navigation scrolls the actual marketing panel. This explicitly supersedes old requirements to keep separate policy pages and copied unverified location/analytics/one-day-notice claims. Preserve existing content ownership and consumer/data protections; do not invent corporate identity, refunds, retention deadlines or compliance guarantees.
+
+
+### 2026-10-09 — Concise Help, details on demand
+
+Owner finds the expanded Help page overwhelming. Keep its initial reading short: concise headings, six short FAQ topics closed initially, a collapsed four-step guide, and brief policy introductions. Full terms/privacy remain accessible through disclosures and open on their existing hash/legacy links; do not discard their full content. Keep ID/EN parity, available heading width, readable text sizes, and support contact.

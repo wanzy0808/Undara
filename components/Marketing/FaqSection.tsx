@@ -14,6 +14,7 @@ type FaqSectionProps = {
   items: readonly FaqItem[];
   wide?: boolean;
   editorial?: boolean;
+  defaultOpen?: number | null;
 };
 
 export default function FaqSection({
@@ -23,8 +24,9 @@ export default function FaqSection({
   items,
   wide = false,
   editorial = false,
+  defaultOpen = 0,
 }: FaqSectionProps) {
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(defaultOpen);
 
   return (
     <section className={`mx-auto w-full space-y-8 md:space-y-10 ${wide ? "max-w-none" : "max-w-4xl"}`}>
