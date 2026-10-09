@@ -1,3 +1,32 @@
+.album {
+  display: grid;
+  grid-template-areas: "intro" "photo" "details";
+  gap: 28px;
+  width: 100%;
+  min-width: 0;
+}
+
+.intro { grid-area: intro; min-width: 0; }
+.stage { grid-area: photo; width: 100%; max-width: 680px; align-self: center; }
+.details { grid-area: details; min-width: 0; }
+.choices { display: flex; gap: 12px; }
+
+@media (min-width: 1024px) {
+  .album {
+    grid-template-areas: "photo intro" "photo details";
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(32px, 4vw, 64px);
+    row-gap: 28px;
+  }
+  .album[data-physical-album="material"] {
+    grid-template-areas: "intro photo" "details photo";
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  }
+  .choices { flex-direction: column; gap: 4px; }
+  .choices .choice { flex: none; flex-direction: row; align-items: center; gap: 16px; }
+}
+
 .photo {
   position: absolute;
   inset: 0;
