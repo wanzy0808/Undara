@@ -1831,3 +1831,10 @@ body:has(.undara-dashboard--redesign) {
   .undara-sidebar-link:is(.is-active, [aria-current="page"]):hover {
   color: #3A2020 !important;
 }
+
+
+/* Reveal content stays visible from the first frame when motion is disabled. */
+@media (prefers-reduced-motion: reduce) {
+  .undara-scroll-reveal { opacity: 1 !important; transform: none !important; }
+  .undara-stationery-note { transform: none !important; }
+}
