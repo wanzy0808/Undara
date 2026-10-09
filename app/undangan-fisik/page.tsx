@@ -142,16 +142,16 @@ export default function UndanganFisikPage() {
                 <p className="undara-marketing-kicker">{en ? "Printed design inspiration" : "Inspirasi Undangan Cetak"}</p>
                 <h2 className="undara-marketing-heading mt-4 text-primary">{en ? "Two ways to tell Una & Dara’s story." : "Dua cara membawa cerita Una & Dara."}</h2>
                 <p className="mt-5 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Illustrative designs. Shapes, colors, and print details can be discussed for your event." : "Contoh ilustrasi desain. Bentuk, warna, dan detail cetak bisa dibicarakan untuk acaramu."}</p>
-                <div className="mt-9 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-                  <figure data-physical-sample className="min-w-0 lg:w-[57%]">
+                <div className="mt-9 flex w-full max-w-3xl flex-col gap-10 md:gap-14">
+                  <figure data-physical-sample className="min-w-0 w-full">
                     <div className="relative aspect-[3/2] overflow-hidden rounded-[20px]">
-                      <Image src="/assets/marketing/physical-invitation/sample-ivory-una-dara.webp" alt={en ? "Una & Dara ivory arch printed invitation set" : "Set undangan cetak Una & Dara berbentuk lengkung warna ivory"} fill sizes="(max-width: 1023px) 90vw, 50vw" className="object-cover" />
+                      <Image src="/assets/marketing/physical-invitation/sample-ivory-una-dara.webp" alt={en ? "Una & Dara ivory arch printed invitation set" : "Set undangan cetak Una & Dara berbentuk lengkung warna ivory"} fill sizes="(max-width: 1023px) 90vw, 768px" className="object-cover" />
                     </div>
                     <figcaption className="mt-5"><h3 className="undara-marketing-subheading text-primary">{en ? "Ivory arch" : "Lengkung Ivory"}</h3><p className="mt-2 text-base text-muted-foreground">{en ? "Soft tones, a gentle silhouette." : "Warna lembut, bentuk yang hangat."}</p></figcaption>
                   </figure>
-                  <figure data-physical-sample className="min-w-0 lg:mt-16 lg:flex-1">
+                  <figure data-physical-sample className="min-w-0 w-full">
                     <div className="relative aspect-[3/2] overflow-hidden rounded-[20px]">
-                      <Image src="/assets/marketing/physical-invitation/sample-brown-una-dara.webp" alt={en ? "Una & Dara brown folded printed invitation set" : "Set undangan cetak lipat Una & Dara berwarna coklat"} fill sizes="(max-width: 1023px) 90vw, 40vw" className="object-cover" />
+                      <Image src="/assets/marketing/physical-invitation/sample-brown-una-dara.webp" alt={en ? "Una & Dara brown folded printed invitation set" : "Set undangan cetak lipat Una & Dara berwarna coklat"} fill sizes="(max-width: 1023px) 90vw, 768px" className="object-cover" />
                     </div>
                     <figcaption className="mt-5"><h3 className="undara-marketing-subheading text-primary">{en ? "Brown fold" : "Lipatan Coklat"}</h3><p className="mt-2 text-base text-muted-foreground">{en ? "Warm paper, champagne accents." : "Kertas hangat, aksen champagne."}</p></figcaption>
                   </figure>
@@ -160,7 +160,7 @@ export default function UndanganFisikPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
-              <section id="material" className="undara-marketing-section undara-editorial-offset-right relative isolate py-8 md:py-12">
+              <section id="material" className="undara-marketing-section relative isolate py-8 md:py-12">
                 <div className="relative z-10 grid gap-8">
                   <div>
                     <p className="undara-marketing-kicker">{en ? "Tactile direction" : "Arah Material"}</p>
@@ -176,15 +176,15 @@ export default function UndanganFisikPage() {
                 </div>
 
                 <p className="undara-marketing-meta mt-5 text-muted-foreground">{en ? "Design illustrations · final specifications agreed through consultation" : "Ilustrasi desain · spesifikasi akhir melalui konsultasi"}</p>
-                <div className="mt-10 space-y-12 md:space-y-16">
-                  {materials.map(([asset, title, detail, alt], index) => (
-                    <article key={asset} data-physical-material className={`grid items-center gap-6 md:gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] ${index === 1 ? "lg:ml-auto lg:max-w-5xl" : ""}`}>
-                      <figure className={`group relative aspect-[3/2] overflow-hidden rounded-[20px] ${index === 1 ? "lg:order-2" : ""}`}>
-                        <Image src={`/assets/marketing/physical-invitation/${asset}.webp`} alt={alt} fill sizes="(max-width: 1023px) 90vw, 55vw" className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.025] motion-reduce:transition-none" />
+                <div className="mt-10 w-full max-w-3xl space-y-10 md:space-y-14">
+                  {materials.map(([asset, title, detail, alt]) => (
+                    <article key={asset} data-physical-material className="flex w-full min-w-0 flex-col gap-5">
+                      <figure className="group relative aspect-[3/2] w-full overflow-hidden rounded-[20px]">
+                        <Image src={`/assets/marketing/physical-invitation/${asset}.webp`} alt={alt} fill sizes="(max-width: 1023px) 90vw, 768px" className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.025] motion-reduce:transition-none" />
                       </figure>
                       <div className="min-w-0">
                         <h3 className="undara-marketing-subheading text-primary">{title}</h3>
-                        <p className="mt-4 max-w-[60ch] text-base leading-8 text-muted-foreground">{detail}</p>
+                        <p className="mt-2 max-w-[70ch] text-base leading-8 text-muted-foreground">{detail}</p>
                       </div>
                     </article>
                   ))}
@@ -193,7 +193,7 @@ export default function UndanganFisikPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
-              <section id="proses" className="undara-marketing-section undara-editorial-offset-left relative isolate scroll-mt-24 py-14 md:py-20">
+              <section id="proses" className="undara-marketing-section relative isolate scroll-mt-24 py-14 md:py-20">
                 <StationeryNote className="-right-[4%] top-[12%] h-[46%] w-[42%]" rotate={9} />
                 <div className="relative z-10 grid gap-8">
                   <div>
@@ -210,10 +210,10 @@ export default function UndanganFisikPage() {
                 </div>
 
                 <div className="relative z-10 mt-10">
-                  {steps.map(([title, detail], index) => (
+                  {steps.map(([title, detail]) => (
                     <article
                       key={title}
-                      className={`grid gap-3 py-6 md:py-8 ${index % 2 ? "lg:pl-[6%]" : "lg:pr-[5%]"}`}
+                      className="grid gap-3 py-6 md:py-8"
                     >
                       <h3 className="undara-marketing-subheading font-[family-name:var(--font-undara-heading)] text-primary">
                         {title}
@@ -229,7 +229,7 @@ export default function UndanganFisikPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
-              <section className="undara-marketing-section undara-editorial-offset-right pb-14">
+              <section className="undara-marketing-section pb-14">
                 <p className="undara-marketing-kicker">{en ? "Ways to order" : "Pilihan Pemesanan"}</p>
                 <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                   {en ? "A few keepsakes or a full print run." : "Beberapa untuk disimpan, atau satu produksi penuh."}
@@ -257,7 +257,7 @@ export default function UndanganFisikPage() {
                     </Link>
                   </article>
 
-                  <article className="flex max-w-3xl flex-col rounded-[20px] bg-background/55 lg:ml-auto p-7 shadow-[0_16px_44px_rgba(58,32,32,0.07)] md:p-9">
+                  <article className="flex max-w-3xl flex-col rounded-[20px] bg-background/55 p-7 shadow-[0_16px_44px_rgba(58,32,32,0.07)] md:p-9">
                     <p className="undara-marketing-kicker">{en ? "Standalone / Custom" : "Terpisah / Khusus"}</p>
                     <h3 className="undara-marketing-subheading mt-5 font-[family-name:var(--font-undara-heading)] text-primary">
                       {en ? "Minimum 300 pieces." : "Minimal 300 lembar."}
@@ -277,7 +277,7 @@ export default function UndanganFisikPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
-              <section className="undara-marketing-section undara-editorial-offset-left relative mb-4 overflow-hidden py-14 md:py-20">
+              <section className="undara-marketing-section relative mb-4 overflow-hidden py-14 md:py-20">
                 <StationeryNote className="-right-[3%] -top-[8%] h-[110%] w-[40%]" rotate={-5} />
                 <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-16">
                   <div>

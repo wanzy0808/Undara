@@ -538,3 +538,8 @@ Owner finds `/undangan-fisik` too text-heavy and asks for faint stationery notes
 
 
 **Owner follow-up:** Add two finished printed invitation design examples using the names Una & Dara: ivory arch and brown folded stationery. Display them as illustrative designs in an asymmetric gallery ahead of the material details, without invented customer orders, dates or venues.
+
+
+### 2026-10-09 — Printed photo size and calm reading flow
+
+Owner likes the Printed Invitation imagery but finds alternating left/right composition and uneven sizes untidy. Use a single aligned vertical sequence for the two sample sets and three material photos: consistent max-3xl width, 3:2 image ratio, and captions directly underneath. Remove sample staggering, alternating material column order, process-row indents and order-card right shifts. Keep broad section headings and readable caption measures, transparent notes, existing imagery/content and production policy. This supersedes the earlier asymmetric/staggered arrangement on this page only; do not replace it with a dense equal-card grid.
