@@ -140,10 +140,14 @@ export default function UndanganFisikPage() {
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
               <section id="contoh" className="undara-marketing-section">
-                <p className="undara-marketing-kicker">{en ? "Printed design inspiration" : "Inspirasi Undangan Cetak"}</p>
-                <h2 className="undara-marketing-heading mt-4 text-primary">{en ? "Two ways to tell Una & Dara’s story." : "Dua cara membawa cerita Una & Dara."}</h2>
-                <p className="mt-5 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Illustrative designs. Shapes, colors, and print details can be discussed for your event." : "Contoh ilustrasi desain. Bentuk, warna, dan detail cetak bisa dibicarakan untuk acaramu."}</p>
                 <PhotoAlbum
+                  intro={
+                    <div>
+                      <p className="undara-marketing-kicker">{en ? "Printed design inspiration" : "Inspirasi Undangan Cetak"}</p>
+                      <h2 className="undara-marketing-heading mt-4 text-primary">{en ? "Two ways to tell Una & Dara’s story." : "Dua cara membawa cerita Una & Dara."}</h2>
+                      <p className="mt-5 max-w-[70ch] text-base leading-8 text-muted-foreground">{en ? "Illustrative designs. Shapes, colors, and print details can be discussed for your event." : "Contoh ilustrasi desain. Bentuk, warna, dan detail cetak bisa dibicarakan untuk acaramu."}</p>
+                    </div>
+                  }
                   kind="sample"
                   label={en ? "Choose a printed design" : "Pilih contoh desain cetak"}
                   photos={[
@@ -156,22 +160,26 @@ export default function UndanganFisikPage() {
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
               <section id="material" className="undara-marketing-section relative isolate py-8 md:py-12">
-                <div className="relative z-10 grid gap-8">
-                  <div>
-                    <p className="undara-marketing-kicker">{en ? "Tactile direction" : "Arah Material"}</p>
-                    <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
-                      {en ? "Details you can feel." : "Detail yang bisa kamu rasakan."}
-                    </h2>
-                  </div>
-                  <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
-                    {en
-                      ? "A little inspiration for your paper, envelope, and finishing. We will confirm the available materials during consultation."
-                      : "Inspirasi untuk kertas, amplop, dan sentuhan akhir. Pilihan material yang tersedia dibahas saat konsultasi."}
-                  </p>
-                </div>
-
-                <p className="undara-marketing-meta mt-5 text-muted-foreground">{en ? "Design illustrations · final specifications agreed through consultation" : "Ilustrasi desain · spesifikasi akhir melalui konsultasi"}</p>
                 <PhotoAlbum
+                  intro={
+                    <div>
+                      <div className="relative z-10 grid gap-8">
+                        <div>
+                          <p className="undara-marketing-kicker">{en ? "Tactile direction" : "Arah Material"}</p>
+                          <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                            {en ? "Details you can feel." : "Detail yang bisa kamu rasakan."}
+                          </h2>
+                        </div>
+                        <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
+                          {en
+                            ? "A little inspiration for your paper, envelope, and finishing. We will confirm the available materials during consultation."
+                            : "Inspirasi untuk kertas, amplop, dan sentuhan akhir. Pilihan material yang tersedia dibahas saat konsultasi."}
+                        </p>
+                      </div>
+
+                      <p className="undara-marketing-meta mt-5 text-muted-foreground">{en ? "Design illustrations · final specifications agreed through consultation" : "Ilustrasi desain · spesifikasi akhir melalui konsultasi"}</p>
+                    </div>
+                  }
                   kind="material"
                   label={en ? "Choose a material detail" : "Pilih detail material"}
                   photos={materials.map(([asset, title, detail, alt]) => ({ asset, title, detail, alt }))}
