@@ -530,3 +530,11 @@ Owner requests that policies live within Help and follow current product behavio
 ### 2026-10-09 — Concise Help, details on demand
 
 Owner finds the expanded Help page overwhelming. Keep its initial reading short: concise headings, six short FAQ topics closed initially, a collapsed four-step guide, and brief policy introductions. Full terms/privacy remain accessible through disclosures and open on their existing hash/legacy links; do not discard their full content. Keep ID/EN parity, available heading width, readable text sizes, and support contact.
+
+
+### 2026-10-09 — Printed Invitation material imagery and quiet notes
+
+Owner finds `/undangan-fisik` too text-heavy and asks for faint stationery notes like Event Planner, scoped to Printed Invitation first. Retain the current hero, add three illustrated paper/envelope/foil material visuals with varied media/copy placement, shorter nearby copy, and restrained hover feedback. Add a transparent stationery note at low theme-aware opacity in hero, process, and consultation whitespace; keep it behind readable copy, aria-hidden and pointer-events-none, with slow transform-only drift disabled for reduced motion. This is an explicit exception allowing service-specific stationery notes, not new woodland/leaf background layers. Do not propagate to other pages without a scoped request. Show an illustration label; never call generated imagery actual customer production. Preserve ID/EN, shared fonts, one forest/frame, one-off orders with Digital Invitation, standalone/custom minimum 300 pieces, quote-by-specification, WhatsApp and existing anchors. Assets and exact ImageGen prompts live in `public/assets/marketing/physical-invitation/README.md`.
+
+
+**Owner follow-up:** Add two finished printed invitation design examples using the names Una & Dara: ivory arch and brown folded stationery. Display them as illustrative designs in an asymmetric gallery ahead of the material details, without invented customer orders, dates or venues.

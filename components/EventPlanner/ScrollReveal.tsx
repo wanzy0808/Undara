@@ -17,11 +17,11 @@ export default function ScrollReveal({
   lift?: boolean;
 }) {
   const reducedMotion = useReducedMotion();
-  if (reducedMotion) return <div className="[&_h1]:text-primary [&_h2]:text-primary [&_h3]:text-primary">{children}</div>;
+  if (reducedMotion) return <div style={{ opacity: 1, transform: "none" }} className="undara-scroll-reveal [&_h1]:text-primary [&_h2]:text-primary [&_h3]:text-primary">{children}</div>;
 
   return (
     <motion.div
-      className="[&_h1]:text-primary [&_h2]:text-primary [&_h3]:text-primary"
+      className="undara-scroll-reveal [&_h1]:text-primary [&_h2]:text-primary [&_h3]:text-primary"
       initial={lift ? { opacity: 0, transform: "translateY(8px)" } : { opacity: 0 }}
       whileInView={lift ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 1 }}
       viewport={{ root: scrollRoot, once: true, amount: 0.06 }}
