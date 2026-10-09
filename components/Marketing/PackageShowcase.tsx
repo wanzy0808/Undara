@@ -35,13 +35,13 @@ export default function PackageShowcase({
   if (editorial) {
     return (
       <section className="undara-marketing-section py-14 md:py-20">
-        <div className="grid gap-12 lg:grid-cols-[0.84fr_1.16fr] lg:items-start lg:gap-20">
-          <div className="max-w-xl lg:pt-6">
+        <div className="grid gap-12 ">
+          <div className="w-full">
             <p className="undara-marketing-kicker">{eyebrow}</p>
-            <h2 className="undara-marketing-heading mt-4 max-w-[15ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+            <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
               {title}
             </h2>
-            <p className="mt-6 text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+            <p className="mt-6 max-w-[70ch] text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
               {description}
             </p>
             {note ? (
@@ -68,7 +68,7 @@ export default function PackageShowcase({
                         </span>
                       )}
                     </div>
-                    <h3 className="undara-marketing-subheading mt-5 max-w-[16ch] font-[family-name:var(--font-undara-heading)] text-primary">
+                    <h3 className="undara-marketing-subheading mt-5 font-[family-name:var(--font-undara-heading)] text-primary">
                       {item.name[locale]}
                     </h3>
                     <p className="mt-5 font-[family-name:var(--font-undara-heading)] text-4xl text-foreground md:text-5xl">
@@ -112,10 +112,10 @@ export default function PackageShowcase({
 
   return (
     <section className={`w-full py-14 md:py-20 ${wide ? "max-w-none" : ""}`}>
-      <div className={`grid gap-10 ${wide && packages.length === 1 ? "lg:grid-cols-[0.95fr_1.05fr] lg:gap-16" : ""}`}>
-        <div className={`space-y-4 ${wide && packages.length === 1 ? "lg:pt-8" : "max-w-3xl text-left"}`}>
+      <div className="grid gap-10">
+        <div className="w-full space-y-4 text-left">
           <p className="undara-marketing-meta text-primary">{eyebrow}</p>
-          <h2 className="undara-marketing-heading max-w-[20ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">{title}</h2>
+          <h2 className="undara-marketing-heading font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">{title}</h2>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">{description}</p>
         </div>
         <div className={`grid w-full gap-6 ${packages.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1"}`}>

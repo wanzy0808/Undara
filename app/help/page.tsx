@@ -84,21 +84,21 @@ export default function HelpPage() {
         <main ref={scrollRoot} tabIndex={0} aria-label={en ? "Help page content" : "Konten halaman bantuan"} className="undara-marketing-scroll relative z-20 focus-visible:outline-2 focus-visible:outline-primary">
           <div className="undara-marketing-content flex flex-col gap-24 py-8 md:gap-28 md:py-12">
             <ScrollReveal scrollRoot={scrollRoot} lift>
-            <section className="undara-marketing-section grid min-h-[min(68dvh,690px)] items-center gap-10 pb-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
+            <section className="undara-marketing-section grid items-center gap-10 pb-14 ">
               <div>
                 <div className="flex items-center gap-3">
                   <CircleHelp className="h-4 w-4 text-primary" aria-hidden="true" />
                   <p className="undara-marketing-kicker">{en ? "Undara Help" : "Bantuan Undara"}</p>
                 </div>
 
-                <h1 className="undara-marketing-title mt-5 max-w-[22ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.035em] text-primary">
+                <h1 className="undara-marketing-title mt-5 font-[family-name:var(--font-undara-heading)] tracking-[-0.035em] text-primary">
                   {en
                     ? "Start with the question that blocks your next step."
                     : "Mulai dari pertanyaan yang menghambat langkah berikutnya."}
                 </h1>
               </div>
 
-              <div className="max-w-xl border-l border-primary/30 py-6 pl-7 md:pl-12">
+              <div className="max-w-[70ch]">
                 <p className="text-base leading-7 text-muted-foreground md:text-base md:leading-8">
                   {en
                     ? "A practical guide to invitations, packages, templates, publishing, RSVP, Digital Guestbook, and the main Undara workflow."
@@ -154,7 +154,7 @@ export default function HelpPage() {
               <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-16">
                 <div>
                   <p className="undara-marketing-kicker">{en ? "Next step" : "Langkah Berikutnya"}</p>
-                  <h2 className="undara-marketing-heading mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                  <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                     {en ? "Ready to continue your event setup?" : "Siap melanjutkan persiapan acaramu?"}
                   </h2>
                   <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">

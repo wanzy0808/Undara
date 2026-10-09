@@ -55,10 +55,10 @@ export default function ProcessSection() {
 
   return (
     <section className="undara-marketing-section py-14 md:py-20">
-      <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16">
+      <div className="grid gap-8 ">
         <div>
           <p className="undara-marketing-kicker">{en ? "From list to arrival" : "Dari Daftar sampai Kedatangan"}</p>
-          <h2 className="undara-marketing-heading mt-4 max-w-[17ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+          <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
             {en ? "A clear sequence for the busiest part of the day." : "Urutan yang jelas untuk bagian hari yang paling sibuk."}
           </h2>
         </div>
@@ -80,7 +80,7 @@ export default function ProcessSection() {
                 <Icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
               </span>
             </div>
-            <h3 className="undara-marketing-subheading max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-primary">
+            <h3 className="undara-marketing-subheading font-[family-name:var(--font-undara-heading)] text-primary">
               {title}
             </h3>
             <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">

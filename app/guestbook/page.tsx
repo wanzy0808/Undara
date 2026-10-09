@@ -87,10 +87,10 @@ export default function GuestbookPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot} lift>
-              <section className="undara-marketing-section undara-editorial-offset-right grid gap-8 pb-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16">
+              <section className="undara-marketing-section undara-editorial-offset-right grid gap-8 pb-14 ">
                 <div>
                   <p className="undara-marketing-kicker">{en ? "One event, one source" : "Satu Acara, Satu Sumber Data"}</p>
-                  <h2 className="undara-marketing-heading mt-4 max-w-[17ch] font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
+                  <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
                     {en ? "One guest list for the whole reception team." : "Satu daftar tamu untuk seluruh tim penerima."}
                   </h2>
                 </div>

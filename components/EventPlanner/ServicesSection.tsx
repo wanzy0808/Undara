@@ -6,12 +6,12 @@ export default function ServicesSection({ locale }: { locale: "id" | "en" }) {
 
   return (
     <section className="space-y-10 md:space-y-12">
-      <div className="grid gap-6 pb-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-end lg:gap-14">
+      <div className="grid gap-6 pb-8 ">
         <div>
           <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.2em] text-primary">
             {en ? "Before we connect you" : "Sebelum kami hubungkan"}
           </p>
-          <h2 className="mt-4 max-w-[19ch] font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.04] tracking-[-0.025em] text-primary md:text-4xl">
+          <h2 className="mt-4 font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.04] tracking-[-0.025em] text-primary md:text-4xl">
             {en ? "Four things are enough to get started." : "Empat hal sederhana sudah cukup untuk mulai."}
           </h2>
         </div>
@@ -38,7 +38,7 @@ export default function ServicesSection({ locale }: { locale: "id" | "en" }) {
               <span className="h-px flex-1 bg-primary/20" />
             </div>
 
-            <h3 className="mt-10 max-w-[17ch] font-[family-name:var(--font-undara-heading)] text-2xl font-normal leading-tight text-primary md:text-3xl">
+            <h3 className="mt-10 font-[family-name:var(--font-undara-heading)] text-2xl font-normal leading-tight text-primary md:text-3xl">
               {en ? service.titleEn : service.title}
             </h3>
 

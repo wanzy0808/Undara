@@ -1765,12 +1765,12 @@ body:has(.undara-dashboard--redesign) {
     display: block;
     width: auto;
     height: auto;
-    max-width: 42rem;
+    max-width: 64rem;
     margin-bottom: 2rem;
     transform: none;
     translate: none;
   }
-  .undara-template-intro h1 { max-width: 22ch; }
+  .undara-template-intro h1 { max-width: none; }
   .undara-template-outro {
     position: relative;
     inset: auto;

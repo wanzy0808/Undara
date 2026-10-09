@@ -216,7 +216,7 @@ export default function EventPlannerPage() {
         >
           <div className="undara-marketing-content flex w-full max-w-none flex-col gap-24 py-8 md:gap-28 md:py-12">
             <ScrollReveal scrollRoot={scrollRoot}>
-              <section className="undara-marketing-section relative mx-auto grid min-h-[calc(100dvh-170px)] w-full max-w-[1560px] items-center gap-10 overflow-hidden pb-14 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16 lg:pb-16">
+              <section className="undara-marketing-section relative mx-auto grid min-h-[calc(100dvh-170px)] w-full max-w-[1560px] items-center gap-10 overflow-hidden pb-14 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] lg:gap-16 lg:pb-16">
                 <PlannerNote
                   src="/assets/note1.webp"
                   className="-right-[5%] top-[3%] h-[52%] w-[40%] opacity-[0.12] lg:opacity-[0.16] dark:opacity-[0.08]"
@@ -225,12 +225,12 @@ export default function EventPlannerPage() {
                   reduced={reduced}
                 />
 
-                <div className="relative z-10 max-w-3xl py-8 lg:py-12">
+                <div className="relative z-10 min-w-0 w-full py-8 lg:py-12">
                   <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-medium uppercase tracking-[0.22em] text-primary md:text-xs">
                     {en ? "Event Planner via Undara" : "Event Planner via Undara"}
                   </p>
 
-                  <h1 className="mt-5 max-w-[15ch] font-[family-name:var(--font-undara-heading)] text-[clamp(2.25rem,3.6vw,3.75rem)] font-normal leading-[1.12] tracking-[-0.035em] text-primary">
+                  <h1 className="mt-5 font-[family-name:var(--font-undara-heading)] text-[clamp(2.25rem,3.6vw,3.75rem)] font-normal leading-[1.12] tracking-[-0.035em] text-primary">
                     {en ? "Need an Event Planner?" : "Butuh Event Planner?"}
                     <span className="block text-foreground">
                       {en ? "Tell us about the event first." : "Ceritakan dulu acaranya."}
@@ -334,7 +334,7 @@ export default function EventPlannerPage() {
                     <p className="font-[family-name:var(--font-undara-mono)] text-[10px] font-medium uppercase tracking-[0.2em] text-primary/80">
                       {en ? "Service Direction" : "Pilihan Layanan"}
                     </p>
-                    <h2 className="mt-4 max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-[clamp(1.875rem,2.6vw,2.75rem)] font-normal leading-[1.02] tracking-[-0.035em] text-primary">
+                    <h2 className="mt-4 font-[family-name:var(--font-undara-heading)] text-[clamp(1.875rem,2.6vw,2.75rem)] font-normal leading-[1.02] tracking-[-0.035em] text-primary">
                       {en ? "What can you ask about?" : "Apa yang bisa kamu tanyakan?"}
                     </h2>
                   </div>
@@ -429,12 +429,12 @@ export default function EventPlannerPage() {
             </ScrollReveal>
 
             <ScrollReveal scrollRoot={scrollRoot}>
-              <section className="mx-auto grid w-full max-w-[1500px] gap-8 pb-14 lg:grid-cols-[1fr_1fr] lg:items-end lg:gap-16 lg:pb-16">
+              <section className="mx-auto grid w-full max-w-[1500px] gap-8 pb-14 lg:pb-16">
                 <div>
                   <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.2em] text-primary">
                     {en ? "Already using Undara?" : "Sudah pakai Undara?"}
                   </p>
-                  <h2 className="mt-4 max-w-[18ch] font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.04] tracking-[-0.025em] text-primary md:text-4xl">
+                  <h2 className="mt-4 font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.04] tracking-[-0.025em] text-primary md:text-4xl">
                     {en ? "Digital invitations can stay separate." : "Undangan Digital tetap bisa dipakai terpisah."}
                   </h2>
                 </div>
@@ -479,7 +479,7 @@ export default function EventPlannerPage() {
                     <p className="font-[family-name:var(--font-undara-mono)] text-[10px] uppercase tracking-[0.2em] text-primary">
                       {en ? "Start here" : "Mulai dari sini"}
                     </p>
-                    <h2 className="mt-3 max-w-[22ch] font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.03] tracking-[-0.025em] text-primary md:text-4xl">
+                    <h2 className="mt-3 font-[family-name:var(--font-undara-heading)] text-3xl font-normal leading-[1.03] tracking-[-0.025em] text-primary md:text-4xl">
                       {en ? "Send the event details you already have." : "Kirim detail acara yang sudah kamu punya."}
                     </h2>
                     <p className="mt-5 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
