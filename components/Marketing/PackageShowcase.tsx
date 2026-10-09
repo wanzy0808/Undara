@@ -15,6 +15,7 @@ type PackageShowcaseProps = {
   roundedCard?: boolean;
   wide?: boolean;
   editorial?: boolean;
+  compact?: boolean;
 };
 
 export default function PackageShowcase({
@@ -26,11 +27,50 @@ export default function PackageShowcase({
   roundedCard = false,
   wide = false,
   editorial = false,
+  compact = false,
 }: PackageShowcaseProps) {
   const { locale } = useLanguage();
   const packages = packageKeys.map(getServicePackage).filter(Boolean);
   const chooseLabel = locale === "en" ? "Choose package" : "Pilih paket";
   const featuredLabel = locale === "en" ? "Best value" : "Paling lengkap";
+
+  if (compact) {
+    const en = locale === "en";
+    const blast = getServicePackage("WA_BLAST_50");
+    return (
+      <section id="paket-undangan" data-compact-invitation-offer className="undara-marketing-section py-14 md:py-20">
+        {packages.map(item => item ? (
+          <div key={item.key}>
+            <h2 className="undara-marketing-heading font-[family-name:var(--font-undara-heading)] text-primary">{item.name[locale]}</h2>
+            <article className="mt-7 flex flex-col gap-9 rounded-[24px] bg-primary/[0.045] p-6 sm:p-8 lg:flex-row lg:items-center lg:gap-14 lg:p-10">
+              <div className="min-w-0 lg:w-[42%] lg:shrink-0">
+                <p className="font-[family-name:var(--font-undara-heading)] text-5xl leading-tight text-primary sm:text-6xl">Rp{item.price.toLocaleString("id-ID")}</p>
+                <p className="mt-4 text-base leading-7 text-foreground">{en ? "For one event, one invitation and one template." : "Untuk satu acara, satu undangan dan satu template."}</p>
+                <Button asChild size="lg" className="mt-6">
+                  <Link href={`/packages?package=${encodeURIComponent(item.key)}`}>{chooseLabel}<ArrowRight className="h-4 w-4" /></Link>
+                </Button>
+              </div>
+              <ul className="flex min-w-0 flex-1 flex-col gap-5">
+                {item.features[locale].slice(2).map(feature => (
+                  <li key={feature} className="flex items-start gap-3 text-base leading-7 text-foreground">
+                    <Check className="mt-1.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        ) : null)}
+        {blast && <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-1 sm:px-2">
+          <div className="min-w-0">
+            <h3 className="undara-marketing-subheading text-primary">WA Blast <span className="ml-2 font-[family-name:var(--font-undara-body)] text-sm text-muted-foreground">{en ? "Optional" : "Opsional"}</span></h3>
+            <p className="mt-1 text-base leading-7 text-muted-foreground">{en ? "50 credits for an active event, purchased separately." : "50 kuota untuk acara aktif, dibeli terpisah."}</p>
+          </div>
+          <p className="shrink-0 text-xl font-medium text-primary">Rp{blast.price.toLocaleString("id-ID")}</p>
+        </div>}
+      </section>
+    );
+  }
 
   if (editorial) {
     return (
