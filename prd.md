@@ -1123,6 +1123,9 @@ Root domain berasal dari `NEXT_PUBLIC_INVITATION_ROOT_DOMAIN`; fallback `dcweddi
 
 ### 8.1 Digital Invitation
 
+**Marketing pricing layout (owner 9 October 2026):** `/d-invitation` menampilkan satu heading Undangan Digital dengan surface ringkas: harga, unit per acara dan CTA di kiri; fitur termasuk di kanan; mobile berurutan. Hindari pengulangan judul/label Paket/Undara dan deskripsi panjang. WA Blast opsional berada pada satu baris tersendiri di bawah dengan 50 kuota, harga dari katalog dan syarat acara aktif/pembelian terpisah. Checkout dan entitlement tidak berubah.
+
+
 Package key: `INVITATION_BASIC`.
 
 Harga aktif:
@@ -3763,3 +3766,10 @@ Owner finds the demo's canvas change too subtle and asks to show actual visible 
 Owner explicitly removes the demo pause button and asks for a slightly quicker sequence. Remove playback controls and pause state from StudioDemo; shorten each stage from 2000ms to 1600ms (20% shorter), keeping the existing 250ms cursor/artwork transitions. Preserve synchronized canvas edits, offscreen/tab-hidden gating, hydration-safe static reduced motion and ID/EN. This supersedes prior visible pause/play requirements for this marketing illustration only. Source: DigitalInvitation StudioDemo; actual editor behavior is unchanged.
 
 **Validation:** Production build/TypeScript, scoped ESLint, 18 marketing/continuity/Event Planner tests and git diff --check pass. Chromium desktop/mobile (1280px/390px) confirms no demo buttons, stage intervals measured at 1598ms/1595ms, canvas title edits remain visible, live reduced motion stops progression, and no overflow or page errors. Commit title: `style(marketing): remove demo pause and quicken the sequence`; GitHub PR records its SHA. Deployment not observed.
+
+
+### 2026-10-09 — Compact Digital Invitation pricing section
+
+Owner finds the Digital Invitation pricing section untidy and repetitive. Opt `/d-invitation` into a scoped compact variant of the existing PackageShowcase: one catalog-derived Undangan Digital heading, a single warm surface with price/unit/CTA on the left and four concise included-feature rows on the right (stacked on mobile). Combine the first two catalog feature rows into the price-context sentence; remove the duplicated eyebrow, long intro, package/Undara labels and repeated package description. Place optional WA Blast beneath as one open row with 50 credits, active-event/separate-purchase wording and catalog-derived price. Preserve all factual scope: one event, invitation and template, publishing, RSVP/attendance, guest/table/seating management, gallery/music/maps/details; Rp150000 Digital and Rp75000 WA remain from catalog. Keep checkout link, ID/EN, typography and existing reveal; other PackageShowcase callers remain unchanged. Source: shared PackageShowcase opt-in compact branch and Digital Invitation route.
+
+**Validation:** Production build/TypeScript, scoped ESLint, 18 marketing/continuity/Event Planner tests and git diff --check pass. Chromium checks eight desktop/mobile (1280px/390px), Light/Dark and ID/EN cases: one offer heading, four included-feature rows, exact catalog prices, unchanged INVITATION_BASIC checkout link, separate-purchase/active-event WA wording, correct desktop split/mobile flow, no repeated old section labels and no page errors or overflow. Desktop Light ID and mobile Dark EN screenshots inspected. Other showcase branches are untouched; checkout/catalog/entitlement not changed. Commit title: `style(marketing): simplify Digital Invitation pricing layout`; GitHub PR records its SHA. Deployment not observed.

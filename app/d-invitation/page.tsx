@@ -46,12 +46,6 @@ export default function DigitalInvitationPage() {
   const copy =
     locale === "en"
       ? {
-          packageEyebrow: "Per-event Invitation",
-          packageTitle: "One invitation, a complete guest flow.",
-          packageDescription:
-            "Each purchase activates one event with one invitation template, publishing, RSVP, and guest management. Create as many events as you need and activate them separately.",
-          packageNote:
-            "WA Blast is not included. Add 50 WA Blast credits to a selected active event for Rp 75,000 whenever needed.",
           reviewEyebrow: "Client Stories",
           reviewTitle: "Built for more than weddings",
           reviewDescription:
@@ -61,12 +55,6 @@ export default function DigitalInvitationPage() {
             "About per-event pricing, templates, RSVP, guest management, publishing, and the WA Blast add-on.",
         }
       : {
-          packageEyebrow: "Undangan per Acara",
-          packageTitle: "Satu undangan, alur tamu yang lengkap.",
-          packageDescription:
-            "Setiap pembelian mengaktifkan satu acara dengan satu template undangan, publikasi, RSVP, dan manajemen tamu. Buat acara sebanyak yang dibutuhkan lalu aktifkan satu per satu.",
-          packageNote:
-            "WA Blast tidak termasuk. Tambahkan 50 kuota WA Blast ke acara aktif yang dipilih seharga Rp75.000 kapan pun dibutuhkan.",
           reviewEyebrow: "Cerita Klien",
           reviewTitle: "Dibuat untuk lebih dari sekadar pernikahan",
           reviewDescription:
@@ -105,14 +93,11 @@ export default function DigitalInvitationPage() {
               </PuzzleAssemble>
               <PuzzleAssemble ready={assembleReady} direction="left" scrollRoot={scrollRoot} delay={0.07} className="undara-editorial-offset-left">
                 <PackageShowcase
-                  eyebrow={copy.packageEyebrow}
-                  title={copy.packageTitle}
-                  description={copy.packageDescription}
+                  eyebrow=""
+                  title=""
+                  description=""
                   packageKeys={["INVITATION_BASIC"]}
-                  roundedCard
-                  wide
-                  editorial
-                  note={copy.packageNote}
+                  compact
                 />
               </PuzzleAssemble>
               <PuzzleAssemble ready={assembleReady} direction="right" scrollRoot={scrollRoot} delay={0.07} className="undara-editorial-offset-right">
