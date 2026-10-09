@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "motion/react";
 import { isMarketingPath } from "@/lib/marketing-paths";
 import { useMarketingTransitionAudio } from "@/components/Layout/MarketingAudio";
@@ -50,23 +50,25 @@ export default function PortalTransition() {
   const { primeTransitionSound, playTransitionSound } = useMarketingTransitionAudio();
   const primeRef = useRef(primeTransitionSound);
   const playRef = useRef(playTransitionSound);
-  primeRef.current = primeTransitionSound;
-  playRef.current = playTransitionSound;
+  useEffect(() => {
+    primeRef.current = primeTransitionSound;
+    playRef.current = playTransitionSound;
+  }, [primeTransitionSound, playTransitionSound]);
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [coverDuration, setCoverDuration] = useState(COVER_MS);
   const pending = useRef<PendingRoute | null>(null);
   const timers = useRef<number[]>([]);
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-  };
-  const reset = () => {
+  }, []);
+  const reset = useCallback(() => {
     clearTimers();
     pending.current = null;
     delete document.documentElement.dataset.undaraMarketingTransition;
     setPhase("idle");
-  };
+  }, [clearTimers]);
 
   useEffect(() => {
     const begin = (href: string, viaDoor: boolean) => {
@@ -105,6 +107,8 @@ export default function PortalTransition() {
       if (!anchor || anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) return;
       const url = new URL(anchor.href, window.location.href);
       if (url.origin !== window.location.origin || !isMarketingPath(url.pathname)) return;
+      // Opening an invitation example is a direct preview, not a woodland passage.
+      if (url.pathname === "/template-design" && url.searchParams.has("template")) return;
       if (url.pathname === window.location.pathname) return; // Keep in-page links and same-page actions native.
       event.preventDefault();
       primeRef.current();
@@ -127,7 +131,7 @@ export default function PortalTransition() {
       clearTimers();
       delete document.documentElement.dataset.undaraMarketingTransition;
     };
-  }, [router, reducedMotion]);
+  }, [router, reducedMotion, reset, clearTimers]);
 
   useEffect(() => {
     if (!pending.current || pending.current.path !== pathname || phase !== "hold") return;
@@ -139,7 +143,7 @@ export default function PortalTransition() {
       timers.current.push(window.setTimeout(reset, REVEAL_MS + 80));
     }, 90);
     return () => clearTimeout(timer);
-  }, [pathname, phase]);
+  }, [pathname, phase, reset]);
 
   if (phase === "idle" || reducedMotion) return null;
   return (
