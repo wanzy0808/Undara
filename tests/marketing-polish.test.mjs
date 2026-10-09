@@ -46,14 +46,16 @@ test("marketing navbar menu labels follow ID EN", () => {
 });
 
 
-test("public legal pages use the shared marketing frame", () => {
-  for (const file of ["app/privacy-policy/page.tsx", "app/terms-and-conditions/page.tsx"]) {
-    const source = read(file);
-    assert.match(source, /data-undara-marketing-frame/);
-    assert.match(source, /<Navbar embedded \/>/);
-    assert.match(source, /<MarketingFrameFooter \/>/);
-    assert.match(source, /undara-marketing-content/);
-  }
+test("legal links resolve to policy sections inside the shared Help frame", () => {
+  assert.match(read("app/privacy-policy/page.tsx"), /redirect\("\/help#privacy"\)/);
+  assert.match(read("app/terms-and-conditions/page.tsx"), /redirect\("\/help#terms"\)/);
+  const help = read("app/help/page.tsx");
+  for (const id of ["terms", "privacy", "faq", "kontak"]) assert.ok(help.includes(`id="${id}"`));
+  assert.match(help, /data-undara-marketing-frame/);
+  assert.match(help, /<Navbar embedded \/>/);
+  assert.match(help, /<MarketingFrameFooter \/>/);
+  assert.match(help, /hashchange/);
+  assert.match(help, /getServicePackage/);
 });
 
 
