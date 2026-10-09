@@ -55,14 +55,14 @@ export default function ProcessSection() {
 
   return (
     <section className="undara-marketing-section py-14 md:py-20">
-      <div className="grid gap-8 ">
+      <div className="space-y-6 lg:text-right">
         <div>
           <p className="undara-marketing-kicker">{en ? "From list to arrival" : "Dari Daftar sampai Kedatangan"}</p>
-          <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] tracking-[-0.025em] text-primary">
-            {en ? "A clear sequence for the busiest part of the day." : "Urutan yang jelas untuk bagian hari yang paling sibuk."}
+          <h2 className="undara-marketing-heading mt-4 font-[family-name:var(--font-undara-heading)] text-primary">
+            {en ? "Ready before the first guest arrives." : "Siap sebelum tamu pertama datang."}
           </h2>
         </div>
-        <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-base md:leading-8">
+        <p className="max-w-[75ch] text-base lg:ml-auto leading-7 text-muted-foreground md:text-base md:leading-8">
           {en
             ? "The system follows the way guests actually arrive: prepare the data, verify access, scan at the venue, then keep the team informed."
             : "Sistem mengikuti alur kedatangan tamu: siapkan data, verifikasi akses, pindai QR di lokasi, lalu pastikan seluruh tim mendapat informasi yang sama."}
@@ -70,22 +70,24 @@ export default function ProcessSection() {
       </div>
 
       <div className="relative mt-12">
-        {steps.map(({ icon: Icon, title, text }, index) => (
+        {steps.map(({ icon: Icon, title, text }) => (
           <article
             key={title}
-            className={`relative max-w-4xl py-8 md:py-11 ${index % 2 ? "lg:ml-auto" : "lg:mr-auto"}`}
+            className="flex flex-col gap-5 py-7 sm:flex-row sm:gap-7 md:py-8"
           >
-            <div className="relative z-10 mb-5 flex items-center gap-4">
+            <div className="shrink-0">
               <span className="grid h-11 w-11 place-items-center rounded-[16px] border border-primary/35 bg-background text-primary">
                 <Icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
               </span>
             </div>
+            <div className="min-w-0 flex-1">
             <h3 className="undara-marketing-subheading font-[family-name:var(--font-undara-heading)] text-primary">
               {title}
             </h3>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
+            <p className="mt-3 max-w-[80ch] text-base leading-8 text-muted-foreground">
               {text}
             </p>
+            </div>
           </article>
         ))}
       </div>
