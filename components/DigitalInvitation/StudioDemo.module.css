@@ -42,3 +42,15 @@
   .paper h3 { font-size: 23px; }
 }
 @media (prefers-reduced-motion: reduce) { .cursor { visibility: hidden; transition: none; } }
+
+/* The field and canvas share the same edit state; fixed title space avoids layout jumps. */
+.invitationTitle { display: grid; place-items: center; height: 36px; line-height: 18px; }
+.invitationTitle[data-edited=true] { font-size: 13px; }
+.photoOptions { display: grid; gap: 12px; }
+.photoOptions > div { position: relative; aspect-ratio: 4 / 3; border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); border-radius: 8px; background: #fbf5ef; }
+.photoOptions > div[data-active=true] { border-color: var(--primary); }
+.photoOptions svg { position: absolute; right: 4px; bottom: 4px; border-radius: 50%; background: var(--primary); color: var(--background); }
+.art[data-selected=true] { outline: 1px solid #703b3b; outline-offset: 2px; }
+.artImage { position: absolute; inset: 0; opacity: 0; transition: opacity 250ms cubic-bezier(0.23, 1, 0.32, 1); }
+.artImage[data-active=true] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .artImage { transition: none; } }
